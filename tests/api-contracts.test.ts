@@ -21,7 +21,9 @@ test("agent tool manifest is minimal and self-describing", async () => {
     assert.deepEqual(body.tools.map((tool) => tool.name), [
       "inspect_knowledge",
       "ingest_event",
+      "reprocess_event",
       "list_events",
+      "view_metrics",
       "search_knowledge",
     ]);
   } finally {
@@ -42,7 +44,9 @@ test("agent mcp registry mirrors the minimal public tools", async () => {
     assert.deepEqual(body.tools.map((tool) => tool.name), [
       "inspect_knowledge",
       "ingest_event",
+      "reprocess_event",
       "list_events",
+      "view_metrics",
       "search_knowledge",
     ]);
   } finally {

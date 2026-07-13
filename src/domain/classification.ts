@@ -1,5 +1,7 @@
 import type { ClassifiedEvent, EventInput } from "./event.js";
 
+export const CLASSIFICATION_VERSION = "heuristic-v1";
+
 export function classifyEvent(event: EventInput): ClassifiedEvent {
   const text = `${event.title ?? ""} ${event.body ?? ""}`.toLowerCase();
 
@@ -28,6 +30,7 @@ export function classifyEvent(event: EventInput): ClassifiedEvent {
 
   return {
     ...event,
+    classificationVersion: CLASSIFICATION_VERSION,
     inferredKind,
     confidence,
     entities,

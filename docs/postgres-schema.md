@@ -26,24 +26,14 @@ Current runtime no longer writes here.
 
 Stores the unmodified input from the client.
 
-### `classified_events`
-
-Stores derived interpretation linked to one raw event.
-
-### `entities`
-
-Stores canonical knowledge nodes such as people, merchants, places, and amounts.
-
-### `event_entities`
-
-Links events to entities they mention or imply.
-
-## Current columns
-
-### `raw_events`
+Current columns:
 
 - `id text primary key`
 - `source text not null`
+- `contract_version integer not null`
+- `client_id text null`
+- `idempotency_key text null`
+- `dedupe_key text not null unique`
 - `kind text not null`
 - `title text null`
 - `body text null`
@@ -55,12 +45,29 @@ Links events to entities they mention or imply.
 
 ### `classified_events`
 
+Stores derived interpretation linked to one raw event.
+
+Current columns:
+
 - `id text primary key`
 - `raw_event_id text not null`
+- `client_id text null`
+- `contract_version integer not null`
+- `classification_version text not null`
 - `inferred_kind text not null`
 - `confidence numeric(5,4) not null`
 - `entities jsonb not null`
 - `created_at timestamptz not null default now()`
+
+### `entities`
+
+Stores canonical knowledge nodes such as people, merchants, places, and amounts.
+
+### `event_entities`
+
+Links events to entities they mention or imply.
+
+## Current columns
 
 ### `entities`
 
@@ -120,6 +127,7 @@ This schema is intentionally relational, but it preserves enough structure to:
 - keep auditability
 - evolve toward graph-like projections later
 - support reclassification without losing the raw event
+- support retry deduplication and explicit contract versioning
 
 ## Why split the model
 
@@ -166,6 +174,23 @@ This phase lets the runtime:
 - upsert canonical entities
 - link them to events
 - avoid duplicating entity values across events
+
+## Idempotency phase
+
+The current foundation pass adds:
+
+- `contract_version`
+- `client_id`
+- `idempotency_key`
+- `dedupe_key`
+- `classification_version`
+
+This lets the runtime:
+
+- accept explicit contract evolution
+- deduplicate retries safely
+- track the classification version used for a derived event
+- reprocess a raw event while preserving its original source record
 
 ## Relation phase
 

@@ -1,6 +1,8 @@
 import { pool } from "./postgres.js";
 import type { EntityDraft } from "../domain/entities.js";
 
+type Queryable = Pick<typeof pool, "query">;
+
 type StoredEntity = {
   id: string;
   type: string;
@@ -8,8 +10,8 @@ type StoredEntity = {
   normalizedValue: string;
 };
 
-export async function upsertEntity(draft: EntityDraft): Promise<StoredEntity> {
-  const result = await pool.query<StoredEntity>(
+export async function upsertEntity(db: Queryable, draft: EntityDraft): Promise<StoredEntity> {
+  const result = await db.query<StoredEntity>(
     `
       insert into entities (
         id,

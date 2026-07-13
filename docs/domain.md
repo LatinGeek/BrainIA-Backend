@@ -24,11 +24,13 @@ The canonical event is the source record that enters the system.
 
 ### Optional fields
 
+- `contractVersion`
 - `kind`
 - `title`
 - `body`
 - `timestamp`
 - `externalId`
+- `idempotencyKey`
 - `raw`
 - `tags`
 
@@ -36,6 +38,8 @@ The canonical event is the source record that enters the system.
 
 - `id` identifies the record in the ingestion layer
 - `source` identifies where it came from
+- `contractVersion` identifies the payload contract version
+- `idempotencyKey` can be used for stable retries when the client has one
 - `raw` preserves the original payload
 - `kind` is a coarse client hint, not the final truth
 
@@ -45,6 +49,7 @@ A classified event is the event plus backend interpretation.
 
 ### Derived fields
 
+- `classificationVersion`
 - `inferredKind`
 - `confidence`
 - `entities`
@@ -81,6 +86,7 @@ The system should:
 - attach a derived interpretation
 - keep confidence scores where possible
 - allow future reclassification
+- keep track of the classification version used to derive the interpretation
 
 ## Future domain entities
 

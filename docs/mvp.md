@@ -33,6 +33,8 @@ Ship a first solid version of BrainIA that is useful for agent-driven retrieval 
 - `GET /api/v1/entities`
 - `GET /api/v1/relations`
 - `GET /api/v1/search`
+- `POST /api/v1/events/:id/reprocess`
+- `GET /api/v1/metrics`
 
 These exist to support the primary agent flow and debugging, but they are not the main product surface.
 
@@ -57,10 +59,6 @@ These exist to support the primary agent flow and debugging, but they are not th
 
 ## Post-MVP backlog
 
-- authentication for the mobile client
-- better heuristics for entities and relations
-- richer graph traversal and path explanation
-- embeddings or hybrid retrieval
-- formal MCP server integration if needed
-- production deployment and monitoring
+The evolving post-MVP backlog now lives in [`docs/backlog.md`](backlog.md).
 
+This MVP document stays focused on the shipped baseline and should not become the planning surface for future work.

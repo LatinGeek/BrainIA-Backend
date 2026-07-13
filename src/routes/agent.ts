@@ -83,11 +83,13 @@ const tools: ToolManifest[] = [
       properties: {
         id: { type: "string" },
         source: { type: "string" },
+        contractVersion: { type: "number", minimum: 1, default: 1 },
         kind: { type: "string" },
         title: { type: "string" },
         body: { type: "string" },
         timestamp: { type: "string", format: "date-time" },
         externalId: { type: "string" },
+        idempotencyKey: { type: "string" },
         raw: { type: "object" },
         tags: { type: "array", items: { type: "string" } },
       },
@@ -97,8 +99,10 @@ const tools: ToolManifest[] = [
       properties: {
         id: { type: "string" },
         source: { type: "string" },
+        contractVersion: { type: "number" },
         kind: { type: "string" },
         inferredKind: { type: "string" },
+        classificationVersion: { type: "string" },
         confidence: { type: "number" },
       },
     },
@@ -107,18 +111,22 @@ const tools: ToolManifest[] = [
         input: {
           id: "evt_123",
           source: "tasker",
+          contractVersion: 1,
           kind: "notification",
           title: "Compra en supermercado",
           body: "Visa $12.40",
           timestamp: "2026-07-13T12:00:00.000Z",
           raw: { packageName: "com.example.wallet" },
+          idempotencyKey: "notif-abc-123",
           tags: ["expense", "mobile"],
         },
         output: {
           id: "evt_123",
           source: "tasker",
+          contractVersion: 1,
           kind: "notification",
           inferredKind: "expense",
+          classificationVersion: "heuristic-v1",
           confidence: 0.9,
         },
       },
@@ -127,6 +135,47 @@ const tools: ToolManifest[] = [
       {
         code: "invalid_event",
         description: "The event payload is missing required fields or does not match the contract.",
+      },
+    ],
+  },
+  {
+    name: "reprocess_event",
+    description: "Rebuild the derived knowledge for a stored event using the current heuristics.",
+    method: "POST",
+    path: "/api/v1/events/:id/reprocess",
+    inputSchema: {
+      type: "object",
+      required: ["id"],
+      properties: {
+        id: { type: "string" },
+      },
+    },
+    outputSchema: {
+      type: "object",
+      properties: {
+        id: { type: "string" },
+        source: { type: "string" },
+        inferredKind: { type: "string" },
+        classificationVersion: { type: "string" },
+      },
+    },
+    examples: [
+      {
+        input: {
+          id: "evt_123",
+        },
+        output: {
+          id: "evt_123",
+          source: "tasker",
+          inferredKind: "expense",
+          classificationVersion: "heuristic-v1",
+        },
+      },
+    ],
+    expectedErrors: [
+      {
+        code: "event_not_found",
+        description: "The stored event id does not exist.",
       },
     ],
   },
@@ -145,6 +194,40 @@ const tools: ToolManifest[] = [
       {
         input: {},
         output: [],
+      },
+    ],
+    expectedErrors: [],
+  },
+  {
+    name: "view_metrics",
+    description: "Inspect the current storage and knowledge counts for basic observability.",
+    method: "GET",
+    path: "/api/v1/metrics",
+    inputSchema: {
+      type: "null",
+    },
+    outputSchema: {
+      type: "object",
+      properties: {
+        rawEventsCount: { type: "number" },
+        classifiedEventsCount: { type: "number" },
+        entitiesCount: { type: "number" },
+        relationsCount: { type: "number" },
+        eventEntitiesCount: { type: "number" },
+        eventRelationsCount: { type: "number" },
+      },
+    },
+    examples: [
+      {
+        input: {},
+        output: {
+          rawEventsCount: 10,
+          classifiedEventsCount: 10,
+          entitiesCount: 24,
+          relationsCount: 11,
+          eventEntitiesCount: 34,
+          eventRelationsCount: 11,
+        },
       },
     ],
     expectedErrors: [],

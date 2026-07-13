@@ -35,3 +35,7 @@
 - simplified the public agent tool catalog for the MVP
 - added a minimal test suite for the critical paths
 - documented the MVP scope and release boundaries
+- created a dedicated post-MVP backlog document
+- added optional API-key or client-scoped auth
+- added contract versioning and idempotent ingest dedupe
+- added single-event reprocessing and lightweight metrics

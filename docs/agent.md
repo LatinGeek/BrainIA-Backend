@@ -1,98 +1,110 @@
 # BrainIA Agent Context
 
-## Proyecto
+## Project
 
-BrainIA es un backend-first para capturar eventos genéricos desde un móvil, clasificarlos y convertirlos en una base de conocimiento consultable por una futura IA.
+BrainIA is a backend-first system for capturing generic events from a mobile client, classifying them, and turning them into a queryable knowledge base for future AI use.
 
-## Principio de diseño
+## Design principle
 
-La app móvil no debe procesar lógica de negocio. Solo captura y envía eventos.
+The mobile app must not process business logic. It only captures and sends events.
 
-El backend debe ser la fuente de verdad para:
+The backend is the source of truth for:
 
-- ingestión de eventos
-- normalización
-- clasificación
-- persistencia
-- consultas
-- preparación de relaciones para un grafo de conocimiento
+- ingestion
+- normalization
+- classification
+- persistence
+- queries
+- graph preparation
 
-## Objetivo funcional
+## Functional goal
 
-El sistema debe poder recibir eventos como:
+The system should accept events such as:
 
-- correos
-- gastos
-- notas
-- notificaciones
-- recordatorios
-- cualquier otro evento genérico
+- emails
+- expenses
+- notes
+- notifications
+- reminders
+- any other generic event
 
-Y luego:
+And then:
 
-- clasificarlos
-- enriquecerlos
-- relacionarlos entre sí
-- exponerlos para un asistente o capa de IA
+- classify them
+- enrich them
+- relate them to each other
+- expose them to an assistant or AI layer
 
-## Stack actual
+## Current stack
 
 - Node.js
 - Fastify
 - TypeScript
 - Zod
 
-## Decisión de arquitectura
+## Architecture decision
 
-La base del proyecto es una API pura.
+The base of the project is a pure API.
 
-No se asume UI web como producto principal.
-La UI objetivo futura es móvil.
+No web UI is assumed as the primary product.
+The future target UI is mobile.
 
-## Convención de API
+## API convention
 
-- versión base: `/api/v1`
+- base version: `/api/v1`
 - healthcheck: `/health`
 
-## Estado actual
+## Current state
 
-- existe una API mínima funcional
-- existe una clasificación inicial por heurísticas
-- existe persistencia append-only en JSONL para prototipo
-- no existe base de datos todavía
+- a minimal API is already working
+- heuristic classification is active
+- Postgres persistence is active
+- optional API-key or client-scoped auth is active for API routes
+- event contract versioning and idempotency are active
+- raw events and derived knowledge are split
+- entity extraction and event-to-entity links are active
+- relation extraction and event-to-relation links are active
+- single-event reprocessing is active
+- a lightweight metrics endpoint is active
+- text search is active
+- bounded graph expansion is active
+- entity resolution is separated from graph expansion
+- the agent tool catalog stays compact and self-describing
+- DeepSeek can generate a short natural-language summary when configured
 
-## Próximos pasos recomendados
+## Recommended next steps
 
-1. reemplazar JSONL por Postgres
-2. separar eventos crudos de eventos clasificados
-3. definir esquema de entidades y relaciones
-4. agregar autenticación para el cliente móvil
-5. documentar contratos de API
-6. documentar modelo de dominio y reglas de evolución
+1. improve heuristic entity and relation extraction
+2. refine the reprocess pipeline into a broader rebuild flow
+3. formalize the MCP server surface if needed
+4. expand observability and durability notes
+5. keep the mobile client thin and API-driven
 
-## Qué debe mantenerse actualizado
+## What must stay updated
 
-Este archivo debe reflejar siempre:
+This file should always reflect:
 
-- objetivo del proyecto
-- arquitectura vigente
-- decisiones técnicas tomadas
-- estado del sistema
-- próximos pasos
+- the project objective
+- the current architecture
+- technical decisions
+- the system state
+- the next steps
 
-## Memoria de corto plazo
+## Short-term memory
 
-Antes de cerrar una sesión o incorporar una decisión nueva, evaluar si corresponde actualizar `memory.md` en la raíz del proyecto.
+Before closing a session or introducing a new decision, evaluate whether `memory.md` should be updated.
 
-`memory.md` debe usarse para registrar el estado de trabajo más reciente y puede:
+`memory.md` is the short-term working memory and should:
 
-- resumir decisiones activas
-- reflejar cambios recientes
-- señalar documentación que debe crearse, actualizarse o eliminarse
-- actuar como memoria operativa de corto plazo
+- summarize active decisions
+- reflect recent changes
+- point to documentation that should be created, updated, or removed
+- act as operational memory for the current phase
 
-Regla práctica:
+Practical rule:
 
-- si cambia una decisión importante, revisar si `memory.md` debe actualizarse
-- si una parte de la documentación quedó obsoleta, ajustar o eliminar ese contenido
-- si aparece un nuevo flujo o módulo, documentarlo en el proyecto de forma explícita
+- if an important decision changes, review whether `memory.md` should change too
+- if a document becomes obsolete, fix or remove it
+- if a new flow or module appears, document it explicitly
+
+The long-term planning surface lives in `docs/backlog.md`.

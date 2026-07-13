@@ -18,6 +18,10 @@ Expected commands:
 - `HOST`
 - `API_PREFIX`
 - `DATABASE_URL`
+- `BRAINIA_API_KEY`
+- `BRAINIA_CLIENT_KEYS`
+- `DEEPSEEK_API_KEY`
+- `DEEPSEEK_MODEL`
 
 ## Storage behavior
 
@@ -28,10 +32,14 @@ Current state:
 - entities and event links are persisted during ingestion
 - relations and event relations are persisted during ingestion
 - schema managed by explicit SQL migrations
+- migrations run inside real database transactions
 - split knowledge model documented for future rollout
 - first entity extraction pass active during ingestion
 - first relation extraction pass active during ingestion
 - relation descriptions are part of the canonical schema
+- event ingestion is idempotent through a dedupe key
+- reprocessing is available for a single stored event
+- a lightweight metrics endpoint is available
 - knowledge query endpoints are available for entities and relations
 - entity resolve endpoint is available for resolving ids or textual hints
 - textual search endpoint is available for assistant retrieval
@@ -41,7 +49,7 @@ Current state:
 - graph payload includes reconstruction hints for agents
 - agent inspect endpoint is available for resolve+expand+explain
 - DeepSeek integration is enabled through `DEEPSEEK_API_KEY`
-- primary agent surface is intentionally small for the MVP
+- primary agent surface is intentionally compact and self-describing
 
 Production target:
 
@@ -69,6 +77,8 @@ The mobile client should:
 - include a stable `source`
 - include unique `id` or `externalId`
 - preserve raw notification content when possible
+- include `contractVersion` and an `idempotencyKey` when the client can generate one
+- send `x-brainia-client-id` and `x-brainia-api-key` when auth is enabled
 
 ## Operational rules
 
@@ -78,3 +88,4 @@ The mobile client should:
 - keep current decisions reflected in `docs/agent.md`
 - keep the public agent surface minimal until the MVP is frozen
 - keep the MVP scope aligned with [`docs/mvp.md`](mvp.md)
+- keep the backlog aligned with [`docs/backlog.md`](backlog.md)

@@ -2,6 +2,8 @@ import { randomUUID } from "node:crypto";
 import { pool } from "./postgres.js";
 import type { RelationDraft } from "../domain/relations.js";
 
+type Queryable = Pick<typeof pool, "query">;
+
 type StoredRelation = {
   id: string;
   relationType: string;
@@ -9,8 +11,13 @@ type StoredRelation = {
   description: string;
 };
 
-export async function upsertRelation(draft: RelationDraft, sourceEntityId: string, targetEntityId: string): Promise<StoredRelation> {
-  const result = await pool.query<StoredRelation>(
+export async function upsertRelation(
+  db: Queryable,
+  draft: RelationDraft,
+  sourceEntityId: string,
+  targetEntityId: string,
+): Promise<StoredRelation> {
+  const result = await db.query<StoredRelation>(
     `
       insert into relations (
         id,
@@ -41,7 +48,8 @@ export async function upsertRelation(draft: RelationDraft, sourceEntityId: strin
         id,
         relation_type as "relationType",
         label,
-        description
+        description,
+        confidence
     `,
     [
       sourceEntityId,
@@ -57,8 +65,13 @@ export async function upsertRelation(draft: RelationDraft, sourceEntityId: strin
   return result.rows[0];
 }
 
-export async function linkEventRelation(eventId: string, relationId: string, confidence: number) {
-  await pool.query(
+export async function linkEventRelation(
+  db: Queryable,
+  eventId: string,
+  relationId: string,
+  confidence: number,
+) {
+  await db.query(
     `
       insert into event_relations (
         id,

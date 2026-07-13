@@ -11,6 +11,12 @@
 - derived interpretation is stored separately from the source payload
 - event ingestion must be idempotent when possible
 - mobile clients should be able to retry safely
+- optional API-key or client-scoped auth can protect the API surface
+
+When auth is enabled, clients should send:
+
+- `x-brainia-api-key`
+- `x-brainia-client-id` when client-scoped keys are configured
 
 ## Health
 
@@ -39,11 +45,13 @@ The request body must contain:
 
 The request body may contain:
 
+- `contractVersion`
 - `kind`
 - `title`
 - `body`
 - `timestamp`
 - `externalId`
+- `idempotencyKey`
 - `raw`
 - `tags`
 
@@ -51,11 +59,13 @@ The request body may contain:
 
 - `id`: stable identifier for the event in the client or ingestion layer
 - `source`: origin of the event, for example `tasker`, `mobile`, `email`, `wallet`
+- `contractVersion`: explicit version of the request contract, defaults to `1`
 - `kind`: client-provided coarse hint, defaulting to `other`
 - `title`: short human-readable summary
 - `body`: longer body or payload text
 - `timestamp`: ISO 8601 timestamp if the client can provide it
 - `externalId`: identifier from the external system, if any
+- `idempotencyKey`: stable retry key when the client can supply one
 - `raw`: original unmodified payload or a structured representation of it
 - `tags`: free-form client tags
 
@@ -65,11 +75,13 @@ The request body may contain:
 {
   "id": "evt_123",
   "source": "tasker",
+  "contractVersion": 1,
   "kind": "notification",
   "title": "Compra en supermercado",
   "body": "Visa $12.40",
   "timestamp": "2026-07-13T12:00:00.000Z",
   "externalId": "abc-123",
+  "idempotencyKey": "notif-abc-123",
   "raw": {
     "packageName": "com.example.wallet",
     "notificationTitle": "Compra en supermercado"
@@ -86,8 +98,9 @@ When the API receives a valid event, it must:
 2. preserve the raw input
 3. classify the event
 4. attach derived metadata
-5. persist the result
-6. return the stored record
+5. persist the result transactionally
+6. deduplicate retries using the event id or stable retry keys
+7. return the stored record
 
 See also:
 
@@ -97,6 +110,14 @@ See also:
 ### Response contract
 
 On success, the endpoint returns the stored and classified event.
+
+The stored record now includes:
+
+- `contractVersion`
+- `idempotencyKey`
+- `dedupeKey`
+- `classificationVersion`
+- linked entities and relations
 
 ### Error contract
 
@@ -114,6 +135,25 @@ Validation failures return HTTP `400` with a payload shaped like:
 ### `GET /api/v1/events`
 
 Returns the stored events in append order.
+
+## Event reprocessing
+
+### `POST /api/v1/events/:id/reprocess`
+
+Rebuilds the derived knowledge for a stored event using the current heuristics.
+
+This is the first reprocessing primitive. It deletes the previous derived links for that event and rebuilds them from the raw source record.
+
+Response shape:
+
+```json
+{
+  "id": "evt_123",
+  "source": "tasker",
+  "inferredKind": "expense",
+  "classificationVersion": "heuristic-v1"
+}
+```
 
 ## Knowledge queries
 
@@ -214,11 +254,13 @@ It is useful for:
 - UI generation
 - prompt/tool orchestration
 
-The MVP catalog is intentionally small:
+The public catalog is intentionally compact:
 
 - `inspect_knowledge`
 - `ingest_event`
+- `reprocess_event`
 - `list_events`
+- `view_metrics`
 - `search_knowledge`
 
 ### `GET /api/v1/agent/mcp`
@@ -269,6 +311,14 @@ Response shape:
 
 This is the most agent-friendly single-call retrieval path.
 
+## Metrics
+
+### `GET /api/v1/metrics`
+
+Returns lightweight counts for raw events, classified events, entities, relations, and event links.
+
+This endpoint is intended for basic observability and agent-side sanity checks.
+
 ## Search
 
 ### `GET /api/v1/search?q=...`
@@ -298,6 +348,7 @@ Response shape:
 - all specialization happens in the backend
 - the raw event is the source of truth
 - derived classification can change over time without losing the original event
+- event retries should be deduplicated by a stable dedupe key whenever possible
 - the knowledge layer is queryable independently from the ingestion path
 - the search layer is textual for now and can later evolve to embeddings or hybrid retrieval
 - graph expansion should be bounded by depth and maximum result sizes
@@ -305,3 +356,4 @@ Response shape:
 - agent tool manifests should include schemas, examples, and expected errors
 - entity resolution and entity expansion should remain separate tools
 - a single inspect tool should combine retrieval and explanation for agent use
+- reprocessing should rebuild derived knowledge from the raw source without losing the source record

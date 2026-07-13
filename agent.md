@@ -9,6 +9,9 @@ Este archivo apunta al contexto persistente del proyecto.
 - Operaciones: [`docs/operations.md`](docs/operations.md)
 - Historial: [`docs/changelog.md`](docs/changelog.md)
 - MVP: [`docs/mvp.md`](docs/mvp.md)
+- Backlog: [`docs/backlog.md`](docs/backlog.md)
 - Memoria activa: [`memory.md`](memory.md)
 
 Usar este proyecto como backend-first para eventos genéricos de móvil.
+
+El foco actual del repo es la base P0 ya implementada: auth opcional, idempotencia, reprocess y métricas.

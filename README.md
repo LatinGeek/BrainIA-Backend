@@ -21,7 +21,9 @@ Separar el origen del evento del procesamiento:
 
 - `GET /health`
 - `POST /api/v1/events`
+- `POST /api/v1/events/:id/reprocess`
 - `GET /api/v1/events`
+- `GET /api/v1/metrics`
 
 ## Por qué Fastify
 
@@ -39,12 +41,13 @@ Separar el origen del evento del procesamiento:
 - [`docs/operations.md`](docs/operations.md)
 - [`docs/changelog.md`](docs/changelog.md)
 - [`docs/mvp.md`](docs/mvp.md)
+- [`docs/backlog.md`](docs/backlog.md)
 
 ## Siguiente paso
 
 La evolución natural ahora es:
 
-1. agregar persistencia real con Postgres
-2. separar eventos crudos de clasificaciones derivadas
-3. sumar autenticación de cliente móvil
-4. preparar entidades y relaciones para el grafo de conocimiento
+1. mejorar la extracción heurística de entidades y relaciones
+2. ampliar el reprocess para rebuilds más amplios
+3. formalizar el MCP server si hace falta
+4. expandir observabilidad, backup y retención
