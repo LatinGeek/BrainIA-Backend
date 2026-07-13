@@ -14,4 +14,4 @@ Este archivo apunta al contexto persistente del proyecto.
 
 Usar este proyecto como backend-first para eventos genéricos de móvil.
 
-El foco actual del repo es la base P0 ya implementada: auth opcional, idempotencia, reprocess y métricas.
+El foco actual del repo incluye la base P0 ya implementada y el primer bloque P1 de knowledge quality: canonicalización, merge manual, `same_as`, graph canonical y search con filtros básicos.

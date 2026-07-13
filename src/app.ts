@@ -4,6 +4,7 @@ import { registerAgentRoutes } from "./routes/agent.js";
 import { registerAgentInspectRoutes } from "./routes/agent-inspect.js";
 import { registerEventRoutes } from "./routes/events.js";
 import { registerEntityResolveRoutes } from "./routes/entity-resolve.js";
+import { registerEntityMergeRoutes } from "./routes/entity-merge.js";
 import { registerGraphRoutes } from "./routes/graph.js";
 import { registerKnowledgeRoutes } from "./routes/knowledge.js";
 import { registerMetricsRoutes } from "./routes/metrics.js";
@@ -25,6 +26,7 @@ export async function buildApp(options: { authConfig?: AuthConfig } = {}) {
   await app.register(registerMetricsRoutes, { prefix: config.apiPrefix });
   await app.register(registerKnowledgeRoutes, { prefix: config.apiPrefix });
   await app.register(registerEntityResolveRoutes, { prefix: config.apiPrefix });
+  await app.register(registerEntityMergeRoutes, { prefix: config.apiPrefix });
   await app.register(registerGraphRoutes, { prefix: config.apiPrefix });
   await app.register(registerSearchRoutes, { prefix: config.apiPrefix });
 

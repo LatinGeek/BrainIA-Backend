@@ -33,18 +33,21 @@ Update this file when:
 - runtime writes to raw events and classified events
 - entity extraction and event-to-entity links are active
 - relation extraction and event-to-relation links are active
+- entity canonicalization and manual merge are active
 - single-event reprocessing is active
 - lightweight metrics are available through `/api/v1/metrics`
 - entity and relation query endpoints are active
-- textual search is active for assistant retrieval
+- textual search is active for assistant retrieval with basic filters
 - graph-by-entity retrieval is active with depth and limits
 - agent tool manifest is active
 - MCP-like registry endpoint is active
+- merge-aware entity resolve and merge routes are active
 - entity resolution is separate from graph expansion
 - graph responses include root distance, direction, and path hints
+- graph roots resolve to canonical entities when aliases are used
 - inspect endpoint is active for resolve + expand + explain
 - DeepSeek can generate a natural-language summary via `DEEPSEEK_API_KEY`
-- the public agent tool catalog now includes reprocess and metrics helpers
+- the public agent tool catalog now includes resolve, merge, reprocess, and metrics helpers
 - a minimal test suite is active
 - the MVP scope is documented in `docs/mvp.md`
 - the post-MVP backlog is documented in `docs/backlog.md`
@@ -65,7 +68,7 @@ Update this file when:
 
 ## Next immediate steps
 
-1. improve heuristic entity and relation extraction
+1. improve relation quality and deeper graph traversal
 2. refine the reprocess pipeline into a broader rebuild flow
 3. formalize the MCP server surface if needed
 4. expand observability and durability notes

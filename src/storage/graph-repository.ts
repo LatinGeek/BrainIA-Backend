@@ -1,6 +1,8 @@
 import { pool } from "./postgres.js";
+import { loadCanonicalEntityById } from "./entity-repository.js";
 
 export type EntityGraph = {
+  resolvedFromEntityId: string | null;
   rootEntity: {
     id: string;
     type: string;
@@ -61,6 +63,11 @@ export function parseGraphOptions(input: { depth?: string; maxNodes?: string; ma
 }
 
 export async function getEntityGraph(entityId: string, depth: number, maxNodes: number, maxRelations: number): Promise<EntityGraph | null> {
+  const canonicalRoot = await loadCanonicalEntityById(pool, entityId);
+  if (!canonicalRoot) {
+    return null;
+  }
+
   const rootResult = await pool.query(
     `
       select
@@ -74,7 +81,7 @@ export async function getEntityGraph(entityId: string, depth: number, maxNodes: 
       where id = $1
       limit 1
     `,
-    [entityId],
+    [canonicalRoot.id],
   );
 
   if (rootResult.rowCount === 0) {
@@ -127,7 +134,7 @@ export async function getEntityGraph(entityId: string, depth: number, maxNodes: 
       from walk
       order by id, depth asc
     `,
-    [entityId, depth],
+    [canonicalRoot.id, depth],
   );
 
   const relationResult = await pool.query(
@@ -175,7 +182,7 @@ export async function getEntityGraph(entityId: string, depth: number, maxNodes: 
       order by r.id, depth asc
       limit $3
     `,
-    [entityId, depth, maxRelations],
+    [canonicalRoot.id, depth, maxRelations],
   );
 
   const nodes = graphResult.rows.slice(0, maxNodes);
@@ -187,6 +194,7 @@ export async function getEntityGraph(entityId: string, depth: number, maxNodes: 
   );
 
   return {
+    resolvedFromEntityId: canonicalRoot.id === entityId ? null : entityId,
     rootEntity: rootResult.rows[0],
     depthRequested: depth,
     depthReturned: maxDepthReached,
@@ -199,7 +207,7 @@ export async function getEntityGraph(entityId: string, depth: number, maxNodes: 
     nodes,
     relations,
     paths: relations.map((relation: { sourceEntityId: string; targetEntityId: string; id: string }) => ({
-      nodeIds: [entityId, relation.sourceEntityId, relation.targetEntityId].filter(
+      nodeIds: [canonicalRoot.id, relation.sourceEntityId, relation.targetEntityId].filter(
         (value, index, array) => array.indexOf(value) === index,
       ),
       relationIds: [relation.id],

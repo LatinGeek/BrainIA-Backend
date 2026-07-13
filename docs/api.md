@@ -12,6 +12,7 @@
 - event ingestion must be idempotent when possible
 - mobile clients should be able to retry safely
 - optional API-key or client-scoped auth can protect the API surface
+- canonical entities should be preferred for graph and search responses
 
 When auth is enabled, clients should send:
 
@@ -191,7 +192,43 @@ Response shape:
 
 ```json
 {
-  "matches": []
+  "matches": [
+    {
+      "id": "entity_1",
+      "matchedEntityId": "entity_4",
+      "canonicalEntityId": "entity_1",
+      "isCanonical": true
+    }
+  ]
+}
+```
+
+Matches are merge-aware and return canonical entities rather than raw aliases.
+
+### `POST /api/v1/entities/:id/merge`
+
+Merges the entity referenced by `:id` into a canonical root supplied in the request body.
+
+Request body:
+
+```json
+{
+  "canonicalEntityId": "entity_1",
+  "reason": "manual cleanup",
+  "confidence": 1
+}
+```
+
+Response shape:
+
+```json
+{
+  "aliasEntityId": "entity_4",
+  "canonicalEntityId": "entity_1",
+  "reason": "manual cleanup",
+  "confidence": 1,
+  "alreadyMerged": false,
+  "sameAsRelation": {}
 }
 ```
 
@@ -209,6 +246,7 @@ Response shape:
 
 ```json
 {
+  "resolvedFromEntityId": "entity_4",
   "rootEntity": {},
   "depthRequested": 2,
   "depthReturned": 2,
@@ -232,6 +270,8 @@ The graph expansion tool is intentionally separate from entity resolution:
 - `graph` expands the entity
 
 Graph nodes include `rootDistance` and graph relations include `direction` so the agent can reconstruct the traversal.
+
+If the requested id is an alias, the response resolves to the canonical root and exposes `resolvedFromEntityId`.
 
 The response also includes `paths` as a lightweight reconstruction hint.
 
@@ -257,6 +297,8 @@ It is useful for:
 The public catalog is intentionally compact:
 
 - `inspect_knowledge`
+- `resolve_entity`
+- `merge_entity`
 - `ingest_event`
 - `reprocess_event`
 - `list_events`
@@ -300,6 +342,7 @@ Response shape:
 ```json
 {
   "query": "spotify",
+  "resolvedFromEntityId": "entity_4",
   "rootEntity": {},
   "graph": {},
   "searchResult": {},
@@ -329,6 +372,13 @@ Performs a simple textual search across:
 - entities
 - relations
 
+Optional filters:
+
+- `source`
+- `kind`
+- `from`
+- `to`
+
 This is the first retrieval layer for the assistant.
 
 Response shape:
@@ -340,6 +390,8 @@ Response shape:
   "relations": []
 }
 ```
+
+The entity results are canonicalized and deduplicated by their canonical root.
 
 ## Contract notes
 
@@ -357,3 +409,4 @@ Response shape:
 - entity resolution and entity expansion should remain separate tools
 - a single inspect tool should combine retrieval and explanation for agent use
 - reprocessing should rebuild derived knowledge from the raw source without losing the source record
+- canonical graph and search results should prefer merged entity roots

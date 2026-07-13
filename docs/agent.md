@@ -64,9 +64,10 @@ The future target UI is mobile.
 - raw events and derived knowledge are split
 - entity extraction and event-to-entity links are active
 - relation extraction and event-to-relation links are active
+- entity canonicalization and manual merge are active
 - single-event reprocessing is active
 - a lightweight metrics endpoint is active
-- text search is active
+- text search is active with basic relevance filters
 - bounded graph expansion is active
 - entity resolution is separated from graph expansion
 - the agent tool catalog stays compact and self-describing
@@ -74,7 +75,7 @@ The future target UI is mobile.
 
 ## Recommended next steps
 
-1. improve heuristic entity and relation extraction
+1. improve relation quality and deeper graph traversal
 2. refine the reprocess pipeline into a broader rebuild flow
 3. formalize the MCP server surface if needed
 4. expand observability and durability notes

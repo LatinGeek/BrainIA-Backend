@@ -140,6 +140,25 @@ Example:
 
 That lets the graph remain usable both as structured data and as readable knowledge.
 
+## Entity canonicalization
+
+Entities can be merged into a canonical root when the system determines they represent the same knowledge node.
+
+Canonicalization should preserve:
+
+- the canonical entity record
+- the alias entity identity
+- the reason for the merge
+- merge confidence
+- a `same_as` relation for provenance and traversal
+
+The system should favor canonical entities for:
+
+- ingestion-time links
+- search results
+- graph traversal
+- agent resolution
+
 ## First relation pass
 
 The first heuristic relation extractor currently targets:
@@ -152,6 +171,12 @@ Each relation is stored both as:
 
 - a technical relation record
 - a textual, human-readable description
+
+## Merge provenance
+
+Manual or heuristic entity merges should create a `same_as` relation so the knowledge graph keeps the relationship visible.
+
+That keeps aliasing transparent for agents and lets traversal explain why two entities were collapsed into one canonical root.
 
 ## Event-to-entity links
 

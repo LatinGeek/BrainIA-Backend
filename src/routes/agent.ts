@@ -38,6 +38,7 @@ const tools: ToolManifest[] = [
       type: "object",
       properties: {
         query: { type: ["string", "null"] },
+        resolvedFromEntityId: { type: ["string", "null"] },
         rootEntity: { type: ["object", "null"] },
         graph: { type: ["object", "null"] },
         searchResult: { type: "object" },
@@ -69,6 +70,97 @@ const tools: ToolManifest[] = [
       {
         code: "invalid_inspect_query",
         description: "The query must include either id or q.",
+      },
+    ],
+  },
+  {
+    name: "resolve_entity",
+    description: "Resolve a canonical entity from an id or search hint and return merge-aware matches.",
+    method: "GET",
+    path: "/api/v1/entities/resolve",
+    inputSchema: {
+      type: "object",
+      properties: {
+        id: { type: "string" },
+        q: { type: "string" },
+      },
+      oneOf: [{ required: ["id"] }, { required: ["q"] }],
+    },
+    outputSchema: {
+      type: "object",
+      properties: {
+        matches: { type: "array" },
+      },
+    },
+    examples: [
+      {
+        input: {
+          q: "spotify",
+        },
+        output: {
+          matches: [
+            {
+              id: "entity_1",
+              matchedEntityId: "entity_4",
+              canonicalEntityId: "entity_1",
+              isCanonical: true,
+            },
+          ],
+        },
+      },
+    ],
+    expectedErrors: [
+      {
+        code: "invalid_entity_query",
+        description: "The query must include either id or q.",
+      },
+    ],
+  },
+  {
+    name: "merge_entity",
+    description: "Merge an alias entity into a canonical root and materialize a same_as relation.",
+    method: "POST",
+    path: "/api/v1/entities/:id/merge",
+    inputSchema: {
+      type: "object",
+      required: ["canonicalEntityId"],
+      properties: {
+        canonicalEntityId: { type: "string" },
+        reason: { type: "string" },
+        confidence: { type: "number", minimum: 0, maximum: 1, default: 1 },
+      },
+    },
+    outputSchema: {
+      type: "object",
+      properties: {
+        aliasEntityId: { type: "string" },
+        canonicalEntityId: { type: "string" },
+        reason: { type: "string" },
+        confidence: { type: "number" },
+        alreadyMerged: { type: "boolean" },
+        sameAsRelation: { type: ["object", "null"] },
+      },
+    },
+    examples: [
+      {
+        input: {
+          canonicalEntityId: "entity_1",
+          reason: "manual cleanup",
+        },
+        output: {
+          aliasEntityId: "entity_4",
+          canonicalEntityId: "entity_1",
+          reason: "manual cleanup",
+          confidence: 1,
+          alreadyMerged: false,
+          sameAsRelation: {},
+        },
+      },
+    ],
+    expectedErrors: [
+      {
+        code: "entity_not_found",
+        description: "Both entities must exist before they can be merged.",
       },
     ],
   },
@@ -242,6 +334,10 @@ const tools: ToolManifest[] = [
       required: ["q"],
       properties: {
         q: { type: "string" },
+        source: { type: "string" },
+        kind: { type: "string" },
+        from: { type: "string", format: "date-time" },
+        to: { type: "string", format: "date-time" },
       },
     },
     outputSchema: {

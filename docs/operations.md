@@ -31,6 +31,7 @@ Current state:
 - `raw_events` and `classified_events` as the active durable record
 - entities and event links are persisted during ingestion
 - relations and event relations are persisted during ingestion
+- entity merges and same_as provenance are persisted when manual canonicalization is performed
 - schema managed by explicit SQL migrations
 - migrations run inside real database transactions
 - split knowledge model documented for future rollout
@@ -42,7 +43,9 @@ Current state:
 - a lightweight metrics endpoint is available
 - knowledge query endpoints are available for entities and relations
 - entity resolve endpoint is available for resolving ids or textual hints
+- entity merge endpoint is available for canonicalization
 - textual search endpoint is available for assistant retrieval
+- search accepts basic relevance filters for source, kind, and time window
 - entity graph endpoint is available for bounded neighborhood retrieval
 - agent tool manifest endpoint is available for MCP-like discovery
 - agent tool registry endpoint is available with schemas, examples, and errors
@@ -89,3 +92,4 @@ The mobile client should:
 - keep the public agent surface minimal until the MVP is frozen
 - keep the MVP scope aligned with [`docs/mvp.md`](mvp.md)
 - keep the backlog aligned with [`docs/backlog.md`](backlog.md)
+- prefer canonical entity roots when performing graph or search driven workflows

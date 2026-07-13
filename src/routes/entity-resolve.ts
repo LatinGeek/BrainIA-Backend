@@ -1,13 +1,16 @@
 import type { FastifyPluginAsync } from "fastify";
 import { z } from "zod";
+import { resolveEntityMatches } from "../storage/entity-repository.js";
 import { pool } from "../storage/postgres.js";
 
-const resolveQuerySchema = z.object({
-  id: z.string().optional(),
-  q: z.string().optional(),
-}).refine((value) => value.id || value.q, {
-  message: "Provide either id or q",
-});
+const resolveQuerySchema = z
+  .object({
+    id: z.string().optional(),
+    q: z.string().optional(),
+  })
+  .refine((value) => value.id || value.q, {
+    message: "Provide either id or q",
+  });
 
 export const registerEntityResolveRoutes: FastifyPluginAsync = async (app) => {
   app.get("/entities/resolve", async (request, reply) => {
@@ -19,45 +22,13 @@ export const registerEntityResolveRoutes: FastifyPluginAsync = async (app) => {
       });
     }
 
-    const { id, q } = parsed.data;
-    const result = id
-      ? await pool.query(
-          `
-            select
-              id,
-              type,
-              value,
-              normalized_value as "normalizedValue",
-              metadata,
-              created_at as "createdAt"
-            from entities
-            where id = $1
-            limit 10
-          `,
-          [id],
-        )
-      : await pool.query(
-          `
-            select
-              id,
-              type,
-              value,
-              normalized_value as "normalizedValue",
-              metadata,
-              created_at as "createdAt"
-            from entities
-            where lower(id) like $1
-               or lower(type) like $1
-               or lower(value) like $1
-               or lower(normalized_value) like $1
-            order by created_at desc
-            limit 10
-          `,
-          [`%${q!.trim().toLowerCase()}%`],
-        );
+    const matches = await resolveEntityMatches(pool, {
+      id: parsed.data.id,
+      q: parsed.data.q,
+    });
 
     return {
-      matches: result.rows,
+      matches,
     };
   });
 };

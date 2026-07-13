@@ -4,6 +4,10 @@ import { searchKnowledge } from "../storage/search-repository.js";
 
 const searchQuerySchema = z.object({
   q: z.string().min(1),
+  source: z.string().min(1).optional(),
+  kind: z.string().min(1).optional(),
+  from: z.string().datetime().optional(),
+  to: z.string().datetime().optional(),
 });
 
 export const registerSearchRoutes: FastifyPluginAsync = async (app) => {
@@ -16,6 +20,11 @@ export const registerSearchRoutes: FastifyPluginAsync = async (app) => {
       });
     }
 
-    return searchKnowledge(parsed.data.q);
+    return searchKnowledge(parsed.data.q, {
+      source: parsed.data.source,
+      kind: parsed.data.kind,
+      from: parsed.data.from,
+      to: parsed.data.to,
+    });
   });
 };

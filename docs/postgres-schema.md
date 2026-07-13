@@ -87,6 +87,18 @@ Links events to entities they mention or imply.
 - `confidence numeric(5,4) not null`
 - `created_at timestamptz not null default now()`
 
+### `entity_merges`
+
+Tracks alias-to-canonical merges for knowledge nodes.
+
+Current columns:
+
+- `alias_entity_id text primary key`
+- `canonical_entity_id text not null`
+- `reason text not null`
+- `confidence numeric(5,4) not null`
+- `created_at timestamptz not null default now()`
+
 ### `relations`
 
 - `id text primary key`
@@ -149,6 +161,7 @@ The active ingestion path writes to:
 - `event_entities`
 - `relations`
 - `event_relations`
+- `entity_merges`
 
 The API reads back a joined view of these tables.
 
@@ -174,6 +187,20 @@ This phase lets the runtime:
 - upsert canonical entities
 - link them to events
 - avoid duplicating entity values across events
+
+## Canonicalization phase
+
+The current P1 knowledge-quality pass adds:
+
+- `entity_merges`
+- `same_as` provenance relations
+- canonical entity resolution for ingest, graph traversal, and search
+
+This phase lets the runtime:
+
+- collapse aliases into a single knowledge root
+- keep merge provenance auditable
+- preserve traversal visibility for alias relationships
 
 ## Idempotency phase
 

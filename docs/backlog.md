@@ -27,6 +27,18 @@ The first pass of P0 is implemented in the repo:
 
 The remaining work below is therefore follow-up hardening and expansion.
 
+## P1 progress shipped
+
+The following P1 pieces are now implemented:
+
+- entity canonicalization returns canonical roots deterministically
+- manual entity merge is available and materializes `same_as`
+- graph traversal resolves through canonical roots
+- entity resolution is merge-aware
+- search deduplicates canonical entity aliases and supports filters by source, kind, and time window
+
+The remaining P1 items below are the next follow-up targets.
+
 ## P1. Knowledge quality
 
 These items improve the usefulness of the knowledge graph.

@@ -21,11 +21,14 @@ export function createInspectKnowledge(deps: InspectDeps) {
     maxRelations: number;
   }) {
     const searchResult = input.q ? await deps.searchKnowledge(input.q) : { events: [], entities: [], relations: [] };
+    const allEntities = await deps.listEntities();
     const entityMatches = input.id
-      ? await deps.listEntities().then((entities) => entities.filter((entity) => entity.id === input.id))
+      ? allEntities.filter((entity) => entity.id === input.id || entity.canonicalEntityId === input.id)
       : searchResult.entities;
 
-    const rootEntity = entityMatches[0] ?? null;
+    const selectedMatch = entityMatches[0] ?? null;
+    const rootEntityId = selectedMatch ? selectedMatch.canonicalEntityId ?? selectedMatch.id : null;
+    const rootEntity = rootEntityId ? allEntities.find((entity) => entity.id === rootEntityId) ?? selectedMatch : null;
     const graph = rootEntity ? await deps.getEntityGraph(rootEntity.id, input.depth, input.maxNodes, input.maxRelations) : null;
 
     const summary = await deps.generateNaturalLanguageSummary({
@@ -36,6 +39,7 @@ export function createInspectKnowledge(deps: InspectDeps) {
       userPrompt: JSON.stringify(
         {
           query: input.q ?? input.id ?? null,
+          resolvedFromEntityId: selectedMatch ? selectedMatch.id : null,
           rootEntity,
           graph,
           searchResult,
@@ -47,6 +51,7 @@ export function createInspectKnowledge(deps: InspectDeps) {
 
     return {
       query: input.q ?? input.id ?? null,
+      resolvedFromEntityId: selectedMatch ? selectedMatch.id : null,
       rootEntity,
       graph,
       searchResult,

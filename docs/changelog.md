@@ -39,3 +39,6 @@
 - added optional API-key or client-scoped auth
 - added contract versioning and idempotent ingest dedupe
 - added single-event reprocessing and lightweight metrics
+- added merge-aware entity canonicalization with same_as provenance
+- added canonical graph resolution and merge-aware entity lookup
+- added relevance filters to the search endpoint
