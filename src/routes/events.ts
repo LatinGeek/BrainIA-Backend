@@ -1,7 +1,7 @@
 import type { FastifyPluginAsync } from "fastify";
 import { resolveAuthContext, type AuthConfig } from "../auth.js";
 import { eventSchema } from "../domain/event.js";
-import { appendEvent, reprocessEvent } from "../storage/event-store.js";
+import { appendEvent, listEvents, reprocessEvent } from "../storage/event-store.js";
 
 type EventRoutesOptions = {
   authConfig: AuthConfig;
@@ -9,9 +9,18 @@ type EventRoutesOptions = {
 
 export const registerEventRoutes = (options: EventRoutesOptions): FastifyPluginAsync => {
   return async (app) => {
+    app.get("/events", async () => listEvents());
+
     app.post("/events", async (request, reply) => {
       const parsed = eventSchema.safeParse(request.body);
       if (!parsed.success) {
+        request.log.warn(
+          {
+            issues: parsed.error.flatten(),
+            path: "/events",
+          },
+          "invalid event payload",
+        );
         return reply.status(400).send({
           error: "invalid_event",
           issues: parsed.error.flatten(),
@@ -49,6 +58,7 @@ export const registerEventRoutes = (options: EventRoutesOptions): FastifyPluginA
       const params = request.params as { id?: string };
       const eventId = params.id?.trim();
       if (!eventId) {
+        request.log.warn({ path: "/events/:id/reprocess" }, "invalid event id");
         return reply.status(400).send({
           error: "invalid_event_id",
           message: "The event id is required",

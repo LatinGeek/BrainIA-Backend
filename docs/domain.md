@@ -159,6 +159,43 @@ The system should favor canonical entities for:
 - graph traversal
 - agent resolution
 
+## Heuristic entity quality
+
+The first pass now tries to keep entities useful instead of noisy.
+
+Current quality rules include:
+
+- duplicate entity drafts are deduplicated per event
+- generic merchant-like prefixes are stripped from merchant candidates
+- obviously noisy merchant or notification candidates are dropped
+- notification events can surface the event source as an entity so `received_from` relations stay materializable
+
+## Model-assisted classification
+
+The heuristic classifier remains the default.
+
+When an event is ambiguous and DeepSeek is configured, the backend may upgrade the classification with a structured model-assisted suggestion.
+
+That fallback should:
+
+- keep the raw event intact
+- only override the heuristic when the model is more confident
+- preserve the original classification trail through the classification version
+- store audit metadata about the prompt, response, and application decision
+
+## Capture adapters
+
+The API now includes thin capture adapters for common mobile sources.
+
+They normalize input into the generic event contract:
+
+- notes map to `note`
+- email-like payloads map to `email`
+- notifications map to `notification`
+- wallet events map to `expense`
+
+Batch capture is also supported for offline queue flushes. The capture routes are intentionally thin wrappers around the same event ingestion model.
+
 ## First relation pass
 
 The first heuristic relation extractor currently targets:
@@ -223,6 +260,48 @@ Graph responses should also provide:
 
 - `rootDistance` on nodes
 - `direction` on relations
+- `importanceScore` on relations
+- readable path summaries for explanation
 - lightweight `paths` for reconstruction
 
 This allows the assistant to reason over a bounded subgraph instead of only retrieving first-degree links.
+
+## Insight audit history
+
+Insight generation is itself a durable knowledge artifact.
+
+Each generated insight is stored with:
+
+- the originating tool name
+- the normalized query used to produce it
+- the full request snapshot
+- the full response snapshot
+- the summary returned to the caller
+- the model name used, when available
+
+That audit trail makes it easier to:
+
+- replay past conclusions
+- compare outputs after model or heuristic changes
+- inspect what an agent actually saw at generation time
+- keep a lightweight history without building a separate analytics system too early
+
+## Digests
+
+Digests summarize a time window of recent activity instead of a single entity or query.
+
+The digest model includes:
+
+- a normalized time window
+- optional source and kind filters
+- event counts by source, kind, and inferred kind
+- unique entity and relation counts
+- recent events from the selected window
+- related insight runs from the same window
+- a generated summary and audit snapshot
+
+Digests are meant to help agents answer operational questions like:
+
+- what changed this week
+- which source is producing the most events
+- what recent insights are related to the current activity

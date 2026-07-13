@@ -1,5 +1,53 @@
 import { pool } from "./postgres.js";
 
+export type SearchMatchHint = {
+  matchedFields: string[];
+  relevanceScore: number;
+  explanation: string;
+};
+
+function normalizeSearchText(value: unknown) {
+  if (typeof value !== "string") {
+    return "";
+  }
+
+  return value.trim().toLowerCase();
+}
+
+export function buildSearchMatchHint(
+  query: string,
+  fields: Record<string, unknown>,
+  fieldWeights: Record<string, number>,
+): SearchMatchHint {
+  const term = query.trim().toLowerCase();
+  const matchedFields: string[] = [];
+  let relevanceScore = 0;
+
+  for (const [fieldName, value] of Object.entries(fields)) {
+    const normalizedValue = normalizeSearchText(value);
+    if (!normalizedValue) continue;
+
+    if (normalizedValue === term) {
+      matchedFields.push(fieldName);
+      relevanceScore += (fieldWeights[fieldName] ?? 1) + 2;
+      continue;
+    }
+
+    if (normalizedValue.includes(term)) {
+      matchedFields.push(fieldName);
+      relevanceScore += fieldWeights[fieldName] ?? 1;
+    }
+  }
+
+  return {
+    matchedFields,
+    relevanceScore,
+    explanation: matchedFields.length
+      ? `Matched fields: ${matchedFields.join(", ")}`
+      : "Matched through keyword search",
+  };
+}
+
 export function buildEventSearchQuery(
   query: string,
   filters: {
@@ -90,7 +138,7 @@ export async function searchKnowledge(
           value,
           normalized_value as "normalizedValue",
           metadata,
-          created_at as "createdAt",
+          e.created_at as "createdAt",
           coalesce(em.canonical_entity_id, e.id) as "canonicalEntityId",
           case when em.alias_entity_id is null then true else false end as "isCanonical",
           coalesce((
@@ -132,17 +180,73 @@ export async function searchKnowledge(
     ),
   ]);
 
-  const entityDeduped = new Map<string, (typeof entities.rows)[number]>();
+  const eventResults = events.rows
+    .map((row: (typeof events.rows)[number]) => ({
+      ...row,
+      matchHint: buildSearchMatchHint(query, row, {
+        title: 5,
+        body: 4,
+        source: 2,
+        kind: 2,
+      }),
+    }))
+    .sort((left, right) => {
+      if (right.matchHint.relevanceScore !== left.matchHint.relevanceScore) {
+        return right.matchHint.relevanceScore - left.matchHint.relevanceScore;
+      }
+
+      return String(right.rawEventCreatedAt).localeCompare(String(left.rawEventCreatedAt));
+    });
+
+  const entityDeduped = new Map<string, (typeof entities.rows)[number] & { matchHint: SearchMatchHint }>();
   for (const row of entities.rows) {
     const key = row.canonicalEntityId ?? row.id;
     if (!entityDeduped.has(key)) {
-      entityDeduped.set(key, row);
+      entityDeduped.set(key, {
+        ...row,
+        matchHint: buildSearchMatchHint(query, row, {
+          value: 5,
+          normalizedValue: 4,
+          type: 1,
+        }),
+      });
     }
   }
 
+  const entityResults = Array.from(entityDeduped.values()).sort((left, right) => {
+    if (right.matchHint.relevanceScore !== left.matchHint.relevanceScore) {
+      return right.matchHint.relevanceScore - left.matchHint.relevanceScore;
+    }
+
+    return String(right.createdAt).localeCompare(String(left.createdAt));
+  });
+
+  const relationResults = relations.rows
+    .map((row: (typeof relations.rows)[number]) => ({
+      ...row,
+      matchHint: buildSearchMatchHint(query, row, {
+        relationType: 3,
+        label: 4,
+        description: 5,
+      }),
+    }))
+    .sort((left, right) => {
+      if (right.matchHint.relevanceScore !== left.matchHint.relevanceScore) {
+        return right.matchHint.relevanceScore - left.matchHint.relevanceScore;
+      }
+
+      return String(right.createdAt).localeCompare(String(left.createdAt));
+    });
+
   return {
-    events: events.rows,
-    entities: Array.from(entityDeduped.values()),
-    relations: relations.rows,
+    query,
+    searchHints: {
+      eventFields: ["title", "body", "source", "kind"],
+      entityFields: ["value", "normalizedValue", "type"],
+      relationFields: ["relationType", "label", "description"],
+    },
+    events: eventResults,
+    entities: entityResults,
+    relations: relationResults,
   };
 }

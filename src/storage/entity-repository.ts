@@ -2,6 +2,7 @@ import { pool } from "./postgres.js";
 import type { EntityDraft } from "../domain/entities.js";
 import type { RelationDraft } from "../domain/relations.js";
 import { upsertRelation } from "./relation-repository.js";
+import { invalidateGraphTraversalCache } from "./graph-cache.js";
 
 type Queryable = Pick<typeof pool, "query">;
 
@@ -272,6 +273,8 @@ export async function mergeEntities(
     aliasRootId,
     canonicalRootId,
   );
+
+  invalidateGraphTraversalCache();
 
   return {
     aliasEntityId: aliasRootId,

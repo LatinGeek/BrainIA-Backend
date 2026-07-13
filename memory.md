@@ -20,7 +20,7 @@ Update this file when:
 - backend-first project
 - stack base: Node.js + Fastify + TypeScript + Zod
 - API versioned under `/api/v1`
-- no UI yet
+- optional mobile and web shells exist
 - documentation centralized under `docs/`
 - `docs/agent.md` is the persistent context document
 - `memory.md` is the short-term working memory
@@ -40,17 +40,35 @@ Update this file when:
 - textual search is active for assistant retrieval with basic filters
 - graph-by-entity retrieval is active with depth and limits
 - agent tool manifest is active
-- MCP-like registry endpoint is active
+- MCP-like registry and JSON-RPC endpoint are active
 - merge-aware entity resolve and merge routes are active
 - entity resolution is separate from graph expansion
-- graph responses include root distance, direction, and path hints
+- graph responses include root distance, direction, importance scores, and path hints
 - graph roots resolve to canonical entities when aliases are used
-- inspect endpoint is active for resolve + expand + explain
+- inspect endpoint is active for resolve + expand + explain with structured resolution and graph summaries
+- insight endpoint is active for compact conclusions and supporting evidence
+- insight generations are persisted as audit snapshots in `insight_runs`
+- digest endpoint is active for time-window summaries and related insight context
+- digest generations are persisted as audit snapshots in `digest_runs`
+- a concrete future feature list exists in `docs/future-features.md`
+- an end-to-end test covers capture, search, graph, inspect, insight, digest, and agent surfaces
 - DeepSeek can generate a natural-language summary via `DEEPSEEK_API_KEY`
-- the public agent tool catalog now includes resolve, merge, reprocess, and metrics helpers
+- the public agent tool catalog now includes resolve, merge, insight, reprocess, and metrics helpers
 - a minimal test suite is active
 - the MVP scope is documented in `docs/mvp.md`
-- the post-MVP backlog is documented in `docs/backlog.md`
+- the post-MVP backlog is documented in `docs/backlog.md` and now prioritizes observability, graph projections, retrieval quality, relation/entity quality, and the agent surface before mobile UI work
+- request IDs are echoed on responses and slow requests are logged
+- graph traversal caching is active for repeated bounded expansions
+- search results include local relevance hints and explanation fields
+- entity drafts are deduplicated and noisy merchant candidates are filtered
+- notification events can surface a source entity for `received_from` relations
+- ambiguous classifications can be upgraded by DeepSeek when configured
+- model-assisted classification metadata is stored for audit and replay
+- quick capture routes are active for notes, email, notifications, wallet events, and offline batches
+- a thin mobile shell scaffold exists in `mobile/`
+- a thin web dashboard scaffold exists for exploration and debugging
+- operational runbooks now live in `docs/runbooks.md`
+- the post-MVP backlog is closed and residual ideas live in `docs/future-roadmap.md`
 
 ## Active decisions
 
@@ -68,7 +86,5 @@ Update this file when:
 
 ## Next immediate steps
 
-1. improve relation quality and deeper graph traversal
-2. refine the reprocess pipeline into a broader rebuild flow
-3. formalize the MCP server surface if needed
-4. expand observability and durability notes
+1. refine relation/entity quality
+2. consider scheduling, retention, or graph projection work on top of the current retrieval layer

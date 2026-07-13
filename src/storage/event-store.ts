@@ -3,6 +3,8 @@ import type { EventInput } from "../domain/event.js";
 import { buildEntityDrafts } from "../domain/entities.js";
 import { buildRelationDrafts } from "../domain/relations.js";
 import { pool, withTransaction } from "./postgres.js";
+import { maybeEnhanceClassification } from "./classification-assistant.js";
+import { invalidateGraphTraversalCache } from "./graph-cache.js";
 import {
   countKnowledgeMetrics,
   deleteDerivedDataForEvent,
@@ -29,8 +31,11 @@ export function buildEventDedupeKey(event: EventInput, clientId: string | null |
 async function persistClassifiedEvent(
   event: EventInput,
   clientId: string | null,
-  classified = classifyEvent(event),
 ) {
+  const classified = await maybeEnhanceClassification({
+    event,
+    base: classifyEvent(event),
+  });
   const dedupeKey = buildEventDedupeKey(event, clientId);
 
   return withTransaction(async (db) => {
@@ -55,6 +60,7 @@ async function persistClassifiedEvent(
     const relationDrafts = buildRelationDrafts({
       title: event.title,
       body: event.body,
+      source: event.source,
       inferredKind: classified.inferredKind,
       entities: entityDrafts,
     });
@@ -71,6 +77,7 @@ async function persistClassifiedEvent(
       throw new Error("Stored event could not be loaded after ingestion");
     }
 
+    invalidateGraphTraversalCache();
     return stored;
   });
 }
@@ -92,7 +99,10 @@ export async function reprocessEvent(eventId: string) {
 
     await deleteDerivedDataForEvent(db, eventId);
 
-    const classified = classifyEvent(rawEvent);
+    const classified = await maybeEnhanceClassification({
+      event: rawEvent,
+      base: classifyEvent(rawEvent),
+    });
     await insertClassifiedEvent(db, classified, rawEvent.id, rawEvent.clientId);
 
     const entityDrafts = buildEntityDrafts(classified);
@@ -104,6 +114,7 @@ export async function reprocessEvent(eventId: string) {
     const relationDrafts = buildRelationDrafts({
       title: rawEvent.title,
       body: rawEvent.body,
+      source: rawEvent.source,
       inferredKind: classified.inferredKind,
       entities: entityDrafts,
     });
@@ -115,7 +126,9 @@ export async function reprocessEvent(eventId: string) {
       await linkEventRelation(db, rawEvent.id, relation.id, draft.confidence);
     }
 
-    return loadStoredEventByLookup(db, rawEvent.id, rawEvent.dedupeKey);
+    const stored = await loadStoredEventByLookup(db, rawEvent.id, rawEvent.dedupeKey);
+    invalidateGraphTraversalCache();
+    return stored;
   });
 }
 

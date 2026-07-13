@@ -71,15 +71,33 @@ The future target UI is mobile.
 - bounded graph expansion is active
 - entity resolution is separated from graph expansion
 - the agent tool catalog stays compact and self-describing
+- formal MCP discovery is available over GET and JSON-RPC POST
+- inspect returns structured resolution and graph summaries
+- insight generation is available as a focused agent endpoint
+- insight generations are persisted as audit snapshots and can be replayed by id
+- digest generation is available as a time-window summary endpoint
+- digest generations are persisted as audit snapshots and can be replayed by id
 - DeepSeek can generate a short natural-language summary when configured
+- the project keeps a concrete future feature list in `docs/future-features.md`
+- an end-to-end test now covers capture, search, graph, inspect, insight, digest, and agent surfaces
+- the post-MVP backlog now prioritizes observability, graph projections, retrieval quality, relation/entity quality, and the agent surface before mobile UI work
+- request IDs are echoed on responses and slow requests are logged for correlation
+- graph traversal caching is active for repeated bounded expansions
+- search results include local relevance hints and explanation fields
+- entity drafts are deduplicated and noisy merchant candidates are filtered
+- notification events can surface a source entity for `received_from` relations
+- ambiguous classifications can be upgraded by DeepSeek when configured
+- model-assisted classification metadata is stored for audit and replay
+- quick capture routes are active for notes, email, notifications, wallet events, and offline batches
+- a thin mobile shell scaffold exists in `mobile/`
+- a thin web dashboard scaffold exists for exploration and debugging
+- runbooks for import, replay, recovery, and slow requests live in `docs/runbooks.md`
+- the post-MVP backlog has been closed and residual ideas live in `docs/future-roadmap.md`
 
 ## Recommended next steps
 
-1. improve relation quality and deeper graph traversal
-2. refine the reprocess pipeline into a broader rebuild flow
-3. formalize the MCP server surface if needed
-4. expand observability and durability notes
-5. keep the mobile client thin and API-driven
+1. refine relation/entity quality
+2. expand retrieval quality or add richer digesting and scheduling on top of the audit trail
 
 ## What must stay updated
 

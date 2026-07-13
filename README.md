@@ -1,53 +1,55 @@
-# BrainIA Backend
+# BrainIA
 
-Backend puro para recibir eventos desde móvil, clasificarlos y prepararlos para una base de conocimiento.
+BrainIA is a backend-first system for capturing generic events from mobile or automation sources, classifying them, and turning them into a queryable knowledge base.
 
-## Objetivo
+## Current shape
 
-Separar el origen del evento del procesamiento:
+- Fastify + TypeScript backend
+- Postgres-backed event and knowledge storage
+- generic event ingestion under `/api/v1/events`
+- source-specific capture adapters under `/api/v1/capture/*`
+- graph, search, inspect, and insight endpoints for agent retrieval
+- insight audit history for replaying generated conclusions
+- a thin mobile shell scaffold in `mobile/`
+- a thin web dashboard scaffold at `/dashboard`
+- persistent project context under `docs/`
 
-- el móvil solo envía eventos
-- el backend normaliza, clasifica y persiste
-- una capa posterior de IA puede construir entidades, relaciones, resúmenes e insights
+## Design
 
-## Stack
+- mobile clients stay thin
+- the backend owns classification, enrichment, persistence, and retrieval
+- knowledge is modeled with entities, relations, canonical roots, and traversal hints
+- agent-facing routes stay compact and self-describing
 
-- Node.js
-- Fastify
-- TypeScript
-- Zod
-
-## Endpoints
-
-- `GET /health`
-- `POST /api/v1/events`
-- `POST /api/v1/events/:id/reprocess`
-- `GET /api/v1/events`
-- `GET /api/v1/metrics`
-
-## Por qué Fastify
-
-- es liviano
-- tiene buen rendimiento
-- encaja bien para APIs puras
-- no arrastra decisiones de UI
-
-## Documentación
+## Docs
 
 - [`docs/agent.md`](docs/agent.md)
 - [`docs/architecture.md`](docs/architecture.md)
 - [`docs/api.md`](docs/api.md)
 - [`docs/domain.md`](docs/domain.md)
+- [`docs/insights-digests.md`](docs/insights-digests.md)
 - [`docs/operations.md`](docs/operations.md)
 - [`docs/changelog.md`](docs/changelog.md)
 - [`docs/mvp.md`](docs/mvp.md)
 - [`docs/backlog.md`](docs/backlog.md)
+- [`docs/future-features.md`](docs/future-features.md)
 
-## Siguiente paso
+## Mobile shell
 
-La evolución natural ahora es:
+The `mobile/` package is a thin native client scaffold.
 
-1. mejorar la extracción heurística de entidades y relaciones
-2. ampliar el reprocess para rebuilds más amplios
-3. formalizar el MCP server si hace falta
-4. expandir observabilidad, backup y retención
+It can:
+
+- read backend metrics
+- run inspect queries
+- send quick capture events
+
+Set `EXPO_PUBLIC_BRAINIA_API_BASE_URL` to point it at the backend.
+
+## Backend commands
+
+- `npm install`
+- `npm run dev`
+- `npm run build`
+- `npm run test`
+- `npm run migrate`

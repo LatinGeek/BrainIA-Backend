@@ -13,6 +13,7 @@
 - mobile clients should be able to retry safely
 - optional API-key or client-scoped auth can protect the API surface
 - canonical entities should be preferred for graph and search responses
+- every response echoes `x-request-id` for correlation when the client supplies one or the server generates one
 
 When auth is enabled, clients should send:
 
@@ -130,6 +131,44 @@ Validation failures return HTTP `400` with a payload shaped like:
   "issues": {}
 }
 ```
+
+## Capture workflows
+
+The capture routes are thin adapters over the same event contract.
+
+They are intended for mobile clients or source-specific integrations that want a smaller payload surface than the generic `/api/v1/events` route.
+
+### `POST /api/v1/capture/note`
+
+Captures a note-like payload and maps it to a `note` event.
+
+### `POST /api/v1/capture/email`
+
+Captures email-like metadata and maps it to an `email` event.
+
+### `POST /api/v1/capture/notification`
+
+Captures a notification payload and maps it to a `notification` event.
+
+### `POST /api/v1/capture/wallet`
+
+Captures a wallet or expense payload and maps it to an `expense` event.
+
+### `POST /api/v1/capture/batch`
+
+Flushes an offline batch of mixed capture items.
+
+Batch response shape:
+
+```json
+{
+  "batchId": "batch_1",
+  "count": 2,
+  "items": []
+}
+```
+
+These routes preserve raw payloads while still producing the generic ingestion contract expected by the backend.
 
 ## List events
 
@@ -257,8 +296,30 @@ Response shape:
     "truncated": false
   },
   "nodes": [],
-  "relations": [],
-  "paths": []
+  "relations": [
+    {
+      "id": "relation_1",
+      "sourceEntityId": "entity_2",
+      "targetEntityId": "entity_1",
+      "relationType": "spent_at",
+      "label": "se gastó en",
+      "description": "$12.40 se gastó en Spotify",
+      "confidence": 0.8,
+      "importanceScore": 0.4,
+      "explanation": "$12.40 se gastó en Spotify",
+      "depth": 1,
+      "direction": "incoming"
+    }
+  ],
+  "paths": [
+    {
+      "nodeIds": ["entity_1", "entity_2"],
+      "relationIds": ["relation_1"],
+      "summary": "$12.40 se gastó en Spotify",
+      "depth": 1,
+      "direction": "incoming"
+    }
+  ]
 }
 ```
 
@@ -274,6 +335,8 @@ Graph nodes include `rootDistance` and graph relations include `direction` so th
 If the requested id is an alias, the response resolves to the canonical root and exposes `resolvedFromEntityId`.
 
 The response also includes `paths` as a lightweight reconstruction hint.
+
+Graph relations also include an `importanceScore` and a human-readable `explanation` so the agent can rank and narrate edges more easily.
 
 ## Agent tools
 
@@ -297,6 +360,12 @@ It is useful for:
 The public catalog is intentionally compact:
 
 - `inspect_knowledge`
+- `generate_insight`
+- `list_insight_runs`
+- `get_insight_run`
+- `generate_digest`
+- `list_digest_runs`
+- `get_digest_run`
 - `resolve_entity`
 - `merge_entity`
 - `ingest_event`
@@ -320,6 +389,38 @@ Each tool includes:
 
 This lets agents and adapters understand not just the route, but how to use it.
 
+### `POST /api/v1/agent/mcp`
+
+Implements a minimal JSON-RPC 2.0 MCP transport for agent discovery.
+
+Supported methods:
+
+- `initialize`
+- `tools/list`
+
+Initialize response shape:
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "protocolVersion": "2024-11-05",
+    "serverInfo": {
+      "name": "BrainIA",
+      "version": "0.1.0"
+    },
+    "capabilities": {
+      "tools": {
+        "listChanged": false
+      }
+    }
+  }
+}
+```
+
+`tools/list` returns the same manifest used by the GET registry endpoint.
+
 ### `GET /api/v1/agent/inspect?id=...`
 
 or
@@ -342,9 +443,17 @@ Response shape:
 ```json
 {
   "query": "spotify",
-  "resolvedFromEntityId": "entity_4",
+  "resolution": {
+    "requestedEntityId": null,
+    "requestedQuery": "spotify",
+    "matchedEntityId": "entity_1",
+    "canonicalEntityId": "entity_1",
+    "mode": "search_match",
+    "explanation": "The query matched a canonical entity through textual retrieval."
+  },
   "rootEntity": {},
   "graph": {},
+  "graphSummary": {},
   "searchResult": {},
   "summary": "Natural language explanation",
   "model": "deepseek-v4-flash",
@@ -354,6 +463,165 @@ Response shape:
 
 This is the most agent-friendly single-call retrieval path.
 
+The response includes a structured `resolution` object and a lightweight `graphSummary` so an agent can understand both the selection and the expansion at a glance.
+
+## Insights
+
+### `GET /api/v1/insights?id=...`
+
+or
+
+### `GET /api/v1/insights?q=...`
+
+Builds a structured insight from an entity or textual hint.
+
+The endpoint wraps resolution, graph expansion, and summary generation into a more opinionated response for agent consumption.
+
+Response shape:
+
+```json
+{
+  "query": "spotify",
+  "resolution": {},
+  "summary": "Spotify is a merchant entity linked to expense activity.",
+  "takeaways": [
+    "Spotify is a merchant entity linked to expense activity.",
+    "The graph expands to 3 nodes and 2 relations."
+  ],
+  "graphSummary": {},
+  "supportingEntities": [],
+  "supportingRelations": [],
+  "model": "deepseek-v4-flash",
+  "summaryAvailable": true,
+  "audit": {
+    "id": "insight_1",
+    "createdAt": "2026-07-13T12:05:00.000Z",
+    "model": "deepseek-v4-flash",
+    "toolName": "generate_insight"
+  }
+}
+```
+
+This is the preferred endpoint when the agent wants a compact conclusion instead of the full structured inspect payload.
+
+Each insight generation is also persisted as an audit snapshot so agents can replay or inspect the exact request and response later.
+
+### `GET /api/v1/insights/history?limit=25`
+
+Lists stored insight generations in reverse chronological order.
+
+Response shape:
+
+```json
+{
+  "limit": 25,
+  "count": 1,
+  "runs": [
+    {
+      "id": "insight_1",
+      "toolName": "generate_insight",
+      "query": "spotify",
+      "request": {},
+      "response": {},
+      "summary": "Spotify is a merchant entity linked to expense activity.",
+      "model": "deepseek-v4-flash",
+      "createdAt": "2026-07-13T12:05:00.000Z"
+    }
+  ]
+}
+```
+
+### `GET /api/v1/insights/history/:id`
+
+Returns one stored insight generation by id, including the original request and full response snapshot.
+
+If the run id does not exist, the API returns HTTP `404` with:
+
+```json
+{
+  "error": "insight_run_not_found",
+  "message": "No stored insight run matches the provided id"
+}
+```
+
+## Digests
+
+### `GET /api/v1/digests`
+
+Generates a time-window digest over recent events, aggregate metrics, and related insight history.
+
+Query params:
+
+- `from`
+- `to`
+- `days`
+- `source`
+- `kind`
+- `eventLimit`
+
+If `from` is omitted, the backend uses `days` to derive a default window ending at `to` or `now`.
+
+Response shape:
+
+```json
+{
+  "scope": "window 2026-07-06T00:00:00.000Z -> 2026-07-13T00:00:00.000Z, source=tasker",
+  "window": {
+    "from": "2026-07-06T00:00:00.000Z",
+    "to": "2026-07-13T00:00:00.000Z"
+  },
+  "filters": {
+    "source": "tasker",
+    "kind": null
+  },
+  "metrics": {
+    "totalEvents": 12,
+    "classifiedEvents": 12,
+    "uniqueEntities": 8,
+    "uniqueRelations": 4,
+    "eventsBySource": [],
+    "eventsByKind": [],
+    "eventsByInferredKind": []
+  },
+  "recentEvents": [],
+  "relatedInsights": [],
+  "highlights": [],
+  "summary": "Tasker produced 12 events in the requested window.",
+  "model": "deepseek-v4-flash",
+  "summaryAvailable": true,
+  "audit": {
+    "id": "digest_1",
+    "createdAt": "2026-07-13T12:20:00.000Z",
+    "model": "deepseek-v4-flash",
+    "toolName": "generate_digest"
+  }
+}
+```
+
+Digests are broader than insights:
+
+- insights focus on a single entity or query
+- digests focus on a time window and event trends
+
+The digest response always includes a human-readable summary; DeepSeek enriches it when configured, otherwise the backend falls back to a deterministic summary.
+
+### `GET /api/v1/digests/history?limit=25`
+
+Lists stored digest generations in reverse chronological order.
+
+### `GET /api/v1/digests/history/:id`
+
+Returns one stored digest generation by id, including the original request and response snapshot.
+
+If the digest id does not exist, the API returns HTTP `404` with:
+
+```json
+{
+  "error": "digest_run_not_found",
+  "message": "No stored digest run matches the provided id"
+}
+```
+
 ## Metrics
 
 ### `GET /api/v1/metrics`
@@ -361,6 +629,17 @@ This is the most agent-friendly single-call retrieval path.
 Returns lightweight counts for raw events, classified events, entities, relations, and event links.
 
 This endpoint is intended for basic observability and agent-side sanity checks.
+
+## Web dashboard
+
+### `GET /dashboard`
+
+Returns the optional operations dashboard HTML shell.
+
+Supporting assets:
+
+- `GET /dashboard/styles.css`
+- `GET /dashboard/app.js`
 
 ## Search
 
@@ -385,6 +664,8 @@ Response shape:
 
 ```json
 {
+  "query": "spotify",
+  "searchHints": {},
   "events": [],
   "entities": [],
   "relations": []
@@ -392,6 +673,7 @@ Response shape:
 ```
 
 The entity results are canonicalized and deduplicated by their canonical root.
+Each result now includes a `matchHint` with `matchedFields`, `relevanceScore`, and a short explanation of why it matched.
 
 ## Contract notes
 

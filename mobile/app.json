@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "name": "BrainIA",
+    "slug": "brainia-mobile",
+    "scheme": "brainia",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "platforms": ["ios", "android", "web"],
+    "assetBundlePatterns": ["**/*"],
+    "userInterfaceStyle": "light"
+  }
+}

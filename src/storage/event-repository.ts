@@ -26,6 +26,7 @@ export type StoredEventRecord = EventInput & {
   inferredKind: ClassifiedEvent["inferredKind"];
   confidence: number;
   classifiedEntities: ClassifiedEvent["entities"];
+  modelMetadata: Record<string, unknown> | null;
   clientId: string | null;
   dedupeKey: string;
   rawEventCreatedAt: string;
@@ -104,9 +105,10 @@ export async function insertClassifiedEvent(
         classification_version,
         inferred_kind,
         confidence,
+        model_metadata,
         entities
       ) values (
-        $1, $2, $3, $4, $5, $6, $7, $8::jsonb
+        $1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9::jsonb
       )
       on conflict do nothing
       returning id
@@ -119,6 +121,7 @@ export async function insertClassifiedEvent(
       event.classificationVersion,
       event.inferredKind,
       event.confidence,
+      JSON.stringify(event.modelMetadata ?? null),
       JSON.stringify(event.entities ?? []),
     ],
   );
@@ -226,6 +229,7 @@ export async function loadStoredEventById(
         c.classification_version as "classificationVersion",
         c.inferred_kind as "inferredKind",
         c.confidence,
+        c.model_metadata as "modelMetadata",
         c.entities as "classifiedEntities",
         r.created_at as "rawEventCreatedAt",
         c.created_at as "classifiedEventCreatedAt",
@@ -238,7 +242,7 @@ export async function loadStoredEventById(
                 'value', e.value,
                 'normalizedValue', e.normalized_value
               )
-              order by ee.created_at asc
+              order by ee.entity_id asc
             )
             from event_entities ee
             join entities e on e.id = ee.entity_id
@@ -258,7 +262,7 @@ export async function loadStoredEventById(
                 'description', rel.description,
                 'confidence', rel.confidence
               )
-              order by er.created_at asc
+              order by er.relation_id asc
             )
             from event_relations er
             join relations rel on rel.id = er.relation_id
@@ -321,6 +325,7 @@ export async function listStoredEvents() {
         c.classification_version as "classificationVersion",
         c.inferred_kind as "inferredKind",
         c.confidence,
+        c.model_metadata as "modelMetadata",
         c.entities as "classifiedEntities",
         r.created_at as "rawEventCreatedAt",
         c.created_at as "classifiedEventCreatedAt",
@@ -333,7 +338,7 @@ export async function listStoredEvents() {
                 'value', e.value,
                 'normalizedValue', e.normalized_value
               )
-              order by ee.created_at asc
+              order by ee.entity_id asc
             )
             from event_entities ee
             join entities e on e.id = ee.entity_id
@@ -353,7 +358,7 @@ export async function listStoredEvents() {
                 'description', rel.description,
                 'confidence', rel.confidence
               )
-              order by er.created_at asc
+              order by er.relation_id asc
             )
             from event_relations er
             join relations rel on rel.id = er.relation_id

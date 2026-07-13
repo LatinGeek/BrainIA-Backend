@@ -42,3 +42,19 @@
 - added merge-aware entity canonicalization with same_as provenance
 - added canonical graph resolution and merge-aware entity lookup
 - added relevance filters to the search endpoint
+- added structured inspect summaries and graph explanation hints
+- added a JSON-RPC MCP transport and structured insight endpoint
+- added response request IDs, slow-request logging, and operational runbooks
+- added bounded graph traversal caching with explicit invalidation on writes
+- added search result relevance hints and explanation fields for retrieval
+- added entity deduplication and noisy merchant filtering
+- added notification source entities and model-assisted classification fallback
+- added quick capture routes for notes, email, notifications, wallet events, and batch offline flushes
+- added a thin mobile shell scaffold for metrics, inspect, and capture flows
+- added a thin web dashboard scaffold for exploration and debugging
+- closed the post-MVP backlog and moved remaining ideas to a future roadmap
+- added model-assistance audit metadata and structured operational logging
+- added persisted insight audit snapshots with list and replay endpoints
+- added time-window digest generation with persisted audit snapshots
+- added an end-to-end regression test for capture, search, graph, inspect, insight, digest, and agent surfaces
+- added a concrete future feature list document for post-version planning

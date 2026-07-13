@@ -1,5 +1,10 @@
 import { pool } from "./postgres.js";
 import { loadCanonicalEntityById } from "./entity-repository.js";
+import {
+  buildGraphTraversalCacheKey,
+  readGraphTraversalCache,
+  writeGraphTraversalCache,
+} from "./graph-cache.js";
 
 export type EntityGraph = {
   resolvedFromEntityId: string | null;
@@ -37,6 +42,8 @@ export type EntityGraph = {
     label: string;
     description: string;
     confidence: number;
+    importanceScore: number;
+    explanation: string;
     metadata: Record<string, unknown>;
     createdAt: string;
     depth: number;
@@ -45,8 +52,40 @@ export type EntityGraph = {
   paths: Array<{
     nodeIds: string[];
     relationIds: string[];
+    summary: string;
+    depth: number;
+    direction: "outgoing" | "incoming";
   }>;
 };
+
+type GraphNode = EntityGraph["nodes"][number];
+type GraphRelation = EntityGraph["relations"][number];
+
+export function buildGraphTraversalPaths(
+  entityId: string,
+  nodes: GraphNode[],
+  relations: GraphRelation[],
+) {
+  const nodeById = new Map(nodes.map((node) => [node.id, node] as const));
+
+  return relations.map((relation) => {
+    const source = nodeById.get(relation.sourceEntityId);
+    const target = nodeById.get(relation.targetEntityId);
+
+    return {
+      nodeIds: [entityId, relation.sourceEntityId, relation.targetEntityId].filter(
+        (value, index, array) => array.indexOf(value) === index,
+      ),
+      relationIds: [relation.id],
+      summary: relation.explanation,
+      depth: relation.depth,
+      direction: relation.direction,
+      importanceScore: relation.importanceScore,
+      sourceLabel: source?.value ?? relation.sourceEntityId,
+      targetLabel: target?.value ?? relation.targetEntityId,
+    };
+  });
+}
 
 function clampInteger(value: string | undefined, fallback: number, min: number, max: number) {
   const parsed = Number.parseInt(value ?? "", 10);
@@ -66,6 +105,12 @@ export async function getEntityGraph(entityId: string, depth: number, maxNodes: 
   const canonicalRoot = await loadCanonicalEntityById(pool, entityId);
   if (!canonicalRoot) {
     return null;
+  }
+
+  const cacheKey = buildGraphTraversalCacheKey(canonicalRoot.id, depth, maxNodes, maxRelations);
+  const cachedGraph = readGraphTraversalCache(cacheKey);
+  if (cachedGraph) {
+    return cachedGraph;
   }
 
   const rootResult = await pool.query(
@@ -179,21 +224,44 @@ export async function getEntityGraph(entityId: string, depth: number, maxNodes: 
       from relations r
       join walk ws on ws.id = r.source_entity_id
       join walk wt on wt.id = r.target_entity_id
-      order by r.id, depth asc
+      order by r.id asc, r.confidence desc, depth asc
       limit $3
     `,
     [canonicalRoot.id, depth, maxRelations],
   );
 
   const nodes = graphResult.rows.slice(0, maxNodes);
-  const relations = relationResult.rows.slice(0, maxRelations);
+  const relations = relationResult.rows.slice(0, maxRelations).map((relation: {
+    id: string;
+    sourceEntityId: string;
+    targetEntityId: string;
+    relationType: string;
+    label: string;
+    description: string;
+    confidence: number;
+    metadata: Record<string, unknown>;
+    createdAt: string;
+    depth: number;
+    direction: "outgoing" | "incoming";
+  }) => {
+    const sourceNode = nodes.find((node: { id: string; value: string }) => node.id === relation.sourceEntityId);
+    const targetNode = nodes.find((node: { id: string; value: string }) => node.id === relation.targetEntityId);
+    const importanceScore = Number((relation.confidence / Math.max(1, relation.depth + 1)).toFixed(4));
+    const explanation = `${sourceNode?.value ?? relation.sourceEntityId} ${relation.label} ${targetNode?.value ?? relation.targetEntityId}`;
+
+    return {
+      ...relation,
+      importanceScore,
+      explanation,
+    };
+  });
   const maxDepthReached = Math.max(
     0,
     ...nodes.map((node: { depth: number }) => node.depth),
     ...relations.map((relation: { depth: number }) => relation.depth),
   );
 
-  return {
+  const graph = {
     resolvedFromEntityId: canonicalRoot.id === entityId ? null : entityId,
     rootEntity: rootResult.rows[0],
     depthRequested: depth,
@@ -206,11 +274,9 @@ export async function getEntityGraph(entityId: string, depth: number, maxNodes: 
     },
     nodes,
     relations,
-    paths: relations.map((relation: { sourceEntityId: string; targetEntityId: string; id: string }) => ({
-      nodeIds: [canonicalRoot.id, relation.sourceEntityId, relation.targetEntityId].filter(
-        (value, index, array) => array.indexOf(value) === index,
-      ),
-      relationIds: [relation.id],
-    })),
+    paths: buildGraphTraversalPaths(canonicalRoot.id, nodes, relations),
   };
+
+  writeGraphTraversalCache(cacheKey, graph);
+  return graph;
 }

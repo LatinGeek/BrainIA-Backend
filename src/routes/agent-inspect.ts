@@ -17,6 +17,7 @@ export const registerAgentInspectRoutes: FastifyPluginAsync = async (app) => {
   app.get("/agent/inspect", async (request, reply) => {
     const parsed = inspectSchema.safeParse(request.query);
     if (!parsed.success) {
+      request.log.warn({ path: "/agent/inspect", issues: parsed.error.flatten() }, "invalid inspect query");
       return reply.status(400).send({
         error: "invalid_inspect_query",
         issues: parsed.error.flatten(),
@@ -29,12 +30,25 @@ export const registerAgentInspectRoutes: FastifyPluginAsync = async (app) => {
       maxRelations: parsed.data.maxRelations,
     });
 
-    return inspectKnowledge({
+    const result = await inspectKnowledge({
       id: parsed.data.id,
       q: parsed.data.q,
       depth: options.depth,
       maxNodes: options.maxNodes,
       maxRelations: options.maxRelations,
     });
+
+    request.log.info(
+      {
+        query: result.query,
+        mode: result.resolution.mode,
+        canonicalEntityId: result.resolution.canonicalEntityId,
+        nodesCount: result.graphSummary?.nodesCount ?? 0,
+        relationsCount: result.graphSummary?.relationsCount ?? 0,
+      },
+      "inspect completed",
+    );
+
+    return result;
   });
 };

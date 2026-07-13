@@ -39,6 +39,8 @@ test("inspect knowledge resolves, expands and summarizes using injected dependen
   assert.equal(result.summaryAvailable, true);
   assert.equal(result.model, "deepseek-v4-flash");
   assert.equal(result.rootEntity?.value, "Spotify");
+  assert.equal(result.resolution.mode, "search_match");
+  assert.equal(result.resolution.canonicalEntityId, "entity_1");
+  assert.equal(result.graphSummary?.rootEntityId, "entity_1");
   assert.equal(result.summary, "Spotify is a merchant entity linked to the query.");
 });
-

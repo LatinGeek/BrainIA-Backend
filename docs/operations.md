@@ -46,11 +46,24 @@ Current state:
 - entity merge endpoint is available for canonicalization
 - textual search endpoint is available for assistant retrieval
 - search accepts basic relevance filters for source, kind, and time window
+- search results include local relevance hints and explanation fields
 - entity graph endpoint is available for bounded neighborhood retrieval
+- quick capture routes are available for notes, email, notifications, wallet events, and offline batches
+- the `mobile/` package contains a thin native shell scaffold wired to metrics, inspect, and capture flows
 - agent tool manifest endpoint is available for MCP-like discovery
 - agent tool registry endpoint is available with schemas, examples, and errors
+- agent tool MCP JSON-RPC endpoint is available for initialize and tools/list
 - graph payload includes reconstruction hints for agents
-- agent inspect endpoint is available for resolve+expand+explain
+- graph payload includes confidence-based ranking and readable path summaries
+- agent inspect endpoint is available for resolve+expand+explain with structured summaries
+- insight endpoint is available for compact agent conclusions and supporting evidence
+- insight generations are persisted as audit snapshots in `insight_runs`
+- digest endpoint is available for time-window summaries and related insight context
+- digest generations are persisted as audit snapshots in `digest_runs`
+- request IDs are echoed back on responses and slow requests are logged explicitly
+- graph traversal caching is active for repeated bounded expansions
+- ambiguous classifications can be upgraded by DeepSeek when `DEEPSEEK_API_KEY` is set
+- model-assisted classification metadata is stored for later audit and replay
 - DeepSeek integration is enabled through `DEEPSEEK_API_KEY`
 - primary agent surface is intentionally compact and self-describing
 
@@ -81,7 +94,15 @@ The mobile client should:
 - include unique `id` or `externalId`
 - preserve raw notification content when possible
 - include `contractVersion` and an `idempotencyKey` when the client can generate one
+- use `/api/v1/capture/*` routes for source-specific shortcuts when they simplify the client
+- the mobile shell reads `EXPO_PUBLIC_BRAINIA_API_BASE_URL`
 - send `x-brainia-client-id` and `x-brainia-api-key` when auth is enabled
+- use `/api/v1/insights` when a compact conclusion is preferred over full inspect output
+
+## Web dashboard integration
+
+- the optional web dashboard is served from `/dashboard`
+- it is intended for exploration and debugging, not as the primary product surface
 
 ## Operational rules
 
@@ -93,3 +114,7 @@ The mobile client should:
 - keep the MVP scope aligned with [`docs/mvp.md`](mvp.md)
 - keep the backlog aligned with [`docs/backlog.md`](backlog.md)
 - prefer canonical entity roots when performing graph or search driven workflows
+
+## Runbooks
+
+- importing data, reprocessing, recovery, and slow-request handling are documented in [`docs/runbooks.md`](runbooks.md)

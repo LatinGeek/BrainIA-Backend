@@ -33,4 +33,5 @@ export type ClassifiedEvent = EventInput & {
     type: string;
     value: string;
   }>;
+  modelMetadata?: Record<string, unknown> | null;
 };

@@ -82,7 +82,7 @@ export async function linkEventRelation(
       ) values (
         $1, $2, $3, $4, $5
       )
-      on conflict (event_id, relation_id, role)
+      on conflict (event_id, relation_id)
       do update set confidence = excluded.confidence
     `,
     [randomUUID(), eventId, relationId, "implied", confidence],

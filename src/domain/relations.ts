@@ -14,9 +14,27 @@ function getFirstEntity(entities: EntityDraft[], type: string) {
   return entities.find((entity) => entity.type === type);
 }
 
+function buildRelationMetadata(input: {
+  source: string;
+  title?: string;
+  body?: string;
+  inferredKind: string;
+}) {
+  return {
+    source: "heuristic",
+    evidence: {
+      kind: input.inferredKind,
+      title: input.title ?? null,
+      body: input.body ?? null,
+      source: input.source,
+    },
+  };
+}
+
 export function buildRelationDrafts(input: {
   title?: string;
   body?: string;
+  source?: string;
   inferredKind: string;
   entities: EntityDraft[];
 }): RelationDraft[] {
@@ -33,9 +51,12 @@ export function buildRelationDrafts(input: {
         sourceEntity: amount,
         targetEntity: merchant,
         confidence: 0.8,
-        metadata: {
-          source: "heuristic",
-        },
+        metadata: buildRelationMetadata({
+          source: input.source ?? "unknown",
+          title: input.title,
+          body: input.body,
+          inferredKind: input.inferredKind,
+        }),
       });
     }
   }
@@ -51,9 +72,12 @@ export function buildRelationDrafts(input: {
         sourceEntity: message,
         targetEntity: recipient,
         confidence: 0.75,
-        metadata: {
-          source: "heuristic",
-        },
+        metadata: buildRelationMetadata({
+          source: input.source ?? "unknown",
+          title: input.title,
+          body: input.body,
+          inferredKind: input.inferredKind,
+        }),
       });
     }
   }
@@ -69,9 +93,12 @@ export function buildRelationDrafts(input: {
         sourceEntity: notification,
         targetEntity: source,
         confidence: 0.7,
-        metadata: {
-          source: "heuristic",
-        },
+        metadata: buildRelationMetadata({
+          source: input.source ?? "unknown",
+          title: input.title,
+          body: input.body,
+          inferredKind: input.inferredKind,
+        }),
       });
     }
   }
