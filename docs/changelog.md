@@ -1,0 +1,37 @@
+# Changelog
+
+## 2026-07-13
+
+- created the BrainIA backend skeleton
+- chose Fastify for a backend-only API
+- defined the initial event domain model
+- added heuristic event classification
+- added append-only JSONL storage for prototype use
+- introduced persistent project documentation under `docs/`
+- created `docs/agent.md` as the session context file
+- formalized the event ingestion contract in Markdown
+- clarified the distinction between raw events and classified events
+- added the first Postgres schema for durable event storage
+- documented the end-to-end ingestion flow
+- aligned the event primary key with the generic ingestion contract
+- replaced runtime schema creation with explicit SQL migrations
+- added a migration runner and migration tracking table
+- designed the split knowledge persistence model
+- added a migration for raw events, classified events, entities, and relations
+- switched the runtime ingestion path to the split Postgres model
+- added entity extraction and event-to-entity linking
+- added the first entity canonicalization migration and sequence generator
+- added relations with canonical type, label, and description fields
+- added heuristic relation extraction and event-to-relation linking
+- added query endpoints for entities and relations
+- added a textual search endpoint across events, entities, and relations
+- added bounded entity graph retrieval with depth and size limits
+- added an agent tool manifest endpoint for MCP-like discovery
+- formalized the agent tool manifest with schemas, examples, and errors
+- added an MCP-like registry endpoint for agent tooling
+- split entity retrieval into resolve and expand tools
+- added root-distance, direction, and path hints to graph retrieval
+- added agent inspect endpoint with optional DeepSeek natural language summaries
+- simplified the public agent tool catalog for the MVP
+- added a minimal test suite for the critical paths
+- documented the MVP scope and release boundaries
