@@ -18,6 +18,7 @@ Expected commands:
 - `HOST`
 - `API_PREFIX`
 - `DATABASE_URL`
+- `DATABASE_URL_UNPOOLED`
 - `BRAINIA_API_KEY`
 - `BRAINIA_CLIENT_KEYS`
 - `DEEPSEEK_API_KEY`
@@ -33,6 +34,7 @@ Current state:
 - relations and event relations are persisted during ingestion
 - entity merges and same_as provenance are persisted when manual canonicalization is performed
 - schema managed by explicit SQL migrations
+- runtime uses the pooled Postgres URL while migrations prefer the unpooled URL
 - migrations run inside real database transactions
 - split knowledge model documented for future rollout
 - first entity extraction pass active during ingestion

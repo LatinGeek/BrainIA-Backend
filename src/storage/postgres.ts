@@ -1,17 +1,21 @@
 import { Pool, type PoolClient } from "pg";
+import { resolveRuntimeDatabaseUrl } from "./database-url.js";
 
-const connectionString = process.env.DATABASE_URL;
+const connectionString = resolveRuntimeDatabaseUrl();
 
 if (!connectionString) {
-  throw new Error("DATABASE_URL is required");
+  throw new Error("DATABASE_URL or a compatible Postgres URL is required");
 }
 
 export const pool = new Pool({
   connectionString,
 });
 
-export async function withTransaction<T>(fn: (client: PoolClient) => Promise<T>) {
-  const client = await pool.connect();
+export async function withTransactionOnPool<T>(
+  activePool: Pool,
+  fn: (client: PoolClient) => Promise<T>,
+) {
+  const client = await activePool.connect();
 
   try {
     await client.query("begin");
@@ -24,4 +28,8 @@ export async function withTransaction<T>(fn: (client: PoolClient) => Promise<T>)
   } finally {
     client.release();
   }
+}
+
+export async function withTransaction<T>(fn: (client: PoolClient) => Promise<T>) {
+  return withTransactionOnPool(pool, fn);
 }
