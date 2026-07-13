@@ -89,6 +89,10 @@ test("upsert entity returns the canonical root when the row is merged", async ()
 test("resolve entity matches deduplicates aliases into the canonical root", async () => {
   const db = createQueuedDb([
     {
+      rows: [],
+      rowCount: 0,
+    },
+    {
       rows: [
         {
           id: "entity_2",
@@ -103,21 +107,8 @@ test("resolve entity matches deduplicates aliases into the canonical root", asyn
           mergeReason: "manual_merge",
           mergeConfidence: 1,
         },
-        {
-          id: "entity_1",
-          type: "merchant",
-          value: "Spotify",
-          normalizedValue: "spotify",
-          metadata: {},
-          createdAt: "2026-07-13T00:00:00.000Z",
-          canonicalEntityId: "entity_1",
-          isCanonical: true,
-          aliasCount: 1,
-          mergeReason: null,
-          mergeConfidence: null,
-        },
       ],
-      rowCount: 2,
+      rowCount: 1,
     },
     {
       rows: [

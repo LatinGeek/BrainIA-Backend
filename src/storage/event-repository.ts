@@ -179,6 +179,17 @@ export async function findStoredRawEventId(
 export async function deleteDerivedDataForEvent(db: Queryable, eventId: string) {
   await db.query("delete from event_relations where event_id = $1", [eventId]);
   await db.query("delete from event_entities where event_id = $1", [eventId]);
+  await db.query("delete from financial_transaction_events where raw_event_id = $1", [eventId]);
+  await db.query(
+    `
+      delete from financial_transactions t
+      where not exists (
+        select 1
+        from financial_transaction_events e
+        where e.transaction_id = t.id
+      )
+    `,
+  );
   await db.query("delete from classified_events where raw_event_id = $1", [eventId]);
 }
 
@@ -383,6 +394,8 @@ export async function countKnowledgeMetrics(db: Queryable) {
     relationsCount: string;
     eventEntitiesCount: string;
     eventRelationsCount: string;
+    financialTransactionsCount: string;
+    financialTransactionEventsCount: string;
   }>(
     `
       select
@@ -391,7 +404,9 @@ export async function countKnowledgeMetrics(db: Queryable) {
         (select count(*)::text from entities) as "entitiesCount",
         (select count(*)::text from relations) as "relationsCount",
         (select count(*)::text from event_entities) as "eventEntitiesCount",
-        (select count(*)::text from event_relations) as "eventRelationsCount"
+        (select count(*)::text from event_relations) as "eventRelationsCount",
+        (select count(*)::text from financial_transactions) as "financialTransactionsCount",
+        (select count(*)::text from financial_transaction_events) as "financialTransactionEventsCount"
     `,
   );
 

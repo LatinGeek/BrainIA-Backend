@@ -5,6 +5,8 @@ import { buildRelationDrafts } from "../domain/relations.js";
 import { pool, withTransaction } from "./postgres.js";
 import { maybeEnhanceClassification } from "./classification-assistant.js";
 import { invalidateGraphTraversalCache } from "./graph-cache.js";
+import { enqueueEntityReview } from "./entity-alias-repository.js";
+import { buildFinancialTransactionCandidate } from "../domain/financial-transactions.js";
 import {
   countKnowledgeMetrics,
   deleteDerivedDataForEvent,
@@ -16,6 +18,7 @@ import {
   listStoredEvents,
 } from "./event-repository.js";
 import { upsertEntity } from "./entity-repository.js";
+import { linkFinancialTransactionForEvent } from "./financial-transaction-repository.js";
 import { linkEventRelation, upsertRelation } from "./relation-repository.js";
 
 export type EventIngestionContext = {
@@ -26,6 +29,10 @@ export function buildEventDedupeKey(event: EventInput, clientId: string | null |
   const stableInput = event.idempotencyKey?.trim() || event.externalId?.trim() || event.id.trim();
   const clientScope = clientId?.trim() || "anonymous";
   return `${clientScope}:${event.source}:${event.contractVersion}:${stableInput}`;
+}
+
+function isFinancialInferredKind(kind: string) {
+  return kind === "expense" || kind === "income";
 }
 
 async function persistClassifiedEvent(
@@ -52,9 +59,24 @@ async function persistClassifiedEvent(
     await insertClassifiedEvent(db, classified, event.id, clientId);
 
     const entityDrafts = buildEntityDrafts(classified);
+    const upsertedByType = new Map<string, Awaited<ReturnType<typeof upsertEntity>>>();
     for (const draft of entityDrafts) {
       const entity = await upsertEntity(db, draft);
+      if (!upsertedByType.has(draft.type)) {
+        upsertedByType.set(draft.type, entity);
+      }
       await linkEventEntity(db, event.id, entity.id, 0.8);
+
+      if (draft.type === "merchant" && isFinancialInferredKind(classified.inferredKind)) {
+        await enqueueEntityReview(db, {
+          entityId: entity.id,
+          eventId: event.id,
+          source: event.source,
+          originalValue: draft.value,
+          suggestedAlias: draft.value,
+          reason: String(draft.metadata?.source ?? "merchant_candidate"),
+        });
+      }
     }
 
     const relationDrafts = buildRelationDrafts({
@@ -75,6 +97,19 @@ async function persistClassifiedEvent(
     const stored = await loadStoredEventByLookup(db, event.id, dedupeKey);
     if (!stored) {
       throw new Error("Stored event could not be loaded after ingestion");
+    }
+
+    const financialCandidate = buildFinancialTransactionCandidate({
+      event: stored,
+      classified,
+      entityDrafts,
+      merchantEntity: upsertedByType.get("merchant") ?? null,
+      amountEntity: upsertedByType.get("amount") ?? null,
+      observedAt: stored.timestamp ?? stored.rawEventCreatedAt,
+    });
+
+    if (financialCandidate) {
+      await linkFinancialTransactionForEvent(db, financialCandidate);
     }
 
     invalidateGraphTraversalCache();
@@ -106,9 +141,24 @@ export async function reprocessEvent(eventId: string) {
     await insertClassifiedEvent(db, classified, rawEvent.id, rawEvent.clientId);
 
     const entityDrafts = buildEntityDrafts(classified);
+    const upsertedByType = new Map<string, Awaited<ReturnType<typeof upsertEntity>>>();
     for (const draft of entityDrafts) {
       const entity = await upsertEntity(db, draft);
+      if (!upsertedByType.has(draft.type)) {
+        upsertedByType.set(draft.type, entity);
+      }
       await linkEventEntity(db, rawEvent.id, entity.id, 0.8);
+
+      if (draft.type === "merchant" && isFinancialInferredKind(classified.inferredKind)) {
+        await enqueueEntityReview(db, {
+          entityId: entity.id,
+          eventId: rawEvent.id,
+          source: rawEvent.source,
+          originalValue: draft.value,
+          suggestedAlias: draft.value,
+          reason: String(draft.metadata?.source ?? "merchant_candidate"),
+        });
+      }
     }
 
     const relationDrafts = buildRelationDrafts({
@@ -127,6 +177,19 @@ export async function reprocessEvent(eventId: string) {
     }
 
     const stored = await loadStoredEventByLookup(db, rawEvent.id, rawEvent.dedupeKey);
+    const financialCandidate = buildFinancialTransactionCandidate({
+      event: rawEvent,
+      classified,
+      entityDrafts,
+      merchantEntity: upsertedByType.get("merchant") ?? null,
+      amountEntity: upsertedByType.get("amount") ?? null,
+      observedAt: rawEvent.timestamp ?? rawEvent.rawEventCreatedAt,
+    });
+
+    if (financialCandidate) {
+      await linkFinancialTransactionForEvent(db, financialCandidate);
+    }
+
     invalidateGraphTraversalCache();
     return stored;
   });

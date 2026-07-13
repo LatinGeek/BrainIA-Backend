@@ -170,6 +170,25 @@ Batch response shape:
 
 These routes preserve raw payloads while still producing the generic ingestion contract expected by the backend.
 
+## Financial transactions
+
+### `GET /api/v1/financial/transactions?limit=50`
+
+Returns the canonical financial transaction layer derived from expense and income events.
+
+Each item includes:
+
+- normalized merchant label
+- amount and currency
+- observed window
+- evidence rows that point back to the contributing raw events
+
+The endpoint is useful when an agent wants to see the same real-world payment grouped across wallet notifications, bank notifications, and related receipts.
+
+### `GET /api/v1/financial/transactions/:id`
+
+Returns one canonical transaction and all of its evidence rows.
+
 ## List events
 
 ### `GET /api/v1/events`
@@ -271,6 +290,52 @@ Response shape:
 }
 ```
 
+## Alias review queue
+
+### `GET /api/v1/aliases?entityId=...`
+
+Lists the manual aliases attached to one canonical entity.
+
+Aliases are the user-facing labels that help retrieval work with merchant names or other legal names that should be normalized into a friendlier concept.
+
+Each alias can also store a `categoryPath` breadcrumb such as:
+
+```json
+["gastos", "supermercado"]
+```
+
+### `GET /api/v1/review/aliases?status=pending|resolved|ignored`
+
+Lists financial merchant-style candidates waiting for human review.
+
+These queue items are created when the backend detects a likely merchant or legal name inside a financial event but still needs a user to decide:
+
+- the alias to store
+- the category breadcrumb to attach
+- whether the candidate should be ignored
+
+### `POST /api/v1/review/aliases/:id/resolve`
+
+Resolves one pending review by creating or updating an alias and attaching a category breadcrumb.
+
+Request body:
+
+```json
+{
+  "alias": "kiosco",
+  "categoryPath": ["gastos", "supermercado"],
+  "notes": "Alias manual para Las Acacias SRL"
+}
+```
+
+This endpoint creates the alias record, marks the queue item as resolved, and makes the alias available to search and entity resolution.
+
+### `POST /api/v1/review/aliases/:id/ignore`
+
+Marks a queue item as ignored when the candidate should not become an alias.
+
+This is useful for false positives or for merchant names inside financial events that should be normalized in a later pass.
+
 ### `GET /api/v1/entities/:id/graph?depth=2&maxNodes=100&maxRelations=100`
 
 Returns the neighborhood of a canonical entity as a bounded graph expansion.
@@ -349,6 +414,7 @@ This endpoint is intentionally MCP-like:
 - each entry names a tool
 - each entry explains what it does
 - each entry maps to a concrete HTTP method and path
+- the manifest is grouped into workflow sections
 
 It is useful for:
 
@@ -359,6 +425,14 @@ It is useful for:
 
 The public catalog is intentionally compact:
 
+It is also grouped into three workflow sections so agents can reason about the API surface without mixing unrelated concerns:
+
+- `non_financial_entity_extraction`
+- `general_event_ingestion`
+- `financial_alias_review`
+
+Each section is exposed in the manifest and in the MCP-like registry.
+
 - `inspect_knowledge`
 - `generate_insight`
 - `list_insight_runs`
@@ -368,17 +442,27 @@ The public catalog is intentionally compact:
 - `get_digest_run`
 - `resolve_entity`
 - `merge_entity`
+- `list_entity_aliases`
+- `list_alias_reviews`
+- `resolve_alias_review`
+- `ignore_alias_review`
 - `ingest_event`
 - `reprocess_event`
 - `list_events`
 - `view_metrics`
 - `search_knowledge`
 
+The financial alias review section contains the alias queue and resolution tools.
+The general event ingestion section contains generic capture and replay helpers.
+The non-financial extraction section contains the knowledge retrieval and graph-facing tools.
+
 ### `GET /api/v1/agent/mcp`
 
 Returns the same tool catalog with a shape closer to a tool registry.
 
 It is intended as a bridge for future MCP adapters and external agent runtimes.
+
+The registry also includes the same workflow sections used by `GET /api/v1/agent/tools`.
 
 Each tool includes:
 
@@ -397,6 +481,8 @@ Supported methods:
 
 - `initialize`
 - `tools/list`
+
+`tools/list` returns the grouped sections and the flat tool list, so agents can either scan the whole catalog or focus on one workflow.
 
 Initialize response shape:
 
@@ -684,6 +770,7 @@ Each result now includes a `matchHint` with `matchedFields`, `relevanceScore`, a
 - derived classification can change over time without losing the original event
 - event retries should be deduplicated by a stable dedupe key whenever possible
 - the knowledge layer is queryable independently from the ingestion path
+- merchant or legal-name notifications can be queued for alias review
 - the search layer is textual for now and can later evolve to embeddings or hybrid retrieval
 - graph expansion should be bounded by depth and maximum result sizes
 - agent-facing routes should be self-describing and easy to adapt to MCP

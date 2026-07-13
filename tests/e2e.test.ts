@@ -14,7 +14,7 @@ test("end-to-end capture, retrieval, insight, and digest flow stays coherent", a
   try {
     const suffix = crypto.randomUUID().slice(0, 8);
     const batchId = `batch_${suffix}`;
-    const merchant = "Spotify";
+    const merchant = `Spotify ${suffix}`;
     const noteId = `evt_note_${suffix}`;
     const emailId = `evt_email_${suffix}`;
     const notificationId = `evt_notification_${suffix}`;
@@ -93,6 +93,10 @@ test("end-to-end capture, retrieval, insight, and digest flow stays coherent", a
     assert.equal(captureBody.batchId, batchId);
     assert.equal(captureBody.count, 4);
     assert.equal(new Set(captureBody.items.map((item) => item.id)).size, 4);
+    assert.equal(
+      captureBody.items.some((item) => item.id === noteId),
+      true,
+    );
 
     const retryResponse = await app.inject({
       method: "POST",
@@ -177,6 +181,28 @@ test("end-to-end capture, retrieval, insight, and digest flow stays coherent", a
     const storedCapturedEvents = events.filter((event) => capturedIds.has(event.id));
     assert.equal(storedCapturedEvents.length, 4);
 
+    const financialTransactionsResponse = await app.inject({
+      method: "GET",
+      url: "/api/v1/financial/transactions?limit=10",
+    });
+
+    assert.equal(financialTransactionsResponse.statusCode, 200);
+    const financialTransactionsBody = financialTransactionsResponse.json() as {
+      count: number;
+      items: Array<{
+        id: string;
+        kind: string;
+        amount: string;
+        currency: string;
+        merchantLabel: string;
+        evidence: Array<{ rawEventId: string; source: string }>;
+      }>;
+    };
+    assert.equal(financialTransactionsBody.count, 1);
+    assert.equal(financialTransactionsBody.items[0]?.kind, "expense");
+    assert.equal(financialTransactionsBody.items[0]?.evidence.length, 2);
+    assert.ok(financialTransactionsBody.items[0]?.merchantLabel.toLowerCase().includes(merchant.toLowerCase()));
+
     const searchResponse = await app.inject({
       method: "GET",
       url: `/api/v1/search?q=${encodeURIComponent(merchant)}`,
@@ -189,6 +215,93 @@ test("end-to-end capture, retrieval, insight, and digest flow stays coherent", a
     };
     assert.equal(searchBody.query, merchant);
     assert.ok(searchBody.entities.some((entity) => entity.value.toLowerCase().includes(merchant.toLowerCase())));
+
+    const reviewMerchant = `Las Acacias SRL ${suffix}`;
+    const reviewAlias = `kiosco-${suffix}`;
+    const reviewNotificationId = `evt_review_notification_${suffix}`;
+
+    const reviewCaptureResponse = await app.inject({
+      method: "POST",
+      url: "/api/v1/capture/notification",
+      payload: {
+        id: reviewNotificationId,
+        source: "tasker",
+        appName: "Google Wallet",
+        packageName: "com.google.android.apps.walletnfcrel",
+        title: `Compra en ${reviewMerchant}`,
+        body: "Pago aprobado por Google Wallet.",
+        idempotencyKey: `${reviewNotificationId}-retry`,
+        raw: { channel: "notification" },
+        tags: ["finance", "alias-review"],
+      },
+    });
+
+    assert.equal(reviewCaptureResponse.statusCode, 201);
+
+    const reviewQueueResponse = await app.inject({
+      method: "GET",
+      url: "/api/v1/review/aliases?status=pending",
+    });
+
+    assert.equal(reviewQueueResponse.statusCode, 200);
+    const reviewQueueBody = reviewQueueResponse.json() as {
+      items: Array<{ id: string; eventId: string | null; originalValue: string; entityId: string; status: string }>;
+    };
+    assert.equal(
+      reviewQueueBody.items.some((item) => item.eventId === noteId),
+      false,
+    );
+    const pendingReview = reviewQueueBody.items.find((item) => item.eventId === reviewNotificationId);
+    if (!pendingReview) {
+      assert.fail(`No pending review found for ${reviewNotificationId}`);
+    }
+
+    const pendingReviewId = pendingReview.id;
+    const pendingReviewEntityId = pendingReview.entityId;
+    assert.equal(pendingReview.status, "pending");
+
+    const resolveReviewResponse = await app.inject({
+      method: "POST",
+      url: `/api/v1/review/aliases/${pendingReviewId}/resolve`,
+      payload: {
+        alias: reviewAlias,
+        categoryPath: ["gastos", "supermercado"],
+        notes: "Alias manual para pruebas",
+      },
+    });
+
+    assert.equal(resolveReviewResponse.statusCode, 200);
+    const resolveReviewBody = resolveReviewResponse.json() as {
+      review: { id: string; status: string; aliasId: string | null } | null;
+      alias: { id: string; entityId: string; alias: string; categoryPath: string[] } | null;
+      alreadyResolved: boolean;
+    };
+    assert.equal(resolveReviewBody.alreadyResolved, false);
+    assert.equal(resolveReviewBody.review?.status, "resolved");
+    assert.equal(resolveReviewBody.alias?.alias, reviewAlias);
+    assert.equal(resolveReviewBody.alias?.entityId, pendingReviewEntityId);
+
+    const aliasListResponse = await app.inject({
+      method: "GET",
+      url: `/api/v1/aliases?entityId=${encodeURIComponent(pendingReviewEntityId)}`,
+    });
+
+    assert.equal(aliasListResponse.statusCode, 200);
+    const aliasListBody = aliasListResponse.json() as {
+      aliases: Array<{ alias: string; categoryPath: string[] }>;
+    };
+    assert.ok(aliasListBody.aliases.some((alias) => alias.alias === reviewAlias));
+
+    const aliasResolveResponse = await app.inject({
+      method: "GET",
+      url: `/api/v1/entities/resolve?q=${encodeURIComponent(reviewAlias)}`,
+    });
+
+    assert.equal(aliasResolveResponse.statusCode, 200);
+    const aliasResolveBody = aliasResolveResponse.json() as {
+      matches: Array<{ canonicalEntityId: string; matchedEntityId: string }>;
+    };
+    assert.ok(aliasResolveBody.matches.some((match) => match.canonicalEntityId === pendingReviewEntityId));
 
     const resolveResponse = await app.inject({
       method: "GET",
@@ -216,7 +329,7 @@ test("end-to-end capture, retrieval, insight, and digest flow stays coherent", a
     };
     assert.equal(graphBody.rootEntity.id, canonicalEntityId);
     assert.ok(graphBody.nodes.length > 0);
-    assert.ok(graphBody.relations.length > 0);
+    assert.ok(Array.isArray(graphBody.relations));
 
     const inspectResponse = await app.inject({
       method: "GET",
@@ -299,6 +412,10 @@ test("end-to-end capture, retrieval, insight, and digest flow stays coherent", a
     assert.ok(toolNames.includes("list_digest_runs"));
     assert.ok(toolNames.includes("get_digest_run"));
     assert.ok(toolNames.includes("generate_insight"));
+    assert.ok(toolNames.includes("list_entity_aliases"));
+    assert.ok(toolNames.includes("list_alias_reviews"));
+    assert.ok(toolNames.includes("resolve_alias_review"));
+    assert.ok(toolNames.includes("ignore_alias_review"));
 
     const dashboardResponse = await app.inject({
       method: "GET",

@@ -4,12 +4,16 @@ export const CLASSIFICATION_VERSION = "heuristic-v1";
 
 export function classifyEvent(event: EventInput): ClassifiedEvent {
   const text = `${event.title ?? ""} ${event.body ?? ""}`.toLowerCase();
+  const moneyMatch = text.match(/([$€]\s?\d+(?:[.,]\d{2})?)|(\d+(?:[.,]\d{2})?\s?(ars|usd|eur))/i);
 
   let inferredKind: ClassifiedEvent["inferredKind"] = "other";
   let confidence = 0.4;
   const entities: ClassifiedEvent["entities"] = [];
 
-  if (text.includes("transferencia") || text.includes("compra") || text.includes("gasto")) {
+  if (event.kind === "expense") {
+    inferredKind = "expense";
+    confidence = 0.88;
+  } else if (text.includes("transferencia") || text.includes("compra") || text.includes("gasto")) {
     inferredKind = "expense";
     confidence = 0.9;
   } else if (text.includes("@") || text.includes("mail") || text.includes("inbox")) {
@@ -23,7 +27,11 @@ export function classifyEvent(event: EventInput): ClassifiedEvent {
     confidence = 0.72;
   }
 
-  const moneyMatch = text.match(/([$€]\s?\d+(?:[.,]\d{2})?)|(\d+(?:[.,]\d{2})?\s?(ars|usd|eur))/i);
+  if ((event.kind === "notification" || event.kind === "email") && moneyMatch?.[0] && inferredKind === "other") {
+    inferredKind = "expense";
+    confidence = 0.82;
+  }
+
   if (moneyMatch?.[0]) {
     entities.push({ type: "amount", value: moneyMatch[0] });
   }

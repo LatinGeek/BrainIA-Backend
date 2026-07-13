@@ -1,5 +1,10 @@
 import type { FastifyPluginAsync } from "fastify";
 
+type ToolSectionId =
+  | "non_financial_entity_extraction"
+  | "general_event_ingestion"
+  | "financial_alias_review";
+
 type ToolManifest = {
   name: string;
   description: string;
@@ -16,6 +21,53 @@ type ToolManifest = {
     description: string;
   }>;
 };
+
+type ToolSectionManifest = {
+  id: ToolSectionId;
+  label: string;
+  description: string;
+  tools: ReturnType<typeof toMcpToolManifest>[];
+};
+
+const toolSectionOrder: ToolSectionId[] = [
+  "non_financial_entity_extraction",
+  "general_event_ingestion",
+  "financial_alias_review",
+];
+
+const toolSectionMeta: Record<ToolSectionId, { label: string; description: string }> = {
+  non_financial_entity_extraction: {
+    label: "Non-financial entity extraction",
+    description: "Knowledge retrieval, inspect, and entity-linking tools that do not belong to the financial alias queue.",
+  },
+  general_event_ingestion: {
+    label: "General event ingestion",
+    description: "Generic capture, reprocessing, and operational readouts for incoming events.",
+  },
+  financial_alias_review: {
+    label: "Financial alias review",
+    description: "Alias and categorization review for merchant-like values found in financial events.",
+  },
+};
+
+function getToolSection(name: string): ToolSectionId {
+  if (
+    [
+      "list_entity_aliases",
+      "list_alias_reviews",
+      "resolve_alias_review",
+      "ignore_alias_review",
+    ].includes(name)
+  ) {
+    return "financial_alias_review";
+  }
+
+  if (["ingest_event", "reprocess_event", "list_events", "view_metrics"].includes(name)) {
+    return "general_event_ingestion";
+  }
+
+  return "non_financial_entity_extraction";
+}
 
 const tools: ToolManifest[] = [
   {
@@ -610,6 +662,224 @@ const tools: ToolManifest[] = [
     ],
   },
   {
+    name: "list_entity_aliases",
+    description: "List manual aliases and category paths for one canonical entity.",
+    method: "GET",
+    path: "/api/v1/aliases",
+    inputSchema: {
+      type: "object",
+      properties: {
+        entityId: { type: "string" },
+      },
+    },
+    outputSchema: {
+      type: "object",
+      properties: {
+        aliases: { type: "array" },
+      },
+    },
+    examples: [
+      {
+        input: {
+          entityId: "entity_1",
+        },
+        output: {
+          aliases: [
+            {
+              id: "alias_1",
+              entityId: "entity_1",
+              alias: "kiosco",
+              normalizedAlias: "kiosco",
+              categoryPath: ["gastos", "supermercado"],
+              notes: "Google Wallet merchant alias",
+              createdAt: "2026-07-13T12:30:00.000Z",
+              updatedAt: "2026-07-13T12:30:00.000Z",
+            },
+          ],
+        },
+      },
+    ],
+    expectedErrors: [
+      {
+        code: "invalid_alias_query",
+        description: "The entityId filter must be a non-empty string when provided.",
+      },
+    ],
+  },
+  {
+    name: "list_alias_reviews",
+    description: "List merchant alias reviews that are pending, resolved, or ignored.",
+    method: "GET",
+    path: "/api/v1/review/aliases",
+    inputSchema: {
+      type: "object",
+      properties: {
+        status: { type: "string", enum: ["pending", "resolved", "ignored"] },
+      },
+    },
+    outputSchema: {
+      type: "object",
+      properties: {
+        items: { type: "array" },
+      },
+    },
+    examples: [
+      {
+        input: {
+          status: "pending",
+        },
+        output: {
+          items: [
+            {
+              id: "review_1",
+              entityId: "entity_1",
+              eventId: "evt_1",
+              source: "tasker",
+              originalValue: "Las Acacias SRL",
+              normalizedValue: "las acacias srl",
+              status: "pending",
+              suggestedAlias: "Las Acacias SRL",
+              suggestedCategoryPath: [],
+              aliasId: null,
+              reason: "merchant_candidate",
+              resolvedAt: null,
+              notes: null,
+              createdAt: "2026-07-13T12:30:00.000Z",
+              updatedAt: "2026-07-13T12:30:00.000Z",
+              entityValue: "Las Acacias SRL",
+              entityType: "merchant",
+            },
+          ],
+        },
+      },
+    ],
+    expectedErrors: [
+      {
+        code: "invalid_review_query",
+        description: "The status filter must be one of pending, resolved, or ignored.",
+      },
+    ],
+  },
+  {
+    name: "resolve_alias_review",
+    description: "Resolve a merchant review by assigning a human alias and category path.",
+    method: "POST",
+    path: "/api/v1/review/aliases/:id/resolve",
+    inputSchema: {
+      type: "object",
+      required: ["alias"],
+      properties: {
+        alias: { type: "string" },
+        categoryPath: { type: "array", items: { type: "string" } },
+        notes: { type: "string" },
+        reason: { type: "string" },
+      },
+    },
+    outputSchema: {
+      type: "object",
+      properties: {
+        review: { type: ["object", "null"] },
+        alias: { type: ["object", "null"] },
+        alreadyResolved: { type: "boolean" },
+      },
+    },
+    examples: [
+      {
+        input: {
+          alias: "kiosco",
+          categoryPath: ["gastos", "supermercado"],
+          notes: "Alias manual para Las Acacias SRL",
+        },
+        output: {
+          review: {
+            id: "review_1",
+            entityId: "entity_1",
+            eventId: "evt_1",
+            source: "tasker",
+            originalValue: "Las Acacias SRL",
+            normalizedValue: "las acacias srl",
+            status: "resolved",
+            suggestedAlias: "kiosco",
+            suggestedCategoryPath: ["gastos", "supermercado"],
+            aliasId: "alias_1",
+            reason: "merchant_candidate",
+            resolvedAt: "2026-07-13T12:30:00.000Z",
+            notes: "Alias manual para Las Acacias SRL",
+            createdAt: "2026-07-13T12:30:00.000Z",
+            updatedAt: "2026-07-13T12:30:00.000Z",
+            entityValue: "Las Acacias SRL",
+            entityType: "merchant",
+          },
+          alias: {
+            id: "alias_1",
+            entityId: "entity_1",
+            alias: "kiosco",
+            normalizedAlias: "kiosco",
+            categoryPath: ["gastos", "supermercado"],
+            notes: "Alias manual para Las Acacias SRL",
+            createdAt: "2026-07-13T12:30:00.000Z",
+            updatedAt: "2026-07-13T12:30:00.000Z",
+          },
+          alreadyResolved: false,
+        },
+      },
+    ],
+    expectedErrors: [
+      {
+        code: "invalid_review_resolution",
+        description: "The review id and alias payload must be valid.",
+      },
+      {
+        code: "alias_conflict",
+        description: "The alias already belongs to another entity.",
+      },
+      {
+        code: "review_not_found",
+        description: "No review queue item matches the provided id.",
+      },
+    ],
+  },
+  {
+    name: "ignore_alias_review",
+    description: "Mark a merchant review as ignored when it should not be turned into an alias.",
+    method: "POST",
+    path: "/api/v1/review/aliases/:id/ignore",
+    inputSchema: {
+      type: "object",
+      properties: {
+        notes: { type: "string" },
+      },
+    },
+    outputSchema: {
+      type: "object",
+      properties: {
+        id: { type: "string" },
+        status: { type: "string" },
+      },
+    },
+    examples: [
+      {
+        input: {
+          notes: "False positive merchant candidate",
+        },
+        output: {
+          id: "review_1",
+          status: "ignored",
+        },
+      },
+    ],
+    expectedErrors: [
+      {
+        code: "invalid_review_ignore",
+        description: "The ignore payload must be valid.",
+      },
+      {
+        code: "review_not_found",
+        description: "No review queue item matches the provided id.",
+      },
+    ],
+  },
+  {
     name: "ingest_event",
     description: "Store a generic event, classify it, extract entities and relations, and persist the result.",
     method: "POST",
@@ -818,11 +1088,31 @@ function toMcpToolManifest(tool: ToolManifest) {
   return {
     name: tool.name,
     description: tool.description,
+    section: getToolSection(tool.name),
     inputSchema: tool.inputSchema,
     outputSchema: tool.outputSchema,
     examples: tool.examples,
     expectedErrors: tool.expectedErrors,
   };
+}
+
+function buildToolSections(): ToolSectionManifest[] {
+  const bySection = new Map<ToolSectionId, ToolManifest[]>();
+  for (const sectionId of toolSectionOrder) {
+    bySection.set(sectionId, []);
+  }
+
+  for (const tool of tools) {
+    const sectionId = getToolSection(tool.name);
+    bySection.get(sectionId)?.push(tool);
+  }
+
+  return toolSectionOrder.map((id) => ({
+    id,
+    label: toolSectionMeta[id].label,
+    description: toolSectionMeta[id].description,
+    tools: (bySection.get(id) ?? []).map(toMcpToolManifest),
+  }));
 }
 
 function buildMcpError(id: unknown, code: number, message: string, data?: unknown) {
@@ -841,11 +1131,13 @@ export const registerAgentRoutes: FastifyPluginAsync = async (app) => {
   app.get("/agent/tools", async () => ({
     mode: "agent-first",
     protocol: "mcp-like",
+    sections: buildToolSections(),
     tools,
   }));
 
   app.get("/agent/mcp", async () => ({
     protocol: "mcp-like",
+    sections: buildToolSections(),
     tools: tools.map(toMcpToolManifest),
   }));
 
@@ -887,6 +1179,7 @@ export const registerAgentRoutes: FastifyPluginAsync = async (app) => {
         jsonrpc: "2.0",
         id: body.id ?? null,
         result: {
+          sections: buildToolSections(),
           tools: tools.map(toMcpToolManifest),
           nextCursor: body.params?.cursor ?? null,
         },

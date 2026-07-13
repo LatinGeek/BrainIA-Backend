@@ -137,6 +137,16 @@ export async function searchKnowledge(
           type,
           value,
           normalized_value as "normalizedValue",
+          coalesce((
+            select string_agg(alias, ' | ' order by created_at asc)
+            from entity_aliases a
+            where a.entity_id = e.id
+          ), '') as aliases,
+          coalesce((
+            select string_agg(array_to_string(category_path, ' / '), ' | ' order by created_at asc)
+            from entity_aliases a
+            where a.entity_id = e.id
+          ), '') as "categoryPaths",
           metadata,
           e.created_at as "createdAt",
           coalesce(em.canonical_entity_id, e.id) as "canonicalEntityId",
@@ -152,6 +162,16 @@ export async function searchKnowledge(
         where lower(type) like $1
            or lower(value) like $1
            or lower(normalized_value) like $1
+           or exists (
+             select 1
+             from entity_aliases a
+             where a.entity_id = e.id
+               and (
+                 lower(a.alias) like $1
+                 or lower(a.normalized_alias) like $1
+                 or lower(coalesce(array_to_string(a.category_path, ' / '), '')) like $1
+               )
+           )
         order by e.created_at desc
         limit 20
       `,
@@ -207,6 +227,8 @@ export async function searchKnowledge(
         matchHint: buildSearchMatchHint(query, row, {
           value: 5,
           normalizedValue: 4,
+          aliases: 4,
+          categoryPaths: 2,
           type: 1,
         }),
       });
@@ -242,7 +264,7 @@ export async function searchKnowledge(
     query,
     searchHints: {
       eventFields: ["title", "body", "source", "kind"],
-      entityFields: ["value", "normalizedValue", "type"],
+      entityFields: ["value", "normalizedValue", "aliases", "categoryPaths", "type"],
       relationFields: ["relationType", "label", "description"],
     },
     events: eventResults,

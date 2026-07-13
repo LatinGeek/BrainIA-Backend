@@ -24,6 +24,10 @@ export type ResolvedEntityRecord = EntityRecord & {
   matchedEntityId: string;
 };
 
+type EntityMatchRow = EntityRecord & {
+  matchedEntityId?: string | null;
+};
+
 export type EntityMergeRecord = {
   aliasEntityId: string;
   canonicalEntityId: string;
@@ -137,35 +141,84 @@ export async function resolveEntityMatches(
   db: Queryable,
   input: { id?: string; q?: string },
 ): Promise<ResolvedEntityRecord[]> {
-  const rows = input.id
-    ? await db.query<EntityRecord>(
-        `
-          ${selectEntityProjectionSql()}
-          where e.id = $1
-          limit 10
-        `,
-        [input.id],
-      )
-    : await db.query<EntityRecord>(
-        `
-          ${selectEntityProjectionSql()}
-          where lower(e.id) like $1
-             or lower(e.type) like $1
-             or lower(e.value) like $1
-             or lower(e.normalized_value) like $1
-          order by
-            case when lower(e.id) = $1 then 0 else 1 end,
-            case when lower(e.value) = $1 then 0 else 1 end,
-            e.created_at desc
-          limit 10
-        `,
-        [`%${input.q!.trim().toLowerCase()}%`],
-      );
-
   const resolved: ResolvedEntityRecord[] = [];
   const seenCanonicalIds = new Set<string>();
 
-  for (const row of rows.rows) {
+  if (input.id) {
+    const rows = await db.query<EntityRecord>(
+      `
+        ${selectEntityProjectionSql()}
+        where e.id = $1
+        limit 10
+      `,
+      [input.id],
+    );
+
+    for (const row of rows.rows) {
+      const canonical = row.canonicalEntityId === row.id ? row : await loadEntityById(db, row.canonicalEntityId);
+      if (!canonical) continue;
+      if (seenCanonicalIds.has(canonical.id)) continue;
+      seenCanonicalIds.add(canonical.id);
+
+      resolved.push({
+        ...canonical,
+        matchedEntityId: row.id,
+      });
+    }
+
+    return resolved;
+  }
+
+  const term = `%${input.q!.trim().toLowerCase()}%`;
+  const [entityRows, aliasRows] = await Promise.all([
+    db.query<EntityMatchRow>(
+      `
+        ${selectEntityProjectionSql()}
+        where lower(e.id) like $1
+           or lower(e.type) like $1
+           or lower(e.value) like $1
+           or lower(e.normalized_value) like $1
+        order by
+          case when lower(e.id) = $1 then 0 else 1 end,
+          case when lower(e.value) = $1 then 0 else 1 end,
+          e.created_at desc
+        limit 10
+      `,
+      [term],
+    ),
+    db.query<EntityMatchRow>(
+      `
+        select
+          e.id,
+          e.type,
+          e.value,
+          e.normalized_value as "normalizedValue",
+          e.metadata,
+          e.created_at as "createdAt",
+          coalesce(em.canonical_entity_id, e.id) as "canonicalEntityId",
+          case when em.alias_entity_id is null then true else false end as "isCanonical",
+          coalesce((
+            select count(*)::integer
+            from entity_merges aliases
+            where aliases.canonical_entity_id = e.id
+          ), 0) as "aliasCount",
+          em.reason as "mergeReason",
+          em.confidence as "mergeConfidence",
+          a.id as "matchedEntityId"
+        from entity_aliases a
+        join entities e on e.id = a.entity_id
+        left join entity_merges em on em.alias_entity_id = e.id
+        where lower(a.alias) like $1
+           or lower(a.normalized_alias) like $1
+           or lower(coalesce(array_to_string(a.category_path, ' / '), '')) like $1
+        order by a.created_at desc
+        limit 10
+      `,
+      [term],
+    ),
+  ]);
+
+  for (const row of [...entityRows.rows, ...aliasRows.rows]) {
     const canonical = row.canonicalEntityId === row.id ? row : await loadEntityById(db, row.canonicalEntityId);
     if (!canonical) continue;
     if (seenCanonicalIds.has(canonical.id)) continue;
@@ -173,7 +226,7 @@ export async function resolveEntityMatches(
 
     resolved.push({
       ...canonical,
-      matchedEntityId: row.id,
+      matchedEntityId: row.matchedEntityId ?? row.id,
     });
   }
 

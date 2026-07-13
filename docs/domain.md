@@ -110,6 +110,31 @@ The first extraction pass currently targets:
 
 These are heuristic and can be expanded later with richer extraction and NLP/LLM support.
 
+## Financial aliasing
+
+Alias review is currently scoped to financial events.
+
+That means the human alias queue is meant for:
+
+- `expense`
+- `income` once that inferred kind is added
+
+and for merchant-like or legal-name entities inside that financial flow.
+
+The rest of the event types keep their normal entity and relation extraction, but they do not enter the alias review queue.
+
+## Non-financial extraction
+
+All other events still participate in the general knowledge flow:
+
+- classification
+- entity extraction
+- relation extraction
+- canonical resolution
+- retrieval and graph expansion
+
+This is the non-financial side of the agent catalog. It keeps the knowledge graph useful without sending those events through the alias review workflow.
+
 ## Future relations
 
 Planned relation types include:
@@ -169,6 +194,48 @@ Current quality rules include:
 - generic merchant-like prefixes are stripped from merchant candidates
 - obviously noisy merchant or notification candidates are dropped
 - notification events can surface the event source as an entity so `received_from` relations stay materializable
+
+## Alias review queue
+
+Some notifications and emails only expose a legal name or merchant label.
+
+When the backend detects one of those candidates, it can place the value in a review queue so a human can decide:
+
+- the friendly alias to store
+- the category breadcrumb to attach
+- whether the candidate should be ignored
+
+This is especially useful for payment notifications such as wallet alerts or bank receipts.
+
+The resolved alias should then become a retrieval synonym for the canonical entity, while the category path keeps the user taxonomy visible.
+
+## Financial transaction correlation
+
+Financial captures now also materialize a canonical transaction layer on top of the raw events.
+
+This layer is meant to group repeated observations of the same real-world movement, for example:
+
+- a wallet notification
+- a bank notification
+- a receipt email
+- a later reprocess of the same event
+
+The transaction record stores:
+
+- canonical kind
+- normalized merchant label
+- normalized amount and currency
+- observed time window
+- evidence rows pointing back to raw event ids
+
+The matching heuristic is intentionally conservative:
+
+- explicit amount fields are preferred
+- bare numbers inside free text are ignored unless they come from a known amount field
+- wallet payloads can contribute canonical merchant and amount fields directly
+- notifications and emails only join the layer when they expose a real financial signal
+
+This gives the agent a single transaction view without losing the supporting source events.
 
 ## Model-assisted classification
 

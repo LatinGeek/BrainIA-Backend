@@ -17,7 +17,21 @@ test("agent tool manifest is minimal and self-describing", async () => {
     });
 
     assert.equal(response.statusCode, 200);
-    const body = response.json() as { tools: Array<{ name: string }> };
+    const body = response.json() as {
+      tools: Array<{ name: string }>;
+      sections: Array<{ id: string; tools: Array<{ name: string }> }>;
+    };
+    assert.deepEqual(body.sections.map((section) => section.id), [
+      "non_financial_entity_extraction",
+      "general_event_ingestion",
+      "financial_alias_review",
+    ]);
+    assert.deepEqual(body.sections[2]?.tools.map((tool) => tool.name), [
+      "list_entity_aliases",
+      "list_alias_reviews",
+      "resolve_alias_review",
+      "ignore_alias_review",
+    ]);
     assert.deepEqual(body.tools.map((tool) => tool.name), [
       "inspect_knowledge",
       "generate_insight",
@@ -28,6 +42,10 @@ test("agent tool manifest is minimal and self-describing", async () => {
       "get_digest_run",
       "resolve_entity",
       "merge_entity",
+      "list_entity_aliases",
+      "list_alias_reviews",
+      "resolve_alias_review",
+      "ignore_alias_review",
       "ingest_event",
       "reprocess_event",
       "list_events",
@@ -48,7 +66,15 @@ test("agent mcp registry mirrors the minimal public tools", async () => {
     });
 
     assert.equal(response.statusCode, 200);
-    const body = response.json() as { tools: Array<{ name: string }> };
+    const body = response.json() as {
+      tools: Array<{ name: string }>;
+      sections: Array<{ id: string; tools: Array<{ name: string }> }>;
+    };
+    assert.deepEqual(body.sections.map((section) => section.id), [
+      "non_financial_entity_extraction",
+      "general_event_ingestion",
+      "financial_alias_review",
+    ]);
     assert.deepEqual(body.tools.map((tool) => tool.name), [
       "inspect_knowledge",
       "generate_insight",
@@ -59,6 +85,10 @@ test("agent mcp registry mirrors the minimal public tools", async () => {
       "get_digest_run",
       "resolve_entity",
       "merge_entity",
+      "list_entity_aliases",
+      "list_alias_reviews",
+      "resolve_alias_review",
+      "ignore_alias_review",
       "ingest_event",
       "reprocess_event",
       "list_events",
@@ -102,7 +132,17 @@ test("agent mcp json-rpc initialize and tools list are available", async () => {
     });
 
     assert.equal(listResponse.statusCode, 200);
-    const listBody = listResponse.json() as { result: { tools: Array<{ name: string }> } };
+    const listBody = listResponse.json() as {
+      result: {
+        tools: Array<{ name: string }>;
+        sections: Array<{ id: string; tools: Array<{ name: string }> }>;
+      };
+    };
+    assert.deepEqual(listBody.result.sections.map((section) => section.id), [
+      "non_financial_entity_extraction",
+      "general_event_ingestion",
+      "financial_alias_review",
+    ]);
     assert.deepEqual(listBody.result.tools.map((tool) => tool.name), [
       "inspect_knowledge",
       "generate_insight",
@@ -113,6 +153,10 @@ test("agent mcp json-rpc initialize and tools list are available", async () => {
       "get_digest_run",
       "resolve_entity",
       "merge_entity",
+      "list_entity_aliases",
+      "list_alias_reviews",
+      "resolve_alias_review",
+      "ignore_alias_review",
       "ingest_event",
       "reprocess_event",
       "list_events",

@@ -9,6 +9,8 @@ import { registerEventRoutes } from "./routes/events.js";
 import { registerEntityResolveRoutes } from "./routes/entity-resolve.js";
 import { registerEntityMergeRoutes } from "./routes/entity-merge.js";
 import { registerDigestRoutes } from "./routes/digests.js";
+import { registerEntityAliasRoutes } from "./routes/entity-aliases.js";
+import { registerFinancialTransactionRoutes } from "./routes/financial-transactions.js";
 import { registerGraphRoutes } from "./routes/graph.js";
 import { registerInsightsRoutes } from "./routes/insights.js";
 import { registerKnowledgeRoutes } from "./routes/knowledge.js";
@@ -62,8 +64,10 @@ export async function buildApp(options: { authConfig?: AuthConfig } = {}) {
   await app.register(registerKnowledgeRoutes, { prefix: config.apiPrefix });
   await app.register(registerInsightsRoutes, { prefix: config.apiPrefix });
   await app.register(registerDigestRoutes, { prefix: config.apiPrefix });
+  await app.register(registerFinancialTransactionRoutes, { prefix: config.apiPrefix });
   await app.register(registerEntityResolveRoutes, { prefix: config.apiPrefix });
   await app.register(registerEntityMergeRoutes, { prefix: config.apiPrefix });
+  await app.register(registerEntityAliasRoutes, { prefix: config.apiPrefix });
   await app.register(registerGraphRoutes, { prefix: config.apiPrefix });
   await app.register(registerSearchRoutes, { prefix: config.apiPrefix });
 

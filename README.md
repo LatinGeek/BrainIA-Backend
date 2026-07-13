@@ -53,3 +53,13 @@ Set `EXPO_PUBLIC_BRAINIA_API_BASE_URL` to point it at the backend.
 - `npm run build`
 - `npm run test`
 - `npm run migrate`
+- `npm run cleanup:test-data`
+
+## Deployment notes
+
+- On Vercel, connect the Neon integration and use the injected `DATABASE_URL` and `DATABASE_URL_UNPOOLED`.
+- `DATABASE_URL` is the runtime connection string.
+- `DATABASE_URL_UNPOOLED` is preferred for migrations and direct schema work.
+- The Vercel production entrypoint is `serverless.ts`, which is compiled into `dist/serverless.js` and rewrites all incoming paths into the Fastify app.
+- `PORT`, `HOST`, and `API_PREFIX` stay as local/runtime defaults and do not need to be set on Vercel unless you intentionally override them.
+- Production smoke testing is automated in `.github/workflows/production-smoke.yml` and targets `https://brain-ia-six.vercel.app`.

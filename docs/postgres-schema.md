@@ -99,6 +99,43 @@ Current columns:
 - `confidence numeric(5,4) not null`
 - `created_at timestamptz not null default now()`
 
+### `entity_aliases`
+
+Stores human-readable aliases and category breadcrumbs for canonical entities.
+
+Current columns:
+
+- `id text primary key`
+- `entity_id text not null`
+- `alias text not null`
+- `normalized_alias text not null unique`
+- `category_path text[] not null default '{}'::text[]`
+- `notes text null`
+- `created_at timestamptz not null default now()`
+- `updated_at timestamptz not null default now()`
+
+### `entity_review_queue`
+
+Stores merchant or legal-name candidates from financial events that still need a human alias or category assignment.
+
+Current columns:
+
+- `id text primary key`
+- `entity_id text not null`
+- `event_id text null`
+- `source text not null`
+- `original_value text not null`
+- `normalized_value text not null`
+- `status text not null`
+- `suggested_alias text null`
+- `suggested_category_path text[] not null default '{}'::text[]`
+- `alias_id text null`
+- `reason text not null`
+- `resolved_at timestamptz null`
+- `notes text null`
+- `created_at timestamptz not null default now()`
+- `updated_at timestamptz not null default now()`
+
 ### `relations`
 
 - `id text primary key`
@@ -118,6 +155,50 @@ Current columns:
 - `relation_id text not null`
 - `role text not null`
 - `confidence numeric(5,4) not null`
+- `created_at timestamptz not null default now()`
+
+### `financial_transactions`
+
+Canonical financial transactions grouped from one or more raw events.
+
+Current columns:
+
+- `id text primary key`
+- `kind text not null`
+- `amount numeric not null`
+- `currency text not null`
+- `merchant_label text not null`
+- `normalized_merchant text not null`
+- `merchant_entity_id text null`
+- `observed_at timestamptz not null`
+- `window_start timestamptz not null`
+- `window_end timestamptz not null`
+- `evidence_count integer not null`
+- `match_score numeric(5,4) not null`
+- `match_strategy text not null`
+- `primary_source text not null`
+- `anchor_event_id text null`
+- `created_at timestamptz not null default now()`
+- `updated_at timestamptz not null default now()`
+
+### `financial_transaction_events`
+
+Evidence rows that link raw events to one canonical transaction.
+
+Current columns:
+
+- `id text primary key`
+- `transaction_id text not null`
+- `raw_event_id text not null`
+- `source text not null`
+- `kind text not null`
+- `amount numeric not null`
+- `currency text not null`
+- `merchant_label text not null`
+- `normalized_merchant text not null`
+- `observed_at timestamptz not null`
+- `match_score numeric(5,4) not null`
+- `match_reason text not null`
 - `created_at timestamptz not null default now()`
 
 ## Migration tracking
@@ -162,6 +243,10 @@ The active ingestion path writes to:
 - `relations`
 - `event_relations`
 - `entity_merges`
+- `entity_aliases`
+- `entity_review_queue`
+- `financial_transactions`
+- `financial_transaction_events`
 
 The API reads back a joined view of these tables.
 
@@ -193,6 +278,8 @@ This phase lets the runtime:
 The current P1 knowledge-quality pass adds:
 
 - `entity_merges`
+- `entity_aliases`
+- `entity_review_queue`
 - `same_as` provenance relations
 - canonical entity resolution for ingest, graph traversal, and search
 

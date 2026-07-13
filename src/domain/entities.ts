@@ -50,6 +50,27 @@ const GENERIC_MERCHANT_PREFIXES = new Set([
   "las",
 ]);
 
+const MERCHANT_TERMINATORS = new Set([
+  "payment",
+  "receipt",
+  "recibo",
+  "approved",
+  "processed",
+  "charged",
+  "paid",
+  "debit",
+  "credit",
+  "invoice",
+  "transaction",
+  "notification",
+  "alert",
+  "expense",
+  "gasto",
+  "compra",
+  "pago",
+  "payment",
+]);
+
 function buildDraftMetadata(source: string, extras: Record<string, unknown> = {}) {
   return {
     source,
@@ -108,6 +129,11 @@ function cleanMerchantCandidate(value: string) {
     words.shift();
   }
 
+  const stopIndex = words.findIndex((word, index) => index > 0 && MERCHANT_TERMINATORS.has(normalizeEntityValue(word)));
+  if (stopIndex > 0) {
+    words.length = stopIndex;
+  }
+
   return words.join(" ").trim();
 }
 
@@ -132,7 +158,7 @@ export function buildEntityDrafts(input: {
     });
   }
 
-  if (input.inferredKind === "expense") {
+  if (input.inferredKind === "expense" || input.inferredKind === "email" || input.inferredKind === "notification") {
     const text = `${input.title ?? ""} ${input.body ?? ""}`;
     const expenseMatch = text.match(/\b(gasto|compra|pag[oó])\b/i);
     if (expenseMatch?.[1]) {

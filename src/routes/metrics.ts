@@ -11,6 +11,8 @@ export const registerMetricsRoutes: FastifyPluginAsync = async (app) => {
       relationsCount: Number(metrics.relationsCount),
       eventEntitiesCount: Number(metrics.eventEntitiesCount),
       eventRelationsCount: Number(metrics.eventRelationsCount),
+      financialTransactionsCount: Number(metrics.financialTransactionsCount),
+      financialTransactionEventsCount: Number(metrics.financialTransactionEventsCount),
     };
   });
 };

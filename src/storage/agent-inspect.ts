@@ -8,6 +8,11 @@ type InspectDeps = {
   getEntityGraph: typeof getEntityGraph;
   searchKnowledge: typeof searchKnowledge;
   generateNaturalLanguageSummary: typeof generateNaturalLanguageSummary;
+  resolveEntityMatches?: (input: { q?: string; id?: string }) => Promise<Array<{
+    id: string;
+    canonicalEntityId: string;
+    matchedEntityId?: string | null;
+  }>>;
   model: string;
   apiKey?: string;
 };
@@ -24,7 +29,9 @@ export function createInspectKnowledge(deps: InspectDeps) {
     const allEntities = await deps.listEntities();
     const entityMatches = input.id
       ? allEntities.filter((entity) => entity.id === input.id || entity.canonicalEntityId === input.id)
-      : searchResult.entities;
+      : input.q && deps.resolveEntityMatches
+        ? await deps.resolveEntityMatches({ q: input.q })
+        : searchResult.entities;
 
     const selectedMatch = entityMatches[0] ?? null;
     const requestedEntityId = input.id ?? null;
@@ -104,6 +111,11 @@ export const inspectKnowledge = createInspectKnowledge({
   getEntityGraph,
   searchKnowledge,
   generateNaturalLanguageSummary,
+  resolveEntityMatches: async (input) => {
+    const { resolveEntityMatches } = await import("./entity-repository.js");
+    const { pool } = await import("./postgres.js");
+    return resolveEntityMatches(pool, input);
+  },
   apiKey: process.env.DEEPSEEK_API_KEY,
   model: process.env.DEEPSEEK_MODEL ?? "deepseek-v4-flash",
 });

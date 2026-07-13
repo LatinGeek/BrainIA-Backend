@@ -136,6 +136,13 @@ export function buildWalletCaptureEvent(input: {
     kind: "expense",
     title: input.merchant ?? input.note ?? "wallet capture",
     body: details || input.note || input.merchant || undefined,
+    raw: {
+      ...input.raw,
+      merchant: input.merchant ?? null,
+      amount: input.amount ?? null,
+      currency: input.currency ?? null,
+      note: input.note ?? null,
+    },
   });
 }
 

@@ -29,7 +29,7 @@ Update this file when:
 - event contract versioning and idempotency are active
 - event ingestion contract is documented
 - SQL migrations are versioned
-- knowledge model is split across raw events, classified events, entities, and relations
+- knowledge model is split across raw events, classified events, entities, relations, and financial transaction evidence
 - runtime writes to raw events and classified events
 - entity extraction and event-to-entity links are active
 - relation extraction and event-to-relation links are active
@@ -43,6 +43,7 @@ Update this file when:
 - MCP-like registry and JSON-RPC endpoint are active
 - merge-aware entity resolve and merge routes are active
 - entity resolution is separate from graph expansion
+- inspect now aligns its query resolution with the entity resolver
 - graph responses include root distance, direction, importance scores, and path hints
 - graph roots resolve to canonical entities when aliases are used
 - inspect endpoint is active for resolve + expand + explain with structured resolution and graph summaries
@@ -52,6 +53,7 @@ Update this file when:
 - digest generations are persisted as audit snapshots in `digest_runs`
 - a concrete future feature list exists in `docs/future-features.md`
 - an end-to-end test covers capture, search, graph, inspect, insight, digest, and agent surfaces
+- the agent catalog is grouped into non-financial extraction, general ingestion, and financial alias review sections
 - DeepSeek can generate a natural-language summary via `DEEPSEEK_API_KEY`
 - the public agent tool catalog now includes resolve, merge, insight, reprocess, and metrics helpers
 - a minimal test suite is active
@@ -60,11 +62,17 @@ Update this file when:
 - request IDs are echoed on responses and slow requests are logged
 - graph traversal caching is active for repeated bounded expansions
 - search results include local relevance hints and explanation fields
+- Vercel deployment now uses a serverless entrypoint (`serverless.ts`) compiled to `dist/serverless.js` with a rewrite for the full backend surface
+- production backend is reachable at `https://brain-ia-six.vercel.app/`, `/health` returns 200, and the remote smoke POST succeeds after applying the Postgres migrations
+- production smoke verification is automated through `.github/workflows/production-smoke.yml`
 - entity drafts are deduplicated and noisy merchant candidates are filtered
 - notification events can surface a source entity for `received_from` relations
+- financial merchant and legal-name candidates can be queued for alias review and categorization
+- canonical financial transactions now group wallet, notification, and email evidence across one canonical expense or income view
 - ambiguous classifications can be upgraded by DeepSeek when configured
 - model-assisted classification metadata is stored for audit and replay
 - quick capture routes are active for notes, email, notifications, wallet events, and offline batches
+- a cleanup script exists for test data and is dry-run by default unless `--apply` is passed; it also handles `financial_transactions` and `financial_transaction_events`
 - a thin mobile shell scaffold exists in `mobile/`
 - a thin web dashboard scaffold exists for exploration and debugging
 - operational runbooks now live in `docs/runbooks.md`

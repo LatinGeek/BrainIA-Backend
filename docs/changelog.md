@@ -58,3 +58,4 @@
 - added time-window digest generation with persisted audit snapshots
 - added an end-to-end regression test for capture, search, graph, inspect, insight, digest, and agent surfaces
 - added a concrete future feature list document for post-version planning
+- added a canonical financial transaction layer with evidence rows, plus cleanup support for financial test data

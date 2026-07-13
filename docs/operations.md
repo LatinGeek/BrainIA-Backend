@@ -11,6 +11,7 @@ Expected commands:
 - `npm run build`
 - `npm run lint`
 - `npm run migrate`
+- `npm run cleanup:test-data`
 
 ## Environment variables
 
@@ -23,6 +24,15 @@ Expected commands:
 - `BRAINIA_CLIENT_KEYS`
 - `DEEPSEEK_API_KEY`
 - `DEEPSEEK_MODEL`
+
+On Vercel with the Neon integration, `DATABASE_URL` and `DATABASE_URL_UNPOOLED` are injected for you.
+For local development, keep the localhost values in `.env.example` or override them in `.env.local`.
+
+`PORT`, `HOST`, and `API_PREFIX` are local defaults for the direct Node process. Vercel uses the `serverless.ts` entrypoint and a rewrite to `dist/serverless.js`, so those three variables do not need to be set in the Vercel dashboard unless you want custom overrides.
+
+The production smoke check is automated in `.github/workflows/production-smoke.yml` and runs `npm run smoke:remote` against `https://brain-ia-six.vercel.app`.
+
+The cleanup utility is intentionally dry-run by default. Use `--apply` only after verifying the matched rows, add `--prune-orphans` only when you want to remove now-unused graph records after deleting test rows, and pass `--include-runs` only when you also provide explicit filters for `insight_runs` and `digest_runs`. It also knows how to clear `financial_transactions` and `financial_transaction_events` when those rows are part of the selected test scope. For a complete data reset, use `--full-purge --apply`, which truncates all application tables except `schema_migrations`.
 
 ## Storage behavior
 
@@ -51,6 +61,7 @@ Current state:
 - search results include local relevance hints and explanation fields
 - entity graph endpoint is available for bounded neighborhood retrieval
 - quick capture routes are available for notes, email, notifications, wallet events, and offline batches
+- financial merchant and legal-name candidates can be queued for alias review and categorization
 - the `mobile/` package contains a thin native shell scaffold wired to metrics, inspect, and capture flows
 - agent tool manifest endpoint is available for MCP-like discovery
 - agent tool registry endpoint is available with schemas, examples, and errors
