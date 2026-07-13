@@ -25,6 +25,8 @@ type MatchSpec = {
   params: unknown[];
 };
 
+type Queryable = Pick<Pool, "query">;
+
 type CleanupCounts = {
   rawEvents: number;
   classifiedEvents: number;
@@ -369,7 +371,7 @@ function hasRunFilters(options: CleanupOptions) {
   return Boolean(options.since || options.before || options.tools.length || options.contains.length);
 }
 
-async function getCleanupCounts(db: Pool, options: CleanupOptions): Promise<CleanupCounts> {
+async function getCleanupCounts(db: Queryable, options: CleanupOptions): Promise<CleanupCounts> {
   const rawMatch = buildRawMatchSpec(options);
   const includeRuns = options.includeRuns && hasRunFilters(options);
 
@@ -412,7 +414,7 @@ async function getCleanupCounts(db: Pool, options: CleanupOptions): Promise<Clea
   };
 }
 
-async function applyCleanup(db: Pool, options: CleanupOptions): Promise<CleanupDeletes> {
+async function applyCleanup(db: Queryable, options: CleanupOptions): Promise<CleanupDeletes> {
   const rawMatch = buildRawMatchSpec(options);
   const includeRuns = options.includeRuns && hasRunFilters(options);
   const pruneOrphansClause = options.pruneOrphans
@@ -580,7 +582,7 @@ function hasAnyFilters(options: CleanupOptions) {
   );
 }
 
-async function listApplicationTables(db: Pool) {
+async function listApplicationTables(db: Queryable) {
   const result = await db.query<{ tablename: string }>(
     `
       select tablename
@@ -594,17 +596,17 @@ async function listApplicationTables(db: Pool) {
   return result.rows.map((row) => row.tablename);
 }
 
-async function getFullPurgeCounts(db: Pool) {
+async function getFullPurgeCounts(db: Queryable) {
   const tables = await listApplicationTables(db);
-  const counts = await Promise.all(
-    tables.map(async (table) => {
-      const result = await db.query<{ count: string }>(`select count(*)::text as count from ${table}`);
-      return {
-        table,
-        rows: Number(result.rows[0]?.count ?? 0),
-      };
-    }),
-  );
+  const counts = [];
+
+  for (const table of tables) {
+    const result = await db.query<{ count: string }>(`select count(*)::text as count from ${table}`);
+    counts.push({
+      table,
+      rows: Number(result.rows[0]?.count ?? 0),
+    });
+  }
 
   return {
     tables: counts,
@@ -612,7 +614,7 @@ async function getFullPurgeCounts(db: Pool) {
   };
 }
 
-async function applyFullPurge(db: Pool) {
+async function applyFullPurge(db: Queryable) {
   const tables = await listApplicationTables(db);
   if (!tables.length) {
     return {
@@ -654,10 +656,13 @@ async function main() {
   }
 
   const pool = new Pool({ connectionString });
+  const client = await pool.connect();
 
   try {
+    await client.query("begin");
+
     if (options.fullPurge) {
-      const summary = options.apply ? await applyFullPurge(pool) : await getFullPurgeCounts(pool);
+      const summary = options.apply ? await applyFullPurge(client) : await getFullPurgeCounts(client);
       console.log(
         JSON.stringify(
           {
@@ -670,10 +675,11 @@ async function main() {
           2,
         ),
       );
+      await client.query(options.apply ? "commit" : "rollback");
       return;
     }
 
-    const counts = await getCleanupCounts(pool, options);
+    const counts = await getCleanupCounts(client, options);
     console.log(
       JSON.stringify(
         {
@@ -699,10 +705,11 @@ async function main() {
     );
 
     if (!options.apply) {
+      await client.query("rollback");
       return;
     }
 
-    const deletionCounts = await applyCleanup(pool, options);
+    const deletionCounts = await applyCleanup(client, options);
     console.log(
       JSON.stringify(
         {
@@ -713,7 +720,12 @@ async function main() {
         2,
       ),
     );
+    await client.query("commit");
+  } catch (error) {
+    await client.query("rollback");
+    throw error;
   } finally {
+    client.release();
     await pool.end();
   }
 }
