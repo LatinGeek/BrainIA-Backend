@@ -40,11 +40,19 @@ const noteCaptureSchema = commonCaptureSchema.extend({
 });
 
 const emailCaptureSchema = commonCaptureSchema.extend({
+  provider: z.string().optional(),
+  accountId: z.string().optional(),
+  messageId: z.string().optional(),
+  threadId: z.string().optional(),
+  folder: z.string().optional(),
+  labels: z.array(z.string()).default([]),
   subject: z.string().optional(),
+  snippet: z.string().optional(),
   body: z.string().optional(),
   from: z.string().optional(),
   to: z.string().optional(),
   cc: z.array(z.string()).default([]),
+  bcc: z.array(z.string()).default([]),
 });
 
 const notificationCaptureSchema = commonCaptureSchema.extend({
@@ -135,7 +143,6 @@ export const registerCaptureRoutes = (options: CaptureRoutesOptions): FastifyPlu
       const stored = await ingestEvent(
         buildEmailCaptureEvent({
           ...parsed.data,
-          raw: parsed.data.raw,
         }),
         { clientId: getAuthClientId(auth) },
       );

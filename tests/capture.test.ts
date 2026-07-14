@@ -50,6 +50,55 @@ test("capture note route normalizes note payloads into the base event contract",
   }
 });
 
+test("capture email route normalizes provider-agnostic email payloads", async () => {
+  const calls: any[] = [];
+  const app = await createCaptureApp(async (event, context) => {
+    calls.push({ event, context });
+    return {
+      id: event.id,
+      source: event.source,
+      inferredKind: event.kind,
+      dedupeKey: `${event.source}:${event.id}`,
+    };
+  });
+
+  try {
+    const response = await app.inject({
+      method: "POST",
+      url: "/api/v1/capture/email",
+      payload: {
+        id: "mail_1",
+        provider: "gmail",
+        accountId: "acc_123",
+        messageId: "msg_123",
+        threadId: "thread_123",
+        folder: "Inbox",
+        subject: "Receipt from store",
+        snippet: "Your receipt is ready",
+        from: "billing@example.com",
+        to: "me@example.com",
+        labels: ["INBOX", "IMPORTANT"],
+        raw: { sourceSystem: "gmail-api" },
+      },
+    });
+
+    assert.equal(response.statusCode, 201);
+    assert.equal(calls.length, 1);
+    assert.equal(calls[0]?.event.source, "gmail");
+    assert.equal(calls[0]?.event.kind, "email");
+    assert.equal(calls[0]?.event.title, "Receipt from store");
+    assert.equal(calls[0]?.event.raw.provider, "gmail");
+    assert.equal(calls[0]?.event.raw.accountId, "acc_123");
+    assert.equal(calls[0]?.event.raw.messageId, "msg_123");
+    assert.equal(calls[0]?.event.raw.threadId, "thread_123");
+    assert.equal(calls[0]?.event.raw.folder, "Inbox");
+    assert.deepEqual(calls[0]?.event.raw.labels, ["INBOX", "IMPORTANT"]);
+    assert.equal(calls[0]?.event.raw.sourceSystem, "gmail-api");
+  } finally {
+    await app.close();
+  }
+});
+
 test("capture batch route expands source-specific payloads into events", async () => {
   const events = buildCaptureBatchEvents({
     batchId: "batch_1",

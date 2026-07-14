@@ -18,11 +18,19 @@ The mobile client or automation tool observes something relevant:
 
 It converts that observation into a generic event payload.
 
+For email, the same idea applies to a provider-agnostic bridge:
+
+- Gmail, Outlook, or another mail source normalizes a message into one canonical email payload
+- the bridge posts it to the backend
+- provider-specific details stay inside `raw`
+
 ### 2. HTTP ingestion
 
 The client sends the payload to:
 
 `POST /api/v1/events`
+
+Source-specific bridges may also use the thin capture routes, such as `POST /api/v1/capture/email`, when they want the backend to normalize a mail event before the generic event pipeline stores it.
 
 ### 3. Validation
 
@@ -47,6 +55,8 @@ This is where the system may infer:
 ### 5. Persistence
 
 The backend stores the raw event and the derived classification in Postgres within a single transaction.
+
+For email events, the backend also preserves bridge metadata such as provider, account id, message id, folder, and labels inside the raw payload so the system can remain provider-agnostic.
 
 In the split model:
 

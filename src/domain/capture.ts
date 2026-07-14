@@ -5,6 +5,35 @@ function trimOrNull(value: string | undefined | null) {
   return trimmed ? trimmed : null;
 }
 
+function joinEnvelopeLines(values: Array<string | null | undefined>) {
+  return values
+    .map((value) => value?.trim() ?? null)
+    .filter((value): value is string => Boolean(value))
+    .join("\n");
+}
+
+function buildStableEmailIdempotencyKey(input: {
+  provider?: string;
+  accountId?: string;
+  messageId?: string;
+  threadId?: string;
+  externalId?: string;
+  idempotencyKey?: string;
+}) {
+  if (input.idempotencyKey?.trim()) {
+    return input.idempotencyKey.trim();
+  }
+
+  const parts = [
+    input.provider?.trim(),
+    input.accountId?.trim(),
+    input.messageId?.trim() || input.externalId?.trim(),
+    input.threadId?.trim(),
+  ].filter(Boolean);
+
+  return parts.length ? parts.join(":") : null;
+}
+
 function buildBaseEvent(input: {
   id: string;
   source: string;
@@ -55,11 +84,19 @@ export function buildNoteCaptureEvent(input: {
 export function buildEmailCaptureEvent(input: {
   id: string;
   source?: string;
+  provider?: string;
+  accountId?: string;
+  messageId?: string;
+  threadId?: string;
+  folder?: string;
+  labels?: string[];
   subject?: string;
+  snippet?: string;
   body?: string;
   from?: string;
   to?: string;
   cc?: string[];
+  bcc?: string[];
   timestamp?: string;
   externalId?: string;
   idempotencyKey?: string;
@@ -67,21 +104,42 @@ export function buildEmailCaptureEvent(input: {
   raw?: Record<string, unknown>;
   tags?: string[];
 }) {
-  const envelope = [
+  const envelope = joinEnvelopeLines([
+    input.provider ? `provider: ${input.provider}` : null,
+    input.accountId ? `accountId: ${input.accountId}` : null,
+    input.messageId ? `messageId: ${input.messageId}` : null,
+    input.threadId ? `threadId: ${input.threadId}` : null,
+    input.folder ? `folder: ${input.folder}` : null,
     input.from ? `from: ${input.from}` : null,
     input.to ? `to: ${input.to}` : null,
     input.cc?.length ? `cc: ${input.cc.join(", ")}` : null,
+    input.bcc?.length ? `bcc: ${input.bcc.join(", ")}` : null,
+    input.snippet ? `snippet: ${input.snippet}` : null,
     input.body ? `body: ${input.body}` : null,
-  ]
-    .filter(Boolean)
-    .join("\n");
+  ]);
 
   return buildBaseEvent({
     ...input,
-    source: input.source?.trim() || "capture.email",
+    source: input.source?.trim() || input.provider?.trim() || "capture.email",
     kind: "email",
-    title: input.subject ?? input.body ?? "email capture",
-    body: envelope || input.body || input.subject || undefined,
+    title: input.subject ?? input.snippet ?? input.body ?? "email capture",
+    body: envelope || input.body || input.snippet || input.subject || undefined,
+    externalId: trimOrNull(input.externalId ?? input.messageId ?? null) ?? undefined,
+    idempotencyKey: buildStableEmailIdempotencyKey(input) ?? undefined,
+    raw: {
+      ...input.raw,
+      provider: input.provider ?? null,
+      accountId: input.accountId ?? null,
+      messageId: input.messageId ?? null,
+      threadId: input.threadId ?? null,
+      folder: input.folder ?? null,
+      labels: input.labels ?? [],
+      snippet: input.snippet ?? null,
+      from: input.from ?? null,
+      to: input.to ?? null,
+      cc: input.cc ?? [],
+      bcc: input.bcc ?? [],
+    },
   });
 }
 

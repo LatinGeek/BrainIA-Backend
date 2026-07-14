@@ -144,7 +144,62 @@ Captures a note-like payload and maps it to a `note` event.
 
 ### `POST /api/v1/capture/email`
 
-Captures email-like metadata and maps it to an `email` event.
+Captures a provider-agnostic email payload and maps it to an `email` event.
+
+The backend does not care whether the payload came from Gmail, Outlook, another mail provider, or a custom bridge. The bridge should normalize the message into one canonical email capture request and send it here.
+
+Recommended fields:
+
+- `id`
+- `provider`
+- `accountId`
+- `messageId`
+- `threadId`
+- `subject`
+- `snippet`
+- `body`
+- `from`
+- `to`
+- `cc`
+- `bcc`
+- `folder`
+- `labels`
+- `timestamp`
+- `externalId`
+- `idempotencyKey`
+- `raw`
+- `tags`
+
+Field notes:
+
+- `provider` is optional and can be used for analytics or debugging
+- `accountId` should identify the mailbox account inside the bridge
+- `messageId` should be the stable message identifier from the provider
+- `threadId` can be used when the bridge wants to group conversation threads
+- `raw` should preserve provider-specific payloads, headers, and any extra metadata
+- if `source` is omitted, the backend can fall back to `provider` or `capture.email`
+
+Example:
+
+```json
+{
+  "id": "mail_123",
+  "provider": "gmail",
+  "accountId": "acc_123",
+  "messageId": "msg_123",
+  "threadId": "thread_123",
+  "subject": "Receipt from store",
+  "snippet": "Your receipt is ready",
+  "from": "billing@example.com",
+  "to": "me@example.com",
+  "labels": ["INBOX", "IMPORTANT"],
+  "raw": {
+    "sourceSystem": "gmail-api"
+  }
+}
+```
+
+The bridge should keep the message id stable across retries so the backend can deduplicate safely.
 
 ### `POST /api/v1/capture/notification`
 
