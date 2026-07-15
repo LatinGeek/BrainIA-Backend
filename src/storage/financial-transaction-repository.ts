@@ -35,6 +35,9 @@ export type FinancialTransactionRecord = {
   evidenceCount: number;
   matchScore: number;
   matchStrategy: string;
+  category: string | null;
+  accountId: string | null;
+  account: string | null;
   primarySource: string;
   anchorEventId: string | null;
   createdAt: string;
@@ -110,12 +113,58 @@ function buildTransactionProjectionSql() {
       t.evidence_count as "evidenceCount",
       t.match_score as "matchScore",
       t.match_strategy as "matchStrategy",
+      t.category,
+      t.account_id as "accountId",
+      coalesce(a.name, a.mask) as account,
       t.primary_source as "primarySource",
       t.anchor_event_id as "anchorEventId",
       t.created_at as "createdAt",
       t.updated_at as "updatedAt"
     from financial_transactions t
+    left join financial_accounts a on a.id = t.account_id
   `;
+}
+
+export type FinancialAccountRecord = {
+  id: string;
+  name: string;
+  type: string;
+  mask: string | null;
+  externalRef: string | null;
+};
+
+export async function listFinancialAccounts() {
+  const result = await pool.query<FinancialAccountRecord>(
+    `select id, name, type, mask, external_ref as "externalRef" from financial_accounts order by name asc`,
+  );
+  return result.rows;
+}
+
+export async function createFinancialAccount(input: { name: string; type?: string; mask?: string | null }) {
+  const result = await pool.query<FinancialAccountRecord>(
+    `
+      insert into financial_accounts (id, name, type, mask)
+      values ($1, $2, $3, $4)
+      returning id, name, type, mask, external_ref as "externalRef"
+    `,
+    [`account_${randomUUID()}`, input.name.trim(), input.type?.trim() || "bank", input.mask?.trim() || null],
+  );
+  return result.rows[0];
+}
+
+export async function updateFinancialTransactionContext(
+  id: string,
+  input: { category?: string | null; accountId?: string | null },
+) {
+  const result = await pool.query(`
+    update financial_transactions
+    set category = $2, account_id = $3, updated_at = now()
+    where id = $1
+    returning id
+  `, [id, input.category?.trim() || null, input.accountId || null]);
+
+  if (!result.rowCount) return null;
+  return loadFinancialTransactionById(pool, id);
 }
 
 async function loadFinancialTransactionEvidence(db: Queryable, transactionId: string) {

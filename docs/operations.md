@@ -49,9 +49,10 @@ Current state:
 - split knowledge model documented for future rollout
 - first entity extraction pass active during ingestion
 - first relation extraction pass active during ingestion
+- email extraction now normalizes sender and recipient metadata before entity and relation building
 - relation descriptions are part of the canonical schema
 - event ingestion is idempotent through a dedupe key
-- reprocessing is available for a single stored event
+- reprocessing is available for a single stored event and prunes the event-local graph surface when rerun
 - a lightweight metrics endpoint is available
 - knowledge query endpoints are available for entities and relations
 - entity resolve endpoint is available for resolving ids or textual hints
@@ -61,7 +62,7 @@ Current state:
 - search results include local relevance hints and explanation fields
 - entity graph endpoint is available for bounded neighborhood retrieval
 - quick capture routes are available for notes, email, notifications, wallet events, and offline batches
-- financial merchant and legal-name candidates can be queued for alias review and categorization
+- financial merchant and legal-name candidates can be queued for alias review and categorization when they look descriptor-like rather than already cleanly branded
 - the `mobile/` package contains a thin native shell scaffold wired to metrics, inspect, and capture flows
 - agent tool manifest endpoint is available for MCP-like discovery
 - agent tool registry endpoint is available with schemas, examples, and errors
@@ -78,6 +79,7 @@ Current state:
 - ambiguous classifications can be upgraded by DeepSeek when `DEEPSEEK_API_KEY` is set
 - model-assisted classification metadata is stored for later audit and replay
 - DeepSeek integration is enabled through `DEEPSEEK_API_KEY`
+- the cleanup utility can also target `insight_runs` and `digest_runs` when explicit run filters are supplied
 - primary agent surface is intentionally compact and self-describing
 
 Production target:

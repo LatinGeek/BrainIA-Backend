@@ -92,6 +92,8 @@ test("capture email route normalizes provider-agnostic email payloads", async ()
     assert.equal(calls[0]?.event.raw.messageId, "msg_123");
     assert.equal(calls[0]?.event.raw.threadId, "thread_123");
     assert.equal(calls[0]?.event.raw.folder, "Inbox");
+    assert.equal(calls[0]?.event.raw.sender, "billing@example.com");
+    assert.equal(calls[0]?.event.raw.recipient, "me@example.com");
     assert.deepEqual(calls[0]?.event.raw.labels, ["INBOX", "IMPORTANT"]);
     assert.equal(calls[0]?.event.raw.sourceSystem, "gmail-api");
   } finally {

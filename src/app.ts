@@ -34,6 +34,15 @@ export async function buildApp(options: { authConfig?: AuthConfig } = {}) {
   });
 
   app.addHook("onRequest", async (request, reply) => {
+    reply
+      .header("access-control-allow-origin", "*")
+      .header("access-control-allow-methods", "GET,HEAD,POST,PUT,PATCH,DELETE,OPTIONS")
+      .header("access-control-allow-headers", "content-type, authorization, x-api-key, x-client-id, x-request-id");
+
+    if (request.method === "OPTIONS") {
+      return reply.code(204).send();
+    }
+
     reply.header("x-request-id", request.id);
   });
 

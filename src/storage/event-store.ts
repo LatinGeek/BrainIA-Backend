@@ -58,7 +58,10 @@ async function persistClassifiedEvent(
 
     await insertClassifiedEvent(db, classified, event.id, clientId);
 
-    const entityDrafts = buildEntityDrafts(classified);
+    const entityDrafts = buildEntityDrafts({
+      ...classified,
+      raw: classified.raw,
+    });
     const upsertedByType = new Map<string, Awaited<ReturnType<typeof upsertEntity>>>();
     for (const draft of entityDrafts) {
       const entity = await upsertEntity(db, draft);
@@ -140,7 +143,10 @@ export async function reprocessEvent(eventId: string) {
     });
     await insertClassifiedEvent(db, classified, rawEvent.id, rawEvent.clientId);
 
-    const entityDrafts = buildEntityDrafts(classified);
+    const entityDrafts = buildEntityDrafts({
+      ...classified,
+      raw: classified.raw,
+    });
     const upsertedByType = new Map<string, Awaited<ReturnType<typeof upsertEntity>>>();
     for (const draft of entityDrafts) {
       const entity = await upsertEntity(db, draft);

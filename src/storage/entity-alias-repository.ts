@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { pool } from "./postgres.js";
+import { mergeEntities, resolveCanonicalEntityId } from "./entity-repository.js";
 
 type Queryable = Pick<typeof pool, "query">;
 
@@ -42,6 +43,49 @@ function normalizeCategoryPath(categoryPath?: string[] | null) {
   return (categoryPath ?? [])
     .map((part) => part.trim())
     .filter(Boolean);
+}
+
+const LEGAL_NAME_SUFFIXES = new Set([
+  "srl",
+  "sa",
+  "sas",
+  "spa",
+  "llc",
+  "inc",
+  "ltd",
+  "corp",
+  "co",
+  "company",
+  "gmbh",
+  "plc",
+  "bv",
+  "ag",
+  "pty",
+  "sl",
+]);
+
+function shouldQueueMerchantReview(originalValue: string) {
+  const value = originalValue.trim();
+  const normalized = normalizeAlias(value);
+
+  if (!normalized) {
+    return false;
+  }
+
+  if (normalized.includes("@")) {
+    return false;
+  }
+
+  if (/[/*|:#\\]/.test(value)) {
+    return true;
+  }
+
+  const words = value.split(/\s+/).filter(Boolean);
+  if (words.length >= 3) {
+    return true;
+  }
+
+  return words.some((word) => LEGAL_NAME_SUFFIXES.has(normalizeAlias(word)));
 }
 
 export async function listEntityAliases(db: Queryable, entityId?: string) {
@@ -202,6 +246,10 @@ export async function enqueueEntityReview(
     reason?: string;
   },
 ) {
+  if (!shouldQueueMerchantReview(input.originalValue)) {
+    return null;
+  }
+
   const normalizedValue = normalizeAlias(input.originalValue);
   if (!normalizedValue) {
     return null;
@@ -297,18 +345,21 @@ export async function resolveEntityReview(
     categoryPath?: string[];
     notes?: string | null;
     reason?: string | null;
+    targetEntityId?: string | null;
   },
 ) {
   const queue = await db.query<{
     id: string;
     entityId: string;
     status: string;
+    normalizedValue: string;
   }>(
     `
       select
         id,
         entity_id as "entityId",
-        status
+        status,
+        normalized_value as "normalizedValue"
       from entity_review_queue
       where id = $1
       limit 1
@@ -332,8 +383,73 @@ export async function resolveEntityReview(
     };
   }
 
+  const existingAlias = await findEntityAliasByNormalizedAlias(db, normalizeAlias(input.alias));
+  let aliasEntityId = review.entityId;
+  const targetSelected = Boolean(input.targetEntityId);
+
+  if (input.targetEntityId) {
+    const reviewCanonicalId = await resolveCanonicalEntityId(db, review.entityId);
+    const targetCanonicalId = await resolveCanonicalEntityId(db, input.targetEntityId);
+
+    if (!reviewCanonicalId || !targetCanonicalId) {
+      throw new Error("Both the review entity and selected entity must exist before an alias can be unified");
+    }
+
+    if (reviewCanonicalId !== targetCanonicalId) {
+      await mergeEntities(db, reviewCanonicalId, targetCanonicalId, {
+        reason: "review_entity_match",
+        confidence: 0.96,
+      });
+    }
+
+    aliasEntityId = targetCanonicalId;
+  }
+
+  if (existingAlias && existingAlias.entityId !== aliasEntityId && targetSelected) {
+    const existingCanonicalId = await resolveCanonicalEntityId(db, existingAlias.entityId);
+    if (!existingCanonicalId) {
+      throw new Error("The existing alias entity must exist before it can be unified");
+    }
+
+    if (existingCanonicalId !== aliasEntityId) {
+      await mergeEntities(db, existingCanonicalId, aliasEntityId, {
+        reason: "review_entity_match",
+        confidence: 0.96,
+      });
+    }
+
+    await db.query(
+      `update entity_aliases set entity_id = $2, updated_at = now() where id = $1`,
+      [existingAlias.id, aliasEntityId],
+    );
+  } else if (existingAlias && existingAlias.entityId !== aliasEntityId) {
+    const reviewCanonicalId = await resolveCanonicalEntityId(db, review.entityId);
+    const existingCanonicalId = await resolveCanonicalEntityId(db, existingAlias.entityId);
+
+    if (!reviewCanonicalId || !existingCanonicalId) {
+      throw new Error("Both entities must exist before an alias can be unified");
+    }
+
+    const reviewMatchesAlias = normalizeAlias(review.normalizedValue) === normalizeAlias(input.alias);
+    const canonicalEntityId = reviewMatchesAlias ? reviewCanonicalId : existingCanonicalId;
+    const duplicateEntityId = canonicalEntityId === reviewCanonicalId ? existingCanonicalId : reviewCanonicalId;
+
+    if (canonicalEntityId !== duplicateEntityId) {
+      await mergeEntities(db, duplicateEntityId, canonicalEntityId, {
+        reason: "shared_alias",
+        confidence: 0.98,
+      });
+    }
+
+    await db.query(
+      `update entity_aliases set entity_id = $2, updated_at = now() where id = $1`,
+      [existingAlias.id, canonicalEntityId],
+    );
+    aliasEntityId = canonicalEntityId;
+  }
+
   const createdAlias = await createEntityAlias(db, {
-    entityId: review.entityId,
+    entityId: aliasEntityId,
     alias: input.alias,
     categoryPath: input.categoryPath,
     notes: input.notes ?? null,

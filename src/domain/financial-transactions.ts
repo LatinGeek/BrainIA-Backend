@@ -14,6 +14,8 @@ export type FinancialTransactionCandidate = {
   eventId: string;
   confidence: number;
   matchStrategy: string;
+  accountId: string | null;
+  accountName: string | null;
 };
 
 type EntityLike = Pick<EntityDraft, "type" | "value" | "normalizedValue"> & {
@@ -252,6 +254,8 @@ export function buildFinancialTransactionCandidate(input: {
     eventId: input.event.id,
     confidence: input.classified.confidence,
     matchStrategy: merchantDraft?.id ? "merchant_entity_match" : "merchant_text_match",
+    accountId: readRawString(raw, ["accountId", "account_id", "account"]) ?? null,
+    accountName: readRawString(raw, ["accountName", "account_name", "accountLabel"]) ?? null,
   };
 }
 

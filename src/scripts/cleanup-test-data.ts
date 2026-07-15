@@ -91,6 +91,14 @@ function pushParam(params: unknown[], value: unknown) {
   return `$${params.length}`;
 }
 
+function offsetSqlParams(sql: string, offset: number) {
+  if (offset === 0) {
+    return sql;
+  }
+
+  return sql.replace(/\$(\d+)/g, (_, value: string) => `$${Number(value) + offset}`);
+}
+
 function parseArgs(argv: string[]): CleanupOptions {
   const options: CleanupOptions = {
     apply: false,
@@ -328,7 +336,7 @@ function buildRawMatchSpec(options: CleanupOptions): MatchSpec {
   };
 }
 
-function buildRunMatchSpec(options: CleanupOptions): MatchSpec {
+function buildRunMatchSpec(table: "insight_runs" | "digest_runs", options: CleanupOptions): MatchSpec {
   const params: unknown[] = [];
   const clauses: string[] = [];
 
@@ -344,15 +352,24 @@ function buildRunMatchSpec(options: CleanupOptions): MatchSpec {
     clauses.push(`lower(coalesce(tool_name, '')) = any(${pushParam(params, options.tools)}::text[])`);
   }
 
+  const textFields = table === "insight_runs"
+    ? [
+        "coalesce(tool_name, '')",
+        "coalesce(query, '')",
+        "coalesce(summary, '')",
+        "coalesce(request::text, '')",
+        "coalesce(response::text, '')",
+      ]
+    : [
+        "coalesce(tool_name, '')",
+        "coalesce(scope, '')",
+        "coalesce(summary, '')",
+        "coalesce(request::text, '')",
+        "coalesce(response::text, '')",
+      ];
+
   const textClause = buildTextMatchClause(
-    [
-      "coalesce(tool_name, '')",
-      "coalesce(query, '')",
-      "coalesce(scope, '')",
-      "coalesce(summary, '')",
-      "coalesce(request::text, '')",
-      "coalesce(response::text, '')",
-    ],
+    textFields,
     options.contains,
     params,
   );
@@ -374,6 +391,12 @@ function hasRunFilters(options: CleanupOptions) {
 async function getCleanupCounts(db: Queryable, options: CleanupOptions): Promise<CleanupCounts> {
   const rawMatch = buildRawMatchSpec(options);
   const includeRuns = options.includeRuns && hasRunFilters(options);
+  const insightRunMatch = includeRuns ? buildRunMatchSpec("insight_runs", options) : null;
+  const digestRunMatch = includeRuns ? buildRunMatchSpec("digest_runs", options) : null;
+  const insightRunSql = insightRunMatch ? offsetSqlParams(insightRunMatch.sql, rawMatch.params.length) : null;
+  const digestRunSql = digestRunMatch
+    ? offsetSqlParams(digestRunMatch.sql, rawMatch.params.length + (insightRunMatch?.params.length ?? 0))
+    : null;
 
   const result = await db.query<CleanupCounts>(
     `
@@ -395,10 +418,12 @@ async function getCleanupCounts(db: Queryable, options: CleanupOptions): Promise
         (select count(*)::int from entity_review_queue q join candidate_raw_events r on r.id = q.event_id) as "reviewQueue",
         (select count(*)::int from financial_transaction_events fte join candidate_raw_events r on r.id = fte.raw_event_id) as "financialTransactionEvents",
         (select count(*)::int from financial_transactions ft join candidate_financial_transactions cft on cft.transaction_id = ft.id where not exists (select 1 from financial_transaction_events fte where fte.transaction_id = ft.id and fte.raw_event_id not in (select id from candidate_raw_events))) as "financialTransactions",
-        ${includeRuns ? `(select count(*)::int from insight_runs where ${buildRunMatchSpec(options).sql})` : "0::int"} as "insightRuns",
-        ${includeRuns ? `(select count(*)::int from digest_runs where ${buildRunMatchSpec(options).sql})` : "0::int"} as "digestRuns"
+        ${includeRuns && insightRunMatch && insightRunSql ? `(select count(*)::int from insight_runs where ${insightRunSql})` : "0::int"} as "insightRuns",
+        ${includeRuns && digestRunMatch && digestRunSql ? `(select count(*)::int from digest_runs where ${digestRunSql})` : "0::int"} as "digestRuns"
     `,
-    includeRuns ? [...rawMatch.params, ...buildRunMatchSpec(options).params, ...buildRunMatchSpec(options).params] : rawMatch.params,
+    includeRuns && insightRunMatch && digestRunMatch
+      ? [...rawMatch.params, ...insightRunMatch.params, ...digestRunMatch.params]
+      : rawMatch.params,
   );
 
   return result.rows[0] ?? {
@@ -417,6 +442,10 @@ async function getCleanupCounts(db: Queryable, options: CleanupOptions): Promise
 async function applyCleanup(db: Queryable, options: CleanupOptions): Promise<CleanupDeletes> {
   const rawMatch = buildRawMatchSpec(options);
   const includeRuns = options.includeRuns && hasRunFilters(options);
+  const insightRunMatch = includeRuns ? buildRunMatchSpec("insight_runs", options) : null;
+  const digestRunMatch = includeRuns ? buildRunMatchSpec("digest_runs", options) : null;
+  const insightRunSql = insightRunMatch ? offsetSqlParams(insightRunMatch.sql, 0) : null;
+  const digestRunSql = digestRunMatch ? offsetSqlParams(digestRunMatch.sql, insightRunMatch?.params.length ?? 0) : null;
   const pruneOrphansClause = options.pruneOrphans
     ? `
       ,
@@ -482,17 +511,16 @@ async function applyCleanup(db: Queryable, options: CleanupOptions): Promise<Cle
     `,
   );
 
-  const runMatch = includeRuns ? buildRunMatchSpec(options) : null;
-  const runDeleteCtes = includeRuns && runMatch
+  const runDeleteCtes = includeRuns && insightRunMatch && digestRunMatch && insightRunSql && digestRunSql
     ? `
       , deleted_insight_runs as (
         delete from insight_runs
-        where ${runMatch.sql}
+        where ${insightRunSql}
         returning id
       ),
       deleted_digest_runs as (
         delete from digest_runs
-        where ${runMatch.sql}
+        where ${digestRunSql}
         returning id
       )`
     : "";
@@ -547,7 +575,9 @@ async function applyCleanup(db: Queryable, options: CleanupOptions): Promise<Cle
         ${options.pruneOrphans ? '(select count(*)::int from deleted_relations) as "orphanRelations",' : '0::int as "orphanRelations",'}
         ${options.pruneOrphans ? '(select count(*)::int from deleted_entities) as "orphanEntities"' : '0::int as "orphanEntities"'}
     `,
-    includeRuns && runMatch ? [...runMatch.params, ...runMatch.params] : [],
+    includeRuns && insightRunMatch && digestRunMatch
+      ? [...insightRunMatch.params, ...digestRunMatch.params]
+      : [],
   );
 
   return deletionResult.rows[0] ?? {

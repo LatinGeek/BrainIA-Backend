@@ -21,6 +21,7 @@ const resolveReviewSchema = z.object({
   categoryPath: z.array(z.string().min(1)).default([]),
   notes: z.string().optional(),
   reason: z.string().optional(),
+  targetEntityId: z.string().min(1).optional(),
 });
 
 const ignoreReviewSchema = z.object({
@@ -73,6 +74,7 @@ export const registerEntityAliasRoutes: FastifyPluginAsync = async (app) => {
         categoryPath: body.data.categoryPath,
         notes: body.data.notes,
         reason: body.data.reason,
+        targetEntityId: body.data.targetEntityId,
       });
 
       if (!result) {

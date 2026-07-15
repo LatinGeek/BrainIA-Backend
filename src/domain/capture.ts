@@ -12,6 +12,71 @@ function joinEnvelopeLines(values: Array<string | null | undefined>) {
     .join("\n");
 }
 
+type RawRecord = Record<string, unknown>;
+
+function readRawField(raw: RawRecord | undefined, key: string) {
+  if (!raw) {
+    return undefined;
+  }
+
+  if (Object.prototype.hasOwnProperty.call(raw, key)) {
+    return raw[key];
+  }
+
+  const providerPayload = raw.providerPayload;
+  if (providerPayload && typeof providerPayload === "object" && !Array.isArray(providerPayload)) {
+    const providerRecord = providerPayload as RawRecord;
+    if (Object.prototype.hasOwnProperty.call(providerRecord, key)) {
+      return providerRecord[key];
+    }
+  }
+
+  return undefined;
+}
+
+function extractStringValue(value: unknown): string | null {
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    return trimmed || null;
+  }
+
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return String(value);
+  }
+
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const extracted = extractStringValue(item);
+      if (extracted) {
+        return extracted;
+      }
+    }
+  }
+
+  if (value && typeof value === "object") {
+    const record = value as RawRecord;
+    for (const key of ["displayName", "name", "email", "address", "value", "text"]) {
+      const extracted = extractStringValue(record[key]);
+      if (extracted) {
+        return extracted;
+      }
+    }
+  }
+
+  return null;
+}
+
+function readEmailField(raw: RawRecord | undefined, keys: string[]) {
+  for (const key of keys) {
+    const extracted = extractStringValue(readRawField(raw, key));
+    if (extracted) {
+      return extracted;
+    }
+  }
+
+  return null;
+}
+
 function buildStableEmailIdempotencyKey(input: {
   provider?: string;
   accountId?: string;
@@ -104,6 +169,14 @@ export function buildEmailCaptureEvent(input: {
   raw?: Record<string, unknown>;
   tags?: string[];
 }) {
+  const normalizedSender =
+    readEmailField(input.raw, ["fromName", "fromEmail", "senderName", "senderEmail", "from", "sender"]) ??
+    input.from ??
+    null;
+  const normalizedRecipient =
+    readEmailField(input.raw, ["to", "recipient", "recipientEmail", "toEmail"]) ??
+    input.to ??
+    null;
   const envelope = joinEnvelopeLines([
     input.provider ? `provider: ${input.provider}` : null,
     input.accountId ? `accountId: ${input.accountId}` : null,
@@ -135,8 +208,10 @@ export function buildEmailCaptureEvent(input: {
       folder: input.folder ?? null,
       labels: input.labels ?? [],
       snippet: input.snippet ?? null,
-      from: input.from ?? null,
-      to: input.to ?? null,
+      from: normalizedSender,
+      sender: normalizedSender,
+      to: normalizedRecipient,
+      recipient: normalizedRecipient,
       cc: input.cc ?? [],
       bcc: input.bcc ?? [],
     },

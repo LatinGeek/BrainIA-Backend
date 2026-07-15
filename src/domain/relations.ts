@@ -64,6 +64,25 @@ export function buildRelationDrafts(input: {
   if (input.inferredKind === "email") {
     const message = getFirstEntity(input.entities, "message");
     const recipient = getFirstEntity(input.entities, "recipient");
+    const sender = getFirstEntity(input.entities, "sender");
+
+    if (message && sender) {
+      drafts.push({
+        relationType: "sent_by",
+        label: "se envía desde",
+        description: `${message.value} se envía desde ${sender.value}`,
+        sourceEntity: message,
+        targetEntity: sender,
+        confidence: 0.75,
+        metadata: buildRelationMetadata({
+          source: input.source ?? "unknown",
+          title: input.title,
+          body: input.body,
+          inferredKind: input.inferredKind,
+        }),
+      });
+    }
+
     if (message && recipient) {
       drafts.push({
         relationType: "sent_to",

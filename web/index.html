@@ -58,6 +58,23 @@
             <p class="muted">Run an inspect query to see resolution and graph summary output.</p>
           </div>
         </section>
+
+        <section class="card span-3 graph-card">
+          <div class="section-header">
+            <h2>Graph</h2>
+            <span class="muted">Layered SVG view of the inspected DAG</span>
+          </div>
+          <div class="graph-banner">
+            <div id="graph-summary" class="graph-summary">Run inspect to render the graph.</div>
+            <div class="graph-legend">Root on the left, deeper layers to the right.</div>
+          </div>
+          <div class="graph-stage">
+            <svg id="graph-svg" class="graph-svg" viewBox="0 0 1400 520" role="img" aria-label="Knowledge graph visualization"></svg>
+          </div>
+          <div class="graph-paths" id="graph-paths">
+            <p class="muted">The selected graph paths will appear here after inspect.</p>
+          </div>
+        </section>
       </main>
 
       <section class="card logs-card">

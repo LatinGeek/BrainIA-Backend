@@ -87,13 +87,16 @@ The future target UI is mobile.
 - search results include local relevance hints and explanation fields
 - entity drafts are deduplicated and noisy merchant candidates are filtered
 - notification events can surface a source entity for `received_from` relations
-- merchant and legal-name candidates can be queued for alias review and categorization
+- email capture now normalizes sender and recipient metadata before graph extraction
+- merchant and legal-name candidates can be queued for alias review and categorization only when they look descriptor-like rather than already cleanly branded
 - canonical financial transactions now group wallet, notification, and email evidence across one canonical expense or income view
 - ambiguous classifications can be upgraded by DeepSeek when configured
 - model-assisted classification metadata is stored for audit and replay
 - quick capture routes are active for notes, email, notifications, wallet events, and offline batches
 - a cleanup script exists for test data and runs in dry-run mode unless `--apply` is passed; audit runs are opt-in through `--include-runs`
 - the cleanup script also handles `financial_transactions` and `financial_transaction_events`
+- single-event reprocessing prunes the event-local graph surface so orphan entities and relations do not survive the rerun
+- the cleanup script can also target `insight_runs` and `digest_runs` when explicit run filters are provided
 - a thin mobile shell scaffold exists in `mobile/`
 - a thin web dashboard scaffold exists for exploration and debugging
 - runbooks for import, replay, recovery, and slow requests live in `docs/runbooks.md`

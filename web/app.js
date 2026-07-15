@@ -5,6 +5,9 @@ const inspectDepth = document.getElementById("inspect-depth");
 const inspectNodes = document.getElementById("inspect-nodes");
 const inspectRelations = document.getElementById("inspect-relations");
 const inspectResult = document.getElementById("inspect-result");
+const graphSummary = document.getElementById("graph-summary");
+const graphSvg = document.getElementById("graph-svg");
+const graphPaths = document.getElementById("graph-paths");
 const statusPill = document.getElementById("status-pill");
 const activityLog = document.getElementById("activity-log");
 const refreshMetricsButton = document.getElementById("refresh-metrics");
@@ -79,6 +82,139 @@ function renderInspect(result) {
   `;
 }
 
+function hashToHue(value) {
+  let hash = 0;
+  for (let index = 0; index < value.length; index += 1) {
+    hash = (hash << 5) - hash + value.charCodeAt(index);
+    hash |= 0;
+  }
+  return Math.abs(hash) % 360;
+}
+
+function truncate(value, length) {
+  if (value.length <= length) {
+    return value;
+  }
+
+  return `${value.slice(0, Math.max(0, length - 1))}…`;
+}
+
+function renderGraph(result) {
+  const graph = result?.graph;
+  if (!graph || !Array.isArray(graph.nodes) || graph.nodes.length === 0) {
+    graphSummary.textContent = "No graph available for this inspect result.";
+    graphSvg.innerHTML = `
+      <text x="50%" y="50%" text-anchor="middle" fill="#92a2bd" font-size="16">
+        Run inspect to render a graph.
+      </text>
+    `;
+    graphPaths.innerHTML = `<p class="muted">No paths to display.</p>`;
+    return;
+  }
+
+  const nodes = graph.nodes.map((node) => ({
+    ...node,
+    layer: Number.isFinite(node.rootDistance) ? node.rootDistance : Number.isFinite(node.depth) ? node.depth : 0,
+  }));
+  const maxLayer = Math.max(...nodes.map((node) => node.layer), 0);
+  const width = 1400;
+  const height = Math.max(460, Math.max(...Array.from({ length: maxLayer + 1 }, (_, depth) => nodes.filter((node) => node.layer === depth).length)) * 90 + 120);
+  const nodeWidth = 170;
+  const nodeHeight = 56;
+  const layerWidth = maxLayer > 0 ? (width - 180) / maxLayer : 0;
+  const positions = new Map();
+  const layers = Array.from({ length: maxLayer + 1 }, (_, depth) =>
+    nodes
+      .filter((node) => node.layer === depth)
+      .sort((left, right) => left.value.localeCompare(right.value)),
+  );
+
+  layers.forEach((layerNodes, depth) => {
+    const x = maxLayer === 0 ? width / 2 : 90 + depth * layerWidth;
+    const step = height / (layerNodes.length + 1);
+    layerNodes.forEach((node, index) => {
+      positions.set(node.id, {
+        x,
+        y: (index + 1) * step,
+      });
+    });
+  });
+
+  const relationMarkup = graph.relations
+    .map((relation) => {
+      const source = positions.get(relation.sourceEntityId);
+      const target = positions.get(relation.targetEntityId);
+      if (!source || !target) {
+        return "";
+      }
+
+      const midX = (source.x + target.x) / 2;
+      const curve = `M ${source.x + nodeWidth / 2} ${source.y} C ${midX} ${source.y}, ${midX} ${target.y}, ${target.x - nodeWidth / 2} ${target.y}`;
+      const stroke = relation.direction === "outgoing" ? "rgba(56, 189, 248, 0.7)" : "rgba(245, 158, 11, 0.65)";
+
+      return `
+        <g class="graph-edge">
+          <path d="${curve}" stroke="${stroke}" />
+          <title>${escapeHtml(`${relation.explanation} (${relation.relationType})`)}</title>
+        </g>
+      `;
+    })
+    .join("");
+
+  const nodeMarkup = nodes
+    .map((node) => {
+      const position = positions.get(node.id);
+      const fillHue = hashToHue(node.type ?? "entity");
+      const fill = `hsla(${fillHue}, 84%, 55%, 0.18)`;
+      const stroke = `hsla(${fillHue}, 90%, 64%, 0.7)`;
+      const isRoot = node.id === graph.rootEntity.id;
+      const label = truncate(node.value, 20);
+      const typeLabel = truncate(node.type ?? "entity", 18);
+
+      return `
+        <g class="graph-node ${isRoot ? "root" : ""}" transform="translate(${position.x}, ${position.y})">
+          <rect x="${-nodeWidth / 2}" y="${-nodeHeight / 2}" width="${nodeWidth}" height="${nodeHeight}" rx="18" fill="${fill}" stroke="${stroke}" />
+          <text class="graph-node-type" x="0" y="-4" text-anchor="middle">${escapeHtml(typeLabel)}</text>
+          <text class="graph-node-label" x="0" y="16" text-anchor="middle">${escapeHtml(label)}</text>
+          <title>${escapeHtml(`${node.value} · depth ${node.layer}`)}</title>
+        </g>
+      `;
+    })
+    .join("");
+
+  graphSvg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+  graphSvg.innerHTML = `
+    <defs>
+      <marker id="arrowhead" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M 0 0 L 10 5 L 0 10 z" fill="rgba(245, 158, 11, 0.9)"></path>
+      </marker>
+    </defs>
+    <g class="graph-edges" marker-end="url(#arrowhead)">${relationMarkup}</g>
+    <g class="graph-nodes">${nodeMarkup}</g>
+  `;
+
+  const relationList = graph.paths
+    .slice(0, 12)
+    .map(
+      (path) => `
+        <article class="graph-path">
+          <div class="graph-path-title">${escapeHtml(path.summary)}</div>
+          <div class="graph-path-meta">
+            ${escapeHtml(path.sourceLabel ?? path.nodeIds[0] ?? "unknown")}
+            <span>→</span>
+            ${escapeHtml(path.targetLabel ?? path.nodeIds[path.nodeIds.length - 1] ?? "unknown")}
+            <span>· depth ${path.depth}</span>
+            <span>· ${path.direction}</span>
+          </div>
+        </article>
+      `,
+    )
+    .join("");
+
+  graphSummary.textContent = `${graph.stats.nodesCount} nodes, ${graph.stats.relationsCount} relations, max depth ${graph.stats.maxDepthReached}${graph.stats.truncated ? ", truncated" : ""}`;
+  graphPaths.innerHTML = relationList || `<p class="muted">No graph paths available.</p>`;
+}
+
 function escapeHtml(value) {
   return value
     .replaceAll("&", "&amp;")
@@ -115,10 +251,12 @@ async function runInspect(event) {
     const { data, requestId } = await requestJson(`/api/v1/agent/inspect?${params.toString()}`);
     renderInspect(data);
     statusPill.textContent = `Inspect complete ${requestId ? `(${requestId})` : ""}`.trim();
+    renderGraph(data);
     addActivity("Inspect completed", requestId ? `Request ${requestId}` : "No request id");
   } catch (error) {
     statusPill.textContent = "Inspect failed";
     inspectResult.innerHTML = `<p class="muted">${escapeHtml(error instanceof Error ? error.message : "Unknown error")}</p>`;
+    renderGraph(null);
     addActivity("Inspect failed", error instanceof Error ? error.message : "Unknown error", "error");
   }
 }
@@ -184,3 +322,4 @@ document.querySelectorAll("[data-capture]").forEach((button) => {
 });
 
 loadMetrics();
+renderGraph(null);

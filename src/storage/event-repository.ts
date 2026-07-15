@@ -177,19 +177,100 @@ export async function findStoredRawEventId(
 }
 
 export async function deleteDerivedDataForEvent(db: Queryable, eventId: string) {
-  await db.query("delete from event_relations where event_id = $1", [eventId]);
-  await db.query("delete from event_entities where event_id = $1", [eventId]);
-  await db.query("delete from financial_transaction_events where raw_event_id = $1", [eventId]);
   await db.query(
     `
-      delete from financial_transactions t
-      where not exists (
-        select 1
-        from financial_transaction_events e
-        where e.transaction_id = t.id
+      with
+      candidate_entities as (
+        select distinct entity_id
+        from event_entities
+        where event_id = $1
+      ),
+      candidate_relations as (
+        select distinct relation_id
+        from event_relations
+        where event_id = $1
+      ),
+      deleted_event_relations as (
+        delete from event_relations
+        where event_id = $1
+        returning relation_id
+      ),
+      deleted_event_entities as (
+        delete from event_entities
+        where event_id = $1
+        returning entity_id
+      ),
+      deleted_review_queue as (
+        delete from entity_review_queue
+        where event_id = $1
+        returning id
+      ),
+      deleted_financial_transaction_events as (
+        delete from financial_transaction_events
+        where raw_event_id = $1
+        returning transaction_id
+      ),
+      deleted_financial_transactions as (
+        delete from financial_transactions t
+        where not exists (
+          select 1
+          from financial_transaction_events e
+          where e.transaction_id = t.id
+        )
+        returning id
+      ),
+      deleted_relations as (
+        delete from relations rel
+        where rel.id in (select relation_id from candidate_relations)
+          and not exists (
+            select 1
+            from event_relations er
+            where er.relation_id = rel.id
+          )
+        returning id
+      ),
+      deleted_entities as (
+        delete from entities e
+        where e.id in (select entity_id from candidate_entities)
+          and not exists (
+            select 1
+            from event_entities ee
+            where ee.entity_id = e.id
+          )
+          and not exists (
+            select 1
+            from relations r
+            where r.source_entity_id = e.id
+               or r.target_entity_id = e.id
+          )
+          and not exists (
+            select 1
+            from entity_merges m
+            where m.alias_entity_id = e.id
+               or m.canonical_entity_id = e.id
+          )
+          and not exists (
+            select 1
+            from entity_aliases a
+            where a.entity_id = e.id
+          )
+          and not exists (
+            select 1
+            from entity_review_queue q
+            where q.entity_id = e.id
+          )
+          and not exists (
+            select 1
+            from financial_transactions ft
+            where ft.merchant_entity_id = e.id
+          )
+        returning id
       )
+      select 1
     `,
+    [eventId],
   );
+
   await db.query("delete from classified_events where raw_event_id = $1", [eventId]);
 }
 

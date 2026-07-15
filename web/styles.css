@@ -89,6 +89,10 @@ h1 {
   grid-column: span 2;
 }
 
+.span-3 {
+  grid-column: span 3;
+}
+
 .card {
   padding: 22px;
 }
@@ -200,6 +204,101 @@ input {
   color: #d9e6f4;
 }
 
+.graph-card {
+  overflow: hidden;
+}
+
+.graph-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.graph-summary {
+  font-weight: 700;
+}
+
+.graph-legend {
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.graph-stage {
+  border-radius: 20px;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  background:
+    radial-gradient(circle at top left, rgba(56, 189, 248, 0.09), transparent 28%),
+    rgba(15, 23, 42, 0.74);
+  overflow: hidden;
+}
+
+.graph-svg {
+  width: 100%;
+  height: auto;
+  min-height: 460px;
+  display: block;
+}
+
+.graph-edges path {
+  fill: none;
+  stroke-width: 2.2;
+  opacity: 0.9;
+}
+
+.graph-node text {
+  pointer-events: none;
+  fill: var(--text);
+}
+
+.graph-node-type {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  fill: var(--muted);
+}
+
+.graph-node-label {
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.graph-node.root rect {
+  stroke-width: 2.5;
+}
+
+.graph-paths {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.graph-path {
+  border-radius: 16px;
+  padding: 12px 14px;
+  background: rgba(15, 23, 42, 0.72);
+  border: 1px solid rgba(148, 163, 184, 0.14);
+}
+
+.graph-path-title {
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.graph-path-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+
+.graph-path-meta span {
+  opacity: 0.7;
+}
+
 .activity-log {
   display: grid;
   gap: 10px;
@@ -239,11 +338,20 @@ input {
     grid-column: span 1;
   }
 
+  .span-3 {
+    grid-column: span 1;
+  }
+
   .hero {
     flex-direction: column;
   }
 
   .inspect-form {
     grid-template-columns: 1fr;
+  }
+
+  .graph-banner {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }

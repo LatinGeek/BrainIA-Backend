@@ -198,10 +198,28 @@ test("end-to-end capture, retrieval, insight, and digest flow stays coherent", a
         evidence: Array<{ rawEventId: string; source: string }>;
       }>;
     };
-    assert.equal(financialTransactionsBody.count, 1);
-    assert.equal(financialTransactionsBody.items[0]?.kind, "expense");
-    assert.equal(financialTransactionsBody.items[0]?.evidence.length, 2);
-    assert.ok(financialTransactionsBody.items[0]?.merchantLabel.toLowerCase().includes(merchant.toLowerCase()));
+    const flowTransactions = financialTransactionsBody.items.filter((transaction) =>
+      transaction.evidence.some((evidence) => evidence.rawEventId === notificationId || evidence.rawEventId === walletId),
+    );
+
+    assert.equal(flowTransactions.length, 1);
+    assert.equal(flowTransactions[0]?.kind, "expense");
+    assert.equal(flowTransactions[0]?.evidence.length, 2);
+    assert.ok(flowTransactions[0]?.merchantLabel.toLowerCase().includes(merchant.toLowerCase()));
+
+    const preReviewQueueResponse = await app.inject({
+      method: "GET",
+      url: "/api/v1/review/aliases?status=pending",
+    });
+
+    assert.equal(preReviewQueueResponse.statusCode, 200);
+    const preReviewQueueBody = preReviewQueueResponse.json() as {
+      items: Array<{ eventId: string | null }>;
+    };
+    assert.equal(
+      preReviewQueueBody.items.some((item) => item.eventId === emailId),
+      false,
+    );
 
     const searchResponse = await app.inject({
       method: "GET",

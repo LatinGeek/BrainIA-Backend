@@ -67,12 +67,17 @@ Update this file when:
 - production smoke verification is automated through `.github/workflows/production-smoke.yml`
 - entity drafts are deduplicated and noisy merchant candidates are filtered
 - notification events can surface a source entity for `received_from` relations
-- financial merchant and legal-name candidates can be queued for alias review and categorization
+- email capture now normalizes sender and recipient metadata before graph extraction
+- financial merchant and legal-name candidates can be queued for alias review and categorization only when they look descriptor-like rather than already cleanly branded
 - canonical financial transactions now group wallet, notification, and email evidence across one canonical expense or income view
+- live data review found that reprocessing can leave orphan entities and relations behind in the graph layer if those derived rows are not cleaned explicitly, and the reprocess path now prunes those event-local rows
+- email and notification heuristics still produce noisy merchant candidates in some cases, so merchant gating was tightened and email merchant heuristics were removed
 - ambiguous classifications can be upgraded by DeepSeek when configured
 - model-assisted classification metadata is stored for audit and replay
 - quick capture routes are active for notes, email, notifications, wallet events, and offline batches
 - a cleanup script exists for test data and is dry-run by default unless `--apply` is passed; it also handles `financial_transactions` and `financial_transaction_events`
+- the cleanup script can also target `insight_runs` and `digest_runs` when explicit run filters are provided
+- a live event analysis report now exists at `docs/reports/live-event-analysis-2026-07-13.md`
 - a thin mobile shell scaffold exists in `mobile/`
 - a thin web dashboard scaffold exists for exploration and debugging
 - operational runbooks now live in `docs/runbooks.md`

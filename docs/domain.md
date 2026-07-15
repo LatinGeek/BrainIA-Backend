@@ -107,6 +107,9 @@ The first extraction pass currently targets:
 
 - amounts
 - merchants
+- email senders
+- email recipients
+- email messages
 
 These are heuristic and can be expanded later with richer extraction and NLP/LLM support.
 
@@ -194,18 +197,20 @@ Current quality rules include:
 - generic merchant-like prefixes are stripped from merchant candidates
 - obviously noisy merchant or notification candidates are dropped
 - notification events can surface the event source as an entity so `received_from` relations stay materializable
+- email events avoid merchant heuristics and instead extract sender/recipient/message nodes
 
 ## Alias review queue
 
 Some notifications and emails only expose a legal name or merchant label.
 
-When the backend detects one of those candidates, it can place the value in a review queue so a human can decide:
+When the backend detects one of those merchant-like candidates and the value looks descriptor-like rather than cleanly branded, it can place the value in a review queue so a human can decide:
 
 - the friendly alias to store
 - the category breadcrumb to attach
 - whether the candidate should be ignored
 
 This is especially useful for payment notifications such as wallet alerts or bank receipts.
+Clean single-word merchant labels are usually auto-accepted by the extractor and do not need human review.
 
 The resolved alias should then become a retrieval synonym for the canonical entity, while the category path keeps the user taxonomy visible.
 
@@ -268,6 +273,7 @@ Batch capture is also supported for offline queue flushes. The capture routes ar
 The first heuristic relation extractor currently targets:
 
 - expenses linked to merchants with `spent_at`
+- emails linked to senders with `sent_by`
 - emails linked to recipients with `sent_to`
 - notifications linked to sources with `received_from`
 

@@ -53,6 +53,27 @@ test("entity drafts discard noisy merchants and dedupe repeated drafts", () => {
   assert.equal(drafts.some((draft) => draft.type === "merchant" && draft.value === "Compra"), false);
 });
 
+test("email drafts capture sender and recipient without inventing merchants", () => {
+  const drafts = buildEntityDrafts({
+    title: "Hola",
+    body: "from: billing@example.com\nto: me@example.com",
+    raw: {
+      providerPayload: {
+        fromName: "Billing Team",
+        fromEmail: "billing@example.com",
+        to: [{ email: "me@example.com" }],
+      },
+    },
+    inferredKind: "email",
+    entities: [],
+  });
+
+  assert.equal(drafts.some((draft) => draft.type === "merchant"), false);
+  assert.equal(drafts.some((draft) => draft.type === "sender"), true);
+  assert.equal(drafts.some((draft) => draft.type === "recipient"), true);
+  assert.equal(drafts.some((draft) => draft.type === "message"), true);
+});
+
 test("relation drafts include readable relation text", () => {
   const drafts = buildRelationDrafts({
     title: "Compra en Spotify",
@@ -67,6 +88,33 @@ test("relation drafts include readable relation text", () => {
   assert.ok(drafts.length > 0);
   assert.equal(drafts[0]?.label.includes("gast"), true);
   assert.ok(drafts[0]?.description.length > 0);
+});
+
+test("email relation drafts include sender and recipient links", () => {
+  const entityDrafts = buildEntityDrafts({
+    title: "Receipt",
+    body: "from: billing@example.com\nto: me@example.com",
+    raw: {
+      providerPayload: {
+        fromName: "Billing Team",
+        fromEmail: "billing@example.com",
+        to: [{ email: "me@example.com" }],
+      },
+    },
+    inferredKind: "email",
+    entities: [],
+  });
+
+  const drafts = buildRelationDrafts({
+    title: "Receipt",
+    body: "from: billing@example.com\nto: me@example.com",
+    source: "mail",
+    inferredKind: "email",
+    entities: entityDrafts,
+  });
+
+  assert.equal(drafts.some((draft) => draft.relationType === "sent_by"), true);
+  assert.equal(drafts.some((draft) => draft.relationType === "sent_to"), true);
 });
 
 test("notification relations attach the event source when available", () => {
