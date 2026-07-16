@@ -164,10 +164,13 @@ function pickEntity(entities: EntityLike[], type: string) {
 }
 
 function pickMerchantLabel(input: {
-  event: Pick<EventInput, "title" | "body" | "source" | "raw">;
+  event: Pick<EventInput, "kind" | "title" | "body" | "source" | "raw">;
   merchantEntity: EntityLike | null;
 }) {
   const raw = input.event.raw ?? {};
+  const titleMerchant = input.event.kind === "notification"
+    ? input.event.title?.trim().match(/^(?:pagaste\s+a|pago\s+a|compra\s+en)\s+(.+)$/iu)?.[1]?.trim()
+    : null;
   return (
     readRawString(raw, [
       "merchant",
@@ -181,8 +184,9 @@ function pickMerchantLabel(input: {
       "company",
       "legalName",
     ]) ||
+    titleMerchant ||
     input.merchantEntity?.value?.trim() ||
-    collapseText(`${input.event.title ?? ""} ${input.event.body ?? ""}`) ||
+    collapseText(input.event.title ?? input.event.body ?? "") ||
     input.event.source.trim()
   );
 }
@@ -194,7 +198,7 @@ function findRawAmountText(raw: Record<string, unknown> | undefined) {
 }
 
 export function buildFinancialTransactionCandidate(input: {
-  event: Pick<EventInput, "id" | "source" | "title" | "body" | "timestamp" | "raw">;
+  event: Pick<EventInput, "id" | "kind" | "source" | "title" | "body" | "timestamp" | "raw">;
   classified: {
     inferredKind: string;
     confidence: number;

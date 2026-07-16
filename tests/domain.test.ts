@@ -5,7 +5,8 @@ process.env.DATABASE_URL ??= "postgres://postgres:postgres@localhost:5432/braini
 
 const { classifyEvent } = await import("../src/domain/classification.ts");
 const { buildEntityDrafts } = await import("../src/domain/entities.ts");
-const { buildRelationDrafts } = await import("../src/domain/relations.ts");
+const { buildFinancialTransactionCandidate } = await import("../src/domain/financial-transactions.ts");
+const { buildRelationDrafts, normalizeRelationType } = await import("../src/domain/relations.ts");
 const { parseGraphOptions } = await import("../src/storage/graph-repository.ts");
 const { createClassificationAssistant } = await import("../src/storage/classification-assistant.ts");
 const { buildSearchMatchHint } = await import("../src/storage/search-repository.ts");
@@ -36,6 +37,27 @@ test("entity drafts include expense and merchant heuristics", () => {
 
   assert.ok(drafts.some((draft) => draft.type === "amount"));
   assert.ok(drafts.some((draft) => draft.type === "merchant"));
+});
+
+test("notification payment titles keep the merchant separate from the debit message", () => {
+  const title = "Pagaste a La pequena mar azul";
+  const body = "Descontamos $ 195,00 de tu cuenta.";
+  const drafts = buildEntityDrafts({
+    title,
+    body,
+    inferredKind: "expense",
+    entities: [{ type: "amount", value: "$ 195,00" }],
+  });
+  const merchant = drafts.find((draft) => draft.type === "merchant");
+  const candidate = buildFinancialTransactionCandidate({
+    event: { id: "md_notification", source: "macrodroid", kind: "notification", title, body, raw: {}, tags: [] },
+    classified: { inferredKind: "expense", confidence: 0.82 },
+    entityDrafts: drafts,
+  });
+
+  assert.equal(merchant?.value, "La pequena mar azul");
+  assert.equal(candidate?.merchantLabel, "La pequena mar azul");
+  assert.equal(candidate?.amount, 195);
 });
 
 test("entity drafts discard noisy merchants and dedupe repeated drafts", () => {
@@ -138,6 +160,11 @@ test("notification relations attach the event source when available", () => {
   assert.equal(drafts[0]?.metadata?.evidence.source, "tasker");
 });
 
+test("relation labels normalize to stable relation types", () => {
+  assert.deepEqual(normalizeRelationType("paid_to", "Paid to"), { relationType: "spent_at", label: "Spent at" });
+  assert.deepEqual(normalizeRelationType("custom", "Purchased from"), { relationType: "spent_at", label: "Spent at" });
+});
+
 test("graph options are clamped to safe bounds", () => {
   const options = parseGraphOptions({
     depth: "99",
@@ -217,6 +244,54 @@ test("classification assistant upgrades ambiguous events when the model is confi
   assert.equal(result.classificationVersion, "heuristic-v1+llm");
   assert.equal(result.entities.length, 2);
   assert.equal(result.modelMetadata?.provider, "deepseek");
+  assert.equal(result.modelMetadata?.applied, true);
+});
+
+test("classification assistant inspects confident email captures for transaction knowledge", async () => {
+  let completionCalls = 0;
+  const assistant = createClassificationAssistant({
+    apiKey: "test-key",
+    model: "test-model",
+    generateCompletion: async () => {
+      completionCalls += 1;
+      return JSON.stringify({
+        inferredKind: "expense",
+        confidence: 0.96,
+        entities: [
+          { type: "amount", value: "UYU 439.00" },
+          { type: "merchant", value: "MERPAGO*MARIADELROSARVIS3" },
+          { type: "card_last_four", value: "5343" },
+        ],
+        rationale: "Santander card transaction alert.",
+      });
+    },
+  });
+
+  const event = {
+    id: "mail_santander_1",
+    source: "make.gmail",
+    kind: "email" as const,
+    title: "Aviso de transacción",
+    body: "Se realizó una transacción con tu tarjeta VISA terminada en 5343. Importe UYU 439,00. Establecimiento MONTEVIDEO/MERPAGO*MARIADELROSARVIS3.",
+    raw: {},
+    tags: [],
+  };
+
+  const result = await assistant({
+    event,
+    base: {
+      ...event,
+      classificationVersion: "heuristic-v1",
+      inferredKind: "email",
+      confidence: 0.8,
+      entities: [],
+    },
+  });
+
+  assert.equal(completionCalls, 1);
+  assert.equal(result.inferredKind, "expense");
+  assert.equal(result.classificationVersion, "heuristic-v1+llm");
+  assert.deepEqual(result.entities.map((entity) => entity.type), ["amount", "merchant", "card_last_four"]);
   assert.equal(result.modelMetadata?.applied, true);
 });
 

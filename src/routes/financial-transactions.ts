@@ -22,6 +22,7 @@ const accountSchema = z.object({
   name: z.string().trim().min(1).max(120),
   type: z.string().trim().min(1).max(40).optional(),
   mask: z.string().trim().max(40).nullable().optional(),
+  currency: z.enum(["UYU", "USD"]),
 });
 
 export const registerFinancialTransactionRoutes: FastifyPluginAsync = async (app) => {
@@ -78,8 +79,15 @@ export const registerFinancialTransactionRoutes: FastifyPluginAsync = async (app
       return reply.status(400).send({ error: "invalid_financial_transaction_context", issues: parsed.success ? undefined : parsed.error.flatten() });
     }
 
-    const updated = await updateFinancialTransactionContext(params.id.trim(), parsed.data);
-    if (!updated) return reply.status(404).send({ error: "financial_transaction_not_found" });
-    return updated;
+    try {
+      const updated = await updateFinancialTransactionContext(params.id.trim(), parsed.data);
+      if (!updated) return reply.status(404).send({ error: "financial_transaction_not_found" });
+      return updated;
+    } catch (error) {
+      return reply.status(409).send({
+        error: "financial_account_currency_mismatch",
+        message: error instanceof Error ? error.message : "The account currency must match the transaction currency",
+      });
+    }
   });
 };

@@ -70,6 +70,9 @@ const MERCHANT_TERMINATORS = new Set([
   "compra",
   "pago",
   "payment",
+  "descontamos",
+  "debitamos",
+  "acreditamos",
 ]);
 
 function buildDraftMetadata(source: string, extras: Record<string, unknown> = {}) {
@@ -210,6 +213,13 @@ function cleanMerchantCandidate(value: string) {
   return words.join(" ").trim();
 }
 
+function merchantFromNotificationTitle(title: string | undefined) {
+  if (!title) return null;
+
+  const match = title.trim().match(/^(?:pagaste\s+a|pago\s+a|compra\s+en)\s+(.+)$/iu);
+  return match?.[1]?.trim() || null;
+}
+
 export function buildEntityDrafts(input: {
   title?: string;
   body?: string;
@@ -246,9 +256,11 @@ export function buildEntityDrafts(input: {
       });
     }
 
-    const merchantMatch = text.match(/\b([\p{L}\p{N}][\p{L}\p{N}&.\-*/ ]{2,})\b/iu);
-    if (merchantMatch?.[1]) {
-      const value = cleanMerchantCandidate(merchantMatch[1]);
+    const titleMerchant = merchantFromNotificationTitle(input.title);
+    const merchantMatch = titleMerchant ? null : (input.title ?? input.body ?? "").match(/\b([\p{L}\p{N}][\p{L}\p{N}&.\-*/ ]{2,})\b/iu);
+    const merchantCandidate = titleMerchant ?? merchantMatch?.[1];
+    if (merchantCandidate) {
+      const value = titleMerchant ? titleMerchant : cleanMerchantCandidate(merchantCandidate);
       if (value) {
         const normalizedValue = normalizeEntityValue(value);
         if (!NOISY_ENTITY_VALUES.has(normalizedValue)) {
@@ -258,7 +270,7 @@ export function buildEntityDrafts(input: {
             normalizedValue,
             metadata: buildDraftMetadata("heuristic", {
               signal: "merchant_candidate",
-              originalCandidate: merchantMatch[1].trim(),
+              originalCandidate: merchantCandidate.trim(),
             }),
           });
         }

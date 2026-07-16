@@ -70,7 +70,11 @@ export function createClassificationAssistant(deps: ClassificationAssistantDeps)
     event: EventInput;
     base: ClassifiedEvent;
   }) {
-    if (!deps.apiKey || input.base.confidence >= 0.75) {
+    // Email bodies often contain the most useful source detail (receipts, transaction
+    // alerts, confirmations, and commitments). Always let the model inspect them;
+    // the confidence shortcut remains in place for non-email events.
+    const isEmail = input.event.kind === "email" || input.base.inferredKind === "email";
+    if (!deps.apiKey || (!isEmail && input.base.confidence >= 0.75)) {
       return {
         ...input.base,
         modelMetadata: null,
@@ -82,7 +86,7 @@ export function createClassificationAssistant(deps: ClassificationAssistantDeps)
       apiKey: deps.apiKey,
       model: deps.model,
       systemPrompt:
-        "Return only strict JSON. Improve an ambiguous event classification using the provided event and base heuristic output. Keep the same fields and do not invent unrelated entities.",
+        "Return only strict JSON. Classify the event and extract durable knowledge from its content. For emails, inspect the body even when the base classification is confident: detect transaction alerts, receipts, commitments, people, merchants, amounts, dates, and other meaningful entities. Keep the same fields and do not invent unrelated entities.",
       userPrompt: JSON.stringify(
         {
           event: {

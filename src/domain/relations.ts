@@ -10,6 +10,44 @@ export type RelationDraft = {
   metadata?: Record<string, unknown>;
 };
 
+const RELATION_TYPE_ALIASES: Record<string, { relationType: string; label: string }> = {
+  spent_at: { relationType: "spent_at", label: "Spent at" },
+  spend_at: { relationType: "spent_at", label: "Spent at" },
+  paid_at: { relationType: "spent_at", label: "Spent at" },
+  paid_to: { relationType: "spent_at", label: "Spent at" },
+  purchased_from: { relationType: "spent_at", label: "Spent at" },
+  purchase_at: { relationType: "spent_at", label: "Spent at" },
+  same_as: { relationType: "same_as", label: "Same as" },
+  equivalent_to: { relationType: "same_as", label: "Same as" },
+  duplicate_of: { relationType: "same_as", label: "Same as" },
+  sent_by: { relationType: "sent_by", label: "Sent by" },
+  sent_to: { relationType: "sent_to", label: "Sent to" },
+  received_from: { relationType: "received_from", label: "Received from" },
+};
+
+export function normalizeRelationType(relationType: string, label?: string) {
+  const normalized = relationType
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+  const fromType = RELATION_TYPE_ALIASES[normalized];
+  if (fromType) return fromType;
+
+  const normalizedLabel = (label ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+  if (/\b(spent|spend|paid|purchase|purchased)\b/.test(normalizedLabel)) return RELATION_TYPE_ALIASES.spent_at;
+  if (/\b(same|equivalent|duplicate)\b/.test(normalizedLabel)) return RELATION_TYPE_ALIASES.same_as;
+
+  return {
+    relationType: normalized || "related_to",
+    label: label?.trim() || (normalized || "related_to").replace(/_/g, " "),
+  };
+}
+
 function getFirstEntity(entities: EntityDraft[], type: string) {
   return entities.find((entity) => entity.type === type);
 }

@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { pool } from "./postgres.js";
-import type { RelationDraft } from "../domain/relations.js";
+import { normalizeRelationType, type RelationDraft } from "../domain/relations.js";
 
 type Queryable = Pick<typeof pool, "query">;
 
@@ -17,6 +17,7 @@ export async function upsertRelation(
   sourceEntityId: string,
   targetEntityId: string,
 ): Promise<StoredRelation> {
+  const normalized = normalizeRelationType(draft.relationType, draft.label);
   const result = await db.query<StoredRelation>(
     `
       insert into relations (
@@ -54,8 +55,8 @@ export async function upsertRelation(
     [
       sourceEntityId,
       targetEntityId,
-      draft.relationType,
-      draft.label,
+      normalized.relationType,
+      normalized.label,
       draft.description,
       draft.confidence,
       JSON.stringify(draft.metadata ?? {}),

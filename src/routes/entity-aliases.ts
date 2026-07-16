@@ -1,6 +1,7 @@
 import type { FastifyPluginAsync } from "fastify";
 import { z } from "zod";
 import {
+  createEntityAlias,
   ignoreEntityReview,
   listEntityAliases,
   listEntityReviewQueue,
@@ -10,6 +11,13 @@ import { pool } from "../storage/postgres.js";
 
 const aliasListQuerySchema = z.object({
   entityId: z.string().min(1).optional(),
+});
+
+const createAliasSchema = z.object({
+  entityId: z.string().min(1),
+  alias: z.string().trim().min(1).max(240),
+  categoryPath: z.array(z.string().trim().min(1).max(120)).max(8).optional(),
+  notes: z.string().trim().max(2_000).optional(),
 });
 
 const reviewListQuerySchema = z.object({
@@ -40,6 +48,23 @@ export const registerEntityAliasRoutes: FastifyPluginAsync = async (app) => {
 
     const aliases = await listEntityAliases(pool, parsed.data.entityId);
     return { aliases };
+  });
+
+  app.post("/aliases", async (request, reply) => {
+    const parsed = createAliasSchema.safeParse(request.body);
+    if (!parsed.success) {
+      return reply.status(400).send({ error: "invalid_entity_alias", issues: parsed.error.flatten() });
+    }
+
+    try {
+      const alias = await createEntityAlias(pool, parsed.data);
+      return reply.status(201).send(alias);
+    } catch (error) {
+      return reply.status(409).send({
+        error: "alias_conflict",
+        message: error instanceof Error ? error.message : "Alias could not be saved",
+      });
+    }
   });
 
   app.get("/review/aliases", async (request, reply) => {

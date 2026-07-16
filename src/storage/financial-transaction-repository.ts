@@ -131,23 +131,24 @@ export type FinancialAccountRecord = {
   type: string;
   mask: string | null;
   externalRef: string | null;
+  currency: "UYU" | "USD" | null;
 };
 
 export async function listFinancialAccounts() {
   const result = await pool.query<FinancialAccountRecord>(
-    `select id, name, type, mask, external_ref as "externalRef" from financial_accounts order by name asc`,
+    `select id, name, type, mask, external_ref as "externalRef", currency from financial_accounts order by currency nulls last, name asc`,
   );
   return result.rows;
 }
 
-export async function createFinancialAccount(input: { name: string; type?: string; mask?: string | null }) {
+export async function createFinancialAccount(input: { name: string; type?: string; mask?: string | null; currency: "UYU" | "USD" }) {
   const result = await pool.query<FinancialAccountRecord>(
     `
-      insert into financial_accounts (id, name, type, mask)
-      values ($1, $2, $3, $4)
-      returning id, name, type, mask, external_ref as "externalRef"
+      insert into financial_accounts (id, name, type, mask, currency)
+      values ($1, $2, $3, $4, $5)
+      returning id, name, type, mask, external_ref as "externalRef", currency
     `,
-    [`account_${randomUUID()}`, input.name.trim(), input.type?.trim() || "bank", input.mask?.trim() || null],
+    [`account_${randomUUID()}`, input.name.trim(), input.type?.trim() || "bank", input.mask?.trim() || null, input.currency],
   );
   return result.rows[0];
 }
@@ -156,6 +157,23 @@ export async function updateFinancialTransactionContext(
   id: string,
   input: { category?: string | null; accountId?: string | null },
 ) {
+  if (input.accountId) {
+    const compatibility = await pool.query<{ matches: boolean }>(
+      `
+        select exists (
+          select 1
+          from financial_transactions t
+          join financial_accounts a on a.id = $2
+          where t.id = $1
+            and a.currency = t.currency
+        ) as matches
+      `,
+      [id, input.accountId],
+    );
+    if (!compatibility.rows[0]?.matches) {
+      throw new Error("The account currency must match the transaction currency");
+    }
+  }
   const result = await pool.query(`
     update financial_transactions
     set category = $2, account_id = $3, updated_at = now()
@@ -374,17 +392,15 @@ async function updateFinancialTransaction(
     `
       update financial_transactions
       set
-        evidence_count = evidence_count + 1,
+        evidence_count = (
+          select count(*) + 1
+          from financial_transaction_events
+          where transaction_id = $1
+        ),
         match_score = greatest(match_score, $2),
-        merchant_label = case
-          when merchant_label = '' then $3
-          else merchant_label
-        end,
-        normalized_merchant = case
-          when normalized_merchant = '' then $4
-          else normalized_merchant
-        end,
-        merchant_entity_id = coalesce(merchant_entity_id, $5),
+        merchant_label = $3,
+        normalized_merchant = $4,
+        merchant_entity_id = $5,
         primary_source = case
           when primary_source = '' then $6
           else primary_source
