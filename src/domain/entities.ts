@@ -2,6 +2,8 @@ export type EntityDraft = {
   type: string;
   value: string;
   normalizedValue: string;
+  description?: string;
+  identitySource?: "ai" | "ai_seed" | "user" | "extracted" | "legacy";
   metadata?: Record<string, unknown>;
 };
 
@@ -171,6 +173,10 @@ function isMeaningfulDraft(draft: EntityDraft) {
     return false;
   }
 
+  if (draft.type === "merchant" && /^(?:notificaci[oó]n|notification|movimiento detectado|estado del dispositivo)\b/iu.test(draft.value.trim())) {
+    return false;
+  }
+
   if (draft.type === "notification" && NOISY_ENTITY_VALUES.has(draft.normalizedValue)) {
     return false;
   }
@@ -221,6 +227,7 @@ function merchantFromNotificationTitle(title: string | undefined) {
 }
 
 export function buildEntityDrafts(input: {
+  kind?: string;
   title?: string;
   body?: string;
   source?: string;
@@ -257,7 +264,9 @@ export function buildEntityDrafts(input: {
     }
 
     const titleMerchant = merchantFromNotificationTitle(input.title);
-    const merchantMatch = titleMerchant ? null : (input.title ?? input.body ?? "").match(/\b([\p{L}\p{N}][\p{L}\p{N}&.\-*/ ]{2,})\b/iu);
+    const merchantMatch = titleMerchant || input.inferredKind !== "expense"
+      ? null
+      : (input.title ?? input.body ?? "").match(/\b([\p{L}\p{N}][\p{L}\p{N}&.\-*/ ]{2,})\b/iu);
     const merchantCandidate = titleMerchant ?? merchantMatch?.[1];
     if (merchantCandidate) {
       const value = titleMerchant ? titleMerchant : cleanMerchantCandidate(merchantCandidate);
@@ -328,7 +337,7 @@ export function buildEntityDrafts(input: {
     });
   }
 
-  if (input.inferredKind === "notification") {
+  if (input.inferredKind === "notification" || input.kind === "notification") {
     drafts.push({
       type: "notification",
       value: input.title ?? input.body ?? "notification",
@@ -340,7 +349,7 @@ export function buildEntityDrafts(input: {
 
     if (input.source?.trim()) {
       drafts.push({
-        type: "source",
+        type: "app",
         value: input.source.trim(),
         normalizedValue: normalizeEntityValue(input.source),
         metadata: buildDraftMetadata("heuristic", {

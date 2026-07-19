@@ -13,6 +13,8 @@ export type EntityGraph = {
     type: string;
     value: string;
     normalizedValue: string;
+    description: string;
+    identitySource: string;
     metadata: Record<string, unknown>;
     createdAt: string;
   };
@@ -29,6 +31,8 @@ export type EntityGraph = {
     type: string;
     value: string;
     normalizedValue: string;
+    description: string;
+    identitySource: string;
     metadata: Record<string, unknown>;
     createdAt: string;
     depth: number;
@@ -56,6 +60,30 @@ export type EntityGraph = {
     depth: number;
     direction: "outgoing" | "incoming";
   }>;
+};
+
+export type ExploreGraph = {
+  communities: Array<{ id: string; label: string; nodeCount: number; leaderEntityId: string }>;
+  nodes: Array<{
+    id: string;
+    type: string;
+    value: string;
+    description: string;
+    importanceScore: number;
+    communityId: string;
+    hierarchyDepth: number;
+  }>;
+  relations: Array<{
+    id: string;
+    sourceEntityId: string;
+    targetEntityId: string;
+    relationType: string;
+    label: string;
+    description: string;
+    confidence: number;
+    importanceScore: number;
+  }>;
+  stats: { nodesCount: number; relationsCount: number; truncated: boolean };
 };
 
 type GraphNode = EntityGraph["nodes"][number];
@@ -101,6 +129,152 @@ export function parseGraphOptions(input: { depth?: string; maxNodes?: string; ma
   };
 }
 
+export function parseExploreGraphOptions(input: { limit?: string }) {
+  return { limit: clampInteger(input.limit, 80, 10, 250) };
+}
+
+function assignCommunities(nodes: Array<{ id: string }>, relations: Array<{ sourceEntityId: string; targetEntityId: string }>) {
+  const neighbors = new Map(nodes.map((node) => [node.id, new Set<string>()]));
+  for (const relation of relations) {
+    neighbors.get(relation.sourceEntityId)?.add(relation.targetEntityId);
+    neighbors.get(relation.targetEntityId)?.add(relation.sourceEntityId);
+  }
+
+  let labels = new Map(nodes.map((node) => [node.id, node.id]));
+  for (let iteration = 0; iteration < 10; iteration += 1) {
+    const next = new Map(labels);
+    for (const node of [...nodes].sort((left, right) => left.id.localeCompare(right.id))) {
+      const counts = new Map<string, number>();
+      for (const neighbor of neighbors.get(node.id) ?? []) {
+        const label = labels.get(neighbor) ?? neighbor;
+        counts.set(label, (counts.get(label) ?? 0) + 1);
+      }
+      const winner = [...counts.entries()].sort((left, right) => right[1] - left[1] || left[0].localeCompare(right[0]))[0]?.[0];
+      if (winner) next.set(node.id, winner);
+    }
+    if ([...nodes].every((node) => labels.get(node.id) === next.get(node.id))) break;
+    labels = next;
+  }
+  return labels;
+}
+
+function communityLabel(type: string, value: string) {
+  const typeLabel = type.replace(/[_-]+/g, " ").replace(/\b\w/g, (character) => character.toUpperCase());
+  const cleaned = value
+    .replace(/[\[\]{}]/g, " ")
+    .replace(/[^\p{L}\p{N}@.+\-\s]/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  const words = cleaned.split(" ").filter(Boolean).slice(0, 5).join(" ");
+  const name = words.length > 42 ? `${words.slice(0, 39).trimEnd()}…` : words || "Untitled";
+  return `${typeLabel} · ${name}`;
+}
+
+export async function getExploreGraph(limit: number): Promise<ExploreGraph> {
+  const entityResult = await pool.query<{
+    id: string;
+    type: string;
+    value: string;
+    description: string;
+    importanceScore: number;
+  }>(
+    `
+      with recursive rooted(entity_id) as (
+        select id from entities where type = 'domain'
+        union
+        select r.source_entity_id from rooted parent join relations r on r.target_entity_id = parent.entity_id
+        where r.relation_type in ('part_of', 'belongs_to_domain')
+      )
+      select
+        e.id,
+        e.type,
+        e.value,
+        e.description,
+        (count(r.id) + greatest(0, extract(epoch from now() - e.created_at) / -86400))::float as "importanceScore"
+      from entities e
+      left join entity_merges merged on merged.alias_entity_id = e.id
+      left join relations r on (r.source_entity_id = e.id or r.target_entity_id = e.id)
+        and r.relation_type in ('part_of', 'belongs_to_domain')
+      where merged.alias_entity_id is null
+        -- Explore is a map of durable knowledge. Raw events and their
+        -- evidence stay reachable from entity details, but do not form
+        -- misleading hubs or labels in the map itself.
+        and e.type in ('domain', 'concept', 'app', 'merchant', 'sender', 'recipient')
+        and e.identity_source in ('ai', 'ai_seed', 'user')
+        and length(btrim(e.description)) > 0
+        and exists (select 1 from rooted where rooted.entity_id = e.id)
+      group by e.id
+      order by
+        case when e.type = 'domain' then 0 when e.type = 'concept' then 1 else 2 end,
+        count(r.id) desc, e.created_at desc, e.id asc
+      limit $1
+    `,
+    [limit],
+  );
+  const selectedIds = entityResult.rows.map((node) => node.id);
+  if (!selectedIds.length) return { communities: [], nodes: [], relations: [], stats: { nodesCount: 0, relationsCount: 0, truncated: false } };
+
+  const domainResult = await pool.query<{ entityId: string; domainId: string; domainValue: string; hierarchyDepth: number }>(`
+    with recursive domain_paths(entity_id, domain_id, domain_value, hierarchy_depth) as (
+      select id, id, value, 0 from entities where type = 'domain'
+      union all
+      select relation.source_entity_id, parent.domain_id, parent.domain_value, parent.hierarchy_depth + 1
+      from domain_paths parent join relations relation on relation.target_entity_id = parent.entity_id
+      where relation.relation_type in ('part_of', 'belongs_to_domain') and parent.hierarchy_depth < 20
+    )
+    select distinct on (entity_id)
+      entity_id as "entityId", domain_id as "domainId", domain_value as "domainValue", hierarchy_depth as "hierarchyDepth"
+    from domain_paths
+    where entity_id = any($1::text[])
+    order by entity_id, hierarchy_depth asc, domain_value
+  `, [selectedIds]);
+  const semanticDomains = new Map(domainResult.rows.map((row) => [row.entityId, row]));
+  const relationResult = await pool.query<ExploreGraph["relations"][number]>(
+    `
+      select r.id, r.source_entity_id as "sourceEntityId", r.target_entity_id as "targetEntityId",
+        r.relation_type as "relationType", r.label, r.description, r.confidence,
+        r.confidence::float as "importanceScore"
+      from relations r
+      where r.source_entity_id = any($1::text[]) and r.target_entity_id = any($1::text[])
+      order by r.confidence desc, r.created_at desc, r.id asc
+    `,
+    [selectedIds],
+  );
+  // The overview is a hierarchy with sparse bridges between life domains.
+  // Same-domain associations remain available in entity details, where their
+  // meaning and direction can be inspected without looking like extra parents.
+  const visibleRelations = relationResult.rows.filter((relation) => {
+    if (["part_of", "belongs_to_domain"].includes(relation.relationType)) return true;
+    const sourceDomain = semanticDomains.get(relation.sourceEntityId)?.domainId;
+    const targetDomain = semanticDomains.get(relation.targetEntityId)?.domainId;
+    return Boolean(sourceDomain && targetDomain && sourceDomain !== targetDomain);
+  });
+  const labels = assignCommunities(entityResult.rows, visibleRelations);
+  const grouped = new Map<string, typeof entityResult.rows>();
+  for (const node of entityResult.rows) {
+    const communityId = semanticDomains.get(node.id)?.domainId ?? labels.get(node.id) ?? node.id;
+    grouped.set(communityId, [...(grouped.get(communityId) ?? []), node]);
+  }
+  const communities = [...grouped.entries()]
+    .map(([id, members]) => {
+      const leader = members.find((member) => member.id === id)
+        ?? [...members].sort((left, right) => right.importanceScore - left.importanceScore || left.value.localeCompare(right.value))[0];
+      const domain = semanticDomains.get(members[0].id);
+      return { id, label: domain?.domainValue ?? communityLabel(leader.type, leader.value), nodeCount: members.length, leaderEntityId: leader.id };
+    })
+    .sort((left, right) => right.nodeCount - left.nodeCount || left.label.localeCompare(right.label));
+  return {
+    communities,
+    nodes: entityResult.rows.map((node) => ({
+      ...node,
+      communityId: semanticDomains.get(node.id)?.domainId ?? labels.get(node.id) ?? node.id,
+      hierarchyDepth: semanticDomains.get(node.id)?.hierarchyDepth ?? 0,
+    })),
+    relations: visibleRelations,
+    stats: { nodesCount: entityResult.rows.length, relationsCount: visibleRelations.length, truncated: entityResult.rows.length >= limit },
+  };
+}
+
 export async function getEntityGraph(entityId: string, depth: number, maxNodes: number, maxRelations: number): Promise<EntityGraph | null> {
   const canonicalRoot = await loadCanonicalEntityById(pool, entityId);
   if (!canonicalRoot) {
@@ -120,6 +294,8 @@ export async function getEntityGraph(entityId: string, depth: number, maxNodes: 
         type,
         value,
         normalized_value as "normalizedValue",
+        description,
+        identity_source as "identitySource",
         metadata,
         created_at as "createdAt"
       from entities
@@ -141,6 +317,8 @@ export async function getEntityGraph(entityId: string, depth: number, maxNodes: 
           e.type,
           e.value,
           e.normalized_value,
+          e.description,
+          e.identity_source,
           e.metadata,
           e.created_at,
           0 as depth
@@ -154,6 +332,8 @@ export async function getEntityGraph(entityId: string, depth: number, maxNodes: 
           next_e.type,
           next_e.value,
           next_e.normalized_value,
+          next_e.description,
+          next_e.identity_source,
           next_e.metadata,
           next_e.created_at,
           walk.depth + 1 as depth
@@ -172,6 +352,8 @@ export async function getEntityGraph(entityId: string, depth: number, maxNodes: 
         type,
         value,
         normalized_value as "normalizedValue",
+        description,
+        identity_source as "identitySource",
         metadata,
         created_at as "createdAt",
         depth,

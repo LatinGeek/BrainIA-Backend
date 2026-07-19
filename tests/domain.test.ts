@@ -7,6 +7,7 @@ const { classifyEvent } = await import("../src/domain/classification.ts");
 const { buildEntityDrafts } = await import("../src/domain/entities.ts");
 const { buildFinancialTransactionCandidate } = await import("../src/domain/financial-transactions.ts");
 const { buildRelationDrafts, normalizeRelationType } = await import("../src/domain/relations.ts");
+const { shouldQueueMerchantReview } = await import("../src/storage/entity-alias-repository.ts");
 const { parseGraphOptions } = await import("../src/storage/graph-repository.ts");
 const { createClassificationAssistant } = await import("../src/storage/classification-assistant.ts");
 const { buildSearchMatchHint } = await import("../src/storage/search-repository.ts");
@@ -25,6 +26,40 @@ test("classification extracts expense signals", () => {
 
   assert.equal(classified.inferredKind, "expense");
   assert.ok(classified.entities.some((entity) => entity.type === "amount"));
+});
+
+test("completed Santander card alerts become expenses even with UYU prefix amounts", () => {
+  const classified = classifyEvent({
+    id: "santander_card_purchase",
+    source: "Santander",
+    kind: "notification",
+    title: "Aviso: uso de tarjeta de crédito",
+    body: "Se realizó una transacción con la tarjeta MASTERCARD terminada en 2188 por un monto de UYU 258,42 en DLOPEDIDOSYA. Si no reconoces esta transacción comunícate al 132.",
+    raw: {},
+    tags: [],
+  });
+
+  assert.equal(classified.inferredKind, "expense");
+  assert.equal(classified.confidence, 0.99);
+  assert.deepEqual(classified.entities, [
+    { type: "amount", value: "UYU 258,42" },
+    { type: "merchant", value: "DLOPEDIDOSYA" },
+  ]);
+});
+
+test("rejected card alerts do not receive the completed-purchase classification", () => {
+  const classified = classifyEvent({
+    id: "santander_card_rejected",
+    source: "Santander",
+    kind: "notification",
+    title: "Aviso: rechazo de tarjeta de crédito",
+    body: "Se rechazó la transacción con la tarjeta MASTERCARD terminada en 2188 por un monto de UYU 34,30 en DLOPEDIDOSYA.",
+    raw: {},
+    tags: [],
+  });
+
+  assert.equal(classified.inferredKind, "notification");
+  assert.equal(classified.confidence, 0.98);
 });
 
 test("entity drafts include expense and merchant heuristics", () => {
@@ -163,6 +198,11 @@ test("notification relations attach the event source when available", () => {
 test("relation labels normalize to stable relation types", () => {
   assert.deepEqual(normalizeRelationType("paid_to", "Paid to"), { relationType: "spent_at", label: "Spent at" });
   assert.deepEqual(normalizeRelationType("custom", "Purchased from"), { relationType: "spent_at", label: "Spent at" });
+});
+
+test("all-caps merchant labels are sent to alias review", () => {
+  assert.equal(shouldQueueMerchantReview("DLOPEDIDOSYA"), true);
+  assert.equal(shouldQueueMerchantReview("UYU"), false);
 });
 
 test("graph options are clamped to safe bounds", () => {

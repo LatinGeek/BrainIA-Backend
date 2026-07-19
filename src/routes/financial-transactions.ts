@@ -11,11 +11,14 @@ import {
 
 const listQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(25),
+  from: z.string().datetime({ offset: true }).optional(),
+  to: z.string().datetime({ offset: true }).optional(),
 });
 
 const contextSchema = z.object({
   category: z.string().trim().max(120).nullable().optional(),
   accountId: z.string().trim().max(200).nullable().optional(),
+  currency: z.enum(["UYU", "USD"]).optional(),
 });
 
 const accountSchema = z.object({
@@ -44,7 +47,17 @@ export const registerFinancialTransactionRoutes: FastifyPluginAsync = async (app
       });
     }
 
-    const items = await listFinancialTransactions(parsed.data.limit);
+    if (parsed.data.from && parsed.data.to && parsed.data.from > parsed.data.to) {
+      return reply.status(400).send({
+        error: "invalid_financial_transaction_range",
+        message: "The from value must be before the to value",
+      });
+    }
+
+    const items = await listFinancialTransactions(parsed.data.limit, {
+      from: parsed.data.from,
+      to: parsed.data.to,
+    });
     return {
       count: items.length,
       items,

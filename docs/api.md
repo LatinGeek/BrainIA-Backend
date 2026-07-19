@@ -273,7 +273,9 @@ Response shape:
 
 ### `GET /api/v1/entities`
 
-Returns canonical entities stored in Postgres.
+Returns canonical entities stored in Postgres. Entity records include a canonical `value`, standalone `description`, and `identitySource` provenance.
+
+The interactive Explore graph is stricter than raw entity storage: it only exposes rooted entities with a non-empty description whose identity was produced by the semantic model, seeded by the governed ontology, or explicitly named by the user. Extracted event text remains evidence and is not automatically promoted into a visible node.
 
 ### `GET /api/v1/relations`
 
@@ -834,3 +836,10 @@ Each result now includes a `matchHint` with `matchedFields`, `relevanceScore`, a
 - a single inspect tool should combine retrieval and explanation for agent use
 - reprocessing should rebuild derived knowledge from the raw source without losing the source record
 - canonical graph and search results should prefer merged entity roots
+
+## Semantic governance
+
+- `GET /api/v1/semantic/candidates?status=pending` returns reviewable v2 decisions, including `decisionKind`, `domainValue`, `anchorRole`, `proposedPath`, per-step alternatives, recurrence count, model, and governance version.
+- `POST /api/v1/semantic/candidates/:id/resolve` accepts `{ "action": "approve" | "reject", "targetEntityId"?: string, "createRule"?: boolean }`.
+- `POST /api/v1/semantic/backfill` accepts `{ "batchSize"?: 25, "cursor"?: string, "dryRun"?: false, "governanceVersion"?: "semantic-governance-v3" }` and returns a persisted run ID, counts, failures, and the next cursor.
+- An event has exactly one primary semantic anchor and at most one anchor per life domain. Anchors always point to the most-specific selected entity.

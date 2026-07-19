@@ -3,6 +3,7 @@ import { z } from "zod";
 import { createKnowledgeInsight } from "../storage/insights.js";
 import { pool } from "../storage/postgres.js";
 import { insertInsightRun, listInsightRuns, loadInsightRunById } from "../storage/insight-repository.js";
+import { listEntities } from "../storage/entity-repository.js";
 
 const insightSchema = z
   .object({
@@ -24,7 +25,39 @@ const insightHistoryParamsSchema = z.object({
   id: z.string().min(1),
 });
 
+const dailyInsightSchema = z.object({
+  id: z.string().min(1).optional(),
+  q: z.string().min(1).optional(),
+}).refine((value) => value.id || value.q, { message: "Provide id or q when no entity is available" });
+
 export const registerInsightsRoutes: FastifyPluginAsync = async (app) => {
+  app.post("/insights/daily", async (request, reply) => {
+    const token = process.env.BRAINIA_DAILY_INSIGHTS_TOKEN?.trim();
+    if (!token || request.headers["x-brainia-daily-insights-token"] !== token) {
+      return reply.status(401).send({ error: "unauthorized_daily_insight", message: "A valid daily-insights token is required" });
+    }
+
+    const body = (request.body ?? {}) as Record<string, unknown>;
+    const requested = dailyInsightSchema.safeParse(body);
+    const latestEntity = requested.success ? null : (await listEntities()).at(-1);
+    if (!requested.success && !latestEntity) {
+      return reply.status(400).send({ error: "invalid_daily_insight_request", issues: requested.error.flatten() });
+    }
+
+    const input = requested.success ? requested.data : { id: latestEntity!.id };
+    const insight = await createKnowledgeInsight({ id: input.id, q: input.q, depth: 2, maxNodes: 100, maxRelations: 100 });
+    const storedRun = await insertInsightRun(pool, {
+      toolName: "generate_daily_insight",
+      query: insight.query,
+      request: { ...input, schedule: "daily" },
+      response: insight,
+      summary: insight.summary,
+      model: insight.model,
+    });
+
+    return { ...insight, audit: storedRun ? { id: storedRun.id, createdAt: storedRun.createdAt, model: storedRun.model, toolName: storedRun.toolName } : null };
+  });
+
   app.get("/insights", async (request, reply) => {
     const parsed = insightSchema.safeParse(request.query);
     if (!parsed.success) {

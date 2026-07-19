@@ -45,5 +45,19 @@
   "43": "p1-knowledge.test.ts",
   "44": "Event reprocessing",
   "45": "domain.test.ts",
-  "46": "inspect.test.ts"
+  "46": "inspect.test.ts",
+  "47": "entity-repository.ts",
+  "48": "semantic-repository.ts",
+  "49": "semantic-enrichment.ts",
+  "50": "backfill-semantics.ts",
+  "51": "event-repository.ts",
+  "52": "Semantic graph governance",
+  "53": "entities.ts",
+  "54": "entity-repository.ts",
+  "55": "semantic-resolver.ts",
+  "56": "backfill-semantics.ts",
+  "57": "insights.ts",
+  "58": "capture.ts",
+  "59": "AI-governed entity identity",
+  "60": "semantic-governance.test.ts"
 }

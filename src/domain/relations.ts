@@ -23,6 +23,20 @@ const RELATION_TYPE_ALIASES: Record<string, { relationType: string; label: strin
   sent_by: { relationType: "sent_by", label: "Sent by" },
   sent_to: { relationType: "sent_to", label: "Sent to" },
   received_from: { relationType: "received_from", label: "Received from" },
+  belongs_to_domain: { relationType: "belongs_to_domain", label: "Belongs to" },
+  part_of: { relationType: "part_of", label: "Part of" },
+  uses_service: { relationType: "uses_service", label: "Uses service" },
+  produced_by_app: { relationType: "produced_by_app", label: "Produced by app" },
+  has_instance: { relationType: "has_instance", label: "Has instance" },
+  represents_order: { relationType: "represents_order", label: "Represents order" },
+  paid_for: { relationType: "paid_for", label: "Paid for" },
+  has_transaction: { relationType: "has_transaction", label: "Has transaction" },
+  occurred_at: { relationType: "occurred_at", label: "Occurred at" },
+  occurred_on: { relationType: "occurred_on", label: "Occurred on" },
+  received_via: { relationType: "received_via", label: "Received via" },
+  controls: { relationType: "controls", label: "Controls" },
+  mentions: { relationType: "mentions", label: "Mentions" },
+  evidence_for: { relationType: "evidence_for", label: "Evidence for" },
 };
 
 export function normalizeRelationType(relationType: string, label?: string) {
@@ -129,27 +143,6 @@ export function buildRelationDrafts(input: {
         sourceEntity: message,
         targetEntity: recipient,
         confidence: 0.75,
-        metadata: buildRelationMetadata({
-          source: input.source ?? "unknown",
-          title: input.title,
-          body: input.body,
-          inferredKind: input.inferredKind,
-        }),
-      });
-    }
-  }
-
-  if (input.inferredKind === "notification") {
-    const notification = getFirstEntity(input.entities, "notification");
-    const source = getFirstEntity(input.entities, "source");
-    if (notification && source) {
-      drafts.push({
-        relationType: "received_from",
-        label: "se recibe desde",
-        description: `${notification.value} se recibe desde ${source.value}`,
-        sourceEntity: notification,
-        targetEntity: source,
-        confidence: 0.7,
         metadata: buildRelationMetadata({
           source: input.source ?? "unknown",
           title: input.title,

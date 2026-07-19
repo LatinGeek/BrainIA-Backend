@@ -14,6 +14,7 @@ export type FinancialTransactionEvidenceRecord = {
   amount: string;
   currency: string;
   merchantLabel: string;
+  displayMerchantLabel: string;
   normalizedMerchant: string;
   observedAt: string;
   matchScore: number;
@@ -105,6 +106,7 @@ function buildTransactionProjectionSql() {
       t.amount::text as "amount",
       t.currency,
       t.merchant_label as "merchantLabel",
+      coalesce(merchant_alias.alias, merchant_entity.value, t.merchant_label) as "displayMerchantLabel",
       t.normalized_merchant as "normalizedMerchant",
       t.merchant_entity_id as "merchantEntityId",
       t.observed_at as "observedAt",
@@ -122,6 +124,15 @@ function buildTransactionProjectionSql() {
       t.updated_at as "updatedAt"
     from financial_transactions t
     left join financial_accounts a on a.id = t.account_id
+    left join entity_merges merchant_merge on merchant_merge.alias_entity_id = t.merchant_entity_id
+    left join entities merchant_entity on merchant_entity.id = coalesce(merchant_merge.canonical_entity_id, t.merchant_entity_id)
+    left join lateral (
+      select alias
+      from entity_aliases
+      where entity_id = merchant_entity.id
+      order by updated_at desc, created_at desc
+      limit 1
+    ) merchant_alias on true
   `;
 }
 
@@ -155,7 +166,7 @@ export async function createFinancialAccount(input: { name: string; type?: strin
 
 export async function updateFinancialTransactionContext(
   id: string,
-  input: { category?: string | null; accountId?: string | null },
+  input: { category?: string | null; accountId?: string | null; currency?: "UYU" | "USD" },
 ) {
   if (input.accountId) {
     const compatibility = await pool.query<{ matches: boolean }>(
@@ -165,10 +176,10 @@ export async function updateFinancialTransactionContext(
           from financial_transactions t
           join financial_accounts a on a.id = $2
           where t.id = $1
-            and a.currency = t.currency
+            and a.currency = coalesce($3, t.currency)
         ) as matches
       `,
-      [id, input.accountId],
+      [id, input.accountId, input.currency ?? null],
     );
     if (!compatibility.rows[0]?.matches) {
       throw new Error("The account currency must match the transaction currency");
@@ -176,10 +187,10 @@ export async function updateFinancialTransactionContext(
   }
   const result = await pool.query(`
     update financial_transactions
-    set category = $2, account_id = $3, updated_at = now()
+    set category = $2, account_id = $3, currency = coalesce($4, currency), updated_at = now()
     where id = $1
     returning id
-  `, [id, input.category?.trim() || null, input.accountId || null]);
+  `, [id, input.category?.trim() || null, input.accountId || null, input.currency ?? null]);
 
   if (!result.rowCount) return null;
   return loadFinancialTransactionById(pool, id);
@@ -233,14 +244,31 @@ export async function loadFinancialTransactionById(db: Queryable, id: string) {
   };
 }
 
-export async function listFinancialTransactions(limit = 50) {
+export async function listFinancialTransactions(
+  limit = 50,
+  range: { from?: string; to?: string } = {},
+) {
+  const filters: string[] = [];
+  const params: unknown[] = [];
+
+  if (range.from) {
+    params.push(range.from);
+    filters.push(`t.observed_at >= $${params.length}::timestamptz`);
+  }
+  if (range.to) {
+    params.push(range.to);
+    filters.push(`t.observed_at <= $${params.length}::timestamptz`);
+  }
+  params.push(limit);
+
   const result = await pool.query<FinancialTransactionRecord>(
     `
       ${buildTransactionProjectionSql()}
+      ${filters.length ? `where ${filters.join(" and ")}` : ""}
       order by t.observed_at desc, t.created_at desc
-      limit $1
+      limit $${params.length}
     `,
-    [limit],
+    params,
   );
 
   const items = await Promise.all(

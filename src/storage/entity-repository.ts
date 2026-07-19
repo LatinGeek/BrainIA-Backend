@@ -11,6 +11,8 @@ export type EntityRecord = {
   type: string;
   value: string;
   normalizedValue: string;
+  description: string;
+  identitySource: string;
   metadata: Record<string, unknown>;
   createdAt: string;
   canonicalEntityId: string;
@@ -49,6 +51,8 @@ function selectEntityProjectionSql() {
       e.type,
       e.value,
       e.normalized_value as "normalizedValue",
+      e.description,
+      e.identity_source as "identitySource",
       e.metadata,
       e.created_at as "createdAt",
       coalesce(em.canonical_entity_id, e.id) as "canonicalEntityId",
@@ -100,22 +104,31 @@ export async function upsertEntity(db: Queryable, draft: EntityDraft): Promise<E
         type,
         value,
         normalized_value,
+        description,
+        identity_source,
         metadata
       ) values (
         next_sequence_value('entity'),
         $1,
         $2,
         $3,
-        $4::jsonb
+        $4,
+        $5,
+        $6::jsonb
       )
       on conflict (type, normalized_value)
       do update set
-        value = excluded.value,
+        value = case
+          when excluded.identity_source in ('ai', 'ai_seed', 'user') or entities.identity_source not in ('ai', 'ai_seed', 'user') then excluded.value
+          else entities.value
+        end,
+        description = case when length(btrim(excluded.description)) > 0 then excluded.description else entities.description end,
+        identity_source = case when excluded.identity_source in ('ai', 'ai_seed', 'user') then excluded.identity_source else entities.identity_source end,
         metadata = entities.metadata || excluded.metadata
       returning
         id
     `,
-    [draft.type, draft.value, draft.normalizedValue, JSON.stringify(draft.metadata ?? {})],
+    [draft.type, draft.value, draft.normalizedValue, draft.description?.trim() ?? "", draft.identitySource ?? "extracted", JSON.stringify(draft.metadata ?? {})],
   );
 
   const storedEntity = await loadCanonicalEntityById(db, result.rows[0].id);

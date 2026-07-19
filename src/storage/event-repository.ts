@@ -177,6 +177,12 @@ export async function findStoredRawEventId(
 }
 
 export async function deleteDerivedDataForEvent(db: Queryable, eventId: string) {
+  // Semantic v2 records are derived from the immutable raw event and must be
+  // rebuilt together with the rest of the event projection.
+  await db.query(`delete from event_semantic_anchors where event_id = $1`, [eventId]);
+  await db.query(`delete from semantic_observations where event_id = $1`, [eventId]);
+  await db.query(`delete from semantic_candidates where event_id = $1`, [eventId]);
+  await db.query(`delete from semantic_event_decisions where event_id = $1`, [eventId]);
   await db.query(
     `
       with

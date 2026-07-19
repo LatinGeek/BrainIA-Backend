@@ -9,9 +9,19 @@
     "build": "tsc -p tsconfig.json",
     "lint": "tsc -p tsconfig.json --noEmit",
     "migrate": "tsx src/scripts/migrate.ts",
+    "backfill:semantics": "tsx src/scripts/backfill-semantics.ts",
+    "backfill:semantic-subjects": "tsx src/scripts/backfill-missing-semantic-subjects.ts",
+    "backfill:semantic-orphans": "tsx src/scripts/backfill-orphan-semantics.ts",
+    "normalize:providers": "tsx src/scripts/normalize-provider-identities.ts",
+    "normalize:hierarchy": "tsx src/scripts/normalize-hierarchy-relations.ts",
+    "reconcile:semantic-governance": "tsx src/scripts/reconcile-semantic-governance.ts",
+    "audit:semantic-graph": "tsx src/scripts/audit-semantic-graph.ts",
+    "audit:semantic-entities": "tsx src/scripts/audit-rooted-semantics.ts",
+    "probe:deepseek": "tsx src/scripts/probe-deepseek-semantic.ts",
+    "inspect:semantic-proposals": "tsx src/scripts/inspect-semantic-proposals.ts",
     "cleanup:test-data": "tsx src/scripts/cleanup-test-data.ts",
     "smoke:remote": "tsx src/scripts/remote-smoke.ts",
-    "test": "node --test --import tsx tests/api-contracts.test.ts tests/capture.test.ts tests/domain.test.ts tests/e2e.test.ts tests/inspect.test.ts tests/p0-foundation.test.ts tests/p1-knowledge.test.ts"
+    "test": "node --test --import tsx tests/api-contracts.test.ts tests/capture.test.ts tests/domain.test.ts tests/e2e.test.ts tests/inspect.test.ts tests/p0-foundation.test.ts tests/p1-knowledge.test.ts tests/semantic-governance.test.ts"
   },
   "dependencies": {
     "fastify": "^5.3.3",

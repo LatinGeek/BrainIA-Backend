@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { ClassifiedEvent, EventInput } from "../domain/event.js";
 import { eventKindSchema } from "../domain/event.js";
+import { isCompletedCardTransactionAlert } from "../domain/classification.js";
 import { generateNaturalLanguageSummary } from "./deepseek.js";
 
 type ClassificationAssistantDeps = {
@@ -23,6 +24,11 @@ const suggestionSchema = z.object({
   rationale: z.string().optional(),
 });
 
+// The classifier extracts evidence only.  It is deliberately not allowed to
+// mint arbitrary graph types: semantic-enrichment is the single governed path
+// for deciding whether evidence becomes durable knowledge.
+const MODEL_EVIDENCE_TYPES = new Set(["app", "merchant", "sender", "recipient", "message"]);
+
 function normalizeEntityKey(type: string, value: string) {
   return `${type}:${value.trim().toLowerCase()}`;
 }
@@ -37,6 +43,8 @@ function mergeEntities(
   for (const entity of [...baseEntities, ...suggestedEntities]) {
     const normalizedValue = entity.value.trim();
     if (!normalizedValue) continue;
+    if (suggestedEntities.includes(entity) && !MODEL_EVIDENCE_TYPES.has(entity.type)) continue;
+    if (normalizedValue.length > 160 || /\r|\n/.test(normalizedValue)) continue;
 
     const key = normalizeEntityKey(entity.type, normalizedValue);
     if (seen.has(key)) continue;
@@ -74,6 +82,18 @@ export function createClassificationAssistant(deps: ClassificationAssistantDeps)
     // alerts, confirmations, and commitments). Always let the model inspect them;
     // the confidence shortcut remains in place for non-email events.
     const isEmail = input.event.kind === "email" || input.base.inferredKind === "email";
+    if (isCompletedCardTransactionAlert(input.event)) {
+      return {
+        ...input.base,
+        modelMetadata: {
+          provider: "heuristic",
+          model: "deterministic-card-alert",
+          applied: true,
+          reason: "completed_card_transaction",
+        },
+      };
+    }
+
     if (!deps.apiKey || (!isEmail && input.base.confidence >= 0.75)) {
       return {
         ...input.base,
@@ -86,7 +106,7 @@ export function createClassificationAssistant(deps: ClassificationAssistantDeps)
       apiKey: deps.apiKey,
       model: deps.model,
       systemPrompt:
-        "Return only strict JSON. Classify the event and extract durable knowledge from its content. For emails, inspect the body even when the base classification is confident: detect transaction alerts, receipts, commitments, people, merchants, amounts, dates, and other meaningful entities. Keep the same fields and do not invent unrelated entities.",
+        "Return only strict JSON. Classify the event and extract concise evidence from its content. For emails, inspect the body even when the base classification is confident: detect transaction alerts, receipts, commitments, people, merchants, amounts, dates, and other meaningful evidence. Allowed entity types are only app, merchant, sender, recipient, and message. Do not output domains, categories, concepts, notification titles, amounts, IDs, timestamps, raw fragments, or invented entities; a separate semantic governor decides durable graph nodes.",
       userPrompt: JSON.stringify(
         {
           event: {

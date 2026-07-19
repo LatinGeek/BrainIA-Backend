@@ -16,6 +16,7 @@ import { registerInsightsRoutes } from "./routes/insights.js";
 import { registerKnowledgeRoutes } from "./routes/knowledge.js";
 import { registerMetricsRoutes } from "./routes/metrics.js";
 import { registerSearchRoutes } from "./routes/search.js";
+import { registerSemanticRoutes } from "./routes/semantic.js";
 import { config } from "./config.js";
 import type { AuthConfig } from "./auth.js";
 
@@ -79,6 +80,7 @@ export async function buildApp(options: { authConfig?: AuthConfig } = {}) {
   await app.register(registerEntityAliasRoutes, { prefix: config.apiPrefix });
   await app.register(registerGraphRoutes, { prefix: config.apiPrefix });
   await app.register(registerSearchRoutes, { prefix: config.apiPrefix });
+  await app.register(registerSemanticRoutes, { prefix: config.apiPrefix });
 
   return app;
 }

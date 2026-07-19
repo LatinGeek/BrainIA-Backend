@@ -116,7 +116,7 @@ function parseAmountText(
     return {
       amount,
       amountText: trimmed,
-      currency: CURRENCY_SYMBOLS[symbolMatch[1]] ?? currencyHint ?? "UNKNOWN",
+      currency: CURRENCY_SYMBOLS[symbolMatch[1]] ?? currencyHint ?? "UYU",
     };
   }
 
@@ -155,7 +155,7 @@ function parseAmountText(
   return {
     amount,
     amountText: plainAmountMatch[0],
-    currency: currencyHint ?? "UNKNOWN",
+    currency: currencyHint ?? "UYU",
   };
 }
 
