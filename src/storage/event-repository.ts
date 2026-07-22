@@ -22,6 +22,14 @@ type StoredRelation = {
 };
 
 export type StoredEventRecord = EventInput & {
+  displayTitle: string | null;
+  displayDescription: string | null;
+  interpretationStatus: string;
+  interpretationSource: string | null;
+  interpretationConfidence: number | null;
+  interpretationModel: string | null;
+  interpretationPromptVersion: string | null;
+  interpretationFailureReason: string | null;
   classificationVersion: string;
   inferredKind: ClassifiedEvent["inferredKind"];
   confidence: number;
@@ -34,6 +42,36 @@ export type StoredEventRecord = EventInput & {
   entities: StoredEntity[];
   relations: StoredRelation[];
 };
+
+export async function updateClassifiedEventInterpretation(
+  db: Queryable,
+  rawEventId: string,
+  interpretation: {
+    displayTitle: string | null;
+    displayDescription: string | null;
+    status: string;
+    source: string;
+    confidence: number | null;
+    model: string;
+    promptVersion: string;
+    failureReason: string | null;
+  },
+) {
+  await db.query(`
+    update classified_events set
+      display_title = $2,
+      display_description = $3,
+      interpretation_status = $4,
+      interpretation_source = $5,
+      interpretation_confidence = $6,
+      interpretation_model = $7,
+      interpretation_prompt_version = $8,
+      interpretation_failure_reason = $9
+    where raw_event_id = $1
+  `, [rawEventId, interpretation.displayTitle, interpretation.displayDescription, interpretation.status,
+    interpretation.source, interpretation.confidence, interpretation.model,
+    interpretation.promptVersion, interpretation.failureReason]);
+}
 
 export type StoredRawEvent = EventInput & {
   clientId: string | null;
@@ -277,6 +315,17 @@ export async function deleteDerivedDataForEvent(db: Queryable, eventId: string) 
     [eventId],
   );
 
+  // Data-modifying CTEs share one statement snapshot in Postgres, so the
+  // orphan check inside the CTE cannot observe the just-deleted evidence row.
+  // Run this cleanup as a separate statement to prevent stale expense rows
+  // from surviving a reprocess that changes an event into a transfer.
+  await db.query(`
+    delete from financial_transactions t
+    where not exists (
+      select 1 from financial_transaction_events e where e.transaction_id = t.id
+    )
+  `);
+
   await db.query("delete from classified_events where raw_event_id = $1", [eventId]);
 }
 
@@ -328,6 +377,14 @@ export async function loadStoredEventById(
         c.inferred_kind as "inferredKind",
         c.confidence,
         c.model_metadata as "modelMetadata",
+        c.display_title as "displayTitle",
+        c.display_description as "displayDescription",
+        c.interpretation_status as "interpretationStatus",
+        c.interpretation_source as "interpretationSource",
+        c.interpretation_confidence::float8 as "interpretationConfidence",
+        c.interpretation_model as "interpretationModel",
+        c.interpretation_prompt_version as "interpretationPromptVersion",
+        c.interpretation_failure_reason as "interpretationFailureReason",
         c.entities as "classifiedEntities",
         r.created_at as "rawEventCreatedAt",
         c.created_at as "classifiedEventCreatedAt",
@@ -424,6 +481,14 @@ export async function listStoredEvents() {
         c.inferred_kind as "inferredKind",
         c.confidence,
         c.model_metadata as "modelMetadata",
+        c.display_title as "displayTitle",
+        c.display_description as "displayDescription",
+        c.interpretation_status as "interpretationStatus",
+        c.interpretation_source as "interpretationSource",
+        c.interpretation_confidence::float8 as "interpretationConfidence",
+        c.interpretation_model as "interpretationModel",
+        c.interpretation_prompt_version as "interpretationPromptVersion",
+        c.interpretation_failure_reason as "interpretationFailureReason",
         c.entities as "classifiedEntities",
         r.created_at as "rawEventCreatedAt",
         c.created_at as "classifiedEventCreatedAt",

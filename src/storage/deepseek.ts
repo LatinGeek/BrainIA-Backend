@@ -8,6 +8,7 @@ export async function generateNaturalLanguageSummary(input: {
   model?: string;
   systemPrompt: string;
   userPrompt: string;
+  jsonMode?: boolean;
 }) {
   if (!input.apiKey) {
     return null;
@@ -30,6 +31,7 @@ export async function generateNaturalLanguageSummary(input: {
         { role: "user", content: input.userPrompt },
       ] satisfies DeepSeekChatMessage[],
       thinking: { type: "disabled" },
+      ...(input.jsonMode ? { response_format: { type: "json_object" } } : {}),
       }),
       signal: controller.signal,
     });

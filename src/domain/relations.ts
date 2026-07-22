@@ -153,5 +153,21 @@ export function buildRelationDrafts(input: {
     }
   }
 
+  if (input.inferredKind === "notification") {
+    const notification = getFirstEntity(input.entities, "notification");
+    const app = getFirstEntity(input.entities, "app");
+    if (notification && app) {
+      drafts.push({
+        relationType: "received_from",
+        label: "Received from",
+        description: `${notification.value} was received from ${app.value}`,
+        sourceEntity: notification,
+        targetEntity: app,
+        confidence: 0.9,
+        metadata: buildRelationMetadata({ source: input.source ?? "unknown", title: input.title, body: input.body, inferredKind: input.inferredKind }),
+      });
+    }
+  }
+
   return drafts;
 }

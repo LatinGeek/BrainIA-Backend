@@ -56,10 +56,12 @@ export async function consolidateProviderIdentity(db: Queryable, draft: EntityDr
   // installed app is a provider identity, so retain one canonical app node and
   // merge only non-ontology records with exactly the same normalized name.
   const matches = await db.query<{ id: string }>(
-    `select id from entities
-      where normalized_value = $1
-        and type not in ('domain', 'concept')
-        and id <> $2`,
+    `select entity.id from entities entity
+      left join entity_merges merged on merged.alias_entity_id = entity.id
+      where entity.normalized_value = $1
+        and entity.type not in ('domain', 'concept')
+        and entity.id <> $2
+        and merged.alias_entity_id is null`,
     [draft.normalizedValue, canonical.id],
   );
   for (const match of matches.rows) {
@@ -122,6 +124,72 @@ export async function enqueueSemanticCandidate(db: Queryable, input: Omit<Semant
   return result.rows[0];
 }
 
+export async function settleSatisfiedSemanticCandidates(db: Queryable, eventId?: string) {
+  const result = await db.query<{ id: string }>(`
+    with candidate_targets as (
+      select candidate.id,
+        coalesce(merged.canonical_entity_id, matched.id) as canonical_target_id
+      from semantic_candidates candidate
+      join entities matched on matched.normalized_value = candidate.target_normalized_value
+        and matched.type = candidate.target_type
+      left join entity_merges merged on merged.alias_entity_id = matched.id
+      where candidate.status = 'pending' and ($1::text is null or candidate.event_id = $1)
+    ), satisfied as (
+      select distinct candidate.id, target.canonical_target_id
+      from semantic_candidates candidate
+      join candidate_targets target on target.id = candidate.id
+      join relations relation on relation.source_entity_id = candidate.subject_entity_id
+        and relation.target_entity_id = target.canonical_target_id
+        and (relation.relation_type = candidate.relation_type
+          or (relation.relation_type in ('part_of','belongs_to_domain')
+            and candidate.relation_type in ('part_of','belongs_to_domain')))
+    )
+    update semantic_candidates candidate set status = 'approved', resolved_target_entity_id = satisfied.canonical_target_id,
+      resolved_at = now(), updated_at = now(),
+      rationale = coalesce(candidate.rationale, '') || ' [Automatically resolved: the canonical relation already exists.]'
+    from satisfied where candidate.id = satisfied.id
+    returning candidate.id
+  `, [eventId ?? null]);
+  return result.rows.length;
+}
+
+export async function rootEventEvidenceFromAnchors(db: Queryable) {
+  const result = await db.query<{
+    eventId: string;
+    subjectId: string; subjectType: string; subjectValue: string; subjectNormalizedValue: string;
+    anchorId: string; anchorType: string; anchorValue: string; anchorNormalizedValue: string;
+    confidence: number;
+  }>(`
+    select distinct on (subject.id)
+      event_entity.event_id as "eventId", subject.id as "subjectId", subject.type as "subjectType",
+      subject.value as "subjectValue", subject.normalized_value as "subjectNormalizedValue",
+      anchor.id as "anchorId", anchor.type as "anchorType", anchor.value as "anchorValue",
+      anchor.normalized_value as "anchorNormalizedValue", semantic_anchor.confidence::float8
+    from entities subject
+    join event_entities event_entity on event_entity.entity_id = subject.id
+    join event_semantic_anchors semantic_anchor on semantic_anchor.event_id = event_entity.event_id
+    left join entity_merges anchor_merge on anchor_merge.alias_entity_id = semantic_anchor.anchor_entity_id
+    join entities anchor on anchor.id = coalesce(anchor_merge.canonical_entity_id, semantic_anchor.anchor_entity_id)
+    where subject.type in ('activity_instance','financial_event','email_message')
+      and subject.id <> anchor.id
+      and not exists (select 1 from relations parent where parent.source_entity_id = subject.id and parent.relation_type in ('part_of','belongs_to_domain'))
+      and not exists (select 1 from relations child where child.target_entity_id = subject.id and child.relation_type in ('part_of','belongs_to_domain'))
+    order by subject.id, case semantic_anchor.role when 'primary' then 0 else 1 end, semantic_anchor.confidence desc
+  `);
+  let rooted = 0;
+  for (const row of result.rows) {
+    const relation = await setImmediateHierarchyParent(db, {
+      child: { id: row.subjectId, type: row.subjectType, value: row.subjectValue, normalizedValue: row.subjectNormalizedValue },
+      parent: { id: row.anchorId, type: row.anchorType, value: row.anchorValue, normalizedValue: row.anchorNormalizedValue },
+      confidence: row.confidence,
+      metadata: { source: "semantic-anchor-repair", governanceVersion: SEMANTIC_GOVERNANCE_VERSION },
+    });
+    await linkEventRelation(db, row.eventId, relation.id, row.confidence);
+    rooted += 1;
+  }
+  return rooted;
+}
+
 export async function applySemanticRules(db: Queryable, input: { clientId: string | null; eventId: string; drafts: EntityDraft[] }) {
   for (const draft of input.drafts) {
     if (!RULE_ELIGIBLE_ENTITY_TYPES.has(draft.type)) continue;
@@ -137,6 +205,7 @@ export async function applySemanticRules(db: Queryable, input: { clientId: strin
     if (rules.rows.length === 0) continue;
     const source = await upsertEntity(db, draft);
     for (const rule of rules.rows) {
+      if (source.id === rule.targetEntityId) continue;
       const relation = ["part_of", "belongs_to_domain"].includes(rule.relationType)
         ? await setImmediateHierarchyParent(db, {
           child: source,

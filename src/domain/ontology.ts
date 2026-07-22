@@ -31,8 +31,8 @@ export const ONTOLOGY_TREE = {
   Finances: ["Financial activity"], Health: [], Social: [], Work: [], Entrepreneurship: [], Psychology: [], Location: [], Learning: [],
 } as const;
 
-export const SEMANTIC_GOVERNANCE_VERSION = "semantic-governance-v3";
-export const SEMANTIC_PROMPT_VERSION = "semantic-identity-v3";
+export const SEMANTIC_GOVERNANCE_VERSION = "semantic-governance-v4";
+export const SEMANTIC_PROMPT_VERSION = "semantic-meaning-v4";
 export const MAX_SEMANTIC_DEPTH = 8;
 export const PRIMARY_ROOT_CONFIDENCE = 0.8;
 export const PRIMARY_ROOT_MARGIN = 0.1;
@@ -86,8 +86,8 @@ export function ontologyDraft(value: string, type: "domain" | "concept" = "domai
   };
 }
 
-export function semanticInstanceDraft(input: { eventId: string; inferredKind: string; source?: string; title?: string; body?: string }): EntityDraft {
-  const type = input.inferredKind === "email" ? "email_message" : input.inferredKind === "expense" || input.inferredKind === "income" ? "financial_event" : "activity_instance";
+export function semanticInstanceDraft(input: { eventId: string; inferredKind: string; source?: string; title?: string; body?: string; identity?: { displayTitle?: string; displayDescription?: string } | null }): EntityDraft {
+  const type = input.inferredKind === "email" ? "email_message" : input.inferredKind === "expense" || input.inferredKind === "income" || input.inferredKind === "transfer" ? "financial_event" : "activity_instance";
   const title = input.title?.trim();
   const body = input.body?.trim();
   const titleIsProviderName = type === "activity_instance"
@@ -103,12 +103,18 @@ export function semanticInstanceDraft(input: { eventId: string; inferredKind: st
   // Android often uses the app name as notification title. An activity node is
   // evidence, not another copy of the provider, so prefer the notification
   // content in that case and retain a clear fallback when no content exists.
-  const value = (titleIsProviderName ? evidenceBody : title || body?.slice(0, 160))
+  const generatedTitle = input.identity?.displayTitle?.trim();
+  const generatedDescription = input.identity?.displayDescription?.trim();
+  const validGeneratedIdentity = Boolean(generatedTitle && generatedDescription && generatedDescription.length >= 20
+    && !/^(?:aviso|alerta|notification|notificaci(?:o|ó)n|message|mensaje|movimiento|transaction|transacci(?:o|ó)n)$/iu.test(generatedTitle));
+  const value = (validGeneratedIdentity ? generatedTitle : titleIsProviderName ? evidenceBody : title || body?.slice(0, 160))
     || (type === "activity_instance" && input.source ? `Notification from ${input.source}` : input.inferredKind);
   return {
     type,
     value,
     normalizedValue: `event:${input.eventId}`,
-    metadata: { source: SEMANTIC_GOVERNANCE_VERSION, eventId: input.eventId, instance: true },
+    description: validGeneratedIdentity ? generatedDescription : undefined,
+    identitySource: validGeneratedIdentity ? "ai" : "extracted",
+    metadata: { source: SEMANTIC_GOVERNANCE_VERSION, eventId: input.eventId, instance: true, aiIdentity: validGeneratedIdentity },
   };
 }

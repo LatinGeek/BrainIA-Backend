@@ -3,9 +3,11 @@ import { z } from "zod";
 export const eventKindSchema = z.enum([
   "email",
   "expense",
+  "income",
   "note",
   "notification",
   "task",
+  "transfer",
   "other",
 ]);
 

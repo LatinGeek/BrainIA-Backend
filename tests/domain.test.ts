@@ -12,6 +12,7 @@ const { parseGraphOptions } = await import("../src/storage/graph-repository.ts")
 const { createClassificationAssistant } = await import("../src/storage/classification-assistant.ts");
 const { buildSearchMatchHint } = await import("../src/storage/search-repository.ts");
 const { buildKnowledgeDigest } = await import("../src/storage/digests.ts");
+const { buildEventInterpretation } = await import("../src/domain/event-interpretation.ts");
 
 test("classification extracts expense signals", () => {
   const classified = classifyEvent({
@@ -45,6 +46,21 @@ test("completed Santander card alerts become expenses even with UYU prefix amoun
     { type: "amount", value: "UYU 258,42" },
     { type: "merchant", value: "DLOPEDIDOSYA" },
   ]);
+});
+
+test("Santander processor descriptors preserve the real merchant evidence", () => {
+  const classified = classifyEvent({
+    id: "santander_openai_payment",
+    source: "Santander",
+    kind: "notification",
+    title: "Aviso: uso de tarjeta de débito",
+    body: "Se realizó una transacción con la tarjeta VISA terminada en 5343 por un monto de USD 20,00 en +14158799686/OPENAI *CHATGPT SUBSCVIEI. Si no reconoces esta transacción comunícate al 132.",
+    raw: {},
+    tags: [],
+  });
+
+  assert.equal(classified.inferredKind, "expense");
+  assert.equal(classified.entities.find((entity) => entity.type === "merchant")?.value, "OPENAI *CHATGPT SUBSCVIEI");
 });
 
 test("rejected card alerts do not receive the completed-purchase classification", () => {
@@ -93,6 +109,45 @@ test("notification payment titles keep the merchant separate from the debit mess
   assert.equal(merchant?.value, "La pequena mar azul");
   assert.equal(candidate?.merchantLabel, "La pequena mar azul");
   assert.equal(candidate?.amount, 195);
+  assert.equal(candidate?.currency, "UYU");
+});
+
+test("completed account-to-account transfers create transfer records instead of expenses", () => {
+  const event = {
+    id: "itau_account_transfer",
+    source: "Itaú Uruguay",
+    kind: "notification" as const,
+    title: "Transferencia realizada.",
+    body: "Transferencia realizada desde la cuenta 8763 por UYU 5000.00 a la cuenta 0067001205061165 Santander.",
+    raw: {},
+    tags: [],
+  };
+  const classified = classifyEvent(event);
+  const candidate = buildFinancialTransactionCandidate({ event, classified, entityDrafts: buildEntityDrafts(classified) });
+
+  assert.equal(classified.inferredKind, "transfer");
+  assert.equal(candidate?.kind, "transfer");
+  assert.equal(candidate?.amount, 5000);
+  assert.equal(candidate?.currency, "UYU");
+  assert.equal(candidate?.merchantLabel, "Transfer between accounts");
+});
+
+test("an explicit currency hint takes priority over an ambiguous dollar symbol", () => {
+  const candidate = buildFinancialTransactionCandidate({
+    event: {
+      id: "usd_wallet_notification",
+      source: "wallet",
+      kind: "notification",
+      title: "Payment to OpenAI",
+      body: "Charged $ 20.00",
+      raw: { amount: "$ 20.00", currency: "USD", merchant: "OpenAI" },
+      tags: [],
+    },
+    classified: { inferredKind: "expense", confidence: 0.9 },
+    entityDrafts: [],
+  });
+
+  assert.equal(candidate?.currency, "USD");
 });
 
 test("entity drafts discard noisy merchants and dedupe repeated drafts", () => {
@@ -333,6 +388,33 @@ test("classification assistant inspects confident email captures for transaction
   assert.equal(result.classificationVersion, "heuristic-v1+llm");
   assert.deepEqual(result.entities.map((entity) => entity.type), ["amount", "merchant", "card_last_four"]);
   assert.equal(result.modelMetadata?.applied, true);
+});
+
+test("classification assistant enriches high-confidence financial alerts", async () => {
+  let calls = 0;
+  const assistant = createClassificationAssistant({
+    apiKey: "test-key",
+    model: "test-model",
+    generateCompletion: async () => {
+      calls += 1;
+      return JSON.stringify({ inferredKind: "expense", confidence: 0.99, entities: [{ type: "merchant", value: "OpenAI" }], rationale: "OpenAI card payment." });
+    },
+  });
+  const event = { id: "evt_openai", source: "Santander", kind: "notification" as const, title: "Aviso", body: "USD 20,00 OPENAI", raw: {}, tags: [] };
+  const result = await assistant({ event, base: { ...event, classificationVersion: "heuristic-v2", inferredKind: "expense", confidence: 0.99, entities: [] } });
+  assert.equal(calls, 1);
+  assert.equal(result.entities[0]?.value, "OpenAI");
+});
+
+test("event interpretation uses semantic merchant identity and trusted financial facts", () => {
+  const interpretation = buildEventInterpretation({
+    event: { source: "Santander" },
+    classified: { inferredKind: "expense" },
+    financialCandidate: { kind: "expense", amount: 20, amountText: "USD 20,00", currency: "USD", merchantLabel: "OpenAI", normalizedMerchant: "openai", merchantEntityId: "merchant_openai", observedAt: "2026-07-18T18:12:00.000Z", source: "Santander", eventId: "evt_openai", confidence: 0.99, matchStrategy: "merchant_entity_match", accountId: null, accountName: null },
+    decision: { paths: [{ subject: { type: "merchant", value: "OpenAI", normalizedValue: "openai", description: "The artificial-intelligence service and subscription merchant.", identitySource: "ai", metadata: { aiIdentity: true } }, role: "primary", domain: "Finances", action: "reuse", hierarchyPath: ["Finances", "Financial activity"], steps: [], confidence: 0.96, rationale: "A subscription payment.", eventAnchor: true }], associations: [], rootAlternatives: [{ value: "Finances", confidence: 0.96 }], governanceVersion: "semantic-governance-v4", promptVersion: "semantic-meaning-v4", model: "test-model", status: "resolved", source: "deepseek" },
+  });
+  assert.equal(interpretation.displayTitle, "OpenAI payment · USD 20.00");
+  assert.match(interpretation.displayDescription ?? "", /payment to OpenAI/);
 });
 
 test("knowledge digests summarize windows, counts, and highlights", () => {

@@ -4,6 +4,7 @@ import { normalizeEntityValue } from "../domain/entities.js";
 import {
   AUTO_APPLY_CONFIDENCE,
   NEW_NODE_OBSERVATION_CONFIDENCE,
+  PRIMARY_ROOT_CONFIDENCE,
   SEMANTIC_GOVERNANCE_VERSION,
   SEMANTIC_PROMPT_VERSION,
 } from "../domain/ontology.js";
@@ -14,6 +15,7 @@ import { linkEventRelation, upsertRelation } from "./relation-repository.js";
 import {
   applySemanticRules,
   enqueueSemanticCandidate,
+  settleSatisfiedSemanticCandidates,
   setImmediateHierarchyParent,
   upsertEventSemanticAnchor,
 } from "./semantic-repository.js";
@@ -24,11 +26,12 @@ type StoredEntity = { id: string; type: string; value: string; normalizedValue: 
 
 async function findCanonicalEntity(db: Queryable, normalizedValue: string, allowedTypes?: string[]): Promise<StoredEntity | null> {
   const result = await db.query<StoredEntity>(`
-    select e.id, e.type, e.value, e.normalized_value as "normalizedValue"
-    from entities e left join entity_merges merged on merged.alias_entity_id = e.id
-    where merged.alias_entity_id is null and e.normalized_value = $1
-      and ($2::text[] is null or e.type = any($2::text[]))
-    order by case e.type when 'domain' then 0 when 'concept' then 1 else 2 end, e.created_at asc limit 1
+    select canonical.id, canonical.type, canonical.value, canonical.normalized_value as "normalizedValue"
+    from entities matched
+    left join entity_merges merged on merged.alias_entity_id = matched.id
+    join entities canonical on canonical.id = coalesce(merged.canonical_entity_id, matched.id)
+    where matched.normalized_value = $1 and ($2::text[] is null or canonical.type = any($2::text[]))
+    order by case canonical.type when 'domain' then 0 when 'concept' then 1 else 2 end, canonical.created_at asc limit 1
   `, [normalizeEntityValue(normalizedValue), allowedTypes ?? null]);
   return result.rows[0] ?? null;
 }
@@ -74,6 +77,14 @@ function identityStem(value: string) {
   return normalizeEntityValue(value).replace(/\s+(app|application|merchant|provider|service)$/u, "").trim();
 }
 
+export function isSemanticRestatement(value: string, parentValue: string) {
+  const valueNormalized = normalizeEntityValue(value);
+  const parentNormalized = normalizeEntityValue(parentValue);
+  return valueNormalized === parentNormalized
+    || valueNormalized.includes(parentNormalized)
+    || parentNormalized.includes(valueNormalized);
+}
+
 async function recordDecision(db: Queryable, input: { eventId: string; clientId: string | null; decision: SemanticDecision }) {
   const primary = input.decision.paths.find((path) => path.role === "primary");
   await db.query(`
@@ -114,10 +125,28 @@ async function applyPath(db: Queryable, input: { eventId: string; clientId: stri
   }
   const domain = await findCanonicalEntity(db, input.path.domain, ["domain"]);
   const leafName = input.path.hierarchyPath[input.path.hierarchyPath.length - 1]!;
-  const parent = await findCanonicalEntity(db, leafName, input.path.hierarchyPath.length === 1 ? ["domain"] : ["concept"]);
+  const parent = await findCanonicalEntity(
+    db,
+    leafName,
+    input.path.hierarchyPath.length === 1 ? ["domain"] : ["concept", "app", "merchant", "sender", "recipient"],
+  );
   if (!domain || !parent) {
     await enqueuePathCandidate(db, { ...input, subject, targetValue: leafName });
     return false;
+  }
+  if (subject.id === parent.id) {
+    // Some model responses include a reused subject itself as the final path
+    // segment. It is already the durable leaf; never create a self-edge.
+    if (input.path.eventAnchor !== false) await upsertEventSemanticAnchor(db, {
+      eventId: input.eventId,
+      domainEntityId: domain.id,
+      anchorEntityId: subject.id,
+      role: input.path.role,
+      confidence: input.path.confidence,
+      rationale: input.path.rationale,
+      governanceVersion: input.decision.governanceVersion,
+    });
+    return true;
   }
   const existingRootId = await findHierarchyRoot(db, subject.id);
   if (input.path.role === "primary" && existingRootId && existingRootId !== domain.id) {
@@ -128,32 +157,84 @@ async function applyPath(db: Queryable, input: { eventId: string; clientId: stri
   const mayParentSubject = !existingRootId || existingRootId === domain.id;
   let anchorEntityId = mayParentSubject ? subject.id : parent.id;
 
+  if (currentParent && await isHierarchyAncestor(db, subject.id, parent.id)) {
+    // The model tried to move a container below one of its own descendants
+    // (for example Xiaomi Home below Motion detection). Preserve the already
+    // governed parent instead of creating a cycle or asking the user to review
+    // a structurally impossible proposal.
+    if (input.path.eventAnchor !== false) await upsertEventSemanticAnchor(db, {
+      eventId: input.eventId, domainEntityId: domain.id, anchorEntityId: subject.id, role: input.path.role,
+      confidence: input.path.confidence, rationale: `${input.path.rationale} Invalid descendant refinement ignored.`, governanceVersion: input.decision.governanceVersion,
+    });
+    return true;
+  }
+
+  if (input.path.action === "reuse" && currentParent?.id === parent.id) {
+    if (input.path.eventAnchor !== false) await upsertEventSemanticAnchor(db, {
+      eventId: input.eventId, domainEntityId: domain.id, anchorEntityId: subject.id, role: input.path.role,
+      confidence: input.path.confidence, rationale: input.path.rationale, governanceVersion: input.decision.governanceVersion,
+    });
+    return true;
+  }
+
   if (input.path.action === "merge") {
     const mergeTarget = input.path.mergeTargetNormalizedValue ? await findCanonicalEntity(db, input.path.mergeTargetNormalizedValue) : null;
+    const isEventInstance = input.path.subject.metadata?.instance === true;
+    if (isEventInstance && mergeTarget?.type === "concept" && input.path.confidence >= AUTO_APPLY_CONFIDENCE) {
+      const relation = await setImmediateHierarchyParent(db, { child: subject, parent: mergeTarget, confidence: input.path.confidence, metadata: { source: "semantic-event-meaning-reuse", governanceVersion: SEMANTIC_GOVERNANCE_VERSION } });
+      await linkEventRelation(db, input.eventId, relation.id, input.path.confidence);
+      if (input.path.eventAnchor !== false) await upsertEventSemanticAnchor(db, { eventId: input.eventId, domainEntityId: domain.id, anchorEntityId: mergeTarget.id, role: input.path.role, confidence: input.path.confidence, rationale: input.path.rationale, governanceVersion: input.decision.governanceVersion });
+      return true;
+    }
     await enqueuePathCandidate(db, { ...input, subject, targetValue: mergeTarget?.value ?? input.path.mergeTargetNormalizedValue ?? leafName, targetType: mergeTarget?.type ?? subject.type, relationType: "same_as" });
     return false;
   }
 
   if (input.path.action === "create" && input.path.proposedChild?.durable) {
     const proposal = input.path.proposedChild;
-    if (normalizeEntityValue(proposal.parent) !== parent.normalizedValue || proposal.confidence < NEW_NODE_OBSERVATION_CONFIDENCE) {
+    // validatePath already proved that proposal.parent is the requested leaf.
+    // parent may now carry a different normalized value because that leaf was
+    // subsequently merged or renamed, so compare confidence here, not names.
+    if (proposal.confidence < NEW_NODE_OBSERVATION_CONFIDENCE) {
       await enqueuePathCandidate(db, { ...input, subject, targetValue: proposal.value, parentTargetValue: proposal.parent });
       return false;
     }
     // Do not create a concept that merely restates the classified identity
     // (for example app "Xiaomi Home" and concept "Xiaomi Home app"). The
     // identity itself is the durable leaf below the proposed parent.
-    // An event instance is already the AI-named, described leaf. Creating a
-    // second concept from a dated variation of that name would strand the
-    // actual event node until recurrence, even though its governed parent is
-    // already known. Attach the instance directly to that parent.
     const isEventInstance = input.path.subject.metadata?.instance === true;
-    if (isEventInstance || identityStem(proposal.value) === identityStem(subject.value)) {
+    if (!isEventInstance && identityStem(proposal.value) === identityStem(subject.value)) {
       if (!currentParent || await isHierarchyAncestor(db, currentParent.id, parent.id)) {
         const relation = await setImmediateHierarchyParent(db, { child: subject, parent, confidence: proposal.confidence, metadata: { source: "semantic-deepseek", governanceVersion: SEMANTIC_GOVERNANCE_VERSION, identityLeaf: true } });
         await linkEventRelation(db, input.eventId, relation.id, proposal.confidence);
       }
       if (input.path.eventAnchor !== false) await upsertEventSemanticAnchor(db, { eventId: input.eventId, domainEntityId: domain.id, anchorEntityId: subject.id, role: input.path.role, confidence: input.path.confidence, rationale: input.path.rationale, governanceVersion: input.decision.governanceVersion });
+      return true;
+    }
+    if (isEventInstance && isSemanticRestatement(proposal.value, parent.value)) {
+      const relation = await setImmediateHierarchyParent(db, { child: subject, parent, confidence: input.path.confidence, metadata: { source: "semantic-event-meaning-reuse", governanceVersion: SEMANTIC_GOVERNANCE_VERSION } });
+      await linkEventRelation(db, input.eventId, relation.id, input.path.confidence);
+      if (input.path.eventAnchor !== false) await upsertEventSemanticAnchor(db, { eventId: input.eventId, domainEntityId: domain.id, anchorEntityId: parent.id, role: input.path.role, confidence: input.path.confidence, rationale: input.path.rationale, governanceVersion: input.decision.governanceVersion });
+      return true;
+    }
+    if (isEventInstance) {
+      // The LLM has already compared this meaning against canonicalContext.
+      // Materialize one reusable concept hub at high confidence, then retain
+      // each captured event as distinct evidence beneath that hub.
+      const meaningRecord = await upsertEntity(db, {
+        type: "concept",
+        value: proposal.value,
+        normalizedValue: normalizeEntityValue(proposal.value),
+        description: proposal.description,
+        identitySource: "ai",
+        metadata: { source: "semantic-event-meaning", governanceVersion: SEMANTIC_GOVERNANCE_VERSION, aiIdentity: true },
+      });
+      const meaning: StoredEntity = { id: meaningRecord.id, type: meaningRecord.type, value: meaningRecord.value, normalizedValue: meaningRecord.normalizedValue };
+      const meaningRelation = await setImmediateHierarchyParent(db, { child: meaning, parent, confidence: proposal.confidence, metadata: { source: "semantic-event-meaning", governanceVersion: SEMANTIC_GOVERNANCE_VERSION } });
+      const evidenceRelation = await setImmediateHierarchyParent(db, { child: subject, parent: meaning, confidence: input.path.confidence, metadata: { source: "semantic-event-evidence", governanceVersion: SEMANTIC_GOVERNANCE_VERSION } });
+      await linkEventRelation(db, input.eventId, meaningRelation.id, proposal.confidence);
+      await linkEventRelation(db, input.eventId, evidenceRelation.id, input.path.confidence);
+      if (input.path.eventAnchor !== false) await upsertEventSemanticAnchor(db, { eventId: input.eventId, domainEntityId: domain.id, anchorEntityId: meaning.id, role: input.path.role, confidence: input.path.confidence, rationale: input.path.rationale, governanceVersion: input.decision.governanceVersion });
       return true;
     }
     await db.query(`
@@ -176,7 +257,9 @@ async function applyPath(db: Queryable, input: { eventId: string; clientId: stri
     await setImmediateHierarchyParent(db, { child, parent, confidence: average, metadata: { source: "semantic-recurrence", governanceVersion: SEMANTIC_GOVERNANCE_VERSION } });
     if (mayParentSubject) await setImmediateHierarchyParent(db, { child: subject, parent: child, confidence: input.path.confidence, metadata: { source: "semantic-deepseek", governanceVersion: SEMANTIC_GOVERNANCE_VERSION } });
     else anchorEntityId = child.id;
-  } else if (input.path.action === "reuse" && input.path.confidence >= AUTO_APPLY_CONFIDENCE && input.path.steps.every((step) => step.confidence >= AUTO_APPLY_CONFIDENCE)) {
+  } else if (input.path.action === "reuse"
+    && input.path.confidence >= (input.path.subject.metadata?.instance === true ? PRIMARY_ROOT_CONFIDENCE : AUTO_APPLY_CONFIDENCE)
+    && (input.path.subject.metadata?.instance === true || input.path.steps.every((step) => step.confidence >= AUTO_APPLY_CONFIDENCE))) {
     if (mayParentSubject) {
       if (!currentParent || currentParent.id === parent.id) {
         const relation = await setImmediateHierarchyParent(db, { child: subject, parent, confidence: input.path.confidence, metadata: { source: "semantic-deepseek", governanceVersion: SEMANTIC_GOVERNANCE_VERSION, path: input.path.hierarchyPath } });
@@ -268,6 +351,7 @@ export async function persistSemanticDecision(db: Queryable, input: { eventId: s
     });
   }
   await applyAssociations(db, { eventId: input.eventId, clientId: input.clientId, decision: input.decision });
+  await settleSatisfiedSemanticCandidates(db, input.eventId);
   // AI identities that still lack a governed parent are review candidates,
   // not graph nodes. Preserve the evidence and its generated description;
   // semantic review promotes it once the hierarchy is approved.
@@ -282,6 +366,11 @@ export async function persistSemanticDecision(db: Queryable, input: { eventId: s
           and relation.relation_type in ('part_of', 'belongs_to_domain')
       )
   `, [input.eventId]);
+  if (!["retryable", "unclassified", "model_unavailable"].includes(input.decision.status)) {
+    await db.query(`update semantic_event_decisions decision set status = case
+      when exists (select 1 from semantic_candidates candidate where candidate.event_id = decision.event_id and candidate.status = 'pending') then 'review'
+      else 'resolved' end, updated_at = now() where event_id = $1`, [input.eventId]);
+  }
   return { appliedPaths, reviewPaths: input.decision.paths.length - appliedPaths, decision: input.decision };
 }
 

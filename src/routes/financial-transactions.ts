@@ -18,7 +18,9 @@ const listQuerySchema = z.object({
 const contextSchema = z.object({
   category: z.string().trim().max(120).nullable().optional(),
   accountId: z.string().trim().max(200).nullable().optional(),
+  destinationAccountId: z.string().trim().max(200).nullable().optional(),
   currency: z.enum(["UYU", "USD"]).optional(),
+  kind: z.enum(["expense", "income", "transfer"]).optional(),
 });
 
 const accountSchema = z.object({

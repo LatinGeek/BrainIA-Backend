@@ -6,6 +6,7 @@ import { pool, withTransaction } from "../storage/postgres.js";
 import { ensureOntology, listSemanticCandidates, resolveSemanticCandidate } from "../storage/semantic-repository.js";
 import { listEvents, previewEventSemantics, reprocessEvent } from "../storage/event-store.js";
 import { SEMANTIC_GOVERNANCE_VERSION } from "../domain/ontology.js";
+import { reconcileSemanticGraph } from "../storage/semantic-reconciler.js";
 
 function clientId(request: { headers: Record<string, string | string[] | undefined> }) {
   const value = request.headers[CLIENT_ID_HEADER];
@@ -24,6 +25,7 @@ export const registerSemanticRoutes: FastifyPluginAsync = async (app) => {
       limit: z.coerce.number().int().min(1).max(100).optional(),
       cursor: z.string().min(1).optional(),
       dryRun: z.boolean().default(false),
+      reconcileAtEnd: z.boolean().default(true),
       governanceVersion: z.literal(SEMANTIC_GOVERNANCE_VERSION).default(SEMANTIC_GOVERNANCE_VERSION),
     }).safeParse(request.body ?? {});
     if (!parsed.success) return reply.status(400).send({ error: "invalid_semantic_backfill" });
@@ -46,7 +48,11 @@ export const registerSemanticRoutes: FastifyPluginAsync = async (app) => {
       }
     }
     const nextCursor = selected.at(-1)?.id ?? parsed.data.cursor ?? null;
-    const report = { requested: selected.length, processed, failed, nextCursor, remainingHint: Math.max(0, scoped.length - cursorIndex - selected.length) };
+    const remainingHint = Math.max(0, scoped.length - cursorIndex - selected.length);
+    const reconciliation = !parsed.data.dryRun && parsed.data.reconcileAtEnd && remainingHint === 0 && failed.length === 0
+      ? await reconcileSemanticGraph()
+      : { status: parsed.data.dryRun ? "preview_skipped" : failed.length > 0 ? "awaiting_failed_event_retry" : remainingHint > 0 ? "awaiting_final_batch" : "skipped" };
+    const report = { requested: selected.length, processed, failed, nextCursor, remainingHint, reconciliation };
     await pool.query(`update semantic_backfill_runs set processed = $2, failed = $3, cursor_value = $4, report = $5::jsonb, completed_at = now() where id = $1`, [runId, processed, failed.length, nextCursor, JSON.stringify(report)]);
     return { runId, dryRun: parsed.data.dryRun, governanceVersion: parsed.data.governanceVersion, ...report };
   });

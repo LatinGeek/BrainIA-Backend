@@ -24,6 +24,7 @@ const NOISY_ENTITY_VALUES = new Set([
   "alerta",
   "notification",
   "notificacion",
+  "aviso",
   "mensaje",
   "message",
   "note",

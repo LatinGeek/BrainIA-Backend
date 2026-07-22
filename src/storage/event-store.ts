@@ -2,7 +2,7 @@ import { classifyEvent } from "../domain/classification.js";
 import type { EventInput } from "../domain/event.js";
 import { buildEntityDrafts, type EntityDraft } from "../domain/entities.js";
 import { buildRelationDrafts } from "../domain/relations.js";
-import { pool, withTransaction } from "./postgres.js";
+import { pool, withSemanticMaterializationLock, withTransaction } from "./postgres.js";
 import { maybeEnhanceClassification } from "./classification-assistant.js";
 import { invalidateGraphTraversalCache } from "./graph-cache.js";
 import { enqueueEntityReview } from "./entity-alias-repository.js";
@@ -16,8 +16,9 @@ import {
   loadRawEventById,
   loadStoredEventByLookup,
   listStoredEvents,
+  updateClassifiedEventInterpretation,
 } from "./event-repository.js";
-import { upsertEntity } from "./entity-repository.js";
+import { findCanonicalMerchantByValue, upsertEntity } from "./entity-repository.js";
 import { linkFinancialTransactionForEvent } from "./financial-transaction-repository.js";
 import { linkEventRelation, upsertRelation } from "./relation-repository.js";
 import { semanticInstanceDraft } from "../domain/ontology.js";
@@ -25,6 +26,7 @@ import { consolidateProviderIdentity, ensureOntology } from "./semantic-reposito
 import { resolveEventSemantics } from "./semantic-resolver.js";
 import { buildModelSemanticDecision } from "./semantic-enrichment.js";
 import type { SemanticDecision } from "./semantic-enrichment.js";
+import { buildEventInterpretation } from "../domain/event-interpretation.js";
 
 export type EventIngestionContext = {
   clientId?: string | null;
@@ -37,7 +39,7 @@ export function buildEventDedupeKey(event: EventInput, clientId: string | null |
 }
 
 function isFinancialInferredKind(kind: string) {
-  return kind === "expense" || kind === "income";
+  return kind === "expense" || kind === "income" || kind === "transfer";
 }
 
 function shouldPersistGraphEntity(draft: EntityDraft) {
@@ -61,6 +63,16 @@ function governedGraphDrafts(decision: SemanticDecision) {
     });
 }
 
+function classifiedEventIdentity(classified: { modelMetadata?: Record<string, unknown> | null }) {
+  const response = classified.modelMetadata?.response;
+  if (!response || typeof response !== "object" || Array.isArray(response)) return null;
+  const record = response as Record<string, unknown>;
+  return {
+    displayTitle: typeof record.displayTitle === "string" ? record.displayTitle : undefined,
+    displayDescription: typeof record.displayDescription === "string" ? record.displayDescription : undefined,
+  };
+}
+
 async function persistClassifiedEvent(
   event: EventInput,
   clientId: string | null,
@@ -71,7 +83,7 @@ async function persistClassifiedEvent(
   });
   const dedupeKey = buildEventDedupeKey(event, clientId);
   const entityDrafts = buildEntityDrafts({ ...classified, raw: classified.raw });
-  const instanceDraft = semanticInstanceDraft({ eventId: event.id, inferredKind: classified.inferredKind, source: event.source, title: event.title, body: event.body });
+  const instanceDraft = semanticInstanceDraft({ eventId: event.id, inferredKind: classified.inferredKind, source: event.source, title: event.title, body: event.body, identity: classifiedEventIdentity(classified) });
   entityDrafts.push(instanceDraft);
   // Model inference must happen before opening a database transaction. Holding
   // ontology row locks while waiting on the network serializes batch workers.
@@ -160,23 +172,37 @@ async function persistClassifiedEvent(
 
     await resolveEventSemantics(db, { eventId: event.id, clientId, drafts: graphDrafts, source: event.source, inferredKind: classified.inferredKind, title: event.title, body: event.body, decision: semanticDecision });
 
-    const stored = await loadStoredEventByLookup(db, event.id, dedupeKey);
-    if (!stored) {
-      throw new Error("Stored event could not be loaded after ingestion");
-    }
-
     const financialCandidate = buildFinancialTransactionCandidate({
-      event: stored,
+      event,
       classified,
       entityDrafts,
       merchantEntity: upsertedByType.get("merchant") ?? null,
       amountEntity: upsertedByType.get("amount") ?? null,
-      observedAt: stored.timestamp ?? stored.rawEventCreatedAt,
+      observedAt: event.timestamp ?? new Date().toISOString(),
     });
 
     if (financialCandidate) {
+      if (!financialCandidate.merchantEntityId && financialCandidate.kind !== "transfer") {
+        const merchant = await findCanonicalMerchantByValue(db, financialCandidate.merchantLabel);
+        if (merchant) {
+          financialCandidate.merchantEntityId = merchant.id;
+          financialCandidate.matchStrategy = "merchant_identity_lookup";
+          await linkEventEntity(db, event.id, merchant.id, 0.9);
+        }
+      }
       await linkFinancialTransactionForEvent(db, financialCandidate);
     }
+
+    await updateClassifiedEventInterpretation(db, event.id, buildEventInterpretation({
+      event,
+      classified,
+      decision: semanticDecision,
+      eventIdentity: instanceDraft,
+      financialCandidate,
+    }));
+
+    const stored = await loadStoredEventByLookup(db, event.id, dedupeKey);
+    if (!stored) throw new Error("Stored event could not be loaded after ingestion");
 
     invalidateGraphTraversalCache();
     return stored;
@@ -188,10 +214,14 @@ export async function ensureStorage() {
 }
 
 export async function appendEvent(event: EventInput, context: EventIngestionContext = {}) {
-  return persistClassifiedEvent(event, context.clientId ?? null);
+  return withSemanticMaterializationLock(() => persistClassifiedEvent(event, context.clientId ?? null));
 }
 
 export async function reprocessEvent(eventId: string, options: { ensureOntology?: boolean } = {}) {
+  return withSemanticMaterializationLock(() => reprocessEventUnlocked(eventId, options));
+}
+
+async function reprocessEventUnlocked(eventId: string, options: { ensureOntology?: boolean } = {}) {
   const rawEvent = await loadRawEventById(pool, eventId);
   if (!rawEvent) {
     return null;
@@ -201,7 +231,7 @@ export async function reprocessEvent(eventId: string, options: { ensureOntology?
     base: classifyEvent(rawEvent),
   });
   const entityDrafts = buildEntityDrafts({ ...classified, raw: classified.raw });
-  const instanceDraft = semanticInstanceDraft({ eventId: rawEvent.id, inferredKind: classified.inferredKind, source: rawEvent.source, title: rawEvent.title, body: rawEvent.body });
+  const instanceDraft = semanticInstanceDraft({ eventId: rawEvent.id, inferredKind: classified.inferredKind, source: rawEvent.source, title: rawEvent.title, body: rawEvent.body, identity: classifiedEventIdentity(classified) });
   entityDrafts.push(instanceDraft);
   const semanticDecision = await buildModelSemanticDecision({ entities: entityDrafts, source: rawEvent.source, inferredKind: classified.inferredKind, title: rawEvent.title, body: rawEvent.body, clientId: rawEvent.clientId });
   const graphDrafts = governedGraphDrafts(semanticDecision);
@@ -277,7 +307,6 @@ export async function reprocessEvent(eventId: string, options: { ensureOntology?
 
     await resolveEventSemantics(db, { eventId: rawEvent.id, clientId: rawEvent.clientId, drafts: graphDrafts, source: rawEvent.source, inferredKind: classified.inferredKind, title: rawEvent.title, body: rawEvent.body, decision: semanticDecision });
 
-    const stored = await loadStoredEventByLookup(db, rawEvent.id, rawEvent.dedupeKey);
     const financialCandidate = buildFinancialTransactionCandidate({
       event: rawEvent,
       classified,
@@ -291,6 +320,16 @@ export async function reprocessEvent(eventId: string, options: { ensureOntology?
       await linkFinancialTransactionForEvent(db, financialCandidate);
     }
 
+    await updateClassifiedEventInterpretation(db, rawEvent.id, buildEventInterpretation({
+      event: rawEvent,
+      classified,
+      decision: semanticDecision,
+      eventIdentity: instanceDraft,
+      financialCandidate,
+    }));
+
+    const stored = await loadStoredEventByLookup(db, rawEvent.id, rawEvent.dedupeKey);
+
     invalidateGraphTraversalCache();
     return stored;
   });
@@ -301,7 +340,7 @@ export async function previewEventSemantics(eventId: string) {
   if (!rawEvent) return null;
   const classified = await maybeEnhanceClassification({ event: rawEvent, base: classifyEvent(rawEvent) });
   const entityDrafts = buildEntityDrafts({ ...classified, raw: classified.raw });
-  entityDrafts.push(semanticInstanceDraft({ eventId: rawEvent.id, inferredKind: classified.inferredKind, source: rawEvent.source, title: rawEvent.title, body: rawEvent.body }));
+  entityDrafts.push(semanticInstanceDraft({ eventId: rawEvent.id, inferredKind: classified.inferredKind, source: rawEvent.source, title: rawEvent.title, body: rawEvent.body, identity: classifiedEventIdentity(classified) }));
   return buildModelSemanticDecision({ entities: entityDrafts, source: rawEvent.source, inferredKind: classified.inferredKind, title: rawEvent.title, body: rawEvent.body, clientId: rawEvent.clientId });
 }
 

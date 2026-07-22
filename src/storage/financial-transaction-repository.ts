@@ -39,6 +39,8 @@ export type FinancialTransactionRecord = {
   category: string | null;
   accountId: string | null;
   account: string | null;
+  destinationAccountId: string | null;
+  destinationAccount: string | null;
   primarySource: string;
   anchorEventId: string | null;
   createdAt: string;
@@ -118,12 +120,15 @@ function buildTransactionProjectionSql() {
       t.category,
       t.account_id as "accountId",
       coalesce(a.name, a.mask) as account,
+      t.destination_account_id as "destinationAccountId",
+      coalesce(destination.name, destination.mask) as "destinationAccount",
       t.primary_source as "primarySource",
       t.anchor_event_id as "anchorEventId",
       t.created_at as "createdAt",
       t.updated_at as "updatedAt"
     from financial_transactions t
     left join financial_accounts a on a.id = t.account_id
+    left join financial_accounts destination on destination.id = t.destination_account_id
     left join entity_merges merchant_merge on merchant_merge.alias_entity_id = t.merchant_entity_id
     left join entities merchant_entity on merchant_entity.id = coalesce(merchant_merge.canonical_entity_id, t.merchant_entity_id)
     left join lateral (
@@ -166,31 +171,35 @@ export async function createFinancialAccount(input: { name: string; type?: strin
 
 export async function updateFinancialTransactionContext(
   id: string,
-  input: { category?: string | null; accountId?: string | null; currency?: "UYU" | "USD" },
+  input: { category?: string | null; accountId?: string | null; destinationAccountId?: string | null; currency?: "UYU" | "USD"; kind?: "expense" | "income" | "transfer" },
 ) {
-  if (input.accountId) {
+  const accountIds = [input.accountId, input.destinationAccountId].filter((value): value is string => Boolean(value));
+  if (accountIds.length) {
     const compatibility = await pool.query<{ matches: boolean }>(
       `
         select exists (
           select 1
           from financial_transactions t
-          join financial_accounts a on a.id = $2
+          join financial_accounts a on a.id = any($2::text[])
           where t.id = $1
             and a.currency = coalesce($3, t.currency)
         ) as matches
       `,
-      [id, input.accountId, input.currency ?? null],
+      [id, accountIds, input.currency ?? null],
     );
     if (!compatibility.rows[0]?.matches) {
       throw new Error("The account currency must match the transaction currency");
     }
   }
+  if (input.kind === "transfer" && input.accountId && input.destinationAccountId && input.accountId === input.destinationAccountId) {
+    throw new Error("A transfer must use two different accounts");
+  }
   const result = await pool.query(`
     update financial_transactions
-    set category = $2, account_id = $3, currency = coalesce($4, currency), updated_at = now()
+    set category = $2, account_id = $3, destination_account_id = $4, currency = coalesce($5, currency), kind = coalesce($6, kind), updated_at = now()
     where id = $1
     returning id
-  `, [id, input.category?.trim() || null, input.accountId || null, input.currency ?? null]);
+  `, [id, input.category?.trim() || null, input.accountId || null, input.destinationAccountId || null, input.currency ?? null, input.kind ?? null]);
 
   if (!result.rowCount) return null;
   return loadFinancialTransactionById(pool, id);

@@ -2,7 +2,7 @@ import type { EventInput } from "./event.js";
 import { normalizeEntityValue, type EntityDraft } from "./entities.js";
 
 export type FinancialTransactionCandidate = {
-  kind: "expense" | "income";
+  kind: "expense" | "income" | "transfer";
   amount: number;
   amountText: string;
   currency: string;
@@ -23,10 +23,14 @@ type EntityLike = Pick<EntityDraft, "type" | "value" | "normalizedValue"> & {
 };
 
 const CURRENCY_SYMBOLS: Record<string, string> = {
-  $: "USD",
   "\u20ac": "EUR",
   "\u00a3": "GBP",
 };
+
+// A bare "$" is ambiguous. For this Uruguay-focused capture flow it denotes
+// pesos unless the source explicitly provides a currency code or hint. Never
+// silently turn a local debit notification into USD just because it uses "$".
+const DEFAULT_LOCAL_CURRENCY = "UYU";
 
 const CURRENCY_CODES = new Set([
   "ARS",
@@ -116,7 +120,7 @@ function parseAmountText(
     return {
       amount,
       amountText: trimmed,
-      currency: CURRENCY_SYMBOLS[symbolMatch[1]] ?? currencyHint ?? "UYU",
+      currency: currencyHint ?? CURRENCY_SYMBOLS[symbolMatch[1]] ?? DEFAULT_LOCAL_CURRENCY,
     };
   }
 
@@ -155,7 +159,7 @@ function parseAmountText(
   return {
     amount,
     amountText: plainAmountMatch[0],
-    currency: currencyHint ?? "UYU",
+    currency: currencyHint ?? DEFAULT_LOCAL_CURRENCY,
   };
 }
 
@@ -171,7 +175,7 @@ function pickMerchantLabel(input: {
   const titleMerchant = input.event.kind === "notification"
     ? input.event.title?.trim().match(/^(?:pagaste\s+a|pago\s+a|compra\s+en)\s+(.+)$/iu)?.[1]?.trim()
     : null;
-  return (
+  const candidate = (
     readRawString(raw, [
       "merchant",
       "merchantName",
@@ -186,9 +190,12 @@ function pickMerchantLabel(input: {
     ]) ||
     titleMerchant ||
     input.merchantEntity?.value?.trim() ||
-    collapseText(input.event.title ?? input.event.body ?? "") ||
-    input.event.source.trim()
+    null
   );
+  if (!candidate) return null;
+  const collapsed = collapseText(candidate);
+  if (/^(?:aviso|alerta|notification|notificaci(?:o|ó)n|movimiento|transaction|transacci(?:o|ó)n)$/iu.test(collapsed)) return null;
+  return collapsed;
 }
 
 function findRawAmountText(raw: Record<string, unknown> | undefined) {
@@ -208,7 +215,7 @@ export function buildFinancialTransactionCandidate(input: {
   amountEntity?: EntityLike | null;
   observedAt?: string | null;
 }): FinancialTransactionCandidate | null {
-  if (input.classified.inferredKind !== "expense" && input.classified.inferredKind !== "income") {
+  if (!(["expense", "income", "transfer"] as const).includes(input.classified.inferredKind as "expense" | "income" | "transfer")) {
     return null;
   }
 
@@ -230,10 +237,12 @@ export function buildFinancialTransactionCandidate(input: {
     return null;
   }
 
-  const merchantLabel = pickMerchantLabel({
-    event: input.event,
-    merchantEntity: merchantDraft,
-  });
+  const merchantLabel = input.classified.inferredKind === "transfer"
+    ? "Transfer between accounts"
+    : pickMerchantLabel({ event: input.event, merchantEntity: merchantDraft });
+  if (!merchantLabel) {
+    return null;
+  }
   const normalizedMerchant = normalizeMerchantLabel(merchantLabel);
 
   if (!normalizedMerchant) {
@@ -246,7 +255,7 @@ export function buildFinancialTransactionCandidate(input: {
     new Date().toISOString();
 
   return {
-    kind: input.classified.inferredKind,
+    kind: input.classified.inferredKind as FinancialTransactionCandidate["kind"],
     amount: Number(parsedAmount.amount.toFixed(2)),
     amountText: parsedAmount.amountText,
     currency: parsedAmount.currency,

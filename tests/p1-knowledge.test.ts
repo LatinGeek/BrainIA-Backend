@@ -213,6 +213,7 @@ test("merge entities materializes same_as provenance and keeps canonical roots d
       rowCount: 1,
     },
     { rows: [], rowCount: 1 },
+    { rows: [], rowCount: 1 },
     {
       rows: [
         {

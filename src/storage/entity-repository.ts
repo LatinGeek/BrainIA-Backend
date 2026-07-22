@@ -3,6 +3,7 @@ import type { EntityDraft } from "../domain/entities.js";
 import type { RelationDraft } from "../domain/relations.js";
 import { upsertRelation } from "./relation-repository.js";
 import { invalidateGraphTraversalCache } from "./graph-cache.js";
+import { randomUUID } from "node:crypto";
 
 type Queryable = Pick<typeof pool, "query">;
 
@@ -25,6 +26,56 @@ export type EntityRecord = {
 export type ResolvedEntityRecord = EntityRecord & {
   matchedEntityId: string;
 };
+
+export async function rewireEntityRelations(db: Queryable, aliasEntityId: string, canonicalEntityId: string) {
+  const relations = await db.query<{ id: string; sourceEntityId: string; targetEntityId: string; relationType: string }>(`
+    select id, source_entity_id as "sourceEntityId", target_entity_id as "targetEntityId", relation_type as "relationType"
+    from relations where source_entity_id = $1 or target_entity_id = $1
+    order by created_at, id
+  `, [aliasEntityId]);
+  for (const relation of relations.rows) {
+    if (relation.relationType === "same_as") continue;
+    const nextSource = relation.sourceEntityId === aliasEntityId ? canonicalEntityId : relation.sourceEntityId;
+    const nextTarget = relation.targetEntityId === aliasEntityId ? canonicalEntityId : relation.targetEntityId;
+    if (nextSource === nextTarget) {
+      await db.query(`delete from relations where id = $1`, [relation.id]);
+      continue;
+    }
+    const hierarchy = ["part_of", "belongs_to_domain"].includes(relation.relationType);
+    if (hierarchy && relation.sourceEntityId === aliasEntityId) {
+      const established = await db.query<{ id: string }>(`
+        select id from relations where source_entity_id = $1 and relation_type in ('part_of','belongs_to_domain') limit 1
+      `, [canonicalEntityId]);
+      if (established.rows[0]) {
+        await db.query(`
+          insert into event_relations (id,event_id,relation_id,role,confidence)
+          select $1 || md5(old.id || old.event_id), old.event_id, $2, old.role, old.confidence
+          from event_relations old where old.relation_id = $3
+          on conflict (event_id,relation_id) do update set confidence = greatest(event_relations.confidence, excluded.confidence)
+        `, [`event_relation_${randomUUID()}_`, established.rows[0].id, relation.id]);
+        await db.query(`delete from relations where id = $1`, [relation.id]);
+        continue;
+      }
+    }
+    if (hierarchy && relation.targetEntityId === aliasEntityId) {
+      await db.query(`delete from relations where source_entity_id = $1 and id <> $2 and relation_type in ('part_of','belongs_to_domain')`, [nextSource, relation.id]);
+    }
+    const duplicate = await db.query<{ id: string }>(`
+      select id from relations where source_entity_id = $1 and target_entity_id = $2 and relation_type = $3 and id <> $4 limit 1
+    `, [nextSource, nextTarget, relation.relationType, relation.id]);
+    if (duplicate.rows[0]) {
+      await db.query(`
+        insert into event_relations (id,event_id,relation_id,role,confidence)
+        select $1 || md5(old.id || old.event_id), old.event_id, $2, old.role, old.confidence
+        from event_relations old where old.relation_id = $3
+        on conflict (event_id,relation_id) do update set confidence = greatest(event_relations.confidence, excluded.confidence)
+      `, [`event_relation_${randomUUID()}_`, duplicate.rows[0].id, relation.id]);
+      await db.query(`delete from relations where id = $1`, [relation.id]);
+    } else {
+      await db.query(`update relations set source_entity_id = $1, target_entity_id = $2 where id = $3`, [nextSource, nextTarget, relation.id]);
+    }
+  }
+}
 
 type EntityMatchRow = EntityRecord & {
   matchedEntityId?: string | null;
@@ -94,6 +145,29 @@ export async function loadCanonicalEntityById(db: Queryable, entityId: string): 
   }
 
   return loadEntityById(db, canonicalEntityId);
+}
+
+/** Resolve an existing canonical merchant before falling back to raw text. */
+export async function findCanonicalMerchantByValue(db: Queryable, value: string): Promise<EntityRecord | null> {
+  const normalizedValue = value.trim().toLocaleLowerCase();
+  if (!normalizedValue) return null;
+
+  const result = await db.query<{ id: string }>(`
+    select e.id
+    from entities e
+    where e.type = 'merchant'
+      and (
+        lower(e.normalized_value) = $1
+        or exists (
+          select 1 from entity_aliases a
+          where a.entity_id = e.id and lower(a.normalized_alias) = $1
+        )
+      )
+    order by e.created_at asc
+    limit 1
+  `, [normalizedValue]);
+
+  return result.rows[0] ? loadCanonicalEntityById(db, result.rows[0].id) : null;
 }
 
 export async function upsertEntity(db: Queryable, draft: EntityDraft): Promise<EntityRecord> {
@@ -281,8 +355,14 @@ export async function mergeEntities(
     throw new Error("Both entities must exist before they can be merged");
   }
 
+  if (aliasEntity.type !== canonicalEntity.type) {
+    throw new Error("Only entities of the same type can be merged");
+  }
+
   const reason = options.reason ?? "manual_merge";
   const confidence = options.confidence ?? 1;
+
+  await rewireEntityRelations(db, aliasRootId, canonicalRootId);
 
   await db.query(
     `

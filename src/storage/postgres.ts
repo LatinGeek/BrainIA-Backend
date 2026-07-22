@@ -33,3 +33,21 @@ export async function withTransactionOnPool<T>(
 export async function withTransaction<T>(fn: (client: PoolClient) => Promise<T>) {
   return withTransactionOnPool(pool, fn);
 }
+
+/**
+ * Serializes the graph read/model/write cycle across backend instances.
+ */
+export async function withSemanticMaterializationLock<T>(fn: () => Promise<T>) {
+  const client = await pool.connect();
+  const lockName = "brainia:semantic-materialization";
+  try {
+    await client.query("select pg_advisory_lock(hashtextextended($1, 0))", [lockName]);
+    return await fn();
+  } finally {
+    try {
+      await client.query("select pg_advisory_unlock(hashtextextended($1, 0))", [lockName]);
+    } finally {
+      client.release();
+    }
+  }
+}

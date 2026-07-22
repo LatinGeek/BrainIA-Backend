@@ -72,6 +72,7 @@ export type ExploreGraph = {
     importanceScore: number;
     communityId: string;
     hierarchyDepth: number;
+    eventId: string | null;
   }>;
   relations: Array<{
     id: string;
@@ -129,8 +130,17 @@ export function parseGraphOptions(input: { depth?: string; maxNodes?: string; ma
   };
 }
 
-export function parseExploreGraphOptions(input: { limit?: string }) {
-  return { limit: clampInteger(input.limit, 80, 10, 250) };
+export function parseExploreGraphOptions(input: { limit?: string; includeEvents?: string; includeEventEvidence?: string; from?: string; to?: string; eventKind?: string }) {
+  return {
+    limit: clampInteger(input.limit, 80, 10, 250),
+    // Event instances are evidence, not overview concepts. The former
+    // includeEvents flag is intentionally no longer enough to flood the map;
+    // evidence expansion must be explicit and can be used by a detail view.
+    includeEvents: input.includeEventEvidence === "true",
+    from: input.from?.trim() || null,
+    to: input.to?.trim() || null,
+    eventKind: input.eventKind?.trim() || null,
+  };
 }
 
 function assignCommunities(nodes: Array<{ id: string }>, relations: Array<{ sourceEntityId: string; targetEntityId: string }>) {
@@ -170,13 +180,14 @@ function communityLabel(type: string, value: string) {
   return `${typeLabel} · ${name}`;
 }
 
-export async function getExploreGraph(limit: number): Promise<ExploreGraph> {
+export async function getExploreGraph(options: ReturnType<typeof parseExploreGraphOptions>): Promise<ExploreGraph> {
   const entityResult = await pool.query<{
     id: string;
     type: string;
     value: string;
     description: string;
     importanceScore: number;
+    eventId: string | null;
   }>(
     `
       with recursive rooted(entity_id) as (
@@ -190,29 +201,65 @@ export async function getExploreGraph(limit: number): Promise<ExploreGraph> {
         e.type,
         e.value,
         e.description,
+        case when e.type in ('financial_event', 'email_message', 'activity_instance') then e.metadata ->> 'eventId' else null end as "eventId",
         (count(r.id) + greatest(0, extract(epoch from now() - e.created_at) / -86400))::float as "importanceScore"
       from entities e
       left join entity_merges merged on merged.alias_entity_id = e.id
       left join relations r on (r.source_entity_id = e.id or r.target_entity_id = e.id)
         and r.relation_type in ('part_of', 'belongs_to_domain')
       where merged.alias_entity_id is null
-        -- Explore is a map of durable knowledge. Raw events and their
-        -- evidence stay reachable from entity details, but do not form
-        -- misleading hubs or labels in the map itself.
-        and e.type in ('domain', 'concept', 'app', 'merchant', 'sender', 'recipient')
+        and (e.type in ('domain', 'concept', 'app', 'merchant', 'sender', 'recipient')
+          or ($2::boolean and e.type in ('financial_event', 'email_message', 'activity_instance')))
         and e.identity_source in ('ai', 'ai_seed', 'user')
         and length(btrim(e.description)) > 0
         and exists (select 1 from rooted where rooted.entity_id = e.id)
+        and (e.type not in ('financial_event', 'email_message', 'activity_instance') or exists (
+          select 1 from event_entities ee join raw_events event on event.id = ee.event_id
+          left join classified_events classified on classified.raw_event_id = event.id
+          where ee.entity_id = e.id
+            and ($3::timestamptz is null or coalesce(event.timestamp, event.created_at) >= $3::timestamptz)
+            and ($4::timestamptz is null or coalesce(event.timestamp, event.created_at) <= $4::timestamptz)
+            and ($5::text is null or classified.inferred_kind = $5 or event.kind = $5)
+        ))
       group by e.id
       order by
-        case when e.type = 'domain' then 0 when e.type = 'concept' then 1 else 2 end,
+        case when e.type = 'domain' then 0 when e.type = 'concept' then 1 when e.type in ('financial_event', 'email_message', 'activity_instance') then 3 else 2 end,
         count(r.id) desc, e.created_at desc, e.id asc
       limit $1
     `,
-    [limit],
+    [options.limit, options.includeEvents, options.from, options.to, options.eventKind],
   );
   const selectedIds = entityResult.rows.map((node) => node.id);
   if (!selectedIds.length) return { communities: [], nodes: [], relations: [], stats: { nodesCount: 0, relationsCount: 0, truncated: false } };
+
+  // The initial ranking is intentionally capped, but a cap must never sever a
+  // visible node from its semantic lineage. This is most noticeable when
+  // evidence is enabled: event instances are numerous and could otherwise win
+  // a slot while their canonical meaning or domain is omitted from the map.
+  const lineageResult = await pool.query<typeof entityResult.rows[number]>(`
+    with recursive lineage(id) as (
+      select unnest($1::text[])
+      union
+      select relation.target_entity_id
+      from lineage child
+      join relations relation on relation.source_entity_id = child.id
+      where relation.relation_type in ('part_of', 'belongs_to_domain')
+    )
+    select e.id, e.type, e.value, e.description,
+      case when e.type in ('financial_event', 'email_message', 'activity_instance') then e.metadata ->> 'eventId' else null end as "eventId",
+      (count(relation.id) + greatest(0, extract(epoch from now() - e.created_at) / -86400))::float as "importanceScore"
+    from entities e
+    left join entity_merges merged on merged.alias_entity_id = e.id
+    left join relations relation on (relation.source_entity_id = e.id or relation.target_entity_id = e.id)
+      and relation.relation_type in ('part_of', 'belongs_to_domain')
+    where e.id in (select id from lineage)
+      and merged.alias_entity_id is null
+      and e.identity_source in ('ai', 'ai_seed', 'user')
+      and length(btrim(e.description)) > 0
+    group by e.id
+  `, [selectedIds]);
+  const entityRows = [...new Map([...entityResult.rows, ...lineageResult.rows].map((node) => [node.id, node])).values()];
+  const graphEntityIds = entityRows.map((node) => node.id);
 
   const domainResult = await pool.query<{ entityId: string; domainId: string; domainValue: string; hierarchyDepth: number }>(`
     with recursive domain_paths(entity_id, domain_id, domain_value, hierarchy_depth) as (
@@ -227,7 +274,7 @@ export async function getExploreGraph(limit: number): Promise<ExploreGraph> {
     from domain_paths
     where entity_id = any($1::text[])
     order by entity_id, hierarchy_depth asc, domain_value
-  `, [selectedIds]);
+  `, [graphEntityIds]);
   const semanticDomains = new Map(domainResult.rows.map((row) => [row.entityId, row]));
   const relationResult = await pool.query<ExploreGraph["relations"][number]>(
     `
@@ -238,7 +285,7 @@ export async function getExploreGraph(limit: number): Promise<ExploreGraph> {
       where r.source_entity_id = any($1::text[]) and r.target_entity_id = any($1::text[])
       order by r.confidence desc, r.created_at desc, r.id asc
     `,
-    [selectedIds],
+    [graphEntityIds],
   );
   // The overview is a hierarchy with sparse bridges between life domains.
   // Same-domain associations remain available in entity details, where their
@@ -249,9 +296,9 @@ export async function getExploreGraph(limit: number): Promise<ExploreGraph> {
     const targetDomain = semanticDomains.get(relation.targetEntityId)?.domainId;
     return Boolean(sourceDomain && targetDomain && sourceDomain !== targetDomain);
   });
-  const labels = assignCommunities(entityResult.rows, visibleRelations);
+  const labels = assignCommunities(entityRows, visibleRelations);
   const grouped = new Map<string, typeof entityResult.rows>();
-  for (const node of entityResult.rows) {
+  for (const node of entityRows) {
     const communityId = semanticDomains.get(node.id)?.domainId ?? labels.get(node.id) ?? node.id;
     grouped.set(communityId, [...(grouped.get(communityId) ?? []), node]);
   }
@@ -265,13 +312,13 @@ export async function getExploreGraph(limit: number): Promise<ExploreGraph> {
     .sort((left, right) => right.nodeCount - left.nodeCount || left.label.localeCompare(right.label));
   return {
     communities,
-    nodes: entityResult.rows.map((node) => ({
+    nodes: entityRows.map((node) => ({
       ...node,
       communityId: semanticDomains.get(node.id)?.domainId ?? labels.get(node.id) ?? node.id,
       hierarchyDepth: semanticDomains.get(node.id)?.hierarchyDepth ?? 0,
     })),
     relations: visibleRelations,
-    stats: { nodesCount: entityResult.rows.length, relationsCount: visibleRelations.length, truncated: entityResult.rows.length >= limit },
+    stats: { nodesCount: entityRows.length, relationsCount: visibleRelations.length, truncated: entityResult.rows.length >= options.limit },
   };
 }
 
