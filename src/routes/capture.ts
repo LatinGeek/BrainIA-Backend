@@ -67,6 +67,9 @@ const walletCaptureSchema = commonCaptureSchema.extend({
   amount: z.string().optional(),
   currency: z.string().optional(),
   note: z.string().optional(),
+  transactionType: z.enum(["income", "expense"]).optional(),
+  accountId: z.string().trim().min(1).max(200).optional(),
+  category: z.string().trim().min(1).max(120).optional(),
 });
 
 const captureBatchSchema = z.object({

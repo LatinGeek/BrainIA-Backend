@@ -1,7 +1,9 @@
 import type { FastifyPluginAsync } from "fastify";
 import { getMetrics } from "../storage/event-store.js";
+import { getKnowledgeQualityMetrics } from "../storage/quality-metrics.js";
 
 export const registerMetricsRoutes: FastifyPluginAsync = async (app) => {
+  app.get("/metrics/quality", async () => getKnowledgeQualityMetrics());
   app.get("/metrics", async () => {
     const metrics = await getMetrics();
     return {

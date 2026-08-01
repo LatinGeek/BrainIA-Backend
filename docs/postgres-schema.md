@@ -178,8 +178,14 @@ Current columns:
 - `match_strategy text not null`
 - `primary_source text not null`
 - `anchor_event_id text null`
+- `hidden_at timestamptz null`
+- `merged_into_transaction_id text null`
 - `created_at timestamptz not null default now()`
 - `updated_at timestamptz not null default now()`
+
+A non-null `merged_into_transaction_id` requires `hidden_at` to be non-null. This
+keeps duplicate evidence auditable while preventing the duplicate projection from
+participating in user-facing financial reads and calculations.
 
 ### `financial_transaction_events`
 
@@ -252,11 +258,17 @@ The API reads back a joined view of these tables.
 
 ## Future tables
 
-Planned next tables include:
+Migration `0028_knowledge_platform.sql` adds the active platform tables and projections:
 
-None for the current relationship phase. Those tables are now part of the modeled schema.
-
-Those tables will let us materialize a knowledge graph on top of the raw event stream.
+- `event_processing_history` and processing/privacy columns on `raw_events`;
+- `knowledge_facts` for versioned derived facts;
+- `model_call_audits` for tokens, cost, attempts, latency, and outcome;
+- `knowledge_embeddings` as the portable versioned vector store;
+- generated FTS vectors and GIN indexes on evidence, entities, aliases, relations, insights, and digests;
+- `insight_candidates` and delivery/evidence fields on `insight_runs`;
+- `background_jobs` and `background_job_attempts` for outbox processing, retries, and dead letters;
+- `source_processing_policies`, `knowledge_feedback`, and `data_deletion_audit`;
+- `backup_verification_runs`.
 
 ## Entity phase
 

@@ -9,6 +9,10 @@ BrainIA is a backend-first system for capturing generic events from mobile or au
 - generic event ingestion under `/api/v1/events`
 - source-specific capture adapters under `/api/v1/capture/*`
 - graph, search, inspect, and insight endpoints for agent retrieval
+- hybrid full-text/vector/graph retrieval with compact evidence packages
+- observable event states and transactional background jobs with retries/DLQ
+- deterministic daily insight detectors and protected Vercel scheduling
+- per-source privacy, redaction, retention, export, deletion, and feedback controls
 - insight audit history for replaying generated conclusions
 - a thin mobile shell scaffold in `mobile/`
 - a thin web dashboard scaffold at `/dashboard`
@@ -54,6 +58,8 @@ Set `EXPO_PUBLIC_BRAINIA_API_BASE_URL` to point it at the backend.
 - `npm run test`
 - `npm run migrate`
 - `npm run cleanup:test-data`
+- `npm run worker:once`
+- `npm run verify:backup`
 
 ## Deployment notes
 
@@ -63,3 +69,4 @@ Set `EXPO_PUBLIC_BRAINIA_API_BASE_URL` to point it at the backend.
 - The Vercel production entrypoint is `serverless.ts`, which is compiled into `dist/serverless.js` and rewrites all incoming paths into the Fastify app.
 - `PORT`, `HOST`, and `API_PREFIX` stay as local/runtime defaults and do not need to be set on Vercel unless you intentionally override them.
 - Production smoke testing is automated in `.github/workflows/production-smoke.yml` and targets `https://brain-ia-six.vercel.app`.
+- The daily knowledge evaluation is configured in `vercel.json`; set `CRON_SECRET` in production.

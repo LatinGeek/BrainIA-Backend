@@ -22,6 +22,11 @@ type StoredRelation = {
 };
 
 export type StoredEventRecord = EventInput & {
+  processingStatus: "captured" | "classified" | "semantically_resolved" | "review" | "retryable" | "discarded";
+  processingStatusReason: string | null;
+  processingStatusUpdatedAt: string;
+  privacyStatus: "standard" | "private" | "hidden";
+  processingAllowed: boolean;
   displayTitle: string | null;
   displayDescription: string | null;
   interpretationStatus: string;
@@ -77,7 +82,39 @@ export type StoredRawEvent = EventInput & {
   clientId: string | null;
   dedupeKey: string;
   rawEventCreatedAt: string;
+  processingStatus: StoredEventRecord["processingStatus"];
+  processingStatusReason: string | null;
+  processingStatusUpdatedAt: string;
+  privacyStatus: StoredEventRecord["privacyStatus"];
+  processingAllowed: boolean;
 };
+
+export async function transitionEventProcessingStatus(
+  db: Queryable,
+  input: {
+    eventId: string;
+    toStatus: StoredEventRecord["processingStatus"];
+    reason?: string | null;
+    jobId?: string | null;
+    metadata?: Record<string, unknown>;
+  },
+) {
+  const previous = await db.query<{ processingStatus: string }>(`
+    select processing_status as "processingStatus" from raw_events where id = $1 for update
+  `, [input.eventId]);
+  if (!previous.rows[0]) return false;
+  await db.query(`
+    update raw_events set processing_status = $2, processing_status_reason = $3,
+      processing_status_updated_at = now() where id = $1
+  `, [input.eventId, input.toStatus, input.reason ?? null]);
+  await db.query(`
+    insert into event_processing_history (
+      id, event_id, from_status, to_status, reason, job_id, metadata
+    ) values ($1,$2,$3,$4,$5,$6,$7::jsonb)
+  `, [randomUUID(), input.eventId, previous.rows[0].processingStatus, input.toStatus,
+    input.reason ?? null, input.jobId ?? null, JSON.stringify(input.metadata ?? {})]);
+  return true;
+}
 
 export async function insertRawEvent(
   db: Queryable,
@@ -184,6 +221,11 @@ export async function loadRawEventById(db: Queryable, eventId: string): Promise<
         external_id as "externalId",
         raw,
         tags,
+        processing_status as "processingStatus",
+        processing_status_reason as "processingStatusReason",
+        processing_status_updated_at as "processingStatusUpdatedAt",
+        privacy_status as "privacyStatus",
+        processing_allowed as "processingAllowed",
         created_at as "rawEventCreatedAt"
       from raw_events
       where id = $1
@@ -221,6 +263,7 @@ export async function deleteDerivedDataForEvent(db: Queryable, eventId: string) 
   await db.query(`delete from semantic_observations where event_id = $1`, [eventId]);
   await db.query(`delete from semantic_candidates where event_id = $1`, [eventId]);
   await db.query(`delete from semantic_event_decisions where event_id = $1`, [eventId]);
+  await db.query(`delete from knowledge_facts where event_id = $1`, [eventId]);
   await db.query(
     `
       with
@@ -250,13 +293,18 @@ export async function deleteDerivedDataForEvent(db: Queryable, eventId: string) 
         returning id
       ),
       deleted_financial_transaction_events as (
-        delete from financial_transaction_events
-        where raw_event_id = $1
+        delete from financial_transaction_events fte
+        using financial_transactions ft
+        where fte.raw_event_id = $1
+          and fte.transaction_id = ft.id
+          and ft.hidden_at is null
         returning transaction_id
       ),
       deleted_financial_transactions as (
         delete from financial_transactions t
-        where not exists (
+        where not t.excluded_from_reports
+          and t.hidden_at is null
+          and not exists (
           select 1
           from financial_transaction_events e
           where e.transaction_id = t.id
@@ -321,7 +369,9 @@ export async function deleteDerivedDataForEvent(db: Queryable, eventId: string) 
   // from surviving a reprocess that changes an event into a transfer.
   await db.query(`
     delete from financial_transactions t
-    where not exists (
+    where not t.excluded_from_reports
+      and t.hidden_at is null
+      and not exists (
       select 1 from financial_transaction_events e where e.transaction_id = t.id
     )
   `);
@@ -373,9 +423,14 @@ export async function loadStoredEventById(
         r.external_id as "externalId",
         r.raw,
         r.tags,
+        r.processing_status as "processingStatus",
+        r.processing_status_reason as "processingStatusReason",
+        r.processing_status_updated_at as "processingStatusUpdatedAt",
+        r.privacy_status as "privacyStatus",
+        r.processing_allowed as "processingAllowed",
         c.classification_version as "classificationVersion",
         c.inferred_kind as "inferredKind",
-        c.confidence,
+        c.confidence::float8 as confidence,
         c.model_metadata as "modelMetadata",
         c.display_title as "displayTitle",
         c.display_description as "displayDescription",
@@ -477,9 +532,14 @@ export async function listStoredEvents() {
         r.external_id as "externalId",
         r.raw,
         r.tags,
+        r.processing_status as "processingStatus",
+        r.processing_status_reason as "processingStatusReason",
+        r.processing_status_updated_at as "processingStatusUpdatedAt",
+        r.privacy_status as "privacyStatus",
+        r.processing_allowed as "processingAllowed",
         c.classification_version as "classificationVersion",
         c.inferred_kind as "inferredKind",
-        c.confidence,
+        c.confidence::float8 as confidence,
         c.model_metadata as "modelMetadata",
         c.display_title as "displayTitle",
         c.display_description as "displayDescription",

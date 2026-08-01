@@ -244,6 +244,23 @@ The endpoint is useful when an agent wants to see the same real-world payment gr
 
 Returns one canonical transaction and all of its evidence rows.
 
+### `POST /api/v1/financial/transactions/:id/merge`
+
+Keeps the transaction referenced by `:id` as the canonical financial record and
+consolidates another same-kind transaction supplied as `{ "duplicateId": "..." }`.
+The duplicate projection is retained for provenance but is hidden from transaction
+lists, account balances, reports, monthly income and expense totals, and proactive
+financial insights. Its evidence appears on the canonical transaction, and event
+reprocessing does not recreate the duplicate.
+
+Balance adjustments cannot be consolidated.
+
+### `DELETE /api/v1/financial/transactions/:id`
+
+Hides an incorrect financial projection without deleting its captured source event.
+Hidden projections are excluded from the same lists and calculations as merged
+duplicates.
+
 ## List events
 
 ### `GET /api/v1/events`
@@ -765,6 +782,33 @@ If the digest id does not exist, the API returns HTTP `404` with:
 }
 ```
 
+## Hybrid retrieval
+
+### `GET /api/v1/retrieval/hybrid?q=...`
+
+Returns a reranked 10-30 item evidence package. Optional filters are `source`, `kind`, `from`, `to`, `currency`, `account`, `category`, `limit`, and `includeGraph`. The strategy combines structured filtering, GIN full-text search, versioned embeddings, canonical aliases/merges, a bounded graph neighborhood, recency, confidence, and frequency.
+
+## Processing and quality
+
+- Event responses expose `processingStatus`, `processingStatusReason`, `processingStatusUpdatedAt`, `privacyStatus`, and `processingAllowed`.
+- `GET /api/v1/metrics/quality` returns semantic coverage, hierarchy integrity, model-call usage/cost, and job health gates.
+- Protected operations routes under `/api/v1/operations/*` list/retry jobs, run a bounded worker, apply retention, and verify a restored backup.
+
+## Proactive insights
+
+`GET /api/v1/cron/daily-insights` is the Vercel Cron target. It requires `Authorization: Bearer ${CRON_SECRET}`, runs deterministic detectors, suppresses duplicate candidates, synthesizes only the highest-ranked evidence, and persists an auditable insight and daily digest when activity is relevant.
+
+## Privacy and feedback
+
+- `GET /api/v1/privacy/export`
+- `PUT /api/v1/privacy/sources/:source`
+- `PATCH /api/v1/privacy/events/:id`
+- `DELETE /api/v1/privacy/events/:id`
+- `PATCH /api/v1/privacy/entities/:id`
+- `POST /api/v1/knowledge/feedback`
+
+Evidence and derived knowledge can be hidden/deleted independently. Feedback actions are `accept`, `reject`, `merge`, `rename`, and `categorize`; applied decisions are audited and categorization can create a local semantic rule.
+
 ## Metrics
 
 ### `GET /api/v1/metrics`
@@ -828,7 +872,7 @@ Each result now includes a `matchHint` with `matchedFields`, `relevanceScore`, a
 - event retries should be deduplicated by a stable dedupe key whenever possible
 - the knowledge layer is queryable independently from the ingestion path
 - merchant or legal-name notifications can be queued for alias review
-- the search layer is textual for now and can later evolve to embeddings or hybrid retrieval
+- hybrid retrieval combines indexed text, versioned embeddings, canonical identity, graph context, and structured filters
 - graph expansion should be bounded by depth and maximum result sizes
 - agent-facing routes should be self-describing and easy to adapt to MCP
 - agent tool manifests should include schemas, examples, and expected errors

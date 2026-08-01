@@ -16,6 +16,8 @@ import {
 import { normalizeRelationType } from "../domain/relations.js";
 import { generateNaturalLanguageSummary } from "./deepseek.js";
 import { pool } from "./postgres.js";
+import { loadSourceProcessingPolicy, type SourceProcessingPolicy } from "./privacy.js";
+import { retrieveSemanticContext } from "./hybrid-retrieval.js";
 
 export const SEMANTIC_SUBJECT_TYPES = new Set(["app", "merchant", "email_message", "sender", "recipient", "financial_event", "activity_instance"]);
 export const STANDARD_ASSOCIATION_TYPES = new Set(["spent_at", "sent_by", "sent_to", "received_from", "uses_service", "produced_by_app", "represents_order", "paid_for", "has_transaction", "occurred_at", "received_via", "controls", "mentions", "related_to"]);
@@ -62,9 +64,9 @@ export type SemanticDecision = {
   governanceVersion: typeof SEMANTIC_GOVERNANCE_VERSION;
   promptVersion: typeof SEMANTIC_PROMPT_VERSION;
   model: string;
-  status: "resolved" | "review" | "unclassified" | "model_unavailable" | "retryable";
+  status: "resolved" | "review" | "unclassified" | "model_unavailable" | "retryable" | "discarded";
   source: "deepseek" | "structural";
-  failureReason?: "missing_api_key" | "empty_response" | "invalid_response" | "model_error";
+  failureReason?: "missing_api_key" | "empty_response" | "invalid_response" | "model_error" | "privacy_policy";
 };
 
 const alternativeSchema = z.object({ value: z.string().min(1).max(120), confidence: z.number().min(0).max(1) });
@@ -106,9 +108,27 @@ async function requestSemanticJson(input: {
   model: string;
   systemPrompt: string;
   userPrompt: string;
+  clientId: string | null;
+  eventId: string | null;
+  policy: SourceProcessingPolicy;
+  operation?: string;
 }) {
   for (let attempt = 0; attempt < 2; attempt += 1) {
-    const response = await generateNaturalLanguageSummary({ ...input, jsonMode: true });
+    const response = await generateNaturalLanguageSummary({
+      apiKey: input.apiKey,
+      model: input.model,
+      systemPrompt: input.systemPrompt,
+      userPrompt: input.userPrompt,
+      jsonMode: true,
+      audit: {
+        clientId: input.clientId,
+        eventId: input.eventId,
+        operation: input.operation ?? "semantic_enrichment",
+        promptVersion: SEMANTIC_PROMPT_VERSION,
+        attempt: attempt + 1,
+      },
+      redaction: input.policy,
+    });
     if (!response) continue;
     try {
       const parsed = modelSchema.safeParse(parseJson(response));
@@ -174,38 +194,10 @@ function parseJson(content: string) {
   return JSON.parse(text.slice(text.indexOf("{"), text.lastIndexOf("}") + 1));
 }
 
-async function loadCanonicalContext(clientId: string | null) {
-  const [entities, hierarchy] = await Promise.all([
-    pool.query<{ id: string; type: string; value: string; normalizedValue: string; description: string; aliases: string[] }>(`
-      select distinct on (e.type, e.normalized_value) e.id, e.type, e.value,
-        e.normalized_value as "normalizedValue", e.description,
-        coalesce((select array_agg(a.alias order by a.alias) from entity_aliases a where a.entity_id = e.id), '{}') as aliases
-      from entities e
-      left join entity_merges merged on merged.alias_entity_id = e.id
-      left join event_entities ee on ee.entity_id = e.id
-      left join raw_events event on event.id = ee.event_id
-      where merged.alias_entity_id is null
-        and e.identity_source in ('ai', 'ai_seed', 'user')
-        and length(btrim(e.description)) > 0
-        and e.type in ('domain', 'concept', 'app', 'merchant', 'sender', 'recipient')
-        and (e.type in ('domain', 'concept') or event.client_id is not distinct from $1)
-      order by e.type, e.normalized_value, e.created_at asc limit 300
-    `, [clientId]),
-    pool.query<{ child: string; parent: string }>(`
-      select source.value as child, target.value as parent
-      from relations r join entities source on source.id = r.source_entity_id join entities target on target.id = r.target_entity_id
-      left join entity_merges source_merged on source_merged.alias_entity_id = source.id
-      left join entity_merges target_merged on target_merged.alias_entity_id = target.id
-      where r.relation_type in ('part_of', 'belongs_to_domain')
-        and source_merged.alias_entity_id is null and target_merged.alias_entity_id is null
-        and source.type in ('domain', 'concept', 'app', 'merchant', 'sender', 'recipient')
-        and target.type in ('domain', 'concept', 'app', 'merchant', 'sender', 'recipient')
-        and source.identity_source in ('ai', 'ai_seed', 'user') and length(btrim(source.description)) > 0
-        and target.identity_source in ('ai', 'ai_seed', 'user') and length(btrim(target.description)) > 0
-    `),
-  ]);
+async function loadCanonicalContext(clientId: string | null, query: string) {
+  const retrieved = await retrieveSemanticContext(query, clientId, 20, pool);
   const staticHierarchy = ONTOLOGY_PARENT_RELATIONS.map(([child, parent]) => ({ child, parent }));
-  return { entities: entities.rows, hierarchy: [...staticHierarchy, ...hierarchy.rows] };
+  return { entities: retrieved.entities, hierarchy: [...staticHierarchy, ...retrieved.hierarchy] };
 }
 
 function validatePath(path: z.infer<typeof pathSchema>, context: Awaited<ReturnType<typeof loadCanonicalContext>>, subject?: EntityDraft) {
@@ -232,7 +224,7 @@ function validatePath(path: z.infer<typeof pathSchema>, context: Awaited<ReturnT
   return true;
 }
 
-function structuralDecision(input: { entities: EntityDraft[]; inferredKind: string; source?: string; model: string; failureReason?: SemanticDecision["failureReason"] }): SemanticDecision {
+function structuralDecision(input: { entities: EntityDraft[]; inferredKind: string; source?: string; model: string; failureReason?: SemanticDecision["failureReason"]; status?: SemanticDecision["status"] }): SemanticDecision {
   const subjects = input.entities.filter(isSemanticSubject);
   const financial = input.inferredKind === "expense" || input.inferredKind === "income" || input.inferredKind === "transfer";
   const email = input.inferredKind === "email" || /(?:gmail|outlook|email|imap)/iu.test(input.source ?? "");
@@ -257,17 +249,28 @@ function structuralDecision(input: { entities: EntityDraft[]; inferredKind: stri
     governanceVersion: SEMANTIC_GOVERNANCE_VERSION,
     promptVersion: SEMANTIC_PROMPT_VERSION,
     model: input.model,
-    status: input.failureReason ? "retryable" : "model_unavailable",
+    status: input.status ?? (input.failureReason ? "retryable" : "model_unavailable"),
     source: "structural",
     failureReason: input.failureReason,
   };
 }
 
-export async function buildModelSemanticDecision(input: { entities: EntityDraft[]; source: string; inferredKind: string; title?: string; body?: string; clientId: string | null; independentSubjectAudit?: boolean }): Promise<SemanticDecision> {
+export async function buildModelSemanticDecision(input: { entities: EntityDraft[]; source: string; inferredKind: string; title?: string; body?: string; clientId: string | null; independentSubjectAudit?: boolean; allowModel?: boolean }): Promise<SemanticDecision> {
   const model = process.env.DEEPSEEK_MODEL ?? "deepseek-v4-flash";
+  if (input.allowModel === false) return structuralDecision({ entities: input.entities, inferredKind: input.inferredKind, source: input.source, model, failureReason: "privacy_policy", status: "review" });
   if (!process.env.DEEPSEEK_API_KEY) return structuralDecision({ entities: input.entities, inferredKind: input.inferredKind, source: input.source, model, failureReason: "missing_api_key" });
   try {
-    const loadedContext = await loadCanonicalContext(input.clientId);
+    const policy = await loadSourceProcessingPolicy(pool, { clientId: input.clientId, source: input.source });
+    if (!policy.enabled) {
+      return structuralDecision({ entities: input.entities, inferredKind: input.inferredKind, source: input.source, model, failureReason: "privacy_policy", status: "discarded" });
+    }
+    if (!policy.sendToLlm) {
+      return structuralDecision({ entities: input.entities, inferredKind: input.inferredKind, source: input.source, model, failureReason: "privacy_policy", status: "review" });
+    }
+    const retrievalQuery = [input.source, input.inferredKind, input.title, input.body,
+      ...input.entities.filter(isSemanticSubject).map((entity) => `${entity.type} ${entity.value}`)]
+      .filter(Boolean).join(" ").slice(0, 4000);
+    const loadedContext = await loadCanonicalContext(input.clientId, retrievalQuery);
     const auditedSubjects = new Set(input.entities.map((entity) => entity.normalizedValue));
     const canonicalContext = input.independentSubjectAudit
       ? { ...loadedContext, hierarchy: loadedContext.hierarchy.filter((edge) => !auditedSubjects.has(normalizeEntityValue(edge.child))) }
@@ -275,6 +278,9 @@ export async function buildModelSemanticDecision(input: { entities: EntityDraft[
     const parsed = await requestSemanticJson({
       apiKey: process.env.DEEPSEEK_API_KEY,
       model,
+      clientId: input.clientId,
+      eventId: String(input.entities.find((entity) => typeof entity.metadata?.eventId === "string")?.metadata?.eventId ?? "") || null,
+      policy,
       systemPrompt: `Return strict JSON only. Governance ${SEMANTIC_GOVERNANCE_VERSION}. You govern durable personal knowledge, not keywords.
 
 Roots: ${LIFE_DOMAINS.join(", ")}.
@@ -306,6 +312,10 @@ Return {"rootAlternatives":[{"value","confidence"}],"paths":[{"subjectNormalized
       const focused = await requestSemanticJson({
         apiKey: process.env.DEEPSEEK_API_KEY,
         model,
+        clientId: input.clientId,
+        eventId: typeof suppliedEvent.metadata?.eventId === "string" ? suppliedEvent.metadata.eventId : null,
+        policy,
+        operation: "semantic_event_identity",
         systemPrompt: `Return strict JSON only. Governance ${SEMANTIC_GOVERNANCE_VERSION}. Classify exactly one captured event as reusable knowledge evidence.
 
 First compare the event meaning against every existing concept in canonicalContext. If the meaning already exists, action must be reuse and hierarchyPath must end at that concept. If it does not exist, action must be create with one durable reusable concept such as "Home motion detection"; the captured occurrence itself must never become that concept. Use merge only when an existing concept is semantically identical but has a noisy duplicate identity. The event remains a distinct evidence instance in every case.

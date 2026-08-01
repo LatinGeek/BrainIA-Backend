@@ -12,6 +12,8 @@ Expected commands:
 - `npm run lint`
 - `npm run migrate`
 - `npm run cleanup:test-data`
+- `npm run worker:once`
+- `npm run verify:backup`
 
 ## Environment variables
 
@@ -24,6 +26,16 @@ Expected commands:
 - `BRAINIA_CLIENT_KEYS`
 - `DEEPSEEK_API_KEY`
 - `DEEPSEEK_MODEL`
+- `DEEPSEEK_API_URL`
+- `DEEPSEEK_INPUT_USD_PER_MILLION_TOKENS`
+- `DEEPSEEK_OUTPUT_USD_PER_MILLION_TOKENS`
+- `BRAINIA_PROCESSING_MODE` (`inline` or `queued`)
+- `BRAINIA_WORKER_BATCH_SIZE`
+- `BRAINIA_OPERATIONS_TOKEN`
+- `CRON_SECRET`
+- `EMBEDDING_API_URL`, `EMBEDDING_API_KEY`, `EMBEDDING_MODEL`, `EMBEDDING_VERSION`
+- `BACKUP_DATABASE_URL`
+- `INSIGHT_DEDUPE_DAYS`
 
 On Vercel with the Neon integration, `DATABASE_URL` and `DATABASE_URL_UNPOOLED` are injected for you.
 For local development, keep the localhost values in `.env.example` or override them in `.env.local`.
@@ -89,6 +101,37 @@ Production target:
 - backups
 - retention rules
 - separation of raw events, classified events, entities, and relations
+
+## Background processing and recovery
+
+- Capture and outbox insertion commit together. DeepSeek failure cannot roll back a raw event.
+- Run one bounded worker batch with `npm run worker:once`.
+- Inspect failures with `GET /api/v1/operations/jobs` and retry one with `POST /api/v1/operations/jobs/:id/retry`.
+- Operations routes require `x-brainia-operations-token` matching `BRAINIA_OPERATIONS_TOKEN`.
+- Claims use `FOR UPDATE SKIP LOCKED`; workers may run concurrently without claiming the same job.
+- Retry delay is exponential and bounded at 30 minutes. Exhausted work becomes `dead_letter`.
+
+## Scheduled insights
+
+Vercel calls `GET /api/v1/cron/daily-insights` at `08:00 UTC` from `vercel.json`. The request is accepted only when `Authorization` exactly matches `Bearer ${CRON_SECRET}`. The route runs deterministic detectors, deduplicates recent candidates, optionally synthesizes the best candidates with DeepSeek, and persists a daily digest when relevant activity exists.
+
+## Quality gates
+
+`GET /api/v1/metrics/quality` reports observable-event coverage, primary-anchor coverage, rooted visible entities, invalid hierarchy edges, multiple parents, cycles, semantic duplicate groups, pending proposals, model usage/cost, queued jobs, and dead letters.
+
+## Privacy, retention, export, and deletion
+
+- Configure source processing with `PUT /api/v1/privacy/sources/:source`.
+- Export scoped personal data with `GET /api/v1/privacy/export`.
+- Mark evidence standard/private/hidden with `PATCH /api/v1/privacy/events/:id`.
+- Control knowledge visibility with `PATCH /api/v1/privacy/entities/:id`.
+- Delete evidence, derived knowledge, or both with `DELETE /api/v1/privacy/events/:id`.
+- Apply configured retention rules through `POST /api/v1/operations/retention/run`.
+- Model-bound text redacts email addresses, card numbers, account identifiers, and security codes according to source policy.
+
+## Backup verification
+
+Restore a backup into an isolated Postgres database, set `BACKUP_DATABASE_URL`, and run `npm run verify:backup`. Verification checks migration readability and critical-table row access, then stores a `backup_verification_runs` audit. A backup may trail production; the check proves that the restored schema is readable rather than requiring identical live counts.
 
 ## Migration workflow
 

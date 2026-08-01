@@ -8,13 +8,18 @@ const inspectOnly = process.argv.includes("--inspect-only");
 const maintenanceOnly = process.argv.includes("--maintenance-only");
 const skipReconciliation = process.argv.includes("--skip-reconciliation");
 const targetFilter = process.argv.find((argument) => argument.startsWith("--target="))?.slice(9).trim();
-const pending = await pool.query<{ eventId: string }>(`
-  select candidate.event_id as "eventId"
+const pending = await pool.query<{ eventId: string; createdAt: string }>(`
+  select candidate.event_id as "eventId", min(candidate.created_at)::text as "createdAt"
   from semantic_candidates candidate
   where candidate.status = 'pending' and candidate.event_id is not null
     and ($1::text is null or candidate.target_normalized_value = $1)
   group by candidate.event_id
-  order by min(candidate.created_at), candidate.event_id
+  union
+  select decision.event_id, decision.updated_at::text
+  from semantic_event_decisions decision
+  where decision.status in ('retryable','unclassified','model_unavailable')
+    and $1::text is null
+  order by "createdAt", "eventId"
 `, [targetFilter ? normalizeEntityValue(targetFilter) : null]);
 const events = inspectOnly || maintenanceOnly ? [] : pending.rows.slice(0, Number.isFinite(limit) && limit > 0 ? limit : undefined);
 const failed: Array<{ eventId: string; error: string }> = [];

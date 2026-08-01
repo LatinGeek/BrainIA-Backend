@@ -248,6 +248,9 @@ export function buildWalletCaptureEvent(input: {
   amount?: string;
   currency?: string;
   note?: string;
+  transactionType?: "income" | "expense";
+  accountId?: string;
+  category?: string;
   timestamp?: string;
   externalId?: string;
   idempotencyKey?: string;
@@ -255,6 +258,7 @@ export function buildWalletCaptureEvent(input: {
   raw?: Record<string, unknown>;
   tags?: string[];
 }) {
+  const transactionType = input.transactionType ?? "expense";
   const details = [
     input.merchant?.trim() || null,
     input.amount?.trim() ? `${input.amount.trim()} ${input.currency?.trim() ?? ""}`.trim() : null,
@@ -266,8 +270,8 @@ export function buildWalletCaptureEvent(input: {
   return buildBaseEvent({
     ...input,
     source: input.source?.trim() || "capture.wallet",
-    kind: "expense",
-    title: input.merchant ?? input.note ?? "wallet capture",
+    kind: transactionType,
+    title: input.merchant ?? input.note ?? transactionType,
     body: details || input.note || input.merchant || undefined,
     raw: {
       ...input.raw,
@@ -275,6 +279,9 @@ export function buildWalletCaptureEvent(input: {
       amount: input.amount ?? null,
       currency: input.currency ?? null,
       note: input.note ?? null,
+      transactionType,
+      accountId: input.accountId?.trim() || null,
+      category: input.category?.trim() || null,
     },
   });
 }

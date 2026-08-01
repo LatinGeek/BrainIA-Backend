@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import type { FinancialTransactionCandidate } from "../domain/financial-transactions.js";
 import { candidateWindowBounds } from "../domain/financial-transactions.js";
-import { pool } from "./postgres.js";
+import { pool, withTransaction } from "./postgres.js";
 
 type Queryable = Pick<typeof pool, "query">;
 
@@ -41,6 +41,8 @@ export type FinancialTransactionRecord = {
   account: string | null;
   destinationAccountId: string | null;
   destinationAccount: string | null;
+  excludedFromReports: boolean;
+  adjustmentTargetBalance: string | null;
   primarySource: string;
   anchorEventId: string | null;
   createdAt: string;
@@ -114,7 +116,13 @@ function buildTransactionProjectionSql() {
       t.observed_at as "observedAt",
       t.window_start as "windowStart",
       t.window_end as "windowEnd",
-      t.evidence_count as "evidenceCount",
+      (
+        select count(*)
+        from financial_transaction_events evidence
+        join financial_transactions evidence_transaction on evidence_transaction.id = evidence.transaction_id
+        where evidence.transaction_id = t.id
+           or evidence_transaction.merged_into_transaction_id = t.id
+      )::int as "evidenceCount",
       t.match_score as "matchScore",
       t.match_strategy as "matchStrategy",
       t.category,
@@ -122,6 +130,8 @@ function buildTransactionProjectionSql() {
       coalesce(a.name, a.mask) as account,
       t.destination_account_id as "destinationAccountId",
       coalesce(destination.name, destination.mask) as "destinationAccount",
+      t.excluded_from_reports as "excludedFromReports",
+      t.adjustment_target_balance::text as "adjustmentTargetBalance",
       t.primary_source as "primarySource",
       t.anchor_event_id as "anchorEventId",
       t.created_at as "createdAt",
@@ -148,25 +158,169 @@ export type FinancialAccountRecord = {
   mask: string | null;
   externalRef: string | null;
   currency: "UYU" | "USD" | null;
+  color: string;
+  balance: string;
 };
 
 export async function listFinancialAccounts() {
   const result = await pool.query<FinancialAccountRecord>(
-    `select id, name, type, mask, external_ref as "externalRef", currency from financial_accounts order by currency nulls last, name asc`,
+    `
+      select
+        a.id,
+        a.name,
+        a.type,
+        a.mask,
+        a.external_ref as "externalRef",
+        a.currency,
+        a.color,
+        coalesce(sum(
+          case
+            when t.kind = 'transfer' and t.account_id = a.id then -t.amount
+            when t.kind = 'transfer' and t.destination_account_id = a.id then t.amount
+            when t.kind = 'income' and t.account_id = a.id then t.amount
+            when t.kind = 'expense' and t.account_id = a.id then -t.amount
+            else 0
+          end
+        ), 0)::text as balance
+      from financial_accounts a
+      left join financial_transactions t
+        on (t.account_id = a.id or t.destination_account_id = a.id)
+        and upper(t.currency) = upper(a.currency)
+        and t.hidden_at is null
+      group by a.id
+      order by a.currency nulls last, a.name asc
+    `,
   );
   return result.rows;
 }
 
-export async function createFinancialAccount(input: { name: string; type?: string; mask?: string | null; currency: "UYU" | "USD" }) {
+export async function createFinancialAccount(input: { name: string; type?: string; mask?: string | null; currency: "UYU" | "USD"; color?: string }) {
   const result = await pool.query<FinancialAccountRecord>(
     `
-      insert into financial_accounts (id, name, type, mask, currency)
-      values ($1, $2, $3, $4, $5)
-      returning id, name, type, mask, external_ref as "externalRef", currency
+      insert into financial_accounts (id, name, type, mask, currency, color)
+      values ($1, $2, $3, $4, $5, $6)
+      returning id, name, type, mask, external_ref as "externalRef", currency, color, '0.00'::text as balance
     `,
-    [`account_${randomUUID()}`, input.name.trim(), input.type?.trim() || "bank", input.mask?.trim() || null, input.currency],
+    [`account_${randomUUID()}`, input.name.trim(), input.type?.trim() || "bank", input.mask?.trim() || null, input.currency, input.color ?? "#2563EB"],
   );
   return result.rows[0];
+}
+
+export async function updateFinancialAccount(
+  id: string,
+  input: { name: string; type?: string; mask?: string | null; currency: "UYU" | "USD"; color?: string },
+) {
+  const incompatible = await pool.query<{ exists: boolean }>(
+    `
+      select exists (
+        select 1 from financial_transactions
+        where (account_id = $1 or destination_account_id = $1)
+          and hidden_at is null
+          and upper(currency) <> $2
+      ) as exists
+    `,
+    [id, input.currency],
+  );
+  if (incompatible.rows[0]?.exists) {
+    throw new Error("Account currency cannot differ from its existing transactions");
+  }
+
+  const result = await pool.query<FinancialAccountRecord>(
+    `
+      update financial_accounts
+      set name = $2, type = $3, mask = $4, currency = $5, color = $6, updated_at = now()
+      where id = $1
+      returning id, name, type, mask, external_ref as "externalRef", currency, color, '0.00'::text as balance
+    `,
+    [id, input.name.trim(), input.type?.trim() || "bank", input.mask?.trim() || null, input.currency, input.color ?? "#2563EB"],
+  );
+  if (!result.rowCount) return null;
+  return (await listFinancialAccounts()).find((account) => account.id === id) ?? result.rows[0];
+}
+
+export async function deleteFinancialAccount(id: string) {
+  return withTransaction(async (db) => {
+    const account = await db.query<{ id: string }>(
+      `select id from financial_accounts where id = $1 for update`,
+      [id],
+    );
+    if (!account.rowCount) return null;
+
+    const references = await db.query<{ count: string }>(
+      `
+        select count(*)::text as count
+        from financial_transactions
+        where account_id = $1 or destination_account_id = $1
+      `,
+      [id],
+    );
+    const deleted = await db.query(`delete from financial_accounts where id = $1`, [id]);
+    if (!deleted.rowCount) return null;
+    return {
+      deleted: true as const,
+      detachedTransactions: Number(references.rows[0]?.count ?? 0),
+    };
+  });
+}
+
+export async function createBalanceAdjustment(input: { accountId: string; targetBalance: number; note?: string }) {
+  return withTransaction(async (db) => {
+    const accountResult = await db.query<FinancialAccountRecord>(
+      `select id, name, type, mask, external_ref as "externalRef", currency, color, '0.00'::text as balance from financial_accounts where id = $1 for update`,
+      [input.accountId],
+    );
+    const account = accountResult.rows[0];
+    if (!account?.currency) throw new Error("Financial account not found");
+
+    const balanceResult = await db.query<{ balance: string }>(
+      `
+        select coalesce(sum(
+          case
+            when kind = 'transfer' and account_id = $1 then -amount
+            when kind = 'transfer' and destination_account_id = $1 then amount
+            when kind = 'income' and account_id = $1 then amount
+            when kind = 'expense' and account_id = $1 then -amount
+            else 0
+          end
+        ), 0)::text as balance
+        from financial_transactions
+        where (account_id = $1 or destination_account_id = $1)
+          and hidden_at is null
+      `,
+      [account.id],
+    );
+    const currentBalance = Number(balanceResult.rows[0]?.balance ?? 0);
+    const delta = Math.round((input.targetBalance - currentBalance) * 100) / 100;
+    if (Math.abs(delta) < 0.005) throw new Error("Account balance already matches the target");
+
+    const id = `financial_${randomUUID()}`;
+    const now = new Date().toISOString();
+    await db.query(
+      `
+        insert into financial_transactions (
+          id, kind, amount, currency, merchant_label, normalized_merchant,
+          observed_at, window_start, window_end, evidence_count, match_score,
+          match_strategy, primary_source, category, account_id,
+          excluded_from_reports, adjustment_target_balance
+        ) values (
+          $1, $2, $3::numeric, $4, $5, 'balance adjustment',
+          $6::timestamptz, $6::timestamptz, $6::timestamptz, 0, 1,
+          'manual_balance_adjustment', 'manual', 'Balance adjustment', $7, true, $8::numeric
+        )
+      `,
+      [
+        id,
+        delta > 0 ? "income" : "expense",
+        Math.abs(delta).toFixed(2),
+        account.currency,
+        input.note?.trim() || `Balance adjustment for ${account.name}`,
+        now,
+        account.id,
+        input.targetBalance.toFixed(2),
+      ],
+    );
+    return loadFinancialTransactionById(db, id);
+  });
 }
 
 export async function updateFinancialTransactionContext(
@@ -198,6 +352,7 @@ export async function updateFinancialTransactionContext(
     update financial_transactions
     set category = $2, account_id = $3, destination_account_id = $4, currency = coalesce($5, currency), kind = coalesce($6, kind), updated_at = now()
     where id = $1
+      and hidden_at is null
     returning id
   `, [id, input.category?.trim() || null, input.accountId || null, input.destinationAccountId || null, input.currency ?? null, input.kind ?? null]);
 
@@ -223,7 +378,9 @@ async function loadFinancialTransactionEvidence(db: Queryable, transactionId: st
         e.match_reason as "matchReason",
         e.created_at as "createdAt"
       from financial_transaction_events e
+      join financial_transactions t on t.id = e.transaction_id
       where e.transaction_id = $1
+         or t.merged_into_transaction_id = $1
       order by e.created_at asc
     `,
     [transactionId],
@@ -237,6 +394,7 @@ export async function loadFinancialTransactionById(db: Queryable, id: string) {
     `
       ${buildTransactionProjectionSql()}
       where t.id = $1
+        and t.hidden_at is null
       limit 1
     `,
     [id],
@@ -259,6 +417,8 @@ export async function listFinancialTransactions(
 ) {
   const filters: string[] = [];
   const params: unknown[] = [];
+
+  filters.push("t.hidden_at is null");
 
   if (range.from) {
     params.push(range.from);
@@ -330,6 +490,7 @@ async function findMatchingFinancialTransaction(
         abs(extract(epoch from (t.observed_at - $4::timestamptz))) as "timeDiffSeconds"
       from financial_transactions t
       where t.kind = $1
+        and t.hidden_at is null
         and t.amount = $2::numeric
         and (
           upper(t.currency) = $3
@@ -445,6 +606,8 @@ async function updateFinancialTransaction(
         anchor_event_id = coalesce(anchor_event_id, $7),
         window_start = least(window_start, $8::timestamptz),
         window_end = greatest(window_end, $9::timestamptz),
+        account_id = coalesce($10, account_id),
+        category = coalesce($11, category),
         updated_at = now()
       where id = $1
       returning
@@ -476,6 +639,8 @@ async function updateFinancialTransaction(
       input.candidate.eventId,
       window.start,
       window.end,
+      input.candidate.accountId,
+      input.candidate.category,
     ],
   );
 
@@ -506,9 +671,11 @@ async function createFinancialTransaction(
         match_score,
         match_strategy,
         primary_source,
-        anchor_event_id
+        anchor_event_id,
+        account_id,
+        category
       ) values (
-        $1, $2, $3::numeric, $4, $5, $6, $7, $8::timestamptz, $9::timestamptz, $10::timestamptz, 1, $11, $12, $13, $14
+        $1, $2, $3::numeric, $4, $5, $6, $7, $8::timestamptz, $9::timestamptz, $10::timestamptz, 1, $11, $12, $13, $14, $15, $16
       )
       returning
         id,
@@ -544,6 +711,8 @@ async function createFinancialTransaction(
       matchStrategy,
       candidate.source,
       candidate.eventId,
+      candidate.accountId,
+      candidate.category,
     ],
   );
 
@@ -554,6 +723,28 @@ export async function linkFinancialTransactionForEvent(
   db: Queryable,
   candidate: FinancialTransactionCandidate,
 ) {
+  // A user can hide a record or consolidate it into another transaction. The
+  // source event remains linked to that hidden projection so reprocessing does
+  // not silently bring the duplicate back into Money.
+  const retainedHiddenLink = await db.query<{ hiddenAt: string | null }>(
+    `
+      select t.hidden_at as "hiddenAt"
+      from financial_transaction_events evidence
+      join financial_transactions t on t.id = evidence.transaction_id
+      where evidence.raw_event_id = $1
+      limit 1
+    `,
+    [candidate.eventId],
+  );
+  if (retainedHiddenLink.rows[0]?.hiddenAt) {
+    return {
+      transaction: null,
+      matchScore: 1,
+      matchReason: "user_hidden_transaction",
+      matchedExisting: true,
+    };
+  }
+
   const existing = await findMatchingFinancialTransaction(db, candidate);
   const matchScore = existing ? (existing.merchantEntityId === candidate.merchantEntityId ? 0.98 : 0.92) : 0.95;
   const matchReason = existing
@@ -591,15 +782,99 @@ export async function linkFinancialTransactionForEvent(
 }
 
 export async function deleteFinancialTransactionsForEvent(db: Queryable, eventId: string) {
-  await db.query("delete from financial_transaction_events where raw_event_id = $1", [eventId]);
+  await db.query(
+    `
+      delete from financial_transaction_events e
+      using financial_transactions t
+      where e.raw_event_id = $1
+        and e.transaction_id = t.id
+        and t.hidden_at is null
+    `,
+    [eventId],
+  );
   await db.query(
     `
       delete from financial_transactions t
-      where not exists (
+      where not t.excluded_from_reports
+        and t.hidden_at is null
+        and not exists (
         select 1
         from financial_transaction_events e
         where e.transaction_id = t.id
       )
     `,
   );
+}
+
+export async function mergeFinancialTransactions(canonicalId: string, duplicateId: string) {
+  if (canonicalId === duplicateId) {
+    throw new Error("Choose two different transactions to consolidate");
+  }
+
+  return withTransaction(async (db) => {
+    const result = await db.query<
+      Pick<FinancialTransactionRecord, "id" | "kind" | "excludedFromReports"> & { hiddenAt: string | null }
+    >(
+      `
+        select
+          id,
+          kind,
+          excluded_from_reports as "excludedFromReports",
+          hidden_at as "hiddenAt"
+        from financial_transactions
+        where id = any($1::text[])
+        for update
+      `,
+      [[canonicalId, duplicateId]],
+    );
+    const canonical = result.rows.find((transaction) => transaction.id === canonicalId);
+    const duplicate = result.rows.find((transaction) => transaction.id === duplicateId);
+    if (!canonical || !duplicate || canonical.hiddenAt || duplicate.hiddenAt) return null;
+    if (canonical.kind !== duplicate.kind) {
+      throw new Error("Only transactions of the same type can be consolidated");
+    }
+    if (canonical.excludedFromReports || duplicate.excludedFromReports) {
+      throw new Error("Balance adjustments cannot be consolidated");
+    }
+
+    await db.query(
+      `
+        update financial_transactions
+        set hidden_at = now(), merged_into_transaction_id = $1, updated_at = now()
+        where id = $2
+      `,
+      [canonicalId, duplicateId],
+    );
+
+    await db.query(
+      `
+        update financial_transactions
+        set evidence_count = (
+          select count(*)
+          from financial_transaction_events evidence
+          join financial_transactions evidence_transaction on evidence_transaction.id = evidence.transaction_id
+          where evidence.transaction_id = $1
+             or evidence_transaction.merged_into_transaction_id = $1
+        ), updated_at = now()
+        where id = $1
+      `,
+      [canonicalId],
+    );
+
+    return loadFinancialTransactionById(db, canonicalId);
+  });
+}
+
+export async function hideFinancialTransaction(id: string) {
+  const result = await pool.query(
+    `
+      update financial_transactions
+      set hidden_at = now(), merged_into_transaction_id = null, updated_at = now()
+      where id = $1
+        and hidden_at is null
+      returning id
+    `,
+    [id],
+  );
+  return Boolean(result.rowCount);
 }

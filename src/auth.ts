@@ -152,6 +152,11 @@ export function createApiAuthHook(config: AuthConfig) {
       return;
     }
 
+    const cronSecret = process.env.CRON_SECRET?.trim();
+    if (url.includes("/cron/") && cronSecret && request.headers.authorization === `Bearer ${cronSecret}`) {
+      return;
+    }
+
     const result = resolveAuthContext(request.headers, config);
     if ("ok" in result && !result.ok) {
       return reply.status(result.statusCode).send({

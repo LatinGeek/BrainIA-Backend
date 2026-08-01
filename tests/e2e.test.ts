@@ -3,6 +3,7 @@ import crypto from "node:crypto";
 import test from "node:test";
 
 process.env.DATABASE_URL ??= "postgres://postgres:postgres@localhost:5432/brainia_test";
+process.env.DEEPSEEK_API_KEY = "";
 
 async function createApp() {
   const { buildApp } = await import("../src/app.ts");
@@ -60,7 +61,7 @@ test("end-to-end capture, retrieval, insight, and digest flow stays coherent", a
               appName: "Wallet",
               packageName: "com.example.wallet",
               title: `${merchant} payment approved ${suffix}`,
-              body: `Approved for $12.40`,
+              body: `Approved for USD 12.40`,
               idempotencyKey: `${notificationId}-retry`,
               raw: { channel: "notification" },
               tags: ["finance", "mobile"],

@@ -82,6 +82,9 @@ Update this file when:
 - a thin web dashboard scaffold exists for exploration and debugging
 - operational runbooks now live in `docs/runbooks.md`
 - the post-MVP backlog is closed and residual ideas live in `docs/future-roadmap.md`
+- the knowledge-platform action plan is implemented through migration 0028
+- observable event lifecycle, KnowledgeFact, model-call audits, hybrid retrieval, versioned embeddings, proactive insights, transactional jobs, privacy controls, retention, and backup verification are active
+- Vercel runs a protected daily knowledge evaluation at 08:00 UTC
 
 ## Active decisions
 
@@ -99,5 +102,5 @@ Update this file when:
 
 ## Next immediate steps
 
-1. refine relation/entity quality
-2. consider scheduling, retention, or graph projection work on top of the current retrieval layer
+1. monitor production quality gates, dead letters, detector precision, and token cost
+2. tune embeddings and detector thresholds from explicit user feedback

@@ -190,11 +190,25 @@ export async function getExploreGraph(options: ReturnType<typeof parseExploreGra
     eventId: string | null;
   }>(
     `
-      with recursive rooted(entity_id) as (
-        select id from entities where type = 'domain'
+      with recursive visible_rooted(entity_id) as (
+        select entity.id
+        from entities entity
+        left join entity_merges merged on merged.alias_entity_id = entity.id
+        where entity.type = 'domain'
+          and merged.alias_entity_id is null
+          and entity.identity_source in ('ai', 'ai_seed', 'user')
+          and length(btrim(entity.description)) > 0
         union
-        select r.source_entity_id from rooted parent join relations r on r.target_entity_id = parent.entity_id
-        where r.relation_type in ('part_of', 'belongs_to_domain')
+        select relation.source_entity_id
+        from visible_rooted parent
+        join relations relation on relation.target_entity_id = parent.entity_id
+          and relation.relation_type in ('part_of', 'belongs_to_domain')
+        join entities child on child.id = relation.source_entity_id
+        left join entity_merges merged on merged.alias_entity_id = child.id
+        where merged.alias_entity_id is null
+          and child.type in ('domain', 'concept', 'app', 'merchant', 'sender', 'recipient', 'financial_event', 'email_message', 'activity_instance')
+          and child.identity_source in ('ai', 'ai_seed', 'user')
+          and length(btrim(child.description)) > 0
       )
       select
         e.id,
@@ -212,7 +226,10 @@ export async function getExploreGraph(options: ReturnType<typeof parseExploreGra
           or ($2::boolean and e.type in ('financial_event', 'email_message', 'activity_instance')))
         and e.identity_source in ('ai', 'ai_seed', 'user')
         and length(btrim(e.description)) > 0
-        and exists (select 1 from rooted where rooted.entity_id = e.id)
+        -- A node is present only when every hop to its domain is itself a
+        -- displayable governed entity. This prevents evidence from appearing
+        -- alone when its old parent is an extracted or legacy placeholder.
+        and exists (select 1 from visible_rooted where visible_rooted.entity_id = e.id)
         and (e.type not in ('financial_event', 'email_message', 'activity_instance') or exists (
           select 1 from event_entities ee join raw_events event on event.id = ee.event_id
           left join classified_events classified on classified.raw_event_id = event.id
@@ -243,7 +260,13 @@ export async function getExploreGraph(options: ReturnType<typeof parseExploreGra
       select relation.target_entity_id
       from lineage child
       join relations relation on relation.source_entity_id = child.id
+      join entities parent on parent.id = relation.target_entity_id
+      left join entity_merges merged on merged.alias_entity_id = parent.id
       where relation.relation_type in ('part_of', 'belongs_to_domain')
+        and merged.alias_entity_id is null
+        and parent.type in ('domain', 'concept', 'app', 'merchant', 'sender', 'recipient', 'financial_event', 'email_message', 'activity_instance')
+        and parent.identity_source in ('ai', 'ai_seed', 'user')
+        and length(btrim(parent.description)) > 0
     )
     select e.id, e.type, e.value, e.description,
       case when e.type in ('financial_event', 'email_message', 'activity_instance') then e.metadata ->> 'eventId' else null end as "eventId",
@@ -254,6 +277,7 @@ export async function getExploreGraph(options: ReturnType<typeof parseExploreGra
       and relation.relation_type in ('part_of', 'belongs_to_domain')
     where e.id in (select id from lineage)
       and merged.alias_entity_id is null
+      and e.type in ('domain', 'concept', 'app', 'merchant', 'sender', 'recipient', 'financial_event', 'email_message', 'activity_instance')
       and e.identity_source in ('ai', 'ai_seed', 'user')
       and length(btrim(e.description)) > 0
     group by e.id

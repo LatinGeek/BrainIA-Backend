@@ -68,6 +68,15 @@ The future target UI is mobile.
 - single-event reprocessing is active
 - a lightweight metrics endpoint is active
 - text search is active with basic relevance filters
+- dedicated PostgreSQL full-text indexes and versioned embeddings are active
+- hybrid retrieval returns a reranked 10-30 item evidence package and is used by semantic ingestion
+- every event exposes an observable processing state and immutable transition history
+- model calls are audited with prompt/model version, tokens, attempts, latency, cost estimate, and outcome
+- transactional background jobs support idempotency, exponential retry, concurrency-safe claims, and dead letters
+- deterministic daily insight detectors run before LLM synthesis and suppress duplicate deliveries
+- a protected Vercel cron runs daily insight and digest evaluation
+- source privacy policies, model redaction, independent evidence/knowledge visibility, export, deletion, and retention are active
+- explicit user feedback can accept, reject, merge, rename, categorize, and create local semantic rules
 - bounded graph expansion is active
 - entity resolution is separated from graph expansion
 - the agent tool catalog stays compact and self-describing
@@ -104,8 +113,8 @@ The future target UI is mobile.
 
 ## Recommended next steps
 
-1. refine relation/entity quality
-2. expand retrieval quality or add richer digesting and scheduling on top of the audit trail
+1. monitor quality gates, dead letters, retrieval relevance, token cost, and user feedback
+2. tune detector thresholds and remote embedding configuration using production evidence
 
 ## What must stay updated
 

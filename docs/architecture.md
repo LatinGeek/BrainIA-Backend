@@ -2,87 +2,70 @@
 
 ## Overview
 
-BrainIA is designed as a backend-only system that receives generic events from a mobile client.
+BrainIA is a Postgres-backed personal knowledge platform. Thin mobile and integration clients capture evidence; the backend owns normalization, classification, semantic governance, retrieval, proactive insight generation, privacy, and operations.
 
-The mobile app acts as a thin event producer.
+```text
+External sources
+  -> immutable raw_events evidence
+  -> transactional background_jobs outbox
+  -> classified_events + knowledge_facts
+  -> governed entities/relations/semantic anchors
+  -> FTS + versioned embedding projections
+  -> hybrid retrieval and deterministic detectors
+  -> auditable insights/digests
+```
 
-The backend acts as:
+## Storage layers
 
-- ingestion layer
-- normalization layer
-- classification layer
-- storage layer
-- knowledge layer foundation
+1. **Evidence:** `raw_events` preserves source payloads, observation time, client scope, idempotency, privacy, and an observable processing state.
+2. **Interpretation:** `classified_events`, `knowledge_facts`, and `semantic_event_decisions` are replaceable, versioned projections.
+3. **Canonical knowledge:** `entities`, aliases, merges, relations, hierarchy, and semantic anchors form the governed graph.
+4. **Domain projections:** financial accounts and transactions correlate multiple source events without replacing evidence.
+5. **Retrieval:** GIN full-text indexes and `knowledge_embeddings` support bounded hybrid retrieval across events, entities, facts, relations, insights, and digests.
+6. **Conclusions:** insight candidates, insight runs, and digest runs retain selected evidence, confidence, model metadata, delivery state, feedback, and expiry.
+7. **Operations:** background jobs, attempts, model-call audits, processing history, deletion audits, and backup verification runs make failures observable and recoverable.
 
-## Layers
+## Invariants
 
-### 1. Transport
+- Raw evidence is never rewritten to correct a derived interpretation.
+- Every event has one of `captured`, `classified`, `semantically_resolved`, `review`, `retryable`, or `discarded`.
+- Every visible durable entity has a meaningful name, description, one immediate parent, and a valid route to a governed domain.
+- Hierarchy writes are cycle-safe and the database enforces one immediate parent.
+- Event instances remain evidence under their primary semantic meaning; they do not become duplicate concepts.
+- Ambiguous merges and reparenting are review candidates, not silent graph mutations.
+- Every provider call records provider, operation, model, prompt version, attempts, token usage, latency, cost estimate, result, and request fingerprint.
+- Model prompts contain a bounded 10–30 candidate retrieval package, never the entire graph.
+- Jobs are idempotent, retry with exponential backoff, and end in a visible dead-letter state after bounded attempts.
 
-Receives HTTP requests from mobile or other clients.
+## Processing modes
 
-Responsibilities:
+`BRAINIA_PROCESSING_MODE=inline` is the backward-compatible default: raw evidence commits first, then derived processing is attempted in the request. A processing failure returns the captured record in `retryable` state instead of losing it.
 
-- validate input shape
-- return clear errors
-- expose versioned endpoints
+`BRAINIA_PROCESSING_MODE=queued` returns after capture and lets `npm run worker:once` or the protected operations worker run independent classification, semantic enrichment, financial correlation, embedding, insight detection, reconciliation, retention, and backup jobs.
 
-### 2. Domain
+## Retrieval
 
-Contains the project concepts:
+`GET /api/v1/retrieval/hybrid` combines:
 
-- event
-- event kind
-- classified event
-- entities
-- relations
+- structured filters for client, source, kind, time, currency, account, and category;
+- PostgreSQL full-text ranking through dedicated GIN indexes;
+- versioned local or remote embeddings and bounded cosine similarity;
+- canonical aliases and merges;
+- a one-hop graph neighborhood;
+- recency, confidence, frequency, and lightweight reranking.
 
-### 3. Classification
+The response includes a compact `evidencePackage` with stable evidence identifiers. Semantic ingestion uses the same mechanism with a hard 10–30 candidate bound.
 
-Transforms raw events into typed knowledge candidates.
+## Proactive insights
 
-For now this is heuristic.
-Later it can become:
+Deterministic detectors evaluate spending changes, recurrence/subscriptions, source-frequency changes, cross-domain temporal correlations, pending tasks/reviews, and high-confidence graph changes. Candidates are scored by novelty, impact, confidence, recurrence, and utility. Only the highest-ranked non-duplicate candidates are offered to DeepSeek for synthesis.
 
-- rules-based
-- LLM-assisted
-- hybrid
+Vercel invokes the protected daily route at 08:00 UTC. `CRON_SECRET` is verified before any work runs.
 
-### 4. Storage
+## Privacy and learning
 
-Persists accepted events.
+Source policies decide whether a source is enabled, whether it may be sent to an LLM, which identifiers are redacted, and how long evidence is retained. Evidence and knowledge have independent visibility controls. User accept/reject/merge/rename/categorize feedback is audited and can materialize local semantic rules.
 
-Current prototype:
+## Deployment
 
-- JSONL append-only file
-
-Target production direction:
-
-- Postgres
-- normalized tables
-- optional graph projection
-
-## Design Goals
-
-- backend-first
-- mobile-first consumption later
-- minimal coupling
-- versioned API
-- evolvable schema
-- AI-ready data model
-
-## Non-goals for the first phase
-
-- full mobile app
-- web dashboard as primary interface
-- graph database dependency on day one
-- over-engineered microservice split
-
-## Evolution path
-
-1. prototype API
-2. durable storage
-3. auth
-4. query endpoints
-5. knowledge graph tables
-6. AI assistant access layer
-
+Fastify runs directly for local development and through `serverless.ts` on Vercel. Postgres is the sole durable system of record; no JSONL runtime remains. Migrations use the direct database URL, while runtime traffic uses the pooled URL.

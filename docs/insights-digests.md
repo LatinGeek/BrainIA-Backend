@@ -4,6 +4,22 @@ BrainIA now has two complementary retrieval surfaces:
 
 - `insights` for entity- or query-centric conclusions
 - `digests` for time-window summaries over recent activity
+- `insight_candidates` for proactive, scored changes discovered without a user query
+
+## Proactive evaluation
+
+The daily pipeline runs deterministic detectors before any model call:
+
+- spending variation;
+- recurring payments/subscriptions;
+- source activity and frequency changes;
+- cross-domain temporal correlations;
+- pending tasks and semantic reviews;
+- new high-confidence entities and relations.
+
+Candidates are scored by novelty, impact, confidence, recurrence, and expected utility. Recently delivered dedupe keys are suppressed. DeepSeek only synthesizes the top candidates, while the stored run retains evidence identifiers, confidence, suggested action, delivery state, expiry, model, and prompt version.
+
+Relevant route: `GET /api/v1/cron/daily-insights` with `Authorization: Bearer ${CRON_SECRET}`.
 
 ## Insight
 

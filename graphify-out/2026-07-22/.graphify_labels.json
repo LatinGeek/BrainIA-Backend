@@ -53,13 +53,16 @@
   "51": "ontology.ts",
   "52": "Semantic graph governance",
   "53": "entities.ts",
+  "54": "semantic-resolver.ts",
   "55": "semantic.ts",
   "56": "backfill-semantics.ts",
   "57": "capture.ts",
+  "58": "entity-repository.ts",
   "59": "AI-governed entity identity",
   "60": "semantic-governance.test.ts",
   "61": "digests.ts",
-  "62": "insights.ts",
-  "64": "relation-repository.ts",
+  "62": "entities.ts",
+  "63": "relation-repository.ts",
+  "64": "insights.ts",
   "65": "entity-merge.ts"
 }

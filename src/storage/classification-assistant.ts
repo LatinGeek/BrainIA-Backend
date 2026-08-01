@@ -2,11 +2,14 @@ import { z } from "zod";
 import type { ClassifiedEvent, EventInput } from "../domain/event.js";
 import { eventKindSchema } from "../domain/event.js";
 import { generateNaturalLanguageSummary } from "./deepseek.js";
+import { loadSourceProcessingPolicy, type SourceProcessingPolicy } from "./privacy.js";
+import { pool } from "./postgres.js";
 
 type ClassificationAssistantDeps = {
   apiKey?: string;
   model: string;
   generateCompletion?: typeof generateNaturalLanguageSummary;
+  resolvePolicy?: (input: { clientId: string | null; source: string }) => Promise<SourceProcessingPolicy>;
 };
 
 const suggestionSchema = z.object({
@@ -80,14 +83,33 @@ export function createClassificationAssistant(deps: ClassificationAssistantDeps)
   return async function maybeEnhanceClassification(input: {
     event: EventInput;
     base: ClassifiedEvent;
+    clientId?: string | null;
+    allowModel?: boolean;
   }) {
     // Email bodies often contain the most useful source detail (receipts, transaction
     // alerts, confirmations, and commitments). Always let the model inspect them;
     // the confidence shortcut remains in place for non-email events.
-    if (!deps.apiKey) {
+    if (!deps.apiKey || input.allowModel === false) {
       return {
         ...input.base,
-        modelMetadata: null,
+        modelMetadata: input.allowModel === false ? {
+          provider: "deepseek", model: deps.model, applied: false, reason: "private_evidence",
+        } : null,
+      };
+    }
+
+    const policy = deps.resolvePolicy
+      ? await deps.resolvePolicy({ clientId: input.clientId ?? null, source: input.event.source })
+      : null;
+    if (policy && (!policy.enabled || !policy.sendToLlm)) {
+      return {
+        ...input.base,
+        modelMetadata: {
+          provider: "deepseek",
+          model: deps.model,
+          applied: false,
+          reason: "privacy_policy",
+        },
       };
     }
 
@@ -96,6 +118,13 @@ export function createClassificationAssistant(deps: ClassificationAssistantDeps)
       apiKey: deps.apiKey,
       model: deps.model,
       jsonMode: true,
+      audit: {
+        clientId: input.clientId ?? null,
+        eventId: input.event.id,
+        operation: "event_classification",
+        promptVersion: "classification-v1",
+      },
+      redaction: policy ?? undefined,
       systemPrompt:
         "Return only strict JSON. Classify the event, extract concise evidence, and generate a user-facing event identity for every event. displayTitle must state what actually happened in concise English; never copy a generic heading such as Aviso, Notification, Message, or a raw sentence. displayDescription must explain the event using only supplied facts. Always inspect financial alerts and email bodies even when deterministic classification is already confident. For card alerts, identify the real merchant from processor descriptors such as +phone/OPENAI *CHATGPT, not the generic heading. Allowed entity types are only app, merchant, sender, recipient, message, amount, and card_last_four. Do not output domains, categories, concepts, notification titles, timestamps, other IDs, raw fragments, or invented entities; a separate semantic governor decides durable graph placement.",
       userPrompt: JSON.stringify(
@@ -200,4 +229,5 @@ export function createClassificationAssistant(deps: ClassificationAssistantDeps)
 export const maybeEnhanceClassification = createClassificationAssistant({
   apiKey: process.env.DEEPSEEK_API_KEY,
   model: process.env.DEEPSEEK_MODEL ?? "deepseek-v4-flash",
+  resolvePolicy: (input) => loadSourceProcessingPolicy(pool, input),
 });

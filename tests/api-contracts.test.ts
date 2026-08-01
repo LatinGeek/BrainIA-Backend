@@ -8,6 +8,22 @@ async function createApp() {
   return buildApp();
 }
 
+test("financial consolidation route is registered and validates its payload", async () => {
+  const app = await createApp();
+  try {
+    const response = await app.inject({
+      method: "POST",
+      url: "/api/v1/financial/transactions/financial_primary/merge",
+      payload: {},
+    });
+
+    assert.equal(response.statusCode, 400);
+    assert.equal((response.json() as { error: string }).error, "invalid_financial_transaction_merge");
+  } finally {
+    await app.close();
+  }
+});
+
 test("agent tool manifest is minimal and self-describing", async () => {
   const app = await createApp();
   try {

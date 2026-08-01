@@ -4,6 +4,7 @@ import { insertDigestRun, listDigestRuns, loadDigestRunById } from "../storage/d
 import { createKnowledgeDigest } from "../storage/digests.js";
 import { config } from "../config.js";
 import { pool } from "../storage/postgres.js";
+import { upsertEmbedding } from "../storage/embeddings.js";
 
 const digestQuerySchema = z.object({
   from: z.string().datetime().optional(),
@@ -77,6 +78,10 @@ export const registerDigestRoutes: FastifyPluginAsync = async (app) => {
       response: digest,
       summary: digest.summary,
       model: digest.model,
+    });
+    if (storedRun && digest.summary) await upsertEmbedding(pool, {
+      objectType: "digest", objectId: storedRun.id, content: digest.summary,
+      metadata: { title: digest.scope, events: digest.metrics.totalEvents },
     });
 
     request.log.info(

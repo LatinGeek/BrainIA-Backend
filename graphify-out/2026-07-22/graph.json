@@ -694,10 +694,20 @@
       "norm_label": "backfill:financial-merchants"
     },
     {
-      "label": "reprocess:semantic-pending",
+      "label": "backfill:event-evidence-parents",
       "file_type": "code",
       "source_file": "package.json",
       "source_location": "L16",
+      "_origin": "ast",
+      "id": "package_scripts_backfill_event_evidence_parents",
+      "community": 13,
+      "norm_label": "backfill:event-evidence-parents"
+    },
+    {
+      "label": "reprocess:semantic-pending",
+      "file_type": "code",
+      "source_file": "package.json",
+      "source_location": "L17",
       "_origin": "ast",
       "id": "package_scripts_reprocess_semantic_pending",
       "community": 13,
@@ -707,7 +717,7 @@
       "label": "normalize:providers",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L17",
+      "source_location": "L18",
       "_origin": "ast",
       "id": "package_scripts_normalize_providers",
       "community": 13,
@@ -717,7 +727,7 @@
       "label": "normalize:hierarchy",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L18",
+      "source_location": "L19",
       "_origin": "ast",
       "id": "package_scripts_normalize_hierarchy",
       "community": 13,
@@ -727,7 +737,7 @@
       "label": "reconcile:semantic-governance",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L19",
+      "source_location": "L20",
       "_origin": "ast",
       "id": "package_scripts_reconcile_semantic_governance",
       "community": 13,
@@ -737,7 +747,7 @@
       "label": "audit:semantic-graph",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L20",
+      "source_location": "L21",
       "_origin": "ast",
       "id": "package_scripts_audit_semantic_graph",
       "community": 13,
@@ -747,7 +757,7 @@
       "label": "audit:semantic-entities",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L21",
+      "source_location": "L22",
       "_origin": "ast",
       "id": "package_scripts_audit_semantic_entities",
       "community": 13,
@@ -757,7 +767,7 @@
       "label": "probe:deepseek",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L22",
+      "source_location": "L23",
       "_origin": "ast",
       "id": "package_scripts_probe_deepseek",
       "community": 13,
@@ -767,7 +777,7 @@
       "label": "inspect:semantic-proposals",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L23",
+      "source_location": "L24",
       "_origin": "ast",
       "id": "package_scripts_inspect_semantic_proposals",
       "community": 13,
@@ -777,7 +787,7 @@
       "label": "cleanup:test-data",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L24",
+      "source_location": "L25",
       "_origin": "ast",
       "id": "package_scripts_cleanup_test_data",
       "community": 13,
@@ -787,7 +797,7 @@
       "label": "smoke:remote",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L25",
+      "source_location": "L26",
       "_origin": "ast",
       "id": "package_scripts_smoke_remote",
       "community": 13,
@@ -797,7 +807,7 @@
       "label": "test",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L26",
+      "source_location": "L27",
       "_origin": "ast",
       "id": "package_scripts_test",
       "community": 13,
@@ -807,7 +817,7 @@
       "label": "dependencies",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L28",
+      "source_location": "L29",
       "_origin": "ast",
       "id": "package_dependencies",
       "community": 13,
@@ -817,7 +827,7 @@
       "label": "fastify",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L29",
+      "source_location": "L30",
       "_origin": "ast",
       "id": "package_dependencies_fastify",
       "community": 13,
@@ -827,7 +837,7 @@
       "label": "pg",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L30",
+      "source_location": "L31",
       "_origin": "ast",
       "id": "package_dependencies_pg",
       "community": 13,
@@ -837,7 +847,7 @@
       "label": "zod",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L31",
+      "source_location": "L32",
       "_origin": "ast",
       "id": "package_dependencies_zod",
       "community": 13,
@@ -847,7 +857,7 @@
       "label": "devDependencies",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L33",
+      "source_location": "L34",
       "_origin": "ast",
       "id": "package_devdependencies",
       "community": 13,
@@ -857,7 +867,7 @@
       "label": "@types/node",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L34",
+      "source_location": "L35",
       "_origin": "ast",
       "id": "package_devdependencies_types_node",
       "community": 13,
@@ -867,7 +877,7 @@
       "label": "@types/pg",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L35",
+      "source_location": "L36",
       "_origin": "ast",
       "id": "package_devdependencies_types_pg",
       "community": 13,
@@ -877,7 +887,7 @@
       "label": "tsx",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L36",
+      "source_location": "L37",
       "_origin": "ast",
       "id": "package_devdependencies_tsx",
       "community": 13,
@@ -887,7 +897,7 @@
       "label": "typescript",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L37",
+      "source_location": "L38",
       "_origin": "ast",
       "id": "package_devdependencies_typescript",
       "community": 13,
@@ -900,7 +910,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "serverless",
-      "community": 7,
+      "community": 53,
       "norm_label": "serverless.ts"
     },
     {
@@ -910,7 +920,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "serverless_handler",
-      "community": 7,
+      "community": 53,
       "norm_label": "handler()"
     },
     {
@@ -920,7 +930,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_app",
-      "community": 7,
+      "community": 53,
       "norm_label": "app.ts"
     },
     {
@@ -930,7 +940,7 @@
       "source_location": "L23",
       "_origin": "ast",
       "id": "src_app_buildapp",
-      "community": 7,
+      "community": 53,
       "norm_label": "buildapp()"
     },
     {
@@ -1050,7 +1060,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_config",
-      "community": 7,
+      "community": 53,
       "norm_label": "config.ts"
     },
     {
@@ -1060,7 +1070,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_config_config",
-      "community": 7,
+      "community": 53,
       "norm_label": "config"
     },
     {
@@ -1210,7 +1220,7 @@
       "source_location": "L300",
       "_origin": "ast",
       "id": "src_domain_capture_buildcapturebatchevents",
-      "community": 57,
+      "community": 7,
       "norm_label": "buildcapturebatchevents()"
     },
     {
@@ -1290,7 +1300,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_domain_entities",
-      "community": 53,
+      "community": 62,
       "norm_label": "entities.ts"
     },
     {
@@ -1310,7 +1320,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "src_domain_entities_rawrecord",
-      "community": 53,
+      "community": 62,
       "norm_label": "rawrecord"
     },
     {
@@ -1320,7 +1330,7 @@
       "source_location": "L12",
       "_origin": "ast",
       "id": "src_domain_entities_normalizeentityvalue",
-      "community": 51,
+      "community": 54,
       "norm_label": "normalizeentityvalue()"
     },
     {
@@ -1330,7 +1340,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "src_domain_entities_noisy_entity_values",
-      "community": 53,
+      "community": 62,
       "norm_label": "noisy_entity_values"
     },
     {
@@ -1340,7 +1350,7 @@
       "source_location": "L34",
       "_origin": "ast",
       "id": "src_domain_entities_generic_merchant_prefixes",
-      "community": 53,
+      "community": 62,
       "norm_label": "generic_merchant_prefixes"
     },
     {
@@ -1350,7 +1360,7 @@
       "source_location": "L57",
       "_origin": "ast",
       "id": "src_domain_entities_merchant_terminators",
-      "community": 53,
+      "community": 62,
       "norm_label": "merchant_terminators"
     },
     {
@@ -1360,7 +1370,7 @@
       "source_location": "L81",
       "_origin": "ast",
       "id": "src_domain_entities_builddraftmetadata",
-      "community": 53,
+      "community": 62,
       "norm_label": "builddraftmetadata()"
     },
     {
@@ -1370,7 +1380,7 @@
       "source_location": "L88",
       "_origin": "ast",
       "id": "src_domain_entities_readrawfield",
-      "community": 53,
+      "community": 62,
       "norm_label": "readrawfield()"
     },
     {
@@ -1380,7 +1390,7 @@
       "source_location": "L108",
       "_origin": "ast",
       "id": "src_domain_entities_extractstringvalue",
-      "community": 53,
+      "community": 62,
       "norm_label": "extractstringvalue()"
     },
     {
@@ -1390,7 +1400,7 @@
       "source_location": "L140",
       "_origin": "ast",
       "id": "src_domain_entities_readrawstring",
-      "community": 53,
+      "community": 62,
       "norm_label": "readrawstring()"
     },
     {
@@ -1400,7 +1410,7 @@
       "source_location": "L151",
       "_origin": "ast",
       "id": "src_domain_entities_readenvelopefield",
-      "community": 53,
+      "community": 62,
       "norm_label": "readenvelopefield()"
     },
     {
@@ -1410,7 +1420,7 @@
       "source_location": "L160",
       "_origin": "ast",
       "id": "src_domain_entities_ismeaningfuldraft",
-      "community": 53,
+      "community": 62,
       "norm_label": "ismeaningfuldraft()"
     },
     {
@@ -1420,7 +1430,7 @@
       "source_location": "L188",
       "_origin": "ast",
       "id": "src_domain_entities_dedupeentitydrafts",
-      "community": 53,
+      "community": 62,
       "norm_label": "dedupeentitydrafts()"
     },
     {
@@ -1430,7 +1440,7 @@
       "source_location": "L205",
       "_origin": "ast",
       "id": "src_domain_entities_cleanmerchantcandidate",
-      "community": 53,
+      "community": 62,
       "norm_label": "cleanmerchantcandidate()"
     },
     {
@@ -1440,7 +1450,7 @@
       "source_location": "L223",
       "_origin": "ast",
       "id": "src_domain_entities_merchantfromnotificationtitle",
-      "community": 53,
+      "community": 62,
       "norm_label": "merchantfromnotificationtitle()"
     },
     {
@@ -1450,7 +1460,7 @@
       "source_location": "L230",
       "_origin": "ast",
       "id": "src_domain_entities_buildentitydrafts",
-      "community": 53,
+      "community": 62,
       "norm_label": "buildentitydrafts()"
     },
     {
@@ -1530,7 +1540,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "src_domain_event_eventschema",
-      "community": 50,
+      "community": 55,
       "norm_label": "eventschema"
     },
     {
@@ -1800,7 +1810,7 @@
       "source_location": "L74",
       "_origin": "ast",
       "id": "src_domain_ontology_ontologytreeprompt",
-      "community": 51,
+      "community": 49,
       "norm_label": "ontologytreeprompt()"
     },
     {
@@ -1810,7 +1820,7 @@
       "source_location": "L78",
       "_origin": "ast",
       "id": "src_domain_ontology_ontologydraft",
-      "community": 10,
+      "community": 51,
       "norm_label": "ontologydraft()"
     },
     {
@@ -1820,7 +1830,7 @@
       "source_location": "L89",
       "_origin": "ast",
       "id": "src_domain_ontology_semanticinstancedraft",
-      "community": 48,
+      "community": 1,
       "norm_label": "semanticinstancedraft()"
     },
     {
@@ -1830,7 +1840,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_domain_relations",
-      "community": 64,
+      "community": 63,
       "norm_label": "relations.ts"
     },
     {
@@ -1840,7 +1850,7 @@
       "source_location": "L3",
       "_origin": "ast",
       "id": "src_domain_relations_relationdraft",
-      "community": 64,
+      "community": 63,
       "norm_label": "relationdraft"
     },
     {
@@ -1850,7 +1860,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "src_domain_relations_relation_type_aliases",
-      "community": 64,
+      "community": 63,
       "norm_label": "relation_type_aliases"
     },
     {
@@ -1860,7 +1870,7 @@
       "source_location": "L42",
       "_origin": "ast",
       "id": "src_domain_relations_normalizerelationtype",
-      "community": 64,
+      "community": 63,
       "norm_label": "normalizerelationtype()"
     },
     {
@@ -1870,7 +1880,7 @@
       "source_location": "L65",
       "_origin": "ast",
       "id": "src_domain_relations_getfirstentity",
-      "community": 64,
+      "community": 63,
       "norm_label": "getfirstentity()"
     },
     {
@@ -1880,7 +1890,7 @@
       "source_location": "L69",
       "_origin": "ast",
       "id": "src_domain_relations_buildrelationmetadata",
-      "community": 64,
+      "community": 63,
       "norm_label": "buildrelationmetadata()"
     },
     {
@@ -1890,7 +1900,7 @@
       "source_location": "L86",
       "_origin": "ast",
       "id": "src_domain_relations_buildrelationdrafts",
-      "community": 64,
+      "community": 63,
       "norm_label": "buildrelationdrafts()"
     },
     {
@@ -2050,7 +2060,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_routes_capture",
-      "community": 57,
+      "community": 7,
       "norm_label": "capture.ts"
     },
     {
@@ -2060,7 +2070,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "src_routes_capture_captureingestfn",
-      "community": 57,
+      "community": 7,
       "norm_label": "captureingestfn"
     },
     {
@@ -2070,7 +2080,7 @@
       "source_location": "L21",
       "_origin": "ast",
       "id": "src_routes_capture_captureroutesoptions",
-      "community": 57,
+      "community": 7,
       "norm_label": "captureroutesoptions"
     },
     {
@@ -2080,7 +2090,7 @@
       "source_location": "L26",
       "_origin": "ast",
       "id": "src_routes_capture_commoncaptureschema",
-      "community": 57,
+      "community": 7,
       "norm_label": "commoncaptureschema"
     },
     {
@@ -2090,7 +2100,7 @@
       "source_location": "L37",
       "_origin": "ast",
       "id": "src_routes_capture_notecaptureschema",
-      "community": 57,
+      "community": 7,
       "norm_label": "notecaptureschema"
     },
     {
@@ -2100,7 +2110,7 @@
       "source_location": "L42",
       "_origin": "ast",
       "id": "src_routes_capture_emailcaptureschema",
-      "community": 57,
+      "community": 7,
       "norm_label": "emailcaptureschema"
     },
     {
@@ -2110,7 +2120,7 @@
       "source_location": "L58",
       "_origin": "ast",
       "id": "src_routes_capture_notificationcaptureschema",
-      "community": 57,
+      "community": 7,
       "norm_label": "notificationcaptureschema"
     },
     {
@@ -2120,7 +2130,7 @@
       "source_location": "L65",
       "_origin": "ast",
       "id": "src_routes_capture_walletcaptureschema",
-      "community": 57,
+      "community": 7,
       "norm_label": "walletcaptureschema"
     },
     {
@@ -2130,7 +2140,7 @@
       "source_location": "L72",
       "_origin": "ast",
       "id": "src_routes_capture_capturebatchschema",
-      "community": 57,
+      "community": 7,
       "norm_label": "capturebatchschema"
     },
     {
@@ -2140,7 +2150,7 @@
       "source_location": "L96",
       "_origin": "ast",
       "id": "src_routes_capture_getauthclientid",
-      "community": 57,
+      "community": 7,
       "norm_label": "getauthclientid()"
     },
     {
@@ -2160,7 +2170,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_routes_dashboard",
-      "community": 7,
+      "community": 53,
       "norm_label": "dashboard.ts"
     },
     {
@@ -2170,7 +2180,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "src_routes_dashboard_webroot",
-      "community": 7,
+      "community": 53,
       "norm_label": "webroot"
     },
     {
@@ -2180,7 +2190,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "src_routes_dashboard_readasset",
-      "community": 7,
+      "community": 53,
       "norm_label": "readasset()"
     },
     {
@@ -2190,7 +2200,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "src_routes_dashboard_registerdashboardroutes",
-      "community": 7,
+      "community": 53,
       "norm_label": "registerdashboardroutes()"
     },
     {
@@ -2320,7 +2330,7 @@
       "source_location": "L39",
       "_origin": "ast",
       "id": "src_routes_entity_aliases_registerentityaliasroutes",
-      "community": 47,
+      "community": 53,
       "norm_label": "registerentityaliasroutes()"
     },
     {
@@ -2330,7 +2340,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_routes_entity_merge",
-      "community": 65,
+      "community": 3,
       "norm_label": "entity-merge.ts"
     },
     {
@@ -2340,7 +2350,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "src_routes_entity_merge_mergeparamsschema",
-      "community": 65,
+      "community": 3,
       "norm_label": "mergeparamsschema"
     },
     {
@@ -2350,7 +2360,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "src_routes_entity_merge_mergebodyschema",
-      "community": 65,
+      "community": 3,
       "norm_label": "mergebodyschema"
     },
     {
@@ -2360,7 +2370,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "src_routes_entity_merge_registerentitymergeroutes",
-      "community": 65,
+      "community": 3,
       "norm_label": "registerentitymergeroutes()"
     },
     {
@@ -2400,7 +2410,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_routes_events",
-      "community": 50,
+      "community": 55,
       "norm_label": "events.ts"
     },
     {
@@ -2410,7 +2420,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "src_routes_events_eventroutesoptions",
-      "community": 50,
+      "community": 55,
       "norm_label": "eventroutesoptions"
     },
     {
@@ -2420,7 +2430,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "src_routes_events_registereventroutes",
-      "community": 7,
+      "community": 53,
       "norm_label": "registereventroutes()"
     },
     {
@@ -2437,7 +2447,7 @@
       "label": "listQuerySchema",
       "file_type": "code",
       "source_file": "src/routes/financial-transactions.ts",
-      "source_location": "L12",
+      "source_location": "L14",
       "_origin": "ast",
       "id": "src_routes_financial_transactions_listqueryschema",
       "community": 9,
@@ -2447,7 +2457,7 @@
       "label": "contextSchema",
       "file_type": "code",
       "source_file": "src/routes/financial-transactions.ts",
-      "source_location": "L18",
+      "source_location": "L20",
       "_origin": "ast",
       "id": "src_routes_financial_transactions_contextschema",
       "community": 9,
@@ -2457,17 +2467,27 @@
       "label": "accountSchema",
       "file_type": "code",
       "source_file": "src/routes/financial-transactions.ts",
-      "source_location": "L26",
+      "source_location": "L28",
       "_origin": "ast",
       "id": "src_routes_financial_transactions_accountschema",
       "community": 9,
       "norm_label": "accountschema"
     },
     {
+      "label": "adjustmentSchema",
+      "file_type": "code",
+      "source_file": "src/routes/financial-transactions.ts",
+      "source_location": "L35",
+      "_origin": "ast",
+      "id": "src_routes_financial_transactions_adjustmentschema",
+      "community": 9,
+      "norm_label": "adjustmentschema"
+    },
+    {
       "label": "registerFinancialTransactionRoutes()",
       "file_type": "code",
       "source_file": "src/routes/financial-transactions.ts",
-      "source_location": "L33",
+      "source_location": "L40",
       "_origin": "ast",
       "id": "src_routes_financial_transactions_registerfinancialtransactionroutes",
       "community": 9,
@@ -2510,7 +2530,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_routes_insights",
-      "community": 62,
+      "community": 64,
       "norm_label": "insights.ts"
     },
     {
@@ -2520,7 +2540,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "src_routes_insights_insightschema",
-      "community": 62,
+      "community": 64,
       "norm_label": "insightschema"
     },
     {
@@ -2530,7 +2550,7 @@
       "source_location": "L20",
       "_origin": "ast",
       "id": "src_routes_insights_insighthistoryqueryschema",
-      "community": 62,
+      "community": 64,
       "norm_label": "insighthistoryqueryschema"
     },
     {
@@ -2540,7 +2560,7 @@
       "source_location": "L24",
       "_origin": "ast",
       "id": "src_routes_insights_insighthistoryparamsschema",
-      "community": 62,
+      "community": 64,
       "norm_label": "insighthistoryparamsschema"
     },
     {
@@ -2550,7 +2570,7 @@
       "source_location": "L28",
       "_origin": "ast",
       "id": "src_routes_insights_dailyinsightschema",
-      "community": 62,
+      "community": 64,
       "norm_label": "dailyinsightschema"
     },
     {
@@ -2560,7 +2580,7 @@
       "source_location": "L33",
       "_origin": "ast",
       "id": "src_routes_insights_registerinsightsroutes",
-      "community": 62,
+      "community": 64,
       "norm_label": "registerinsightsroutes()"
     },
     {
@@ -2570,7 +2590,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_routes_knowledge",
-      "community": 64,
+      "community": 63,
       "norm_label": "knowledge.ts"
     },
     {
@@ -2580,7 +2600,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "src_routes_knowledge_registerknowledgeroutes",
-      "community": 64,
+      "community": 63,
       "norm_label": "registerknowledgeroutes()"
     },
     {
@@ -2590,7 +2610,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_routes_metrics",
-      "community": 7,
+      "community": 53,
       "norm_label": "metrics.ts"
     },
     {
@@ -2600,7 +2620,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "src_routes_metrics_registermetricsroutes",
-      "community": 7,
+      "community": 53,
       "norm_label": "registermetricsroutes()"
     },
     {
@@ -2640,7 +2660,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_routes_semantic",
-      "community": 55,
+      "community": 2,
       "norm_label": "semantic.ts"
     },
     {
@@ -2650,7 +2670,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "src_routes_semantic_clientid",
-      "community": 55,
+      "community": 2,
       "norm_label": "clientid()"
     },
     {
@@ -2660,7 +2680,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "src_routes_semantic_registersemanticroutes",
-      "community": 55,
+      "community": 2,
       "norm_label": "registersemanticroutes()"
     },
     {
@@ -2670,7 +2690,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_scripts_audit_rooted_semantics",
-      "community": 51,
+      "community": 49,
       "norm_label": "audit-rooted-semantics.ts"
     },
     {
@@ -2680,7 +2700,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "src_scripts_audit_rooted_semantics_entityid",
-      "community": 51,
+      "community": 49,
       "norm_label": "entityid"
     },
     {
@@ -2690,7 +2710,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "src_scripts_audit_rooted_semantics_limit",
-      "community": 51,
+      "community": 49,
       "norm_label": "limit"
     },
     {
@@ -2700,7 +2720,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "src_scripts_audit_rooted_semantics_result",
-      "community": 51,
+      "community": 49,
       "norm_label": "result"
     },
     {
@@ -2734,13 +2754,23 @@
       "norm_label": "typeresult"
     },
     {
+      "label": "backfill-event-evidence-parents.ts",
+      "file_type": "code",
+      "source_file": "src/scripts/backfill-event-evidence-parents.ts",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "src_scripts_backfill_event_evidence_parents",
+      "community": 10,
+      "norm_label": "backfill-event-evidence-parents.ts"
+    },
+    {
       "label": "backfill-financial-merchant-links.ts",
       "file_type": "code",
       "source_file": "src/scripts/backfill-financial-merchant-links.ts",
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_scripts_backfill_financial_merchant_links",
-      "community": 0,
+      "community": 58,
       "norm_label": "backfill-financial-merchant-links.ts"
     },
     {
@@ -2750,7 +2780,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "src_scripts_backfill_financial_merchant_links_main",
-      "community": 0,
+      "community": 58,
       "norm_label": "main()"
     },
     {
@@ -3240,7 +3270,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_scripts_inspect_semantic_proposals",
-      "community": 48,
+      "community": 49,
       "norm_label": "inspect-semantic-proposals.ts"
     },
     {
@@ -3250,7 +3280,7 @@
       "source_location": "L12",
       "_origin": "ast",
       "id": "src_scripts_inspect_semantic_proposals_classified",
-      "community": 48,
+      "community": 49,
       "norm_label": "classified"
     },
     {
@@ -3260,7 +3290,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "src_scripts_inspect_semantic_proposals_entities",
-      "community": 48,
+      "community": 49,
       "norm_label": "entities"
     },
     {
@@ -3270,7 +3300,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_scripts_migrate",
-      "community": 49,
+      "community": 65,
       "norm_label": "migrate.ts"
     },
     {
@@ -3280,7 +3310,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "src_scripts_migrate_filename",
-      "community": 49,
+      "community": 65,
       "norm_label": "__filename"
     },
     {
@@ -3290,7 +3320,7 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "src_scripts_migrate_dirname",
-      "community": 49,
+      "community": 65,
       "norm_label": "__dirname"
     },
     {
@@ -3300,7 +3330,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "src_scripts_migrate_migrationsdir",
-      "community": 49,
+      "community": 65,
       "norm_label": "migrationsdir"
     },
     {
@@ -3310,7 +3340,7 @@
       "source_location": "L12",
       "_origin": "ast",
       "id": "src_scripts_migrate_migrationconnectionstring",
-      "community": 49,
+      "community": 65,
       "norm_label": "migrationconnectionstring"
     },
     {
@@ -3320,7 +3350,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "src_scripts_migrate_migrationpool",
-      "community": 49,
+      "community": 65,
       "norm_label": "migrationpool"
     },
     {
@@ -3330,7 +3360,7 @@
       "source_location": "L22",
       "_origin": "ast",
       "id": "src_scripts_migrate_ensuremigrationtable",
-      "community": 49,
+      "community": 65,
       "norm_label": "ensuremigrationtable()"
     },
     {
@@ -3340,7 +3370,7 @@
       "source_location": "L31",
       "_origin": "ast",
       "id": "src_scripts_migrate_getappliedversions",
-      "community": 49,
+      "community": 65,
       "norm_label": "getappliedversions()"
     },
     {
@@ -3350,7 +3380,7 @@
       "source_location": "L38",
       "_origin": "ast",
       "id": "src_scripts_migrate_run",
-      "community": 49,
+      "community": 65,
       "norm_label": "run()"
     },
     {
@@ -3370,7 +3400,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_scripts_normalize_provider_identities",
-      "community": 48,
+      "community": 1,
       "norm_label": "normalize-provider-identities.ts"
     },
     {
@@ -3380,7 +3410,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "src_scripts_normalize_provider_identities_apps",
-      "community": 48,
+      "community": 1,
       "norm_label": "apps"
     },
     {
@@ -3400,7 +3430,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_scripts_reconcile_semantic_governance",
-      "community": 10,
+      "community": 51,
       "norm_label": "reconcile-semantic-governance.ts"
     },
     {
@@ -3580,7 +3610,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_server",
-      "community": 7,
+      "community": 53,
       "norm_label": "server.ts"
     },
     {
@@ -3710,7 +3740,7 @@
       "source_location": "L200",
       "_origin": "ast",
       "id": "src_storage_classification_assistant_maybeenhanceclassification",
-      "community": 48,
+      "community": 1,
       "norm_label": "maybeenhanceclassification"
     },
     {
@@ -3720,7 +3750,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_storage_database_url",
-      "community": 3,
+      "community": 65,
       "norm_label": "database-url.ts"
     },
     {
@@ -3730,7 +3760,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_storage_database_url_firstavailable",
-      "community": 3,
+      "community": 65,
       "norm_label": "firstavailable()"
     },
     {
@@ -3740,7 +3770,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "src_storage_database_url_resolveruntimedatabaseurl",
-      "community": 3,
+      "community": 65,
       "norm_label": "resolveruntimedatabaseurl()"
     },
     {
@@ -3750,7 +3780,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "src_storage_database_url_resolvemigrationdatabaseurl",
-      "community": 3,
+      "community": 65,
       "norm_label": "resolvemigrationdatabaseurl()"
     },
     {
@@ -4150,7 +4180,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_storage_entity_repository",
-      "community": 1,
+      "community": 58,
       "norm_label": "entity-repository.ts"
     },
     {
@@ -4160,7 +4190,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "src_storage_entity_repository_queryable",
-      "community": 1,
+      "community": 58,
       "norm_label": "queryable"
     },
     {
@@ -4170,7 +4200,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "src_storage_entity_repository_entityrecord",
-      "community": 1,
+      "community": 58,
       "norm_label": "entityrecord"
     },
     {
@@ -4180,7 +4210,7 @@
       "source_location": "L26",
       "_origin": "ast",
       "id": "src_storage_entity_repository_resolvedentityrecord",
-      "community": 1,
+      "community": 58,
       "norm_label": "resolvedentityrecord"
     },
     {
@@ -4190,7 +4220,7 @@
       "source_location": "L30",
       "_origin": "ast",
       "id": "src_storage_entity_repository_rewireentityrelations",
-      "community": 1,
+      "community": 58,
       "norm_label": "rewireentityrelations()"
     },
     {
@@ -4200,7 +4230,7 @@
       "source_location": "L80",
       "_origin": "ast",
       "id": "src_storage_entity_repository_entitymatchrow",
-      "community": 1,
+      "community": 58,
       "norm_label": "entitymatchrow"
     },
     {
@@ -4210,7 +4240,7 @@
       "source_location": "L84",
       "_origin": "ast",
       "id": "src_storage_entity_repository_entitymergerecord",
-      "community": 1,
+      "community": 58,
       "norm_label": "entitymergerecord"
     },
     {
@@ -4220,7 +4250,7 @@
       "source_location": "L98",
       "_origin": "ast",
       "id": "src_storage_entity_repository_selectentityprojectionsql",
-      "community": 1,
+      "community": 58,
       "norm_label": "selectentityprojectionsql()"
     },
     {
@@ -4230,7 +4260,7 @@
       "source_location": "L123",
       "_origin": "ast",
       "id": "src_storage_entity_repository_loadentitybyid",
-      "community": 1,
+      "community": 58,
       "norm_label": "loadentitybyid()"
     },
     {
@@ -4260,7 +4290,7 @@
       "source_location": "L151",
       "_origin": "ast",
       "id": "src_storage_entity_repository_findcanonicalmerchantbyvalue",
-      "community": 0,
+      "community": 58,
       "norm_label": "findcanonicalmerchantbyvalue()"
     },
     {
@@ -4270,7 +4300,7 @@
       "source_location": "L173",
       "_origin": "ast",
       "id": "src_storage_entity_repository_upsertentity",
-      "community": 10,
+      "community": 54,
       "norm_label": "upsertentity()"
     },
     {
@@ -4280,7 +4310,7 @@
       "source_location": "L216",
       "_origin": "ast",
       "id": "src_storage_entity_repository_listentities",
-      "community": 1,
+      "community": 58,
       "norm_label": "listentities()"
     },
     {
@@ -4290,7 +4320,7 @@
       "source_location": "L227",
       "_origin": "ast",
       "id": "src_storage_entity_repository_resolveentitymatches",
-      "community": 1,
+      "community": 58,
       "norm_label": "resolveentitymatches()"
     },
     {
@@ -4300,7 +4330,7 @@
       "source_location": "L323",
       "_origin": "ast",
       "id": "src_storage_entity_repository_mergeentities",
-      "community": 1,
+      "community": 58,
       "norm_label": "mergeentities()"
     },
     {
@@ -4310,7 +4340,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_storage_event_repository",
-      "community": 48,
+      "community": 1,
       "norm_label": "event-repository.ts"
     },
     {
@@ -4320,7 +4350,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "src_storage_event_repository_queryable",
-      "community": 48,
+      "community": 1,
       "norm_label": "queryable"
     },
     {
@@ -4330,7 +4360,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "src_storage_event_repository_storedentity",
-      "community": 48,
+      "community": 1,
       "norm_label": "storedentity"
     },
     {
@@ -4340,7 +4370,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "src_storage_event_repository_storedrelation",
-      "community": 48,
+      "community": 1,
       "norm_label": "storedrelation"
     },
     {
@@ -4350,7 +4380,7 @@
       "source_location": "L24",
       "_origin": "ast",
       "id": "src_storage_event_repository_storedeventrecord",
-      "community": 48,
+      "community": 1,
       "norm_label": "storedeventrecord"
     },
     {
@@ -4360,7 +4390,7 @@
       "source_location": "L46",
       "_origin": "ast",
       "id": "src_storage_event_repository_updateclassifiedeventinterpretation",
-      "community": 48,
+      "community": 1,
       "norm_label": "updateclassifiedeventinterpretation()"
     },
     {
@@ -4370,7 +4400,7 @@
       "source_location": "L76",
       "_origin": "ast",
       "id": "src_storage_event_repository_storedrawevent",
-      "community": 48,
+      "community": 1,
       "norm_label": "storedrawevent"
     },
     {
@@ -4380,7 +4410,7 @@
       "source_location": "L82",
       "_origin": "ast",
       "id": "src_storage_event_repository_insertrawevent",
-      "community": 48,
+      "community": 1,
       "norm_label": "insertrawevent()"
     },
     {
@@ -4390,7 +4420,7 @@
       "source_location": "L130",
       "_origin": "ast",
       "id": "src_storage_event_repository_insertclassifiedevent",
-      "community": 48,
+      "community": 1,
       "norm_label": "insertclassifiedevent()"
     },
     {
@@ -4400,7 +4430,7 @@
       "source_location": "L170",
       "_origin": "ast",
       "id": "src_storage_event_repository_loadraweventbyid",
-      "community": 48,
+      "community": 1,
       "norm_label": "loadraweventbyid()"
     },
     {
@@ -4410,7 +4440,7 @@
       "source_location": "L198",
       "_origin": "ast",
       "id": "src_storage_event_repository_findstoredraweventid",
-      "community": 48,
+      "community": 1,
       "norm_label": "findstoredraweventid()"
     },
     {
@@ -4420,57 +4450,57 @@
       "source_location": "L217",
       "_origin": "ast",
       "id": "src_storage_event_repository_deletederiveddataforevent",
-      "community": 48,
+      "community": 1,
       "norm_label": "deletederiveddataforevent()"
     },
     {
       "label": "linkEventEntity()",
       "file_type": "code",
       "source_file": "src/storage/event-repository.ts",
-      "source_location": "L332",
+      "source_location": "L334",
       "_origin": "ast",
       "id": "src_storage_event_repository_linkevententity",
-      "community": 48,
+      "community": 1,
       "norm_label": "linkevententity()"
     },
     {
       "label": "loadStoredEventById()",
       "file_type": "code",
       "source_file": "src/storage/event-repository.ts",
-      "source_location": "L356",
+      "source_location": "L358",
       "_origin": "ast",
       "id": "src_storage_event_repository_loadstoredeventbyid",
-      "community": 48,
+      "community": 1,
       "norm_label": "loadstoredeventbyid()"
     },
     {
       "label": "loadStoredEventByLookup()",
       "file_type": "code",
       "source_file": "src/storage/event-repository.ts",
-      "source_location": "L439",
+      "source_location": "L441",
       "_origin": "ast",
       "id": "src_storage_event_repository_loadstoredeventbylookup",
-      "community": 48,
+      "community": 1,
       "norm_label": "loadstoredeventbylookup()"
     },
     {
       "label": "listStoredEvents()",
       "file_type": "code",
       "source_file": "src/storage/event-repository.ts",
-      "source_location": "L463",
+      "source_location": "L465",
       "_origin": "ast",
       "id": "src_storage_event_repository_liststoredevents",
-      "community": 48,
+      "community": 2,
       "norm_label": "liststoredevents()"
     },
     {
       "label": "countKnowledgeMetrics()",
       "file_type": "code",
       "source_file": "src/storage/event-repository.ts",
-      "source_location": "L541",
+      "source_location": "L543",
       "_origin": "ast",
       "id": "src_storage_event_repository_countknowledgemetrics",
-      "community": 48,
+      "community": 1,
       "norm_label": "countknowledgemetrics()"
     },
     {
@@ -4480,7 +4510,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_storage_event_store",
-      "community": 48,
+      "community": 1,
       "norm_label": "event-store.ts"
     },
     {
@@ -4490,7 +4520,7 @@
       "source_location": "L31",
       "_origin": "ast",
       "id": "src_storage_event_store_eventingestioncontext",
-      "community": 48,
+      "community": 1,
       "norm_label": "eventingestioncontext"
     },
     {
@@ -4500,7 +4530,7 @@
       "source_location": "L35",
       "_origin": "ast",
       "id": "src_storage_event_store_buildeventdedupekey",
-      "community": 48,
+      "community": 1,
       "norm_label": "buildeventdedupekey()"
     },
     {
@@ -4510,7 +4540,7 @@
       "source_location": "L41",
       "_origin": "ast",
       "id": "src_storage_event_store_isfinancialinferredkind",
-      "community": 48,
+      "community": 1,
       "norm_label": "isfinancialinferredkind()"
     },
     {
@@ -4520,7 +4550,7 @@
       "source_location": "L45",
       "_origin": "ast",
       "id": "src_storage_event_store_shouldpersistgraphentity",
-      "community": 48,
+      "community": 1,
       "norm_label": "shouldpersistgraphentity()"
     },
     {
@@ -4530,7 +4560,7 @@
       "source_location": "L53",
       "_origin": "ast",
       "id": "src_storage_event_store_governedgraphdrafts",
-      "community": 48,
+      "community": 1,
       "norm_label": "governedgraphdrafts()"
     },
     {
@@ -4540,7 +4570,7 @@
       "source_location": "L66",
       "_origin": "ast",
       "id": "src_storage_event_store_classifiedeventidentity",
-      "community": 48,
+      "community": 1,
       "norm_label": "classifiedeventidentity()"
     },
     {
@@ -4550,7 +4580,7 @@
       "source_location": "L76",
       "_origin": "ast",
       "id": "src_storage_event_store_persistclassifiedevent",
-      "community": 48,
+      "community": 1,
       "norm_label": "persistclassifiedevent()"
     },
     {
@@ -4560,7 +4590,7 @@
       "source_location": "L212",
       "_origin": "ast",
       "id": "src_storage_event_store_ensurestorage",
-      "community": 48,
+      "community": 1,
       "norm_label": "ensurestorage()"
     },
     {
@@ -4590,7 +4620,7 @@
       "source_location": "L224",
       "_origin": "ast",
       "id": "src_storage_event_store_reprocesseventunlocked",
-      "community": 48,
+      "community": 1,
       "norm_label": "reprocesseventunlocked()"
     },
     {
@@ -4600,7 +4630,7 @@
       "source_location": "L338",
       "_origin": "ast",
       "id": "src_storage_event_store_previeweventsemantics",
-      "community": 48,
+      "community": 1,
       "norm_label": "previeweventsemantics()"
     },
     {
@@ -4610,7 +4640,7 @@
       "source_location": "L347",
       "_origin": "ast",
       "id": "src_storage_event_store_listevents",
-      "community": 48,
+      "community": 2,
       "norm_label": "listevents()"
     },
     {
@@ -4620,7 +4650,7 @@
       "source_location": "L351",
       "_origin": "ast",
       "id": "src_storage_event_store_getmetrics",
-      "community": 48,
+      "community": 1,
       "norm_label": "getmetrics()"
     },
     {
@@ -4667,7 +4697,7 @@
       "label": "FinancialTransactionCandidateMatch",
       "file_type": "code",
       "source_file": "src/storage/financial-transaction-repository.ts",
-      "source_location": "L51",
+      "source_location": "L53",
       "_origin": "ast",
       "id": "src_storage_financial_transaction_repository_financialtransactioncandidatematch",
       "community": 9,
@@ -4677,7 +4707,7 @@
       "label": "normalizeCurrency()",
       "file_type": "code",
       "source_file": "src/storage/financial-transaction-repository.ts",
-      "source_location": "L55",
+      "source_location": "L57",
       "_origin": "ast",
       "id": "src_storage_financial_transaction_repository_normalizecurrency",
       "community": 9,
@@ -4687,7 +4717,7 @@
       "label": "buildMatchClause()",
       "file_type": "code",
       "source_file": "src/storage/financial-transaction-repository.ts",
-      "source_location": "L59",
+      "source_location": "L61",
       "_origin": "ast",
       "id": "src_storage_financial_transaction_repository_buildmatchclause",
       "community": 9,
@@ -4697,7 +4727,7 @@
       "label": "buildTransactionProjectionSql()",
       "file_type": "code",
       "source_file": "src/storage/financial-transaction-repository.ts",
-      "source_location": "L103",
+      "source_location": "L105",
       "_origin": "ast",
       "id": "src_storage_financial_transaction_repository_buildtransactionprojectionsql",
       "community": 9,
@@ -4707,7 +4737,7 @@
       "label": "FinancialAccountRecord",
       "file_type": "code",
       "source_file": "src/storage/financial-transaction-repository.ts",
-      "source_location": "L144",
+      "source_location": "L148",
       "_origin": "ast",
       "id": "src_storage_financial_transaction_repository_financialaccountrecord",
       "community": 9,
@@ -4717,7 +4747,7 @@
       "label": "listFinancialAccounts()",
       "file_type": "code",
       "source_file": "src/storage/financial-transaction-repository.ts",
-      "source_location": "L153",
+      "source_location": "L158",
       "_origin": "ast",
       "id": "src_storage_financial_transaction_repository_listfinancialaccounts",
       "community": 9,
@@ -4727,17 +4757,37 @@
       "label": "createFinancialAccount()",
       "file_type": "code",
       "source_file": "src/storage/financial-transaction-repository.ts",
-      "source_location": "L160",
+      "source_location": "L188",
       "_origin": "ast",
       "id": "src_storage_financial_transaction_repository_createfinancialaccount",
       "community": 9,
       "norm_label": "createfinancialaccount()"
     },
     {
+      "label": "updateFinancialAccount()",
+      "file_type": "code",
+      "source_file": "src/storage/financial-transaction-repository.ts",
+      "source_location": "L200",
+      "_origin": "ast",
+      "id": "src_storage_financial_transaction_repository_updatefinancialaccount",
+      "community": 9,
+      "norm_label": "updatefinancialaccount()"
+    },
+    {
+      "label": "createBalanceAdjustment()",
+      "file_type": "code",
+      "source_file": "src/storage/financial-transaction-repository.ts",
+      "source_location": "L231",
+      "_origin": "ast",
+      "id": "src_storage_financial_transaction_repository_createbalanceadjustment",
+      "community": 9,
+      "norm_label": "createbalanceadjustment()"
+    },
+    {
       "label": "updateFinancialTransactionContext()",
       "file_type": "code",
       "source_file": "src/storage/financial-transaction-repository.ts",
-      "source_location": "L172",
+      "source_location": "L290",
       "_origin": "ast",
       "id": "src_storage_financial_transaction_repository_updatefinancialtransactioncontext",
       "community": 9,
@@ -4747,7 +4797,7 @@
       "label": "loadFinancialTransactionEvidence()",
       "file_type": "code",
       "source_file": "src/storage/financial-transaction-repository.ts",
-      "source_location": "L208",
+      "source_location": "L326",
       "_origin": "ast",
       "id": "src_storage_financial_transaction_repository_loadfinancialtransactionevidence",
       "community": 9,
@@ -4757,7 +4807,7 @@
       "label": "loadFinancialTransactionById()",
       "file_type": "code",
       "source_file": "src/storage/financial-transaction-repository.ts",
-      "source_location": "L235",
+      "source_location": "L353",
       "_origin": "ast",
       "id": "src_storage_financial_transaction_repository_loadfinancialtransactionbyid",
       "community": 9,
@@ -4767,7 +4817,7 @@
       "label": "listFinancialTransactions()",
       "file_type": "code",
       "source_file": "src/storage/financial-transaction-repository.ts",
-      "source_location": "L256",
+      "source_location": "L374",
       "_origin": "ast",
       "id": "src_storage_financial_transaction_repository_listfinancialtransactions",
       "community": 9,
@@ -4777,7 +4827,7 @@
       "label": "findMatchingFinancialTransaction()",
       "file_type": "code",
       "source_file": "src/storage/financial-transaction-repository.ts",
-      "source_location": "L293",
+      "source_location": "L411",
       "_origin": "ast",
       "id": "src_storage_financial_transaction_repository_findmatchingfinancialtransaction",
       "community": 9,
@@ -4787,7 +4837,7 @@
       "label": "storeFinancialTransactionEvidence()",
       "file_type": "code",
       "source_file": "src/storage/financial-transaction-repository.ts",
-      "source_location": "L361",
+      "source_location": "L479",
       "_origin": "ast",
       "id": "src_storage_financial_transaction_repository_storefinancialtransactionevidence",
       "community": 9,
@@ -4797,7 +4847,7 @@
       "label": "updateFinancialTransaction()",
       "file_type": "code",
       "source_file": "src/storage/financial-transaction-repository.ts",
-      "source_location": "L418",
+      "source_location": "L536",
       "_origin": "ast",
       "id": "src_storage_financial_transaction_repository_updatefinancialtransaction",
       "community": 9,
@@ -4807,7 +4857,7 @@
       "label": "createFinancialTransaction()",
       "file_type": "code",
       "source_file": "src/storage/financial-transaction-repository.ts",
-      "source_location": "L485",
+      "source_location": "L603",
       "_origin": "ast",
       "id": "src_storage_financial_transaction_repository_createfinancialtransaction",
       "community": 9,
@@ -4817,7 +4867,7 @@
       "label": "linkFinancialTransactionForEvent()",
       "file_type": "code",
       "source_file": "src/storage/financial-transaction-repository.ts",
-      "source_location": "L553",
+      "source_location": "L671",
       "_origin": "ast",
       "id": "src_storage_financial_transaction_repository_linkfinancialtransactionforevent",
       "community": 9,
@@ -4827,7 +4877,7 @@
       "label": "deleteFinancialTransactionsForEvent()",
       "file_type": "code",
       "source_file": "src/storage/financial-transaction-repository.ts",
-      "source_location": "L593",
+      "source_location": "L711",
       "_origin": "ast",
       "id": "src_storage_financial_transaction_repository_deletefinancialtransactionsforevent",
       "community": 9,
@@ -4900,7 +4950,7 @@
       "source_location": "L41",
       "_origin": "ast",
       "id": "src_storage_graph_cache_invalidategraphtraversalcache",
-      "community": 1,
+      "community": 10,
       "norm_label": "invalidategraphtraversalcache()"
     },
     {
@@ -5027,7 +5077,7 @@
       "label": "getEntityGraph()",
       "file_type": "code",
       "source_file": "src/storage/graph-repository.ts",
-      "source_location": "L296",
+      "source_location": "L349",
       "_origin": "ast",
       "id": "src_storage_graph_repository_getentitygraph",
       "community": 0,
@@ -5040,7 +5090,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_storage_insight_repository",
-      "community": 62,
+      "community": 64,
       "norm_label": "insight-repository.ts"
     },
     {
@@ -5050,7 +5100,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "src_storage_insight_repository_queryable",
-      "community": 62,
+      "community": 64,
       "norm_label": "queryable"
     },
     {
@@ -5060,7 +5110,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "src_storage_insight_repository_insightrunrecord",
-      "community": 62,
+      "community": 64,
       "norm_label": "insightrunrecord"
     },
     {
@@ -5070,7 +5120,7 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "src_storage_insight_repository_insightruninput",
-      "community": 62,
+      "community": 64,
       "norm_label": "insightruninput"
     },
     {
@@ -5080,7 +5130,7 @@
       "source_location": "L26",
       "_origin": "ast",
       "id": "src_storage_insight_repository_insertinsightrun",
-      "community": 62,
+      "community": 64,
       "norm_label": "insertinsightrun()"
     },
     {
@@ -5090,7 +5140,7 @@
       "source_location": "L65",
       "_origin": "ast",
       "id": "src_storage_insight_repository_listinsightruns",
-      "community": 62,
+      "community": 64,
       "norm_label": "listinsightruns()"
     },
     {
@@ -5100,7 +5150,7 @@
       "source_location": "L87",
       "_origin": "ast",
       "id": "src_storage_insight_repository_loadinsightrunbyid",
-      "community": 62,
+      "community": 64,
       "norm_label": "loadinsightrunbyid()"
     },
     {
@@ -5190,7 +5240,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "src_storage_postgres_withtransactiononpool",
-      "community": 49,
+      "community": 65,
       "norm_label": "withtransactiononpool()"
     },
     {
@@ -5200,7 +5250,7 @@
       "source_location": "L33",
       "_origin": "ast",
       "id": "src_storage_postgres_withtransaction",
-      "community": 48,
+      "community": 10,
       "norm_label": "withtransaction()"
     },
     {
@@ -5220,7 +5270,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_storage_relation_repository",
-      "community": 64,
+      "community": 63,
       "norm_label": "relation-repository.ts"
     },
     {
@@ -5230,7 +5280,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "src_storage_relation_repository_queryable",
-      "community": 64,
+      "community": 63,
       "norm_label": "queryable"
     },
     {
@@ -5240,7 +5290,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "src_storage_relation_repository_storedrelation",
-      "community": 64,
+      "community": 63,
       "norm_label": "storedrelation"
     },
     {
@@ -5250,7 +5300,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "src_storage_relation_repository_upsertrelation",
-      "community": 10,
+      "community": 54,
       "norm_label": "upsertrelation()"
     },
     {
@@ -5260,7 +5310,7 @@
       "source_location": "L69",
       "_origin": "ast",
       "id": "src_storage_relation_repository_linkeventrelation",
-      "community": 10,
+      "community": 54,
       "norm_label": "linkeventrelation()"
     },
     {
@@ -5270,7 +5320,7 @@
       "source_location": "L93",
       "_origin": "ast",
       "id": "src_storage_relation_repository_listrelations",
-      "community": 64,
+      "community": 63,
       "norm_label": "listrelations()"
     },
     {
@@ -5340,7 +5390,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_storage_semantic_enrichment",
-      "community": 51,
+      "community": 49,
       "norm_label": "semantic-enrichment.ts"
     },
     {
@@ -5350,7 +5400,7 @@
       "source_location": "L20",
       "_origin": "ast",
       "id": "src_storage_semantic_enrichment_semantic_subject_types",
-      "community": 51,
+      "community": 49,
       "norm_label": "semantic_subject_types"
     },
     {
@@ -5360,7 +5410,7 @@
       "source_location": "L21",
       "_origin": "ast",
       "id": "src_storage_semantic_enrichment_standard_association_types",
-      "community": 51,
+      "community": 49,
       "norm_label": "standard_association_types"
     },
     {
@@ -5370,7 +5420,7 @@
       "source_location": "L23",
       "_origin": "ast",
       "id": "src_storage_semantic_enrichment_semanticstep",
-      "community": 51,
+      "community": 49,
       "norm_label": "semanticstep"
     },
     {
@@ -5380,7 +5430,7 @@
       "source_location": "L31",
       "_origin": "ast",
       "id": "src_storage_semantic_enrichment_semanticpathdecision",
-      "community": 51,
+      "community": 49,
       "norm_label": "semanticpathdecision"
     },
     {
@@ -5390,7 +5440,7 @@
       "source_location": "L50",
       "_origin": "ast",
       "id": "src_storage_semantic_enrichment_semanticassociationdecision",
-      "community": 51,
+      "community": 49,
       "norm_label": "semanticassociationdecision"
     },
     {
@@ -5410,7 +5460,7 @@
       "source_location": "L70",
       "_origin": "ast",
       "id": "src_storage_semantic_enrichment_alternativeschema",
-      "community": 51,
+      "community": 49,
       "norm_label": "alternativeschema"
     },
     {
@@ -5420,7 +5470,7 @@
       "source_location": "L71",
       "_origin": "ast",
       "id": "src_storage_semantic_enrichment_stepschema",
-      "community": 51,
+      "community": 49,
       "norm_label": "stepschema"
     },
     {
@@ -5430,7 +5480,7 @@
       "source_location": "L78",
       "_origin": "ast",
       "id": "src_storage_semantic_enrichment_pathschema",
-      "community": 51,
+      "community": 49,
       "norm_label": "pathschema"
     },
     {
@@ -5440,7 +5490,7 @@
       "source_location": "L95",
       "_origin": "ast",
       "id": "src_storage_semantic_enrichment_modelschema",
-      "community": 51,
+      "community": 49,
       "norm_label": "modelschema"
     },
     {
@@ -5450,7 +5500,7 @@
       "source_location": "L104",
       "_origin": "ast",
       "id": "src_storage_semantic_enrichment_requestsemanticjson",
-      "community": 8,
+      "community": 49,
       "norm_label": "requestsemanticjson()"
     },
     {
@@ -5460,7 +5510,7 @@
       "source_location": "L123",
       "_origin": "ast",
       "id": "src_storage_semantic_enrichment_issemanticsubject",
-      "community": 51,
+      "community": 49,
       "norm_label": "issemanticsubject()"
     },
     {
@@ -5470,7 +5520,7 @@
       "source_location": "L127",
       "_origin": "ast",
       "id": "src_storage_semantic_enrichment_hasmeaningfulaiidentity",
-      "community": 51,
+      "community": 49,
       "norm_label": "hasmeaningfulaiidentity()"
     },
     {
@@ -5480,7 +5530,7 @@
       "source_location": "L138",
       "_origin": "ast",
       "id": "src_storage_semantic_enrichment_applymodelidentity",
-      "community": 51,
+      "community": 49,
       "norm_label": "applymodelidentity()"
     },
     {
@@ -5490,7 +5540,7 @@
       "source_location": "L160",
       "_origin": "ast",
       "id": "src_storage_semantic_enrichment_refinetypedexistingpath",
-      "community": 51,
+      "community": 49,
       "norm_label": "refinetypedexistingpath()"
     },
     {
@@ -5500,7 +5550,7 @@
       "source_location": "L172",
       "_origin": "ast",
       "id": "src_storage_semantic_enrichment_parsejson",
-      "community": 8,
+      "community": 49,
       "norm_label": "parsejson()"
     },
     {
@@ -5510,7 +5560,7 @@
       "source_location": "L177",
       "_origin": "ast",
       "id": "src_storage_semantic_enrichment_loadcanonicalcontext",
-      "community": 51,
+      "community": 49,
       "norm_label": "loadcanonicalcontext()"
     },
     {
@@ -5520,7 +5570,7 @@
       "source_location": "L211",
       "_origin": "ast",
       "id": "src_storage_semantic_enrichment_validatepath",
-      "community": 51,
+      "community": 49,
       "norm_label": "validatepath()"
     },
     {
@@ -5530,7 +5580,7 @@
       "source_location": "L235",
       "_origin": "ast",
       "id": "src_storage_semantic_enrichment_structuraldecision",
-      "community": 51,
+      "community": 49,
       "norm_label": "structuraldecision()"
     },
     {
@@ -5540,7 +5590,7 @@
       "source_location": "L266",
       "_origin": "ast",
       "id": "src_storage_semantic_enrichment_buildmodelsemanticdecision",
-      "community": 48,
+      "community": 49,
       "norm_label": "buildmodelsemanticdecision()"
     },
     {
@@ -5550,7 +5600,7 @@
       "source_location": "L424",
       "_origin": "ast",
       "id": "src_storage_semantic_enrichment_buildmodelsemanticproposals",
-      "community": 48,
+      "community": 49,
       "norm_label": "buildmodelsemanticproposals()"
     },
     {
@@ -5560,7 +5610,7 @@
       "source_location": "L429",
       "_origin": "ast",
       "id": "src_storage_semantic_enrichment_buildsemanticproposals",
-      "community": 51,
+      "community": 49,
       "norm_label": "buildsemanticproposals()"
     },
     {
@@ -5570,7 +5620,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_storage_semantic_reconciler",
-      "community": 1,
+      "community": 10,
       "norm_label": "semantic-reconciler.ts"
     },
     {
@@ -5580,7 +5630,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "src_storage_semantic_reconciler_reconciliationschema",
-      "community": 1,
+      "community": 10,
       "norm_label": "reconciliationschema"
     },
     {
@@ -5590,7 +5640,7 @@
       "source_location": "L24",
       "_origin": "ast",
       "id": "src_storage_semantic_reconciler_verificationschema",
-      "community": 1,
+      "community": 10,
       "norm_label": "verificationschema"
     },
     {
@@ -5600,7 +5650,7 @@
       "source_location": "L40",
       "_origin": "ast",
       "id": "src_storage_semantic_reconciler_reconciliationnode",
-      "community": 1,
+      "community": 10,
       "norm_label": "reconciliationnode"
     },
     {
@@ -5610,7 +5660,7 @@
       "source_location": "L52",
       "_origin": "ast",
       "id": "src_storage_semantic_reconciler_selectverifiedreconciliationactions",
-      "community": 1,
+      "community": 10,
       "norm_label": "selectverifiedreconciliationactions()"
     },
     {
@@ -5620,7 +5670,7 @@
       "source_location": "L86",
       "_origin": "ast",
       "id": "src_storage_semantic_reconciler_parsejson",
-      "community": 1,
+      "community": 10,
       "norm_label": "parsejson()"
     },
     {
@@ -5630,7 +5680,7 @@
       "source_location": "L91",
       "_origin": "ast",
       "id": "src_storage_semantic_reconciler_requeststructured",
-      "community": 1,
+      "community": 10,
       "norm_label": "requeststructured()"
     },
     {
@@ -5640,7 +5690,7 @@
       "source_location": "L115",
       "_origin": "ast",
       "id": "src_storage_semantic_reconciler_loadreconciliationnodes",
-      "community": 1,
+      "community": 10,
       "norm_label": "loadreconciliationnodes()"
     },
     {
@@ -5660,7 +5710,7 @@
       "source_location": "L145",
       "_origin": "ast",
       "id": "src_storage_semantic_reconciler_reconcilesemanticgraphunlocked",
-      "community": 1,
+      "community": 10,
       "norm_label": "reconcilesemanticgraphunlocked()"
     },
     {
@@ -5670,7 +5720,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_storage_semantic_repository",
-      "community": 10,
+      "community": 51,
       "norm_label": "semantic-repository.ts"
     },
     {
@@ -5680,7 +5730,7 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "src_storage_semantic_repository_queryable",
-      "community": 10,
+      "community": 51,
       "norm_label": "queryable"
     },
     {
@@ -5690,7 +5740,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "src_storage_semantic_repository_rule_eligible_entity_types",
-      "community": 10,
+      "community": 51,
       "norm_label": "rule_eligible_entity_types"
     },
     {
@@ -5700,7 +5750,7 @@
       "source_location": "L12",
       "_origin": "ast",
       "id": "src_storage_semantic_repository_semanticcandidate",
-      "community": 10,
+      "community": 51,
       "norm_label": "semanticcandidate"
     },
     {
@@ -5710,7 +5760,7 @@
       "source_location": "L32",
       "_origin": "ast",
       "id": "src_storage_semantic_repository_ensureontology",
-      "community": 10,
+      "community": 51,
       "norm_label": "ensureontology()"
     },
     {
@@ -5720,7 +5770,7 @@
       "source_location": "L51",
       "_origin": "ast",
       "id": "src_storage_semantic_repository_consolidateprovideridentity",
-      "community": 48,
+      "community": 1,
       "norm_label": "consolidateprovideridentity()"
     },
     {
@@ -5730,7 +5780,7 @@
       "source_location": "L74",
       "_origin": "ast",
       "id": "src_storage_semantic_repository_setimmediatehierarchyparent",
-      "community": 10,
+      "community": 54,
       "norm_label": "setimmediatehierarchyparent()"
     },
     {
@@ -5740,7 +5790,7 @@
       "source_location": "L102",
       "_origin": "ast",
       "id": "src_storage_semantic_repository_upserteventsemanticanchor",
-      "community": 10,
+      "community": 54,
       "norm_label": "upserteventsemanticanchor()"
     },
     {
@@ -5750,7 +5800,7 @@
       "source_location": "L115",
       "_origin": "ast",
       "id": "src_storage_semantic_repository_enqueuesemanticcandidate",
-      "community": 2,
+      "community": 54,
       "norm_label": "enqueuesemanticcandidate()"
     },
     {
@@ -5760,7 +5810,7 @@
       "source_location": "L127",
       "_origin": "ast",
       "id": "src_storage_semantic_repository_settlesatisfiedsemanticcandidates",
-      "community": 1,
+      "community": 10,
       "norm_label": "settlesatisfiedsemanticcandidates()"
     },
     {
@@ -5777,30 +5827,30 @@
       "label": "applySemanticRules()",
       "file_type": "code",
       "source_file": "src/storage/semantic-repository.ts",
-      "source_location": "L193",
+      "source_location": "L210",
       "_origin": "ast",
       "id": "src_storage_semantic_repository_applysemanticrules",
-      "community": 10,
+      "community": 54,
       "norm_label": "applysemanticrules()"
     },
     {
       "label": "listSemanticCandidates()",
       "file_type": "code",
       "source_file": "src/storage/semantic-repository.ts",
-      "source_location": "L230",
+      "source_location": "L247",
       "_origin": "ast",
       "id": "src_storage_semantic_repository_listsemanticcandidates",
-      "community": 55,
+      "community": 2,
       "norm_label": "listsemanticcandidates()"
     },
     {
       "label": "resolveSemanticCandidate()",
       "file_type": "code",
       "source_file": "src/storage/semantic-repository.ts",
-      "source_location": "L251",
+      "source_location": "L268",
       "_origin": "ast",
       "id": "src_storage_semantic_repository_resolvesemanticcandidate",
-      "community": 10,
+      "community": 54,
       "norm_label": "resolvesemanticcandidate()"
     },
     {
@@ -5810,157 +5860,157 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_storage_semantic_resolver",
-      "community": 2,
+      "community": 54,
       "norm_label": "semantic-resolver.ts"
     },
     {
       "label": "Queryable",
       "file_type": "code",
       "source_file": "src/storage/semantic-resolver.ts",
-      "source_location": "L24",
+      "source_location": "L25",
       "_origin": "ast",
       "id": "src_storage_semantic_resolver_queryable",
-      "community": 2,
+      "community": 54,
       "norm_label": "queryable"
     },
     {
       "label": "StoredEntity",
       "file_type": "code",
       "source_file": "src/storage/semantic-resolver.ts",
-      "source_location": "L25",
+      "source_location": "L26",
       "_origin": "ast",
       "id": "src_storage_semantic_resolver_storedentity",
-      "community": 2,
+      "community": 54,
       "norm_label": "storedentity"
     },
     {
       "label": "findCanonicalEntity()",
       "file_type": "code",
       "source_file": "src/storage/semantic-resolver.ts",
-      "source_location": "L27",
+      "source_location": "L28",
       "_origin": "ast",
       "id": "src_storage_semantic_resolver_findcanonicalentity",
-      "community": 2,
+      "community": 54,
       "norm_label": "findcanonicalentity()"
     },
     {
       "label": "findHierarchyRoot()",
       "file_type": "code",
       "source_file": "src/storage/semantic-resolver.ts",
-      "source_location": "L39",
+      "source_location": "L40",
       "_origin": "ast",
       "id": "src_storage_semantic_resolver_findhierarchyroot",
-      "community": 2,
+      "community": 54,
       "norm_label": "findhierarchyroot()"
     },
     {
       "label": "findImmediateHierarchyParent()",
       "file_type": "code",
       "source_file": "src/storage/semantic-resolver.ts",
-      "source_location": "L51",
+      "source_location": "L52",
       "_origin": "ast",
       "id": "src_storage_semantic_resolver_findimmediatehierarchyparent",
-      "community": 2,
+      "community": 54,
       "norm_label": "findimmediatehierarchyparent()"
     },
     {
       "label": "isHierarchyAncestor()",
       "file_type": "code",
       "source_file": "src/storage/semantic-resolver.ts",
-      "source_location": "L61",
+      "source_location": "L62",
       "_origin": "ast",
       "id": "src_storage_semantic_resolver_ishierarchyancestor",
-      "community": 2,
+      "community": 54,
       "norm_label": "ishierarchyancestor()"
     },
     {
       "label": "identityStem()",
       "file_type": "code",
       "source_file": "src/storage/semantic-resolver.ts",
-      "source_location": "L76",
+      "source_location": "L77",
       "_origin": "ast",
       "id": "src_storage_semantic_resolver_identitystem",
-      "community": 2,
+      "community": 54,
       "norm_label": "identitystem()"
     },
     {
       "label": "isSemanticRestatement()",
       "file_type": "code",
       "source_file": "src/storage/semantic-resolver.ts",
-      "source_location": "L80",
+      "source_location": "L81",
       "_origin": "ast",
       "id": "src_storage_semantic_resolver_issemanticrestatement",
-      "community": 2,
+      "community": 54,
       "norm_label": "issemanticrestatement()"
     },
     {
       "label": "recordDecision()",
       "file_type": "code",
       "source_file": "src/storage/semantic-resolver.ts",
-      "source_location": "L88",
+      "source_location": "L89",
       "_origin": "ast",
       "id": "src_storage_semantic_resolver_recorddecision",
-      "community": 2,
+      "community": 54,
       "norm_label": "recorddecision()"
     },
     {
       "label": "candidateAlternatives()",
       "file_type": "code",
       "source_file": "src/storage/semantic-resolver.ts",
-      "source_location": "L100",
+      "source_location": "L101",
       "_origin": "ast",
       "id": "src_storage_semantic_resolver_candidatealternatives",
-      "community": 2,
+      "community": 54,
       "norm_label": "candidatealternatives()"
     },
     {
       "label": "enqueuePathCandidate()",
       "file_type": "code",
       "source_file": "src/storage/semantic-resolver.ts",
-      "source_location": "L104",
+      "source_location": "L105",
       "_origin": "ast",
       "id": "src_storage_semantic_resolver_enqueuepathcandidate",
-      "community": 2,
+      "community": 54,
       "norm_label": "enqueuepathcandidate()"
     },
     {
       "label": "applyPath()",
       "file_type": "code",
       "source_file": "src/storage/semantic-resolver.ts",
-      "source_location": "L119",
+      "source_location": "L120",
       "_origin": "ast",
       "id": "src_storage_semantic_resolver_applypath",
-      "community": 2,
+      "community": 54,
       "norm_label": "applypath()"
     },
     {
       "label": "applyAssociations()",
       "file_type": "code",
       "source_file": "src/storage/semantic-resolver.ts",
-      "source_location": "L288",
+      "source_location": "L289",
       "_origin": "ast",
       "id": "src_storage_semantic_resolver_applyassociations",
-      "community": 2,
+      "community": 54,
       "norm_label": "applyassociations()"
     },
     {
       "label": "persistSemanticDecision()",
       "file_type": "code",
       "source_file": "src/storage/semantic-resolver.ts",
-      "source_location": "L312",
+      "source_location": "L313",
       "_origin": "ast",
       "id": "src_storage_semantic_resolver_persistsemanticdecision",
-      "community": 2,
+      "community": 54,
       "norm_label": "persistsemanticdecision()"
     },
     {
       "label": "resolveEventSemantics()",
       "file_type": "code",
       "source_file": "src/storage/semantic-resolver.ts",
-      "source_location": "L377",
+      "source_location": "L382",
       "_origin": "ast",
       "id": "src_storage_semantic_resolver_resolveeventsemantics",
-      "community": 48,
+      "community": 1,
       "norm_label": "resolveeventsemantics()"
     },
     {
@@ -5970,7 +6020,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "tests_api_contracts_test",
-      "community": 7,
+      "community": 53,
       "norm_label": "api-contracts.test.ts"
     },
     {
@@ -5980,7 +6030,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "tests_api_contracts_test_createapp",
-      "community": 7,
+      "community": 53,
       "norm_label": "createapp()"
     },
     {
@@ -6020,7 +6070,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "tests_e2e_test",
-      "community": 7,
+      "community": 53,
       "norm_label": "e2e.test.ts"
     },
     {
@@ -6030,7 +6080,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "tests_e2e_test_createapp",
-      "community": 7,
+      "community": 53,
       "norm_label": "createapp()"
     },
     {
@@ -10091,7 +10141,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "package.json",
-      "source_location": "L28",
+      "source_location": "L29",
       "weight": 1.0,
       "source": "package",
       "target": "package_dependencies",
@@ -10101,7 +10151,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "package.json",
-      "source_location": "L33",
+      "source_location": "L34",
       "weight": 1.0,
       "source": "package",
       "target": "package_devdependencies",
@@ -10161,7 +10211,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "package.json",
-      "source_location": "L21",
+      "source_location": "L22",
       "weight": 1.0,
       "source": "package_scripts",
       "target": "package_scripts_audit_semantic_entities",
@@ -10171,10 +10221,20 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "package.json",
-      "source_location": "L20",
+      "source_location": "L21",
       "weight": 1.0,
       "source": "package_scripts",
       "target": "package_scripts_audit_semantic_graph",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "package.json",
+      "source_location": "L16",
+      "weight": 1.0,
+      "source": "package_scripts",
+      "target": "package_scripts_backfill_event_evidence_parents",
       "confidence_score": 1.0
     },
     {
@@ -10231,7 +10291,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "package.json",
-      "source_location": "L24",
+      "source_location": "L25",
       "weight": 1.0,
       "source": "package_scripts",
       "target": "package_scripts_cleanup_test_data",
@@ -10251,7 +10311,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "package.json",
-      "source_location": "L23",
+      "source_location": "L24",
       "weight": 1.0,
       "source": "package_scripts",
       "target": "package_scripts_inspect_semantic_proposals",
@@ -10281,7 +10341,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "package.json",
-      "source_location": "L18",
+      "source_location": "L19",
       "weight": 1.0,
       "source": "package_scripts",
       "target": "package_scripts_normalize_hierarchy",
@@ -10291,7 +10351,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "package.json",
-      "source_location": "L17",
+      "source_location": "L18",
       "weight": 1.0,
       "source": "package_scripts",
       "target": "package_scripts_normalize_providers",
@@ -10301,7 +10361,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "package.json",
-      "source_location": "L22",
+      "source_location": "L23",
       "weight": 1.0,
       "source": "package_scripts",
       "target": "package_scripts_probe_deepseek",
@@ -10311,7 +10371,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "package.json",
-      "source_location": "L19",
+      "source_location": "L20",
       "weight": 1.0,
       "source": "package_scripts",
       "target": "package_scripts_reconcile_semantic_governance",
@@ -10321,7 +10381,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "package.json",
-      "source_location": "L16",
+      "source_location": "L17",
       "weight": 1.0,
       "source": "package_scripts",
       "target": "package_scripts_reprocess_semantic_pending",
@@ -10331,7 +10391,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "package.json",
-      "source_location": "L25",
+      "source_location": "L26",
       "weight": 1.0,
       "source": "package_scripts",
       "target": "package_scripts_smoke_remote",
@@ -10351,7 +10411,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "package.json",
-      "source_location": "L26",
+      "source_location": "L27",
       "weight": 1.0,
       "source": "package_scripts",
       "target": "package_scripts_test",
@@ -10361,7 +10421,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "package.json",
-      "source_location": "L29",
+      "source_location": "L30",
       "weight": 1.0,
       "source": "package_dependencies",
       "target": "package_dependencies_fastify",
@@ -10371,7 +10431,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "package.json",
-      "source_location": "L30",
+      "source_location": "L31",
       "weight": 1.0,
       "source": "package_dependencies",
       "target": "package_dependencies_pg",
@@ -10381,7 +10441,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "package.json",
-      "source_location": "L31",
+      "source_location": "L32",
       "weight": 1.0,
       "source": "package_dependencies",
       "target": "package_dependencies_zod",
@@ -10391,7 +10451,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "package.json",
-      "source_location": "L36",
+      "source_location": "L37",
       "weight": 1.0,
       "source": "package_devdependencies",
       "target": "package_devdependencies_tsx",
@@ -10401,7 +10461,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "package.json",
-      "source_location": "L34",
+      "source_location": "L35",
       "weight": 1.0,
       "source": "package_devdependencies",
       "target": "package_devdependencies_types_node",
@@ -10411,7 +10471,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "package.json",
-      "source_location": "L35",
+      "source_location": "L36",
       "weight": 1.0,
       "source": "package_devdependencies",
       "target": "package_devdependencies_types_pg",
@@ -10421,7 +10481,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "package.json",
-      "source_location": "L37",
+      "source_location": "L38",
       "weight": 1.0,
       "source": "package_devdependencies",
       "target": "package_devdependencies_typescript",
@@ -12584,7 +12644,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/storage/semantic-repository.ts",
-      "source_location": "L274",
+      "source_location": "L291",
       "weight": 1.0,
       "source": "src_storage_semantic_repository_resolvesemanticcandidate",
       "target": "src_domain_entities_normalizeentityvalue"
@@ -12605,7 +12665,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/semantic-resolver.ts",
-      "source_location": "L227",
+      "source_location": "L228",
       "weight": 1.0,
       "source": "src_storage_semantic_resolver_applypath",
       "target": "src_domain_entities_normalizeentityvalue",
@@ -12616,7 +12676,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/semantic-resolver.ts",
-      "source_location": "L109",
+      "source_location": "L110",
       "weight": 1.0,
       "source": "src_storage_semantic_resolver_enqueuepathcandidate",
       "target": "src_domain_entities_normalizeentityvalue",
@@ -12627,7 +12687,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/semantic-resolver.ts",
-      "source_location": "L35",
+      "source_location": "L36",
       "weight": 1.0,
       "source": "src_storage_semantic_resolver_findcanonicalentity",
       "target": "src_domain_entities_normalizeentityvalue",
@@ -12638,7 +12698,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/semantic-resolver.ts",
-      "source_location": "L77",
+      "source_location": "L78",
       "weight": 1.0,
       "source": "src_storage_semantic_resolver_identitystem",
       "target": "src_domain_entities_normalizeentityvalue",
@@ -12650,7 +12710,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/storage/semantic-resolver.ts",
-      "source_location": "L81",
+      "source_location": "L82",
       "weight": 1.0,
       "source": "src_storage_semantic_resolver_issemanticrestatement",
       "target": "src_domain_entities_normalizeentityvalue"
@@ -12661,7 +12721,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/storage/semantic-resolver.ts",
-      "source_location": "L345",
+      "source_location": "L350",
       "weight": 1.0,
       "source": "src_storage_semantic_resolver_persistsemanticdecision",
       "target": "src_domain_entities_normalizeentityvalue"
@@ -13594,7 +13654,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/financial-transaction-repository.ts",
-      "source_location": "L60",
+      "source_location": "L62",
       "weight": 1.0,
       "source": "src_storage_financial_transaction_repository_buildmatchclause",
       "target": "src_domain_financial_transactions_candidatewindowbounds",
@@ -13605,7 +13665,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/financial-transaction-repository.ts",
-      "source_location": "L491",
+      "source_location": "L609",
       "weight": 1.0,
       "source": "src_storage_financial_transaction_repository_createfinancialtransaction",
       "target": "src_domain_financial_transactions_candidatewindowbounds",
@@ -13616,7 +13676,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/financial-transaction-repository.ts",
-      "source_location": "L297",
+      "source_location": "L415",
       "weight": 1.0,
       "source": "src_storage_financial_transaction_repository_findmatchingfinancialtransaction",
       "target": "src_domain_financial_transactions_candidatewindowbounds",
@@ -13627,7 +13687,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/financial-transaction-repository.ts",
-      "source_location": "L427",
+      "source_location": "L545",
       "weight": 1.0,
       "source": "src_storage_financial_transaction_repository_updatefinancialtransaction",
       "target": "src_domain_financial_transactions_candidatewindowbounds",
@@ -15106,7 +15166,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/routes/financial-transactions.ts",
-      "source_location": "L26",
+      "source_location": "L28",
       "weight": 1.0,
       "source": "src_routes_financial_transactions",
       "target": "src_routes_financial_transactions_accountschema",
@@ -15116,7 +15176,17 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/routes/financial-transactions.ts",
-      "source_location": "L18",
+      "source_location": "L35",
+      "weight": 1.0,
+      "source": "src_routes_financial_transactions",
+      "target": "src_routes_financial_transactions_adjustmentschema",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/routes/financial-transactions.ts",
+      "source_location": "L20",
       "weight": 1.0,
       "source": "src_routes_financial_transactions",
       "target": "src_routes_financial_transactions_contextschema",
@@ -15126,7 +15196,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/routes/financial-transactions.ts",
-      "source_location": "L12",
+      "source_location": "L14",
       "weight": 1.0,
       "source": "src_routes_financial_transactions",
       "target": "src_routes_financial_transactions_listqueryschema",
@@ -15136,7 +15206,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/routes/financial-transactions.ts",
-      "source_location": "L33",
+      "source_location": "L40",
       "weight": 1.0,
       "source": "src_routes_financial_transactions",
       "target": "src_routes_financial_transactions_registerfinancialtransactionroutes",
@@ -15151,6 +15221,17 @@
       "weight": 1.0,
       "source": "src_routes_financial_transactions",
       "target": "src_storage_financial_transaction_repository",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/routes/financial-transactions.ts",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "src_routes_financial_transactions",
+      "target": "src_storage_financial_transaction_repository_createbalanceadjustment",
       "confidence_score": 1.0
     },
     {
@@ -15195,6 +15276,17 @@
       "weight": 1.0,
       "source": "src_routes_financial_transactions",
       "target": "src_storage_financial_transaction_repository_loadfinancialtransactionbyid",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/routes/financial-transactions.ts",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "src_routes_financial_transactions",
+      "target": "src_storage_financial_transaction_repository_updatefinancialaccount",
       "confidence_score": 1.0
     },
     {
@@ -15895,6 +15987,50 @@
       "confidence_score": 1.0
     },
     {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/scripts/backfill-event-evidence-parents.ts",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "src_scripts_backfill_event_evidence_parents",
+      "target": "src_storage_postgres",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/scripts/backfill-event-evidence-parents.ts",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "src_scripts_backfill_event_evidence_parents",
+      "target": "src_storage_postgres_pool",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/scripts/backfill-event-evidence-parents.ts",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "src_scripts_backfill_event_evidence_parents",
+      "target": "src_storage_semantic_repository",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/scripts/backfill-event-evidence-parents.ts",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "src_scripts_backfill_event_evidence_parents",
+      "target": "src_storage_semantic_repository_rooteventevidencefromanchors",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/scripts/backfill-financial-merchant-links.ts",
@@ -15953,7 +16089,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/scripts/backfill-financial-merchant-links.ts",
-      "source_location": "L14",
+      "source_location": "L16",
       "weight": 1.0,
       "source": "src_scripts_backfill_financial_merchant_links_main",
       "target": "src_storage_entity_repository_findcanonicalmerchantbyvalue",
@@ -19240,7 +19376,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/semantic-repository.ts",
-      "source_location": "L266",
+      "source_location": "L283",
       "weight": 1.0,
       "source": "src_storage_semantic_repository_resolvesemanticcandidate",
       "target": "src_storage_entity_repository",
@@ -19406,7 +19542,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/storage/graph-repository.ts",
-      "source_location": "L297",
+      "source_location": "L350",
       "weight": 1.0,
       "source": "src_storage_graph_repository_getentitygraph",
       "target": "src_storage_entity_repository_loadcanonicalentitybyid"
@@ -19483,7 +19619,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/storage/semantic-repository.ts",
-      "source_location": "L206",
+      "source_location": "L223",
       "weight": 1.0,
       "source": "src_storage_semantic_repository_applysemanticrules",
       "target": "src_storage_entity_repository_upsertentity"
@@ -19516,7 +19652,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/storage/semantic-repository.ts",
-      "source_location": "L260",
+      "source_location": "L277",
       "weight": 1.0,
       "source": "src_storage_semantic_repository_resolvesemanticcandidate",
       "target": "src_storage_entity_repository_upsertentity"
@@ -19537,7 +19673,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/semantic-resolver.ts",
-      "source_location": "L120",
+      "source_location": "L121",
       "weight": 1.0,
       "source": "src_storage_semantic_resolver_applypath",
       "target": "src_storage_entity_repository_upsertentity",
@@ -19549,7 +19685,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/storage/semantic-resolver.ts",
-      "source_location": "L334",
+      "source_location": "L339",
       "weight": 1.0,
       "source": "src_storage_semantic_resolver_persistsemanticdecision",
       "target": "src_storage_entity_repository_upsertentity"
@@ -19615,7 +19751,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/storage/semantic-repository.ts",
-      "source_location": "L267",
+      "source_location": "L284",
       "weight": 1.0,
       "source": "src_storage_semantic_repository_resolvesemanticcandidate",
       "target": "src_storage_entity_repository_mergeentities"
@@ -19624,7 +19760,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/event-repository.ts",
-      "source_location": "L541",
+      "source_location": "L543",
       "weight": 1.0,
       "source": "src_storage_event_repository",
       "target": "src_storage_event_repository_countknowledgemetrics",
@@ -19674,7 +19810,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/event-repository.ts",
-      "source_location": "L332",
+      "source_location": "L334",
       "weight": 1.0,
       "source": "src_storage_event_repository",
       "target": "src_storage_event_repository_linkevententity",
@@ -19684,7 +19820,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/event-repository.ts",
-      "source_location": "L463",
+      "source_location": "L465",
       "weight": 1.0,
       "source": "src_storage_event_repository",
       "target": "src_storage_event_repository_liststoredevents",
@@ -19704,7 +19840,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/event-repository.ts",
-      "source_location": "L356",
+      "source_location": "L358",
       "weight": 1.0,
       "source": "src_storage_event_repository",
       "target": "src_storage_event_repository_loadstoredeventbyid",
@@ -19714,7 +19850,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/event-repository.ts",
-      "source_location": "L439",
+      "source_location": "L441",
       "weight": 1.0,
       "source": "src_storage_event_repository",
       "target": "src_storage_event_repository_loadstoredeventbylookup",
@@ -19994,7 +20130,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/event-repository.ts",
-      "source_location": "L460",
+      "source_location": "L462",
       "weight": 1.0,
       "source": "src_storage_event_repository_loadstoredeventbylookup",
       "target": "src_storage_event_repository_loadstoredeventbyid",
@@ -20727,7 +20863,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/financial-transaction-repository.ts",
-      "source_location": "L59",
+      "source_location": "L61",
       "weight": 1.0,
       "source": "src_storage_financial_transaction_repository",
       "target": "src_storage_financial_transaction_repository_buildmatchclause",
@@ -20737,7 +20873,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/financial-transaction-repository.ts",
-      "source_location": "L103",
+      "source_location": "L105",
       "weight": 1.0,
       "source": "src_storage_financial_transaction_repository",
       "target": "src_storage_financial_transaction_repository_buildtransactionprojectionsql",
@@ -20747,7 +20883,17 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/financial-transaction-repository.ts",
-      "source_location": "L160",
+      "source_location": "L231",
+      "weight": 1.0,
+      "source": "src_storage_financial_transaction_repository",
+      "target": "src_storage_financial_transaction_repository_createbalanceadjustment",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/storage/financial-transaction-repository.ts",
+      "source_location": "L188",
       "weight": 1.0,
       "source": "src_storage_financial_transaction_repository",
       "target": "src_storage_financial_transaction_repository_createfinancialaccount",
@@ -20757,7 +20903,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/financial-transaction-repository.ts",
-      "source_location": "L485",
+      "source_location": "L603",
       "weight": 1.0,
       "source": "src_storage_financial_transaction_repository",
       "target": "src_storage_financial_transaction_repository_createfinancialtransaction",
@@ -20767,7 +20913,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/financial-transaction-repository.ts",
-      "source_location": "L593",
+      "source_location": "L711",
       "weight": 1.0,
       "source": "src_storage_financial_transaction_repository",
       "target": "src_storage_financial_transaction_repository_deletefinancialtransactionsforevent",
@@ -20777,7 +20923,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/financial-transaction-repository.ts",
-      "source_location": "L144",
+      "source_location": "L148",
       "weight": 1.0,
       "source": "src_storage_financial_transaction_repository",
       "target": "src_storage_financial_transaction_repository_financialaccountrecord",
@@ -20787,7 +20933,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/financial-transaction-repository.ts",
-      "source_location": "L51",
+      "source_location": "L53",
       "weight": 1.0,
       "source": "src_storage_financial_transaction_repository",
       "target": "src_storage_financial_transaction_repository_financialtransactioncandidatematch",
@@ -20817,7 +20963,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/financial-transaction-repository.ts",
-      "source_location": "L293",
+      "source_location": "L411",
       "weight": 1.0,
       "source": "src_storage_financial_transaction_repository",
       "target": "src_storage_financial_transaction_repository_findmatchingfinancialtransaction",
@@ -20827,7 +20973,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/financial-transaction-repository.ts",
-      "source_location": "L553",
+      "source_location": "L671",
       "weight": 1.0,
       "source": "src_storage_financial_transaction_repository",
       "target": "src_storage_financial_transaction_repository_linkfinancialtransactionforevent",
@@ -20837,7 +20983,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/financial-transaction-repository.ts",
-      "source_location": "L153",
+      "source_location": "L158",
       "weight": 1.0,
       "source": "src_storage_financial_transaction_repository",
       "target": "src_storage_financial_transaction_repository_listfinancialaccounts",
@@ -20847,7 +20993,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/financial-transaction-repository.ts",
-      "source_location": "L256",
+      "source_location": "L374",
       "weight": 1.0,
       "source": "src_storage_financial_transaction_repository",
       "target": "src_storage_financial_transaction_repository_listfinancialtransactions",
@@ -20857,7 +21003,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/financial-transaction-repository.ts",
-      "source_location": "L235",
+      "source_location": "L353",
       "weight": 1.0,
       "source": "src_storage_financial_transaction_repository",
       "target": "src_storage_financial_transaction_repository_loadfinancialtransactionbyid",
@@ -20867,7 +21013,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/financial-transaction-repository.ts",
-      "source_location": "L208",
+      "source_location": "L326",
       "weight": 1.0,
       "source": "src_storage_financial_transaction_repository",
       "target": "src_storage_financial_transaction_repository_loadfinancialtransactionevidence",
@@ -20877,7 +21023,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/financial-transaction-repository.ts",
-      "source_location": "L55",
+      "source_location": "L57",
       "weight": 1.0,
       "source": "src_storage_financial_transaction_repository",
       "target": "src_storage_financial_transaction_repository_normalizecurrency",
@@ -20897,7 +21043,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/financial-transaction-repository.ts",
-      "source_location": "L361",
+      "source_location": "L479",
       "weight": 1.0,
       "source": "src_storage_financial_transaction_repository",
       "target": "src_storage_financial_transaction_repository_storefinancialtransactionevidence",
@@ -20907,7 +21053,17 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/financial-transaction-repository.ts",
-      "source_location": "L418",
+      "source_location": "L200",
+      "weight": 1.0,
+      "source": "src_storage_financial_transaction_repository",
+      "target": "src_storage_financial_transaction_repository_updatefinancialaccount",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/storage/financial-transaction-repository.ts",
+      "source_location": "L536",
       "weight": 1.0,
       "source": "src_storage_financial_transaction_repository",
       "target": "src_storage_financial_transaction_repository_updatefinancialtransaction",
@@ -20917,7 +21073,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/financial-transaction-repository.ts",
-      "source_location": "L172",
+      "source_location": "L290",
       "weight": 1.0,
       "source": "src_storage_financial_transaction_repository",
       "target": "src_storage_financial_transaction_repository_updatefinancialtransactioncontext",
@@ -20946,11 +21102,22 @@
       "confidence_score": 1.0
     },
     {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/storage/financial-transaction-repository.ts",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "src_storage_financial_transaction_repository",
+      "target": "src_storage_postgres_withtransaction",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/financial-transaction-repository.ts",
-      "source_location": "L66",
+      "source_location": "L68",
       "weight": 1.0,
       "source": "src_storage_financial_transaction_repository_buildmatchclause",
       "target": "src_storage_financial_transaction_repository_normalizecurrency",
@@ -20961,7 +21128,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/financial-transaction-repository.ts",
-      "source_location": "L536",
+      "source_location": "L654",
       "weight": 1.0,
       "source": "src_storage_financial_transaction_repository_createfinancialtransaction",
       "target": "src_storage_financial_transaction_repository_normalizecurrency",
@@ -20972,7 +21139,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/financial-transaction-repository.ts",
-      "source_location": "L301",
+      "source_location": "L419",
       "weight": 1.0,
       "source": "src_storage_financial_transaction_repository_findmatchingfinancialtransaction",
       "target": "src_storage_financial_transaction_repository_normalizecurrency",
@@ -20983,7 +21150,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/financial-transaction-repository.ts",
-      "source_location": "L408",
+      "source_location": "L526",
       "weight": 1.0,
       "source": "src_storage_financial_transaction_repository_storefinancialtransactionevidence",
       "target": "src_storage_financial_transaction_repository_normalizecurrency",
@@ -20994,7 +21161,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/financial-transaction-repository.ts",
-      "source_location": "L275",
+      "source_location": "L393",
       "weight": 1.0,
       "source": "src_storage_financial_transaction_repository_listfinancialtransactions",
       "target": "src_storage_financial_transaction_repository_buildtransactionprojectionsql",
@@ -21005,7 +21172,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/financial-transaction-repository.ts",
-      "source_location": "L238",
+      "source_location": "L356",
       "weight": 1.0,
       "source": "src_storage_financial_transaction_repository_loadfinancialtransactionbyid",
       "target": "src_storage_financial_transaction_repository_buildtransactionprojectionsql",
@@ -21016,7 +21183,29 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/financial-transaction-repository.ts",
-      "source_location": "L205",
+      "source_location": "L228",
+      "weight": 1.0,
+      "source": "src_storage_financial_transaction_repository_updatefinancialaccount",
+      "target": "src_storage_financial_transaction_repository_listfinancialaccounts",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/storage/financial-transaction-repository.ts",
+      "source_location": "L232",
+      "weight": 1.0,
+      "source": "src_storage_financial_transaction_repository_createbalanceadjustment",
+      "target": "src_storage_postgres_withtransaction"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/storage/financial-transaction-repository.ts",
+      "source_location": "L323",
       "weight": 1.0,
       "source": "src_storage_financial_transaction_repository_updatefinancialtransactioncontext",
       "target": "src_storage_financial_transaction_repository_loadfinancialtransactionbyid",
@@ -21027,7 +21216,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/financial-transaction-repository.ts",
-      "source_location": "L252",
+      "source_location": "L370",
       "weight": 1.0,
       "source": "src_storage_financial_transaction_repository_loadfinancialtransactionbyid",
       "target": "src_storage_financial_transaction_repository_loadfinancialtransactionevidence",
@@ -21038,7 +21227,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/financial-transaction-repository.ts",
-      "source_location": "L557",
+      "source_location": "L675",
       "weight": 1.0,
       "source": "src_storage_financial_transaction_repository_linkfinancialtransactionforevent",
       "target": "src_storage_financial_transaction_repository_findmatchingfinancialtransaction",
@@ -21049,7 +21238,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/financial-transaction-repository.ts",
-      "source_location": "L578",
+      "source_location": "L696",
       "weight": 1.0,
       "source": "src_storage_financial_transaction_repository_linkfinancialtransactionforevent",
       "target": "src_storage_financial_transaction_repository_storefinancialtransactionevidence",
@@ -21060,7 +21249,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/financial-transaction-repository.ts",
-      "source_location": "L566",
+      "source_location": "L684",
       "weight": 1.0,
       "source": "src_storage_financial_transaction_repository_linkfinancialtransactionforevent",
       "target": "src_storage_financial_transaction_repository_updatefinancialtransaction",
@@ -21071,7 +21260,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/financial-transaction-repository.ts",
-      "source_location": "L572",
+      "source_location": "L690",
       "weight": 1.0,
       "source": "src_storage_financial_transaction_repository_linkfinancialtransactionforevent",
       "target": "src_storage_financial_transaction_repository_createfinancialtransaction",
@@ -21187,7 +21376,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/storage/graph-repository.ts",
-      "source_location": "L302",
+      "source_location": "L355",
       "weight": 1.0,
       "source": "src_storage_graph_repository_getentitygraph",
       "target": "src_storage_graph_cache_buildgraphtraversalcachekey"
@@ -21209,7 +21398,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/storage/graph-repository.ts",
-      "source_location": "L303",
+      "source_location": "L356",
       "weight": 1.0,
       "source": "src_storage_graph_repository_getentitygraph",
       "target": "src_storage_graph_cache_readgraphtraversalcache"
@@ -21231,7 +21420,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/storage/graph-repository.ts",
-      "source_location": "L480",
+      "source_location": "L533",
       "weight": 1.0,
       "source": "src_storage_graph_repository_getentitygraph",
       "target": "src_storage_graph_cache_writegraphtraversalcache"
@@ -21322,7 +21511,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/graph-repository.ts",
-      "source_location": "L296",
+      "source_location": "L349",
       "weight": 1.0,
       "source": "src_storage_graph_repository",
       "target": "src_storage_graph_repository_getentitygraph",
@@ -21405,7 +21594,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/graph-repository.ts",
-      "source_location": "L477",
+      "source_location": "L530",
       "weight": 1.0,
       "source": "src_storage_graph_repository_getentitygraph",
       "target": "src_storage_graph_repository_buildgraphtraversalpaths",
@@ -21438,7 +21627,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/graph-repository.ts",
-      "source_location": "L270",
+      "source_location": "L323",
       "weight": 1.0,
       "source": "src_storage_graph_repository_getexploregraph",
       "target": "src_storage_graph_repository_assigncommunities",
@@ -21687,7 +21876,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/semantic-resolver.ts",
-      "source_location": "L22",
+      "source_location": "L23",
       "weight": 1.0,
       "source": "src_storage_semantic_resolver",
       "target": "src_storage_postgres",
@@ -21753,7 +21942,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/semantic-resolver.ts",
-      "source_location": "L22",
+      "source_location": "L23",
       "weight": 1.0,
       "source": "src_storage_semantic_resolver",
       "target": "src_storage_postgres_pool",
@@ -21903,7 +22092,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/storage/semantic-repository.ts",
-      "source_location": "L216",
+      "source_location": "L233",
       "weight": 1.0,
       "source": "src_storage_semantic_repository_applysemanticrules",
       "target": "src_storage_relation_repository_upsertrelation"
@@ -21925,7 +22114,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/storage/semantic-repository.ts",
-      "source_location": "L269",
+      "source_location": "L286",
       "weight": 1.0,
       "source": "src_storage_semantic_repository_resolvesemanticcandidate",
       "target": "src_storage_relation_repository_upsertrelation"
@@ -21957,7 +22146,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/semantic-resolver.ts",
-      "source_location": "L307",
+      "source_location": "L308",
       "weight": 1.0,
       "source": "src_storage_semantic_resolver_applyassociations",
       "target": "src_storage_relation_repository_upsertrelation",
@@ -21980,7 +22169,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/storage/semantic-repository.ts",
-      "source_location": "L221",
+      "source_location": "L238",
       "weight": 1.0,
       "source": "src_storage_semantic_repository_applysemanticrules",
       "target": "src_storage_relation_repository_linkeventrelation"
@@ -21991,7 +22180,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/storage/semantic-repository.ts",
-      "source_location": "L270",
+      "source_location": "L287",
       "weight": 1.0,
       "source": "src_storage_semantic_repository_resolvesemanticcandidate",
       "target": "src_storage_relation_repository_linkeventrelation"
@@ -22002,7 +22191,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/storage/semantic-repository.ts",
-      "source_location": "L187",
+      "source_location": "L204",
       "weight": 1.0,
       "source": "src_storage_semantic_repository_rooteventevidencefromanchors",
       "target": "src_storage_relation_repository_linkeventrelation"
@@ -22023,7 +22212,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/semantic-resolver.ts",
-      "source_location": "L308",
+      "source_location": "L309",
       "weight": 1.0,
       "source": "src_storage_semantic_resolver_applyassociations",
       "target": "src_storage_relation_repository_linkeventrelation",
@@ -22034,7 +22223,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/semantic-resolver.ts",
-      "source_location": "L185",
+      "source_location": "L186",
       "weight": 1.0,
       "source": "src_storage_semantic_resolver_applypath",
       "target": "src_storage_relation_repository_linkeventrelation",
@@ -22503,7 +22692,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/storage/semantic-resolver.ts",
-      "source_location": "L378",
+      "source_location": "L383",
       "weight": 1.0,
       "source": "src_storage_semantic_resolver_resolveeventsemantics",
       "target": "src_storage_semantic_enrichment_buildmodelsemanticdecision"
@@ -22690,7 +22879,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/semantic-repository.ts",
-      "source_location": "L193",
+      "source_location": "L210",
       "weight": 1.0,
       "source": "src_storage_semantic_repository",
       "target": "src_storage_semantic_repository_applysemanticrules",
@@ -22730,7 +22919,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/semantic-repository.ts",
-      "source_location": "L230",
+      "source_location": "L247",
       "weight": 1.0,
       "source": "src_storage_semantic_repository",
       "target": "src_storage_semantic_repository_listsemanticcandidates",
@@ -22750,7 +22939,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/semantic-repository.ts",
-      "source_location": "L251",
+      "source_location": "L268",
       "weight": 1.0,
       "source": "src_storage_semantic_repository",
       "target": "src_storage_semantic_repository_resolvesemanticcandidate",
@@ -22832,7 +23021,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/semantic-repository.ts",
-      "source_location": "L210",
+      "source_location": "L227",
       "weight": 1.0,
       "source": "src_storage_semantic_repository_applysemanticrules",
       "target": "src_storage_semantic_repository_setimmediatehierarchyparent",
@@ -22843,7 +23032,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/semantic-repository.ts",
-      "source_location": "L275",
+      "source_location": "L292",
       "weight": 1.0,
       "source": "src_storage_semantic_repository_resolvesemanticcandidate",
       "target": "src_storage_semantic_repository_setimmediatehierarchyparent",
@@ -22854,7 +23043,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/semantic-repository.ts",
-      "source_location": "L181",
+      "source_location": "L198",
       "weight": 1.0,
       "source": "src_storage_semantic_repository_rooteventevidencefromanchors",
       "target": "src_storage_semantic_repository_setimmediatehierarchyparent",
@@ -22876,7 +23065,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/semantic-resolver.ts",
-      "source_location": "L184",
+      "source_location": "L185",
       "weight": 1.0,
       "source": "src_storage_semantic_resolver_applypath",
       "target": "src_storage_semantic_repository_setimmediatehierarchyparent",
@@ -22887,7 +23076,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/semantic-repository.ts",
-      "source_location": "L287",
+      "source_location": "L304",
       "weight": 1.0,
       "source": "src_storage_semantic_repository_resolvesemanticcandidate",
       "target": "src_storage_semantic_repository_upserteventsemanticanchor",
@@ -22909,7 +23098,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/semantic-resolver.ts",
-      "source_location": "L140",
+      "source_location": "L141",
       "weight": 1.0,
       "source": "src_storage_semantic_resolver_applypath",
       "target": "src_storage_semantic_repository_upserteventsemanticanchor",
@@ -22931,7 +23120,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/semantic-resolver.ts",
-      "source_location": "L298",
+      "source_location": "L299",
       "weight": 1.0,
       "source": "src_storage_semantic_resolver_applyassociations",
       "target": "src_storage_semantic_repository_enqueuesemanticcandidate",
@@ -22942,7 +23131,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/semantic-resolver.ts",
-      "source_location": "L105",
+      "source_location": "L106",
       "weight": 1.0,
       "source": "src_storage_semantic_resolver_enqueuepathcandidate",
       "target": "src_storage_semantic_repository_enqueuesemanticcandidate",
@@ -22954,7 +23143,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/storage/semantic-resolver.ts",
-      "source_location": "L342",
+      "source_location": "L347",
       "weight": 1.0,
       "source": "src_storage_semantic_resolver_persistsemanticdecision",
       "target": "src_storage_semantic_repository_enqueuesemanticcandidate"
@@ -22976,10 +23165,32 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/storage/semantic-resolver.ts",
-      "source_location": "L354",
+      "source_location": "L359",
       "weight": 1.0,
       "source": "src_storage_semantic_resolver_persistsemanticdecision",
       "target": "src_storage_semantic_repository_settlesatisfiedsemanticcandidates"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/storage/semantic-resolver.ts",
+      "source_location": "L15",
+      "weight": 1.0,
+      "source": "src_storage_semantic_resolver",
+      "target": "src_storage_semantic_repository_rooteventevidencefromanchors",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/storage/semantic-resolver.ts",
+      "source_location": "L334",
+      "weight": 1.0,
+      "source": "src_storage_semantic_resolver_persistsemanticdecision",
+      "target": "src_storage_semantic_repository_rooteventevidencefromanchors"
     },
     {
       "relation": "imports",
@@ -22998,7 +23209,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/storage/semantic-resolver.ts",
-      "source_location": "L327",
+      "source_location": "L328",
       "weight": 1.0,
       "source": "src_storage_semantic_resolver_persistsemanticdecision",
       "target": "src_storage_semantic_repository_applysemanticrules"
@@ -23007,7 +23218,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/semantic-resolver.ts",
-      "source_location": "L288",
+      "source_location": "L289",
       "weight": 1.0,
       "source": "src_storage_semantic_resolver",
       "target": "src_storage_semantic_resolver_applyassociations",
@@ -23017,7 +23228,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/semantic-resolver.ts",
-      "source_location": "L119",
+      "source_location": "L120",
       "weight": 1.0,
       "source": "src_storage_semantic_resolver",
       "target": "src_storage_semantic_resolver_applypath",
@@ -23027,7 +23238,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/semantic-resolver.ts",
-      "source_location": "L100",
+      "source_location": "L101",
       "weight": 1.0,
       "source": "src_storage_semantic_resolver",
       "target": "src_storage_semantic_resolver_candidatealternatives",
@@ -23037,7 +23248,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/semantic-resolver.ts",
-      "source_location": "L104",
+      "source_location": "L105",
       "weight": 1.0,
       "source": "src_storage_semantic_resolver",
       "target": "src_storage_semantic_resolver_enqueuepathcandidate",
@@ -23047,7 +23258,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/semantic-resolver.ts",
-      "source_location": "L27",
+      "source_location": "L28",
       "weight": 1.0,
       "source": "src_storage_semantic_resolver",
       "target": "src_storage_semantic_resolver_findcanonicalentity",
@@ -23057,7 +23268,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/semantic-resolver.ts",
-      "source_location": "L39",
+      "source_location": "L40",
       "weight": 1.0,
       "source": "src_storage_semantic_resolver",
       "target": "src_storage_semantic_resolver_findhierarchyroot",
@@ -23067,7 +23278,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/semantic-resolver.ts",
-      "source_location": "L51",
+      "source_location": "L52",
       "weight": 1.0,
       "source": "src_storage_semantic_resolver",
       "target": "src_storage_semantic_resolver_findimmediatehierarchyparent",
@@ -23077,7 +23288,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/semantic-resolver.ts",
-      "source_location": "L76",
+      "source_location": "L77",
       "weight": 1.0,
       "source": "src_storage_semantic_resolver",
       "target": "src_storage_semantic_resolver_identitystem",
@@ -23087,7 +23298,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/semantic-resolver.ts",
-      "source_location": "L61",
+      "source_location": "L62",
       "weight": 1.0,
       "source": "src_storage_semantic_resolver",
       "target": "src_storage_semantic_resolver_ishierarchyancestor",
@@ -23097,7 +23308,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/semantic-resolver.ts",
-      "source_location": "L80",
+      "source_location": "L81",
       "weight": 1.0,
       "source": "src_storage_semantic_resolver",
       "target": "src_storage_semantic_resolver_issemanticrestatement",
@@ -23107,7 +23318,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/semantic-resolver.ts",
-      "source_location": "L312",
+      "source_location": "L313",
       "weight": 1.0,
       "source": "src_storage_semantic_resolver",
       "target": "src_storage_semantic_resolver_persistsemanticdecision",
@@ -23117,7 +23328,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/semantic-resolver.ts",
-      "source_location": "L24",
+      "source_location": "L25",
       "weight": 1.0,
       "source": "src_storage_semantic_resolver",
       "target": "src_storage_semantic_resolver_queryable",
@@ -23127,7 +23338,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/semantic-resolver.ts",
-      "source_location": "L88",
+      "source_location": "L89",
       "weight": 1.0,
       "source": "src_storage_semantic_resolver",
       "target": "src_storage_semantic_resolver_recorddecision",
@@ -23137,7 +23348,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/semantic-resolver.ts",
-      "source_location": "L377",
+      "source_location": "L382",
       "weight": 1.0,
       "source": "src_storage_semantic_resolver",
       "target": "src_storage_semantic_resolver_resolveeventsemantics",
@@ -23147,7 +23358,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/semantic-resolver.ts",
-      "source_location": "L25",
+      "source_location": "L26",
       "weight": 1.0,
       "source": "src_storage_semantic_resolver",
       "target": "src_storage_semantic_resolver_storedentity",
@@ -23158,7 +23369,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/semantic-resolver.ts",
-      "source_location": "L290",
+      "source_location": "L291",
       "weight": 1.0,
       "source": "src_storage_semantic_resolver_applyassociations",
       "target": "src_storage_semantic_resolver_findcanonicalentity",
@@ -23169,7 +23380,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/semantic-resolver.ts",
-      "source_location": "L126",
+      "source_location": "L127",
       "weight": 1.0,
       "source": "src_storage_semantic_resolver_applypath",
       "target": "src_storage_semantic_resolver_findcanonicalentity",
@@ -23180,7 +23391,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/semantic-resolver.ts",
-      "source_location": "L151",
+      "source_location": "L152",
       "weight": 1.0,
       "source": "src_storage_semantic_resolver_applypath",
       "target": "src_storage_semantic_resolver_findhierarchyroot",
@@ -23191,7 +23402,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/semantic-resolver.ts",
-      "source_location": "L335",
+      "source_location": "L340",
       "weight": 1.0,
       "source": "src_storage_semantic_resolver_persistsemanticdecision",
       "target": "src_storage_semantic_resolver_findhierarchyroot",
@@ -23202,7 +23413,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/semantic-resolver.ts",
-      "source_location": "L156",
+      "source_location": "L157",
       "weight": 1.0,
       "source": "src_storage_semantic_resolver_applypath",
       "target": "src_storage_semantic_resolver_findimmediatehierarchyparent",
@@ -23213,7 +23424,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/semantic-resolver.ts",
-      "source_location": "L296",
+      "source_location": "L297",
       "weight": 1.0,
       "source": "src_storage_semantic_resolver_applyassociations",
       "target": "src_storage_semantic_resolver_ishierarchyancestor",
@@ -23224,7 +23435,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/semantic-resolver.ts",
-      "source_location": "L160",
+      "source_location": "L161",
       "weight": 1.0,
       "source": "src_storage_semantic_resolver_applypath",
       "target": "src_storage_semantic_resolver_ishierarchyancestor",
@@ -23235,7 +23446,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/semantic-resolver.ts",
-      "source_location": "L206",
+      "source_location": "L207",
       "weight": 1.0,
       "source": "src_storage_semantic_resolver_applypath",
       "target": "src_storage_semantic_resolver_identitystem",
@@ -23246,7 +23457,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/semantic-resolver.ts",
-      "source_location": "L214",
+      "source_location": "L215",
       "weight": 1.0,
       "source": "src_storage_semantic_resolver_applypath",
       "target": "src_storage_semantic_resolver_issemanticrestatement",
@@ -23257,7 +23468,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/semantic-resolver.ts",
-      "source_location": "L314",
+      "source_location": "L315",
       "weight": 1.0,
       "source": "src_storage_semantic_resolver_persistsemanticdecision",
       "target": "src_storage_semantic_resolver_recorddecision",
@@ -23268,7 +23479,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/semantic-resolver.ts",
-      "source_location": "L113",
+      "source_location": "L114",
       "weight": 1.0,
       "source": "src_storage_semantic_resolver_enqueuepathcandidate",
       "target": "src_storage_semantic_resolver_candidatealternatives",
@@ -23279,7 +23490,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/semantic-resolver.ts",
-      "source_location": "L123",
+      "source_location": "L124",
       "weight": 1.0,
       "source": "src_storage_semantic_resolver_applypath",
       "target": "src_storage_semantic_resolver_enqueuepathcandidate",
@@ -23290,7 +23501,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/semantic-resolver.ts",
-      "source_location": "L329",
+      "source_location": "L330",
       "weight": 1.0,
       "source": "src_storage_semantic_resolver_persistsemanticdecision",
       "target": "src_storage_semantic_resolver_applypath",
@@ -23301,7 +23512,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/semantic-resolver.ts",
-      "source_location": "L353",
+      "source_location": "L358",
       "weight": 1.0,
       "source": "src_storage_semantic_resolver_persistsemanticdecision",
       "target": "src_storage_semantic_resolver_applyassociations",
@@ -23312,7 +23523,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/storage/semantic-resolver.ts",
-      "source_location": "L379",
+      "source_location": "L384",
       "weight": 1.0,
       "source": "src_storage_semantic_resolver_resolveeventsemantics",
       "target": "src_storage_semantic_resolver_persistsemanticdecision",
@@ -26914,5 +27125,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "c3f910002874d7f60d6f87ca0202a8f5ef4c5984"
+  "built_at_commit": "b10e37fdff1983c4b2fd0d72ea9c2b65a0f2b137"
 }

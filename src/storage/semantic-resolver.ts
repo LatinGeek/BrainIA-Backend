@@ -15,6 +15,7 @@ import { linkEventRelation, upsertRelation } from "./relation-repository.js";
 import {
   applySemanticRules,
   enqueueSemanticCandidate,
+  rootEventEvidenceFromAnchors,
   settleSatisfiedSemanticCandidates,
   setImmediateHierarchyParent,
   upsertEventSemanticAnchor,
@@ -312,6 +313,9 @@ async function applyAssociations(db: Queryable, input: { eventId: string; client
 export async function persistSemanticDecision(db: Queryable, input: { eventId: string; clientId: string | null; drafts: EntityDraft[]; decision: SemanticDecision; dryRun?: boolean }) {
   if (input.dryRun) return { appliedPaths: 0, reviewPaths: input.decision.paths.length, decision: input.decision };
   await recordDecision(db, input);
+  if (input.decision.status === "discarded") {
+    return { appliedPaths: 0, reviewPaths: 0, decision: input.decision };
+  }
   // Reprocessing may replace an earlier AI-created event identity with a
   // better subject (or decide that no durable event node is warranted). Keep
   // the historical row as evidence, but remove it from the governed graph so
@@ -327,6 +331,10 @@ export async function persistSemanticDecision(db: Queryable, input: { eventId: s
   await applySemanticRules(db, { clientId: input.clientId, eventId: input.eventId, drafts: input.drafts });
   let appliedPaths = 0;
   for (const path of input.decision.paths) if (await applyPath(db, { eventId: input.eventId, clientId: input.clientId, path, decision: input.decision })) appliedPaths += 1;
+  // The event instance is evidence, never a second semantic branch. Once its
+  // primary meaning has been chosen, make that meaning its sole direct parent
+  // even when an older extraction or a prior model pass attached it elsewhere.
+  await rootEventEvidenceFromAnchors(db, input.eventId);
   const coveredSubjects = new Set(input.decision.paths.map((path) => path.subject.normalizedValue));
   const primary = input.decision.paths.find((path) => path.role === "primary") ?? input.decision.paths[0];
   for (const draft of input.drafts) {
@@ -366,7 +374,7 @@ export async function persistSemanticDecision(db: Queryable, input: { eventId: s
           and relation.relation_type in ('part_of', 'belongs_to_domain')
       )
   `, [input.eventId]);
-  if (!["retryable", "unclassified", "model_unavailable"].includes(input.decision.status)) {
+  if (!["retryable", "unclassified", "model_unavailable", "discarded"].includes(input.decision.status)) {
     await db.query(`update semantic_event_decisions decision set status = case
       when exists (select 1 from semantic_candidates candidate where candidate.event_id = decision.event_id and candidate.status = 'pending') then 'review'
       else 'resolved' end, updated_at = now() where event_id = $1`, [input.eventId]);

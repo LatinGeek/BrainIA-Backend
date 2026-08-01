@@ -13,5 +13,11 @@
       "source": "/(.*)",
       "destination": "serverless.ts"
     }
+  ],
+  "crons": [
+    {
+      "path": "/api/v1/cron/daily-insights",
+      "schedule": "0 8 * * *"
+    }
   ]
 }

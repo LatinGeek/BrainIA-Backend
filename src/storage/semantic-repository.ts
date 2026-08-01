@@ -153,7 +153,7 @@ export async function settleSatisfiedSemanticCandidates(db: Queryable, eventId?:
   return result.rows.length;
 }
 
-export async function rootEventEvidenceFromAnchors(db: Queryable) {
+export async function rootEventEvidenceFromAnchors(db: Queryable, eventId?: string) {
   const result = await db.query<{
     eventId: string;
     subjectId: string; subjectType: string; subjectValue: string; subjectNormalizedValue: string;
@@ -168,14 +168,31 @@ export async function rootEventEvidenceFromAnchors(db: Queryable) {
     from entities subject
     join event_entities event_entity on event_entity.entity_id = subject.id
     join event_semantic_anchors semantic_anchor on semantic_anchor.event_id = event_entity.event_id
+      and semantic_anchor.role = 'primary'
     left join entity_merges anchor_merge on anchor_merge.alias_entity_id = semantic_anchor.anchor_entity_id
     join entities anchor on anchor.id = coalesce(anchor_merge.canonical_entity_id, semantic_anchor.anchor_entity_id)
     where subject.type in ('activity_instance','financial_event','email_message')
       and subject.id <> anchor.id
-      and not exists (select 1 from relations parent where parent.source_entity_id = subject.id and parent.relation_type in ('part_of','belongs_to_domain'))
-      and not exists (select 1 from relations child where child.target_entity_id = subject.id and child.relation_type in ('part_of','belongs_to_domain'))
-    order by subject.id, case semantic_anchor.role when 'primary' then 0 else 1 end, semantic_anchor.confidence desc
-  `);
+      and ($1::text is null or event_entity.event_id = $1)
+      -- Event evidence has exactly one immediate semantic parent: the primary
+      -- anchor selected for that event. Replacing a legacy parent here is
+      -- intentional; otherwise a reprocessed event can remain beneath a
+      -- stale, generic concept and look disconnected in Explore.
+      and (
+        exists (
+          select 1 from relations current
+          where current.source_entity_id = subject.id
+            and current.relation_type in ('part_of','belongs_to_domain')
+            and current.target_entity_id <> anchor.id
+        )
+          or not exists (
+            select 1 from relations current
+            where current.source_entity_id = subject.id
+              and current.relation_type in ('part_of','belongs_to_domain')
+          )
+      )
+    order by subject.id, semantic_anchor.confidence desc
+  `, [eventId ?? null]);
   let rooted = 0;
   for (const row of result.rows) {
     const relation = await setImmediateHierarchyParent(db, {

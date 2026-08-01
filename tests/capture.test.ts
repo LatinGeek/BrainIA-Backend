@@ -136,3 +136,44 @@ test("capture batch route expands source-specific payloads into events", async (
   assert.equal(events[1]?.kind, "expense");
   assert.equal(events[1]?.body?.includes("Spotify"), true);
 });
+
+test("capture wallet route preserves the selected income direction", async () => {
+  const calls: any[] = [];
+  const app = await createCaptureApp(async (event) => {
+    calls.push(event);
+    return {
+      id: event.id,
+      source: event.source,
+      inferredKind: event.kind,
+      dedupeKey: `${event.source}:${event.id}`,
+    };
+  });
+
+  try {
+    const response = await app.inject({
+      method: "POST",
+      url: "/api/v1/capture/wallet",
+      payload: {
+        id: "income_1",
+        merchant: "Acme Inc.",
+        amount: "2500",
+        currency: "USD",
+        note: "July salary",
+        transactionType: "income",
+        accountId: "account_salary_uyu",
+        category: "Salary",
+        tags: ["mobile", "finance", "income"],
+      },
+    });
+
+    assert.equal(response.statusCode, 201);
+    assert.equal(calls.length, 1);
+    assert.equal(calls[0]?.kind, "income");
+    assert.equal(calls[0]?.raw.transactionType, "income");
+    assert.equal(calls[0]?.raw.accountId, "account_salary_uyu");
+    assert.equal(calls[0]?.raw.category, "Salary");
+    assert.equal(calls[0]?.body?.includes("2500 USD"), true);
+  } finally {
+    await app.close();
+  }
+});

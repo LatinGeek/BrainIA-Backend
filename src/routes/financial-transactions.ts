@@ -1,11 +1,17 @@
 import type { FastifyPluginAsync } from "fastify";
 import { z } from "zod";
 import { pool } from "../storage/postgres.js";
+import { FINANCIAL_CATEGORIES } from "../domain/financial-categories.js";
 import {
   createFinancialAccount,
+  createBalanceAdjustment,
+  deleteFinancialAccount,
+  hideFinancialTransaction,
   listFinancialAccounts,
   listFinancialTransactions,
   loadFinancialTransactionById,
+  mergeFinancialTransactions,
+  updateFinancialAccount,
   updateFinancialTransactionContext,
 } from "../storage/financial-transaction-repository.js";
 
@@ -28,15 +34,62 @@ const accountSchema = z.object({
   type: z.string().trim().min(1).max(40).optional(),
   mask: z.string().trim().max(40).nullable().optional(),
   currency: z.enum(["UYU", "USD"]),
+  color: z.enum(["#2563EB", "#4F46E5", "#7C3AED", "#DB2777", "#E11D48", "#D97706", "#059669", "#0891B2"]).optional(),
+});
+
+const adjustmentSchema = z.object({
+  targetBalance: z.coerce.number().finite().min(-999999999999).max(999999999999),
+  note: z.string().trim().max(200).optional(),
+});
+
+const mergeSchema = z.object({
+  duplicateId: z.string().trim().min(1).max(200),
 });
 
 export const registerFinancialTransactionRoutes: FastifyPluginAsync = async (app) => {
+  app.get("/financial/categories", async () => ({ categories: FINANCIAL_CATEGORIES }));
+
   app.get("/financial/accounts", async () => ({ accounts: await listFinancialAccounts() }));
 
   app.post("/financial/accounts", async (request, reply) => {
     const parsed = accountSchema.safeParse(request.body);
     if (!parsed.success) return reply.status(400).send({ error: "invalid_financial_account", issues: parsed.error.flatten() });
     return reply.status(201).send(await createFinancialAccount(parsed.data));
+  });
+
+  app.patch("/financial/accounts/:id", async (request, reply) => {
+    const params = request.params as { id?: string };
+    const parsed = accountSchema.safeParse(request.body);
+    if (!params.id?.trim() || !parsed.success) return reply.status(400).send({ error: "invalid_financial_account", issues: parsed.success ? undefined : parsed.error.flatten() });
+    try {
+      const account = await updateFinancialAccount(params.id.trim(), parsed.data);
+      if (!account) return reply.status(404).send({ error: "financial_account_not_found" });
+      return account;
+    } catch (error) {
+      return reply.status(409).send({ error: "financial_account_currency_mismatch", message: error instanceof Error ? error.message : "Unable to update account" });
+    }
+  });
+
+  app.delete("/financial/accounts/:id", async (request, reply) => {
+    const params = request.params as { id?: string };
+    const id = params.id?.trim();
+    if (!id) return reply.status(400).send({ error: "invalid_financial_account_id" });
+    const result = await deleteFinancialAccount(id);
+    if (!result) return reply.status(404).send({ error: "financial_account_not_found" });
+    return result;
+  });
+
+  app.post("/financial/accounts/:id/adjustments", async (request, reply) => {
+    const params = request.params as { id?: string };
+    const parsed = adjustmentSchema.safeParse(request.body);
+    if (!params.id?.trim() || !parsed.success) return reply.status(400).send({ error: "invalid_balance_adjustment", issues: parsed.success ? undefined : parsed.error.flatten() });
+    try {
+      const transaction = await createBalanceAdjustment({ accountId: params.id.trim(), ...parsed.data });
+      return reply.status(201).send(transaction);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unable to create balance adjustment";
+      return reply.status(message.includes("not found") ? 404 : 409).send({ error: "balance_adjustment_failed", message });
+    }
   });
 
   app.get("/financial/transactions", async (request, reply) => {
@@ -104,5 +157,28 @@ export const registerFinancialTransactionRoutes: FastifyPluginAsync = async (app
         message: error instanceof Error ? error.message : "The account currency must match the transaction currency",
       });
     }
+  });
+
+  app.post("/financial/transactions/:id/merge", async (request, reply) => {
+    const params = request.params as { id?: string };
+    const parsed = mergeSchema.safeParse(request.body);
+    if (!params.id?.trim() || !parsed.success) {
+      return reply.status(400).send({ error: "invalid_financial_transaction_merge", issues: parsed.success ? undefined : parsed.error.flatten() });
+    }
+    try {
+      const transaction = await mergeFinancialTransactions(params.id.trim(), parsed.data.duplicateId);
+      if (!transaction) return reply.status(404).send({ error: "financial_transaction_not_found" });
+      return transaction;
+    } catch (error) {
+      return reply.status(409).send({ error: "financial_transaction_merge_failed", message: error instanceof Error ? error.message : "Unable to consolidate transactions" });
+    }
+  });
+
+  app.delete("/financial/transactions/:id", async (request, reply) => {
+    const params = request.params as { id?: string };
+    if (!params.id?.trim()) return reply.status(400).send({ error: "invalid_financial_transaction_id" });
+    const deleted = await hideFinancialTransaction(params.id.trim());
+    if (!deleted) return reply.status(404).send({ error: "financial_transaction_not_found" });
+    return reply.status(204).send();
   });
 };
