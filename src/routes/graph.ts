@@ -1,6 +1,6 @@
 import type { FastifyPluginAsync } from "fastify";
 import { z } from "zod";
-import { getEntityGraph, getExploreGraph, parseExploreGraphOptions, parseGraphOptions } from "../storage/graph-repository.js";
+import { getEntityGraph, getExploreGraph, getTaxonomyGraph, parseExploreGraphOptions, parseGraphOptions } from "../storage/graph-repository.js";
 
 const graphParamsSchema = z.object({
   id: z.string().min(1),
@@ -9,7 +9,7 @@ const graphParamsSchema = z.object({
 export const registerGraphRoutes: FastifyPluginAsync = async (app) => {
   app.get("/graph", async (request) => {
     const options = parseExploreGraphOptions(request.query as Record<string, string | undefined>);
-    return getExploreGraph(options);
+    return options.projection === "taxonomy" ? getTaxonomyGraph(options) : getExploreGraph(options);
   });
 
   app.get("/entities/:id/graph", async (request, reply) => {

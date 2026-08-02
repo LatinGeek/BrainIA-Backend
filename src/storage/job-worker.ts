@@ -10,6 +10,7 @@ import {
 import { pool } from "./postgres.js";
 import { detectInsightCandidates } from "./proactive-insights.js";
 import { reconcileSemanticGraph } from "./semantic-reconciler.js";
+import { SEMANTIC_GOVERNANCE_VERSION } from "../domain/ontology.js";
 
 async function requireEventId(job: BackgroundJob) {
   const eventId = job.eventId ?? (typeof job.payload.eventId === "string" ? job.payload.eventId : null);
@@ -25,7 +26,7 @@ export async function executeBackgroundJob(job: BackgroundJob) {
       if (!classified) throw new Error(`Event ${eventId} is unavailable for classification`);
       await enqueueBackgroundJob(pool, {
         clientId: job.clientId, eventId, jobType: "semantic_enrichment",
-        idempotencyKey: `semantic:${eventId}:semantic-governance-v2`, payload: { eventId }, provider: "deepseek",
+        idempotencyKey: `semantic:${eventId}:${SEMANTIC_GOVERNANCE_VERSION}`, payload: { eventId }, provider: "deepseek",
       });
       return classified;
     }
@@ -71,4 +72,3 @@ export async function processBackgroundJobs(input: { workerId?: string; limit?: 
   }
   return { workerId, claimed: jobs.length, results };
 }
-

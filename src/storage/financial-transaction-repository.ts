@@ -41,6 +41,8 @@ export type FinancialTransactionRecord = {
   account: string | null;
   destinationAccountId: string | null;
   destinationAccount: string | null;
+  destinationAmount: string | null;
+  destinationCurrency: string | null;
   excludedFromReports: boolean;
   adjustmentTargetBalance: string | null;
   primarySource: string;
@@ -130,6 +132,8 @@ function buildTransactionProjectionSql() {
       coalesce(a.name, a.mask) as account,
       t.destination_account_id as "destinationAccountId",
       coalesce(destination.name, destination.mask) as "destinationAccount",
+      t.destination_amount::text as "destinationAmount",
+      t.destination_currency as "destinationCurrency",
       t.excluded_from_reports as "excludedFromReports",
       t.adjustment_target_balance::text as "adjustmentTargetBalance",
       t.primary_source as "primarySource",
@@ -176,7 +180,7 @@ export async function listFinancialAccounts() {
         coalesce(sum(
           case
             when t.kind = 'transfer' and t.account_id = a.id then -t.amount
-            when t.kind = 'transfer' and t.destination_account_id = a.id then t.amount
+            when t.kind = 'transfer' and t.destination_account_id = a.id then coalesce(t.destination_amount, t.amount)
             when t.kind = 'income' and t.account_id = a.id then t.amount
             when t.kind = 'expense' and t.account_id = a.id then -t.amount
             else 0
@@ -184,8 +188,13 @@ export async function listFinancialAccounts() {
         ), 0)::text as balance
       from financial_accounts a
       left join financial_transactions t
-        on (t.account_id = a.id or t.destination_account_id = a.id)
-        and upper(t.currency) = upper(a.currency)
+        on (
+          (t.account_id = a.id and upper(t.currency) = upper(a.currency))
+          or (
+            t.destination_account_id = a.id
+            and upper(coalesce(t.destination_currency, t.currency)) = upper(a.currency)
+          )
+        )
         and t.hidden_at is null
       group by a.id
       order by a.currency nulls last, a.name asc
@@ -214,9 +223,14 @@ export async function updateFinancialAccount(
     `
       select exists (
         select 1 from financial_transactions
-        where (account_id = $1 or destination_account_id = $1)
-          and hidden_at is null
-          and upper(currency) <> $2
+        where hidden_at is null
+          and (
+            (account_id = $1 and upper(currency) <> $2)
+            or (
+              destination_account_id = $1
+              and upper(coalesce(destination_currency, currency)) <> $2
+            )
+          )
       ) as exists
     `,
     [id, input.currency],
@@ -277,17 +291,20 @@ export async function createBalanceAdjustment(input: { accountId: string; target
         select coalesce(sum(
           case
             when kind = 'transfer' and account_id = $1 then -amount
-            when kind = 'transfer' and destination_account_id = $1 then amount
+            when kind = 'transfer' and destination_account_id = $1 then coalesce(destination_amount, amount)
             when kind = 'income' and account_id = $1 then amount
             when kind = 'expense' and account_id = $1 then -amount
             else 0
           end
         ), 0)::text as balance
         from financial_transactions
-        where (account_id = $1 or destination_account_id = $1)
+        where (
+          (account_id = $1 and upper(currency) = upper($2))
+          or (destination_account_id = $1 and upper(coalesce(destination_currency, currency)) = upper($2))
+        )
           and hidden_at is null
       `,
-      [account.id],
+      [account.id, account.currency],
     );
     const currentBalance = Number(balanceResult.rows[0]?.balance ?? 0);
     const delta = Math.round((input.targetBalance - currentBalance) * 100) / 100;
@@ -325,21 +342,30 @@ export async function createBalanceAdjustment(input: { accountId: string; target
 
 export async function updateFinancialTransactionContext(
   id: string,
-  input: { category?: string | null; accountId?: string | null; destinationAccountId?: string | null; currency?: "UYU" | "USD"; kind?: "expense" | "income" | "transfer" },
+  input: {
+    category?: string | null;
+    accountId?: string | null;
+    destinationAccountId?: string | null;
+    destinationAmount?: number | null;
+    destinationCurrency?: "UYU" | "USD" | null;
+    currency?: "UYU" | "USD";
+    kind?: "expense" | "income" | "transfer";
+  },
 ) {
-  const accountIds = [input.accountId, input.destinationAccountId].filter((value): value is string => Boolean(value));
-  if (accountIds.length) {
+  if (input.accountId || input.destinationAccountId) {
     const compatibility = await pool.query<{ matches: boolean }>(
       `
         select exists (
           select 1
           from financial_transactions t
-          join financial_accounts a on a.id = any($2::text[])
+          left join financial_accounts source on source.id = $2
+          left join financial_accounts destination on destination.id = $3
           where t.id = $1
-            and a.currency = coalesce($3, t.currency)
+            and ($2::text is null or source.currency = coalesce($4, t.currency))
+            and ($3::text is null or destination.currency = coalesce($5, t.destination_currency, t.currency))
         ) as matches
       `,
-      [id, accountIds, input.currency ?? null],
+      [id, input.accountId ?? null, input.destinationAccountId ?? null, input.currency ?? null, input.destinationCurrency ?? null],
     );
     if (!compatibility.rows[0]?.matches) {
       throw new Error("The account currency must match the transaction currency");
@@ -350,11 +376,18 @@ export async function updateFinancialTransactionContext(
   }
   const result = await pool.query(`
     update financial_transactions
-    set category = $2, account_id = $3, destination_account_id = $4, currency = coalesce($5, currency), kind = coalesce($6, kind), updated_at = now()
+    set category = $2,
+        account_id = $3,
+        destination_account_id = $4,
+        currency = coalesce($5, currency),
+        kind = coalesce($6, kind),
+        destination_amount = case when coalesce($6, kind) = 'transfer' then coalesce($7, destination_amount) else null end,
+        destination_currency = case when coalesce($6, kind) = 'transfer' then coalesce($8, destination_currency) else null end,
+        updated_at = now()
     where id = $1
       and hidden_at is null
     returning id
-  `, [id, input.category?.trim() || null, input.accountId || null, input.destinationAccountId || null, input.currency ?? null, input.kind ?? null]);
+  `, [id, input.category?.trim() || null, input.accountId || null, input.destinationAccountId || null, input.currency ?? null, input.kind ?? null, input.destinationAmount ?? null, input.destinationCurrency ?? null]);
 
   if (!result.rowCount) return null;
   return loadFinancialTransactionById(pool, id);
@@ -607,7 +640,10 @@ async function updateFinancialTransaction(
         window_start = least(window_start, $8::timestamptz),
         window_end = greatest(window_end, $9::timestamptz),
         account_id = coalesce($10, account_id),
-        category = coalesce($11, category),
+        destination_account_id = coalesce($11, destination_account_id),
+        destination_amount = coalesce($12, destination_amount),
+        destination_currency = coalesce($13, destination_currency),
+        category = coalesce($14, category),
         updated_at = now()
       where id = $1
       returning
@@ -640,6 +676,9 @@ async function updateFinancialTransaction(
       window.start,
       window.end,
       input.candidate.accountId,
+      input.candidate.destinationAccountId,
+      input.candidate.destinationAmount,
+      input.candidate.destinationCurrency,
       input.candidate.category,
     ],
   );
@@ -673,9 +712,12 @@ async function createFinancialTransaction(
         primary_source,
         anchor_event_id,
         account_id,
+        destination_account_id,
+        destination_amount,
+        destination_currency,
         category
       ) values (
-        $1, $2, $3::numeric, $4, $5, $6, $7, $8::timestamptz, $9::timestamptz, $10::timestamptz, 1, $11, $12, $13, $14, $15, $16
+        $1, $2, $3::numeric, $4, $5, $6, $7, $8::timestamptz, $9::timestamptz, $10::timestamptz, 1, $11, $12, $13, $14, $15, $16, $17::numeric, $18, $19
       )
       returning
         id,
@@ -712,6 +754,9 @@ async function createFinancialTransaction(
       candidate.source,
       candidate.eventId,
       candidate.accountId,
+      candidate.destinationAccountId,
+      candidate.destinationAmount,
+      candidate.destinationCurrency,
       candidate.category,
     ],
   );

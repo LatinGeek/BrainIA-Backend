@@ -81,6 +81,78 @@ type EntityMatchRow = EntityRecord & {
   matchedEntityId?: string | null;
 };
 
+type ApproximateEntityMatchRow = EntityMatchRow & {
+  matchText: string;
+};
+
+function normalizeMatchText(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/\p{M}/gu, "")
+    .toLocaleLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, " ")
+    .trim()
+    .replace(/\s+/g, " ");
+}
+
+function levenshteinDistance(left: string, right: string) {
+  if (!left.length) return right.length;
+  if (!right.length) return left.length;
+
+  let previous = Array.from({ length: right.length + 1 }, (_, index) => index);
+  for (let leftIndex = 1; leftIndex <= left.length; leftIndex += 1) {
+    const current = [leftIndex];
+    for (let rightIndex = 1; rightIndex <= right.length; rightIndex += 1) {
+      current[rightIndex] = Math.min(
+        current[rightIndex - 1] + 1,
+        previous[rightIndex] + 1,
+        previous[rightIndex - 1] + (left[leftIndex - 1] === right[rightIndex - 1] ? 0 : 1),
+      );
+    }
+    previous = current;
+  }
+  return previous[right.length];
+}
+
+function diceCoefficient(left: string[], right: string[]) {
+  if (!left.length || !right.length) return 0;
+  const remaining = new Map<string, number>();
+  for (const value of right) remaining.set(value, (remaining.get(value) ?? 0) + 1);
+  let overlap = 0;
+  for (const value of left) {
+    const count = remaining.get(value) ?? 0;
+    if (!count) continue;
+    overlap += 1;
+    remaining.set(value, count - 1);
+  }
+  return (2 * overlap) / (left.length + right.length);
+}
+
+function characterBigrams(value: string) {
+  const compact = value.replace(/\s+/g, "");
+  if (compact.length < 2) return compact ? [compact] : [];
+  return Array.from({ length: compact.length - 1 }, (_, index) => compact.slice(index, index + 2));
+}
+
+/** Rank user-entered names against stored entities and aliases without requiring pg_trgm. */
+export function scoreEntityNameMatch(query: string, candidate: string) {
+  const normalizedQuery = normalizeMatchText(query);
+  const normalizedCandidate = normalizeMatchText(candidate);
+  if (!normalizedQuery || !normalizedCandidate) return 0;
+  if (normalizedQuery === normalizedCandidate) return 1;
+
+  const shorterLength = Math.min(normalizedQuery.length, normalizedCandidate.length);
+  const longerLength = Math.max(normalizedQuery.length, normalizedCandidate.length);
+  const containmentScore = normalizedQuery.includes(normalizedCandidate) || normalizedCandidate.includes(normalizedQuery)
+    ? 0.72 + (shorterLength / longerLength) * 0.2
+    : 0;
+  const tokenScore = diceCoefficient(normalizedQuery.split(" "), normalizedCandidate.split(" ")) * 0.9;
+  const bigramScore = diceCoefficient(characterBigrams(normalizedQuery), characterBigrams(normalizedCandidate));
+  const editScore = 1 - (levenshteinDistance(normalizedQuery, normalizedCandidate) / longerLength);
+
+  return Math.max(containmentScore, tokenScore, bigramScore * 0.78 + editScore * 0.22, editScore * 0.8);
+}
+
 export type EntityMergeRecord = {
   aliasEntityId: string;
   canonicalEntityId: string;
@@ -256,8 +328,10 @@ export async function resolveEntityMatches(
     return resolved;
   }
 
-  const term = `%${input.q!.trim().toLowerCase()}%`;
-  const [entityRows, aliasRows] = await Promise.all([
+  const query = input.q!.trim();
+  const normalizedQuery = normalizeMatchText(query);
+  const term = `%${normalizedQuery}%`;
+  const [entityRows, aliasRows, approximateRows] = await Promise.all([
     db.query<EntityMatchRow>(
       `
         ${selectEntityProjectionSql()}
@@ -266,12 +340,12 @@ export async function resolveEntityMatches(
            or lower(e.value) like $1
            or lower(e.normalized_value) like $1
         order by
-          case when lower(e.id) = $1 then 0 else 1 end,
-          case when lower(e.value) = $1 then 0 else 1 end,
+          case when lower(e.id) = $2 then 0 else 1 end,
+          case when lower(e.value) = $2 or lower(e.normalized_value) = $2 then 0 else 1 end,
           e.created_at desc
         limit 10
       `,
-      [term],
+      [term, normalizedQuery],
     ),
     db.query<EntityMatchRow>(
       `
@@ -303,9 +377,47 @@ export async function resolveEntityMatches(
       `,
       [term],
     ),
+    db.query<ApproximateEntityMatchRow>(
+      `
+        select
+          e.id,
+          e.type,
+          e.value,
+          e.normalized_value as "normalizedValue",
+          e.description,
+          e.identity_source as "identitySource",
+          e.metadata,
+          e.created_at as "createdAt",
+          coalesce(em.canonical_entity_id, e.id) as "canonicalEntityId",
+          case when em.alias_entity_id is null then true else false end as "isCanonical",
+          coalesce((
+            select count(*)::integer
+            from entity_merges aliases
+            where aliases.canonical_entity_id = e.id
+          ), 0) as "aliasCount",
+          em.reason as "mergeReason",
+          em.confidence as "mergeConfidence",
+          e.id as "matchedEntityId",
+          coalesce(nullif(a.alias, ''), e.value) as "matchText"
+        from entities e
+        left join entity_merges em on em.alias_entity_id = e.id
+        left join entity_aliases a on a.entity_id = e.id
+        order by e.created_at desc
+        limit 1000
+      `,
+    ),
   ]);
 
-  for (const row of [...entityRows.rows, ...aliasRows.rows]) {
+  const rankedRows = [
+    ...entityRows.rows.map((row) => ({ row, score: 2 })),
+    ...aliasRows.rows.map((row) => ({ row, score: 1.9 })),
+    ...approximateRows.rows
+      .map((row) => ({ row, score: Math.max(scoreEntityNameMatch(query, row.value), scoreEntityNameMatch(query, row.normalizedValue), scoreEntityNameMatch(query, row.matchText)) }))
+      .filter(({ score }) => score >= 0.56)
+      .sort((left, right) => right.score - left.score),
+  ];
+
+  for (const { row } of rankedRows) {
     const canonical = row.canonicalEntityId === row.id ? row : await loadEntityById(db, row.canonicalEntityId);
     if (!canonical) continue;
     if (seenCanonicalIds.has(canonical.id)) continue;
@@ -315,6 +427,7 @@ export async function resolveEntityMatches(
       ...canonical,
       matchedEntityId: row.matchedEntityId ?? row.id,
     });
+    if (resolved.length >= 10) break;
   }
 
   return resolved;

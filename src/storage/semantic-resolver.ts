@@ -89,13 +89,15 @@ export function isSemanticRestatement(value: string, parentValue: string) {
 async function recordDecision(db: Queryable, input: { eventId: string; clientId: string | null; decision: SemanticDecision }) {
   const primary = input.decision.paths.find((path) => path.role === "primary");
   await db.query(`
-    insert into semantic_event_decisions (event_id, client_id, status, primary_domain_value, decision, governance_version, prompt_version, model)
-    values ($1,$2,$3,$4,$5::jsonb,$6,$7,$8)
+    insert into semantic_event_decisions (event_id, client_id, status, primary_domain_value, decision, governance_version, prompt_version, model, taxonomy_version, primary_category_key, secondary_category_keys, facets)
+    values ($1,$2,$3,$4,$5::jsonb,$6,$7,$8,$9,$10,$11,$12::jsonb)
     on conflict (event_id) do update set client_id = excluded.client_id, status = excluded.status,
       primary_domain_value = excluded.primary_domain_value, decision = excluded.decision,
       governance_version = excluded.governance_version, prompt_version = excluded.prompt_version,
-      model = excluded.model, updated_at = now()
-  `, [input.eventId, input.clientId, input.decision.status, primary?.domain ?? null, JSON.stringify(input.decision), input.decision.governanceVersion, input.decision.promptVersion, input.decision.model]);
+      model = excluded.model, taxonomy_version = excluded.taxonomy_version,
+      primary_category_key = excluded.primary_category_key, secondary_category_keys = excluded.secondary_category_keys,
+      facets = excluded.facets, updated_at = now()
+  `, [input.eventId, input.clientId, input.decision.status, primary?.domain ?? null, JSON.stringify(input.decision), input.decision.governanceVersion, input.decision.promptVersion, input.decision.model, input.decision.taxonomyVersion, input.decision.primaryCategoryKey, input.decision.secondaryCategoryKeys, JSON.stringify(input.decision.facets)]);
 }
 
 function candidateAlternatives(path: SemanticPathDecision) {

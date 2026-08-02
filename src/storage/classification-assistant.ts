@@ -43,13 +43,22 @@ function mergeEntities(
 ) {
   const merged: ClassifiedEvent["entities"] = [];
   const seen = new Set<string>();
+  const hasDeterministicAmount = baseEntities.some((entity) => entity.type === "amount");
+  const orderedEntities = hasDeterministicAmount
+    ? [
+        ...baseEntities.filter((entity) => entity.type === "amount"),
+        ...suggestedEntities.filter((entity) => entity.type !== "amount"),
+        ...baseEntities.filter((entity) => entity.type !== "amount"),
+      ]
+    : [...suggestedEntities, ...baseEntities];
 
-  // Model-normalized evidence takes precedence over raw deterministic text
-  // when both describe the same semantic role (notably merchant descriptors).
-  for (const entity of [...suggestedEntities, ...baseEntities]) {
+  // Deterministically parsed amounts are ledger facts and cannot be replaced by
+  // a model guess. Model-normalized merchant evidence still takes precedence.
+  for (const entity of orderedEntities) {
     const normalizedValue = entity.value.trim();
     if (!normalizedValue) continue;
     if (suggestedEntities.includes(entity) && !MODEL_EVIDENCE_TYPES.has(entity.type)) continue;
+    if (hasDeterministicAmount && suggestedEntities.includes(entity) && entity.type === "amount") continue;
     if (normalizedValue.length > 160 || /\r|\n/.test(normalizedValue)) continue;
 
     const key = normalizeEntityKey(entity.type, normalizedValue);
@@ -85,6 +94,7 @@ export function createClassificationAssistant(deps: ClassificationAssistantDeps)
     base: ClassifiedEvent;
     clientId?: string | null;
     allowModel?: boolean;
+    auditEventId?: string | null;
   }) {
     // Email bodies often contain the most useful source detail (receipts, transaction
     // alerts, confirmations, and commitments). Always let the model inspect them;
@@ -120,13 +130,13 @@ export function createClassificationAssistant(deps: ClassificationAssistantDeps)
       jsonMode: true,
       audit: {
         clientId: input.clientId ?? null,
-        eventId: input.event.id,
+        eventId: input.auditEventId === undefined ? input.event.id : input.auditEventId,
         operation: "event_classification",
-        promptVersion: "classification-v1",
+        promptVersion: "classification-v2",
       },
       redaction: policy ?? undefined,
       systemPrompt:
-        "Return only strict JSON. Classify the event, extract concise evidence, and generate a user-facing event identity for every event. displayTitle must state what actually happened in concise English; never copy a generic heading such as Aviso, Notification, Message, or a raw sentence. displayDescription must explain the event using only supplied facts. Always inspect financial alerts and email bodies even when deterministic classification is already confident. For card alerts, identify the real merchant from processor descriptors such as +phone/OPENAI *CHATGPT, not the generic heading. Allowed entity types are only app, merchant, sender, recipient, message, amount, and card_last_four. Do not output domains, categories, concepts, notification titles, timestamps, other IDs, raw fragments, or invented entities; a separate semantic governor decides durable graph placement.",
+        "Return only strict JSON. Classify the real-world event semantics, not its transport type. A posted or completed card transaction is an expense even when captured as a notification and even when the title says Aviso; a rejected or declined attempt is only a notification. Preserve the exact currency and full amount, including thousands separators such as UYU 1.733,00. Extract concise evidence and generate a user-facing event identity for every event. displayTitle must state what actually happened in concise English; never copy a generic heading such as Aviso, Notification, Message, or a raw sentence. displayDescription must explain the event using only supplied facts. Always inspect financial alerts and email bodies even when deterministic classification is already confident. For card alerts, identify the real merchant from processor descriptors such as +phone/OPENAI *CHATGPT, not the generic heading. Allowed entity types are only app, merchant, sender, recipient, message, amount, and card_last_four. Do not output domains, categories, concepts, notification titles, timestamps, other IDs, raw fragments, or invented entities; a separate semantic governor decides durable graph placement.",
       userPrompt: JSON.stringify(
         {
           event: {
@@ -145,7 +155,7 @@ export function createClassificationAssistant(deps: ClassificationAssistantDeps)
             entities: input.base.entities,
           },
           responseShape: {
-            inferredKind: "email | expense | note | notification | task | other",
+            inferredKind: "email | expense | transfer | note | notification | task | other",
             confidence: "number between 0 and 1",
             entities: [{ type: "string", value: "string" }],
             rationale: "short explanation",
@@ -187,13 +197,19 @@ export function createClassificationAssistant(deps: ClassificationAssistantDeps)
 
       const suggestion = parsed.data;
       const improved = suggestion.confidence > input.base.confidence;
+      const protectedFinancialKind = (input.base.inferredKind === "expense" || input.base.inferredKind === "transfer")
+        && input.base.confidence >= 0.95;
+      const lowInformationKinds = new Set(["notification", "other"]);
+      const protectedSpecificKind = !lowInformationKinds.has(input.base.inferredKind)
+        && lowInformationKinds.has(suggestion.inferredKind);
+      const applySuggestedKind = improved && !protectedFinancialKind && !protectedSpecificKind;
 
       return {
         ...input.base,
         classificationVersion: improved
           ? `${input.base.classificationVersion}+llm`
           : input.base.classificationVersion,
-        inferredKind: improved ? suggestion.inferredKind : input.base.inferredKind,
+        inferredKind: applySuggestedKind ? suggestion.inferredKind : input.base.inferredKind,
         confidence: Math.max(input.base.confidence, suggestion.confidence),
         entities: mergeEntities(input.base.entities, suggestion.entities),
         modelMetadata: {

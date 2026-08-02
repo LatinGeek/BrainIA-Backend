@@ -6,6 +6,7 @@ import { generateNaturalLanguageSummary } from "./deepseek.js";
 import { upsertEmbedding } from "./embeddings.js";
 import { insertInsightRun } from "./insight-repository.js";
 import { pool, withTransaction } from "./postgres.js";
+import { TAXONOMY_VERSION } from "../domain/ontology.js";
 
 type Queryable = Pick<typeof pool, "query">;
 
@@ -170,6 +171,32 @@ export async function detectInsightCandidates(input: { clientId?: string | null;
       evidence: { source: row.source, currentCount: row.currentCount, previousCount: row.previousCount, eventIds: row.eventIds ?? [] },
       novelty: 0.8, impact: Math.min(1, row.currentCount / Math.max(1, row.previousCount * 3)), confidence: 0.9,
       recurrence: 0.4, utility: 0.7, severity: "low", windowFrom: time.fortnightAgo,
+      windowTo: time.to, expiresAt: time.expiresAt,
+    });
+  }
+
+  const categoryActivity = await pool.query<{ categoryKey: string; categoryLabel: string; currentCount: number; previousCount: number; eventIds: string[] }>(`
+    select decision.primary_category_key as "categoryKey", category.value as "categoryLabel",
+      count(*) filter (where coalesce(event.timestamp, event.created_at) >= $2)::int as "currentCount",
+      count(*) filter (where coalesce(event.timestamp, event.created_at) >= $1 and coalesce(event.timestamp, event.created_at) < $2)::int as "previousCount",
+      array_agg(event.id order by coalesce(event.timestamp, event.created_at) desc) filter (where coalesce(event.timestamp, event.created_at) >= $2) as "eventIds"
+    from semantic_event_decisions decision
+    join raw_events event on event.id = decision.event_id
+    join entities category on category.taxonomy_key = decision.primary_category_key
+    where decision.primary_category_key is not null and coalesce(event.timestamp, event.created_at) >= $1
+      and event.privacy_status <> 'hidden' and ($3::text is null or event.client_id is not distinct from $3)
+    group by decision.primary_category_key, category.value
+  `, [time.fortnightAgo, time.weekAgo, clientId]);
+  for (const row of categoryActivity.rows) {
+    if (row.currentCount < 3 || row.currentCount < Math.max(3, row.previousCount * 2)) continue;
+    drafts.push({
+      detector: "category_activity_change", dedupeKey: `category-activity:${row.categoryKey}:${time.weekAgo.slice(0, 10)}`,
+      title: `${row.categoryLabel} activity increased`,
+      explanation: `${row.currentCount} categorized events occurred in the current week versus ${row.previousCount} in the previous week.`,
+      suggestedAction: "Open this category to inspect the activity behind the change.",
+      evidence: { taxonomyVersion: TAXONOMY_VERSION, categoryKey: row.categoryKey, currentCount: row.currentCount, previousCount: row.previousCount, eventIds: row.eventIds ?? [] },
+      novelty: 0.82, impact: Math.min(1, row.currentCount / Math.max(1, row.previousCount * 3)), confidence: 0.92,
+      recurrence: 0.55, utility: 0.82, severity: "low", windowFrom: time.fortnightAgo,
       windowTo: time.to, expiresAt: time.expiresAt,
     });
   }

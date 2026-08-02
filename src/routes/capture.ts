@@ -67,9 +67,31 @@ const walletCaptureSchema = commonCaptureSchema.extend({
   amount: z.string().optional(),
   currency: z.string().optional(),
   note: z.string().optional(),
-  transactionType: z.enum(["income", "expense"]).optional(),
+  transactionType: z.enum(["income", "expense", "transfer"]).optional(),
   accountId: z.string().trim().min(1).max(200).optional(),
+  destinationAccountId: z.string().trim().min(1).max(200).optional(),
+  destinationAmount: z.string().trim().regex(/^\d+(?:[.,]\d{1,2})?$/).optional(),
+  destinationCurrency: z.enum(["UYU", "USD"]).optional(),
   category: z.string().trim().min(1).max(120).optional(),
+}).superRefine((value, context) => {
+  if (value.transactionType !== "transfer") return;
+  if (!value.accountId) {
+    context.addIssue({ code: z.ZodIssueCode.custom, path: ["accountId"], message: "A source account is required for transfers" });
+  }
+  if (!value.destinationAccountId) {
+    context.addIssue({ code: z.ZodIssueCode.custom, path: ["destinationAccountId"], message: "A destination account is required for transfers" });
+  }
+  if (!value.destinationAmount) {
+    context.addIssue({ code: z.ZodIssueCode.custom, path: ["destinationAmount"], message: "A destination amount is required for transfers" });
+  } else if (Number(value.destinationAmount.replace(",", ".")) <= 0) {
+    context.addIssue({ code: z.ZodIssueCode.custom, path: ["destinationAmount"], message: "The destination amount must be greater than zero" });
+  }
+  if (!value.destinationCurrency) {
+    context.addIssue({ code: z.ZodIssueCode.custom, path: ["destinationCurrency"], message: "A destination currency is required for transfers" });
+  }
+  if (value.accountId && value.destinationAccountId && value.accountId === value.destinationAccountId) {
+    context.addIssue({ code: z.ZodIssueCode.custom, path: ["destinationAccountId"], message: "A transfer must use two different accounts" });
+  }
 });
 
 const captureBatchSchema = z.object({

@@ -177,3 +177,53 @@ test("capture wallet route preserves the selected income direction", async () =>
     await app.close();
   }
 });
+
+test("capture wallet route preserves both transfer accounts", async () => {
+  const calls: any[] = [];
+  const app = await createCaptureApp(async (event) => {
+    calls.push(event);
+    return { id: event.id, source: event.source, inferredKind: event.kind, dedupeKey: `${event.source}:${event.id}` };
+  });
+
+  try {
+    const response = await app.inject({
+      method: "POST",
+      url: "/api/v1/capture/wallet",
+      payload: {
+        id: "transfer_1",
+        amount: "1250",
+        currency: "UYU",
+        note: "Move to savings",
+        transactionType: "transfer",
+        accountId: "account_checking",
+        destinationAccountId: "account_savings",
+        destinationAmount: "31.25",
+        destinationCurrency: "USD",
+        tags: ["mobile", "finance", "transfer"],
+      },
+    });
+
+    assert.equal(response.statusCode, 201);
+    assert.equal(calls[0]?.kind, "transfer");
+    assert.equal(calls[0]?.raw.accountId, "account_checking");
+    assert.equal(calls[0]?.raw.destinationAccountId, "account_savings");
+    assert.equal(calls[0]?.raw.destinationAmount, "31.25");
+    assert.equal(calls[0]?.raw.destinationCurrency, "USD");
+
+    const invalidResponse = await app.inject({
+      method: "POST",
+      url: "/api/v1/capture/wallet",
+      payload: {
+        id: "transfer_invalid",
+        amount: "1250",
+        currency: "UYU",
+        transactionType: "transfer",
+        accountId: "account_checking",
+        destinationAccountId: "account_checking",
+      },
+    });
+    assert.equal(invalidResponse.statusCode, 400);
+  } finally {
+    await app.close();
+  }
+});

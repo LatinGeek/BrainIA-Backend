@@ -1,4 +1,4 @@
-# Semantic graph governance v2
+# Semantic graph governance v5
 
 ## Purpose
 
@@ -11,6 +11,13 @@ the payload.
 Every event is evaluated against the controlled life-domain roots: Health,
 Social, Finances, Work, Entrepreneurship, Psychology, Location, Home, Food,
 Communication, Learning, and Entertainment.
+
+Resolved events also use taxonomy `personal-activity-v1`. Stable category keys
+form a navigable backbone: life domain, activity family, event class, and an
+optional reusable subtype. Display labels may change without changing these
+keys. A financial purchase can therefore resolve to
+`finances.spending.card_purchase` while retaining its merchant, account, card,
+capture app, and status as facets rather than extra hierarchy parents.
 
 The governor selects exactly one primary domain when the leading root has at
 least 0.80 confidence and leads the runner-up by at least 0.10. It then descends
@@ -31,10 +38,14 @@ external sender under `Email contacts`, while keeping one Communication anchor.
 
 Examples:
 
-- `Home -> Home automation -> Xiaomi Home`
-- `Communication -> Email -> email account/message`
-- `Food -> Food / Delivery -> Orders -> PedidosYa`
-- `Entertainment -> Music -> Spotify`
+- `Home -> Home automation -> Device alerts`
+- `Communication -> Email -> Email activity`
+- `Food -> Food / Delivery -> Orders`
+- `Finances -> Financial activity -> Spending -> Card purchases`
+
+Xiaomi Home, an email address, PedidosYa, or Spotify remains a canonical
+identity/facet associated with the categorized event rather than another
+category level.
 
 A PedidosYa purchase may be primarily anchored to Orders and secondarily to
 Financial activity. It must not also be anchored to Food, Food / Delivery, or
@@ -55,6 +66,11 @@ Associations such as `spent_at`, `sent_by`, `uses_service`, `occurred_at`, or
 `related_to` are evaluated after hierarchy and never count as parents. A
 standard association between existing canonical entities may auto-apply at
 0.90 confidence; unknown relation types or endpoints require review.
+
+Event facets are typed, evidence-backed attributes. Supported facets are
+merchant, account, channel, sender, recipient, location, recurrence, payment
+method, and status. Facets never count as hierarchy parents and never permit a
+model to overwrite protected deterministic financial facts.
 
 ## Durable node creation
 
@@ -91,8 +107,18 @@ confidence paths enter Review with their complete path and evidence.
 Live ingestion, manual event reprocessing, semantic backfill, and reconciliation
 must call the same resolver. Reprocessing is idempotent for decisions,
 observations, candidates, event anchors, and relations. Each persisted decision
-records governance version `semantic-governance-v2`, prompt version, model,
-evidence event, and the validated model response.
+records governance version `semantic-governance-v5`, taxonomy version, stable
+category keys, facets, prompt version, model, evidence event, and the validated
+model response.
+
+## Evaluation harness
+
+`npm run harness:semantics` runs the deterministic/offline semantic fixture
+corpus. `npm run harness:semantics:live` opts into audited DeepSeek evaluation
+and requires configured model and database credentials. Fixtures assert
+protected facts, acceptable category prefixes, required/prohibited facets,
+rooted paths, and category-creation budgets. Live results can be recorded with
+`--record=<path>`; production personal events must not be used as fixtures.
 
 ## Reconciliation and acceptance
 

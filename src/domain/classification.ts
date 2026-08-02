@@ -1,6 +1,7 @@
 import type { ClassifiedEvent, EventInput } from "./event.js";
+import { findMoneyText, MONEY_NUMBER_SOURCE } from "./money.js";
 
-export const CLASSIFICATION_VERSION = "heuristic-v2";
+export const CLASSIFICATION_VERSION = "heuristic-v3";
 
 function normalizeForMatching(value: string) {
   return value
@@ -25,7 +26,7 @@ export function isCompletedCardTransactionAlert(event: Pick<EventInput, "kind" |
 
   const postedTransaction = /\b(se\s+realizo|se\s+efectuo|registramos|confirmamos)\s+(?:una\s+)?transaccion\b/u.test(text);
   const cardReference = /\b(?:tarjeta|visa|mastercard|amex)\b/u.test(text);
-  const amount = /\b(?:uyu|usd|ars|brl|clp|cop|eur|gbp|mxn|pen)\s*\d+(?:[.,]\d{1,2})?\b|[$€£]\s*\d+(?:[.,]\d{1,2})?/iu.test(text);
+  const amount = Boolean(findMoneyText(text));
 
   return postedTransaction && cardReference && amount;
 }
@@ -47,23 +48,24 @@ export function isAccountTransferAlert(event: Pick<EventInput, "kind" | "title" 
 
 function extractCardAlertMerchant(value: string) {
   const directMatch = value.match(
-    /\b(?:en|establecimiento)\s+([\p{L}\p{N}][\p{L}\p{N}&*\/-]*(?:\s+[\p{L}\p{N}&*\/-]+){0,8})(?=\.?\s+(?:si|fecha|a\s+las|el)\b|[.!]|$)/iu,
+    /\bestablecimiento\s+([\p{L}\p{N}][\p{L}\p{N}&*\/-]*(?:\s+[\p{L}\p{N}&*\/-]+){0,8})(?=\.?\s+(?:si|fecha|a\s+las|el)\b|[.!]|$)/iu,
   );
   if (directMatch?.[1]?.trim()) return directMatch[1].trim();
 
   // Some card processors prefix the descriptor with a phone/reference and a
   // slash instead of the usual Spanish `en <merchant>` form. Preserve the
   // descriptor as evidence for the model, while dropping the transport noise.
-  const descriptorMatch = value.match(
-    /\b(?:monto\s+de|importe)\s+(?:ars|brl|clp|cop|eur|gbp|mxn|pen|usd|uyu)\s*\d+(?:[.,]\d{1,2})?\s+(?:en\s+)?(?:\+?\d{7,16}\/)?([\p{L}\p{N}][\p{L}\p{N}&*\/+._-]*(?:\s+[\p{L}\p{N}&*\/+._-]+){0,8})(?=\.?\s+(?:si|fecha|a\s+las|el)\b|[.!]|$)/iu,
-  );
+  const descriptorMatch = value.match(new RegExp(
+    String.raw`\b(?:monto\s+de|importe)\s+(?:ars|brl|clp|cop|eur|gbp|mxn|pen|usd|uyu)\s*${MONEY_NUMBER_SOURCE}\s+(?:en\s+)?(?:\+?\d{7,16}\/)?([\p{L}\p{N}][\p{L}\p{N}&*\/+._-]*(?:\s+[\p{L}\p{N}&*\/+._-]+){0,8}?)(?=\.?\s+(?:si|fecha|a\s+las|el)\b|[.!]|$)`,
+    "iu",
+  ));
   return descriptorMatch?.[1]?.trim().replace(/[.!?,;:]+$/u, "") ?? null;
 }
 
 export function classifyEvent(event: EventInput): ClassifiedEvent {
   const content = `${event.title ?? ""} ${event.body ?? ""}`;
   const text = normalizeForMatching(content);
-  const moneyMatch = content.match(/(?:[$€£]\s?\d+(?:[.,]\d{1,2})?)|(?:(?:ars|brl|clp|cop|eur|gbp|mxn|pen|usd|uyu)\s?\d+(?:[.,]\d{1,2})?)|(?:\d+(?:[.,]\d{1,2})?\s?(?:ars|brl|clp|cop|eur|gbp|mxn|pen|usd|uyu))/iu);
+  const moneyText = findMoneyText(content);
   const completedCardTransaction = isCompletedCardTransactionAlert(event);
   const rejectedCardTransaction = isRejectedCardTransactionAlert(event);
   const accountTransfer = isAccountTransferAlert(event);
@@ -98,13 +100,13 @@ export function classifyEvent(event: EventInput): ClassifiedEvent {
     confidence = 0.72;
   }
 
-  if ((event.kind === "notification" || event.kind === "email") && moneyMatch?.[0] && inferredKind === "other") {
+  if ((event.kind === "notification" || event.kind === "email") && moneyText && inferredKind === "other") {
     inferredKind = "expense";
     confidence = 0.82;
   }
 
-  if (moneyMatch?.[0]) {
-    entities.push({ type: "amount", value: moneyMatch[0] });
+  if (moneyText) {
+    entities.push({ type: "amount", value: moneyText });
   }
 
   if (completedCardTransaction) {

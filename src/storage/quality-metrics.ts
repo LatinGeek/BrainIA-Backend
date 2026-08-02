@@ -9,6 +9,7 @@ export async function getKnowledgeQualityMetrics() {
     pendingProposals: number; retryableEvents: number; modelCalls: number;
     inputTokens: number; outputTokens: number; estimatedCostUsd: number;
     failedModelCalls: number; queuedJobs: number; deadLetterJobs: number;
+    categorizedEvents: number; level2CategorizedEvents: number; level3CategorizedEvents: number; shallowCategorizedEvents: number;
   }>(`
     with recursive
     visible as (
@@ -56,7 +57,11 @@ export async function getKnowledgeQualityMetrics() {
       (select coalesce(sum(estimated_cost_usd), 0)::float8 from model_call_audits) as "estimatedCostUsd",
       (select count(*)::int from model_call_audits where status = 'failed') as "failedModelCalls",
       (select count(*)::int from background_jobs where status in ('queued','retry_scheduled','running')) as "queuedJobs",
-      (select count(*)::int from background_jobs where status = 'dead_letter') as "deadLetterJobs"
+      (select count(*)::int from background_jobs where status = 'dead_letter') as "deadLetterJobs",
+      (select count(*)::int from semantic_event_decisions where primary_category_key is not null) as "categorizedEvents",
+      (select count(*)::int from semantic_event_decisions where primary_category_key like '%.%') as "level2CategorizedEvents",
+      (select count(*)::int from semantic_event_decisions where primary_category_key like '%.%.%') as "level3CategorizedEvents",
+      (select count(*)::int from semantic_event_decisions where primary_category_key is not null and primary_category_key not like '%.%') as "shallowCategorizedEvents"
   `);
   const row = result.rows[0]!;
   const percentage = (numerator: number, denominator: number) => denominator ? Number(((numerator / denominator) * 100).toFixed(2)) : 100;
@@ -65,6 +70,9 @@ export async function getKnowledgeQualityMetrics() {
       observableEventPercent: percentage(row.observableEvents, row.totalEvents),
       primaryAnchorPercent: percentage(row.anchoredEvents, row.totalEvents),
       rootedVisibleEntityPercent: percentage(row.rootedVisibleEntities, row.visibleDurableEntities),
+      categorizedEventPercent: percentage(row.categorizedEvents, row.totalEvents),
+      level2CategoryPercent: percentage(row.level2CategorizedEvents, row.categorizedEvents),
+      level3CategoryPercent: percentage(row.level3CategorizedEvents, row.categorizedEvents),
     },
     counts: row,
     gates: {
@@ -76,4 +84,3 @@ export async function getKnowledgeQualityMetrics() {
     },
   };
 }
-

@@ -82,9 +82,12 @@ export async function hybridRetrieve(
         coalesce(event.timestamp, event.created_at)::text as "occurredAt",
         coalesce(classified.confidence::float8, 0.5) as confidence, 1::int as frequency,
         ts_rank_cd(event.search_vector, search.query)::float8 as "textScore",
-        jsonb_build_object('source', event.source, 'kind', event.kind, 'status', event.processing_status) as evidence
+        jsonb_build_object('source', event.source, 'kind', event.kind, 'status', event.processing_status,
+          'taxonomyVersion', semantic.taxonomy_version, 'primaryCategoryKey', semantic.primary_category_key,
+          'secondaryCategoryKeys', semantic.secondary_category_keys, 'facets', semantic.facets) as evidence
       from raw_events event cross join search
       left join classified_events classified on classified.raw_event_id = event.id
+      left join semantic_event_decisions semantic on semantic.event_id = event.id
       where event.search_vector @@ search.query and event.privacy_status <> 'hidden'
         and ($2::text is null or event.client_id is not distinct from $2)
         and ($3::text is null or lower(event.source) = lower($3))
@@ -93,7 +96,7 @@ export async function hybridRetrieve(
         and ($6::timestamptz is null or coalesce(event.timestamp, event.created_at) <= $6)
         and ($7::text is null or lower(event.raw::text) like '%' || lower($7) || '%')
         and ($8::text is null or lower(event.raw::text) like '%' || lower($8) || '%')
-        and ($9::text is null or lower(event.raw::text) like '%' || lower($9) || '%')
+        and ($9::text is null or semantic.primary_category_key = $9 or semantic.primary_category_key like $9 || '.%')
       union all
       select 'entity', coalesce(merged.canonical_entity_id, entity.id), entity.value,
         left(entity.description, 600), null, coalesce(merged.canonical_entity_id, entity.id),

@@ -25,7 +25,7 @@ function createQueuedDb(responses: Array<QueryResult<any>>): Queryable {
   };
 }
 
-const { mergeEntities, resolveEntityMatches, upsertEntity } = await import("../src/storage/entity-repository.ts");
+const { mergeEntities, resolveEntityMatches, scoreEntityNameMatch, upsertEntity } = await import("../src/storage/entity-repository.ts");
 const { buildGraphTraversalCacheKey, invalidateGraphTraversalCache, readGraphTraversalCache, writeGraphTraversalCache } = await import("../src/storage/graph-cache.ts");
 const { buildEventSearchQuery } = await import("../src/storage/search-repository.ts");
 const { buildGraphTraversalPaths } = await import("../src/storage/graph-repository.ts");
@@ -111,6 +111,10 @@ test("resolve entity matches deduplicates aliases into the canonical root", asyn
       rowCount: 1,
     },
     {
+      rows: [],
+      rowCount: 0,
+    },
+    {
       rows: [
         {
           id: "entity_1",
@@ -136,6 +140,49 @@ test("resolve entity matches deduplicates aliases into the canonical root", asyn
   assert.equal(matches[0]?.id, "entity_1");
   assert.equal(matches[0]?.matchedEntityId, "entity_2");
   assert.equal(matches[0]?.isCanonical, true);
+});
+
+test("approximate entity-name scoring handles casing, shortened names, and plural variants", () => {
+  const query = "La Casa Azul";
+
+  assert.equal(scoreEntityNameMatch(query, "LA CASA AZUL"), 1);
+  assert.ok(scoreEntityNameMatch(query, "la casa") >= 0.56);
+  assert.ok(scoreEntityNameMatch(query, "CASA azu") >= 0.56);
+  assert.ok(scoreEntityNameMatch(query, "casas azules") >= 0.56);
+  assert.ok(scoreEntityNameMatch(query, "La Pequeña Mar Azul") < 0.56);
+  assert.ok(scoreEntityNameMatch(query, "Spotify") < 0.56);
+});
+
+test("resolve entity matches returns an approximate stored merchant", async () => {
+  const db = createQueuedDb([
+    { rows: [], rowCount: 0 },
+    { rows: [], rowCount: 0 },
+    {
+      rows: [{
+        id: "entity_casa",
+        type: "merchant",
+        value: "Casas Azules",
+        normalizedValue: "casas azules",
+        description: "",
+        identitySource: "user",
+        metadata: {},
+        createdAt: "2026-07-13T00:00:00.000Z",
+        canonicalEntityId: "entity_casa",
+        isCanonical: true,
+        aliasCount: 2,
+        mergeReason: null,
+        mergeConfidence: null,
+        matchedEntityId: "entity_casa",
+        matchText: "CASA azu",
+      }],
+      rowCount: 1,
+    },
+  ]);
+
+  const matches = await resolveEntityMatches(db, { q: "La Casa Azul" });
+
+  assert.equal(matches[0]?.id, "entity_casa");
+  assert.equal(matches[0]?.value, "Casas Azules");
 });
 
 test("merge entities materializes same_as provenance and keeps canonical roots deterministic", async () => {

@@ -38,7 +38,12 @@ export async function ensureOntology(db: Queryable, clientId: string | null) {
   for (const [childName, parentName] of ONTOLOGY_PARENT_RELATIONS) {
     const child = concepts.get(childName)!;
     const parent = concepts.get(parentName) ?? domainByName.get(parentName)!;
-    await upsertRelation(db, { relationType: parent.type === "domain" ? "belongs_to_domain" : "part_of", label: "Part of", description: `${child.value} is part of ${parent.value}`, sourceEntity: ontologyDraft(childName, "concept"), targetEntity: ontologyDraft(parentName, parent.type === "domain" ? "domain" : "concept"), confidence: 1, metadata: { source: "ontology" } }, child.id, parent.id);
+    await setImmediateHierarchyParent(db, {
+      child,
+      parent,
+      confidence: 1,
+      metadata: { source: "ontology", governanceVersion: SEMANTIC_GOVERNANCE_VERSION },
+    });
   }
   if (clientId) {
     for (const domain of domains) {

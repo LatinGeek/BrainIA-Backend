@@ -1,5 +1,6 @@
 import type { EventInput } from "./event.js";
 import { normalizeEntityValue, type EntityDraft } from "./entities.js";
+import { MONEY_NUMBER_SOURCE, parseLocalizedMoneyNumber } from "./money.js";
 
 export type FinancialTransactionCandidate = {
   kind: "expense" | "income" | "transfer";
@@ -15,6 +16,9 @@ export type FinancialTransactionCandidate = {
   confidence: number;
   matchStrategy: string;
   accountId: string | null;
+  destinationAccountId: string | null;
+  destinationAmount: number | null;
+  destinationCurrency: string | null;
   accountName: string | null;
   category: string | null;
 };
@@ -114,9 +118,9 @@ function parseAmountText(
   const trimmed = collapseText(value);
   if (!trimmed) return null;
 
-  const symbolMatch = trimmed.match(/^([$€£])\s*(-?\d+(?:[.,]\d{1,2})?)$/u);
+  const symbolMatch = trimmed.match(new RegExp(String.raw`^([$€£])\s*(-?${MONEY_NUMBER_SOURCE})$`, "u"));
   if (symbolMatch) {
-    const amount = Number(symbolMatch[2].replace(",", "."));
+    const amount = parseLocalizedMoneyNumber(symbolMatch[2]);
     if (!Number.isFinite(amount)) return null;
     return {
       amount,
@@ -125,9 +129,9 @@ function parseAmountText(
     };
   }
 
-  const suffixMatch = trimmed.match(/^(-?\d+(?:[.,]\d{1,2})?)\s*(ars|brl|clp|cop|eur|gbp|mxn|pen|usd|uyu)$/iu);
+  const suffixMatch = trimmed.match(new RegExp(String.raw`^(-?${MONEY_NUMBER_SOURCE})\s*(ars|brl|clp|cop|eur|gbp|mxn|pen|usd|uyu)$`, "iu"));
   if (suffixMatch) {
-    const amount = Number(suffixMatch[1].replace(",", "."));
+    const amount = parseLocalizedMoneyNumber(suffixMatch[1]);
     if (!Number.isFinite(amount)) return null;
     return {
       amount,
@@ -136,9 +140,9 @@ function parseAmountText(
     };
   }
 
-  const prefixMatch = trimmed.match(/^(ars|brl|clp|cop|eur|gbp|mxn|pen|usd|uyu)\s*(-?\d+(?:[.,]\d{1,2})?)$/iu);
+  const prefixMatch = trimmed.match(new RegExp(String.raw`^(ars|brl|clp|cop|eur|gbp|mxn|pen|usd|uyu)\s*(-?${MONEY_NUMBER_SOURCE})$`, "iu"));
   if (prefixMatch) {
-    const amount = Number(prefixMatch[2].replace(",", "."));
+    const amount = parseLocalizedMoneyNumber(prefixMatch[2]);
     if (!Number.isFinite(amount)) return null;
     return {
       amount,
@@ -151,10 +155,10 @@ function parseAmountText(
     return null;
   }
 
-  const plainAmountMatch = trimmed.match(/^-?\d+(?:[.,]\d{1,2})?$/);
+  const plainAmountMatch = trimmed.match(new RegExp(String.raw`^-?${MONEY_NUMBER_SOURCE}$`));
   if (!plainAmountMatch) return null;
 
-  const amount = Number(plainAmountMatch[0].replace(",", "."));
+  const amount = parseLocalizedMoneyNumber(plainAmountMatch[0]);
   if (!Number.isFinite(amount)) return null;
 
   return {
@@ -269,6 +273,14 @@ export function buildFinancialTransactionCandidate(input: {
     confidence: input.classified.confidence,
     matchStrategy: merchantDraft?.id ? "merchant_entity_match" : "merchant_text_match",
     accountId: readRawString(raw, ["accountId", "account_id"]) ?? null,
+    destinationAccountId: readRawString(raw, ["destinationAccountId", "destination_account_id"]) ?? null,
+    destinationAmount: (() => {
+      const value = readRawString(raw, ["destinationAmount", "destination_amount"]);
+      if (!value) return null;
+      const parsed = Number(value.replace(",", "."));
+      return Number.isFinite(parsed) && parsed > 0 ? Number(parsed.toFixed(2)) : null;
+    })(),
+    destinationCurrency: parseCurrencyHint(readRawString(raw, ["destinationCurrency", "destination_currency"])),
     accountName: readRawString(raw, ["accountName", "account_name", "accountLabel"]) ?? null,
     category: readRawString(raw, ["category", "categoryName", "category_name"]) ?? null,
   };

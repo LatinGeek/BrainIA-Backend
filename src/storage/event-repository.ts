@@ -35,6 +35,10 @@ export type StoredEventRecord = EventInput & {
   interpretationModel: string | null;
   interpretationPromptVersion: string | null;
   interpretationFailureReason: string | null;
+  taxonomyVersion: string | null;
+  primaryCategoryKey: string | null;
+  secondaryCategoryKeys: string[];
+  facets: Array<{ type: string; value: string; normalizedValue: string; confidence: number; source: string }>;
   classificationVersion: string;
   inferredKind: ClassifiedEvent["inferredKind"];
   confidence: number;
@@ -440,6 +444,10 @@ export async function loadStoredEventById(
         c.interpretation_model as "interpretationModel",
         c.interpretation_prompt_version as "interpretationPromptVersion",
         c.interpretation_failure_reason as "interpretationFailureReason",
+        semantic.taxonomy_version as "taxonomyVersion",
+        semantic.primary_category_key as "primaryCategoryKey",
+        coalesce(semantic.secondary_category_keys, '{}') as "secondaryCategoryKeys",
+        coalesce(semantic.facets, '[]'::jsonb) as facets,
         c.entities as "classifiedEntities",
         r.created_at as "rawEventCreatedAt",
         c.created_at as "classifiedEventCreatedAt",
@@ -482,6 +490,7 @@ export async function loadStoredEventById(
         ) as relations
       from raw_events r
       left join classified_events c on c.raw_event_id = r.id
+      left join semantic_event_decisions semantic on semantic.event_id = r.id
       where r.id = $1
       limit 1
     `,
@@ -549,6 +558,10 @@ export async function listStoredEvents() {
         c.interpretation_model as "interpretationModel",
         c.interpretation_prompt_version as "interpretationPromptVersion",
         c.interpretation_failure_reason as "interpretationFailureReason",
+        semantic.taxonomy_version as "taxonomyVersion",
+        semantic.primary_category_key as "primaryCategoryKey",
+        coalesce(semantic.secondary_category_keys, '{}') as "secondaryCategoryKeys",
+        coalesce(semantic.facets, '[]'::jsonb) as facets,
         c.entities as "classifiedEntities",
         r.created_at as "rawEventCreatedAt",
         c.created_at as "classifiedEventCreatedAt",
@@ -591,6 +604,7 @@ export async function listStoredEvents() {
         ) as relations
       from raw_events r
       left join classified_events c on c.raw_event_id = r.id
+      left join semantic_event_decisions semantic on semantic.event_id = r.id
       order by r.created_at asc
     `,
   );

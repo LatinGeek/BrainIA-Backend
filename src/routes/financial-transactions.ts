@@ -25,8 +25,19 @@ const contextSchema = z.object({
   category: z.string().trim().max(120).nullable().optional(),
   accountId: z.string().trim().max(200).nullable().optional(),
   destinationAccountId: z.string().trim().max(200).nullable().optional(),
+  destinationAmount: z.number().positive().nullable().optional(),
+  destinationCurrency: z.enum(["UYU", "USD"]).nullable().optional(),
   currency: z.enum(["UYU", "USD"]).optional(),
   kind: z.enum(["expense", "income", "transfer"]).optional(),
+}).superRefine((value, context) => {
+  if (value.kind !== "transfer") return;
+  if (!value.accountId) context.addIssue({ code: z.ZodIssueCode.custom, path: ["accountId"], message: "A source account is required for transfers" });
+  if (!value.destinationAccountId) context.addIssue({ code: z.ZodIssueCode.custom, path: ["destinationAccountId"], message: "A destination account is required for transfers" });
+  if (value.accountId && value.destinationAccountId && value.accountId === value.destinationAccountId) {
+    context.addIssue({ code: z.ZodIssueCode.custom, path: ["destinationAccountId"], message: "A transfer must use two different accounts" });
+  }
+  if (!value.destinationAmount || value.destinationAmount <= 0) context.addIssue({ code: z.ZodIssueCode.custom, path: ["destinationAmount"], message: "A positive destination amount is required for transfers" });
+  if (!value.destinationCurrency) context.addIssue({ code: z.ZodIssueCode.custom, path: ["destinationCurrency"], message: "A destination currency is required for transfers" });
 });
 
 const accountSchema = z.object({

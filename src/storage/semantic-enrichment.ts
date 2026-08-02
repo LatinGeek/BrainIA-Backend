@@ -7,10 +7,17 @@ import {
   MAX_SEMANTIC_DEPTH,
   NEW_NODE_OBSERVATION_CONFIDENCE,
   ONTOLOGY_PARENT_RELATIONS,
+  ONTOLOGY_TREE,
   PRIMARY_ROOT_CONFIDENCE,
   PRIMARY_ROOT_MARGIN,
   SEMANTIC_GOVERNANCE_VERSION,
   SEMANTIC_PROMPT_VERSION,
+  TAXONOMY_VERSION,
+  categoryByKey,
+  categoryByLabel,
+  categoryCatalogPrompt,
+  categoryKeyForPath,
+  categoryPath,
   ontologyTreePrompt,
 } from "../domain/ontology.js";
 import { normalizeRelationType } from "../domain/relations.js";
@@ -47,6 +54,15 @@ export type SemanticPathDecision = {
   proposedChild?: { value: string; description: string; parent: string; durable: boolean; confidence: number } | null;
   mergeTargetNormalizedValue?: string | null;
   eventAnchor?: boolean;
+  categoryKey?: string | null;
+};
+
+export type SemanticFacet = {
+  type: "merchant" | "account" | "channel" | "sender" | "recipient" | "location" | "recurrence" | "payment_method" | "status";
+  value: string;
+  normalizedValue: string;
+  confidence: number;
+  source: "deterministic" | "deepseek";
 };
 
 export type SemanticAssociationDecision = {
@@ -67,6 +83,10 @@ export type SemanticDecision = {
   status: "resolved" | "review" | "unclassified" | "model_unavailable" | "retryable" | "discarded";
   source: "deepseek" | "structural";
   failureReason?: "missing_api_key" | "empty_response" | "invalid_response" | "model_error" | "privacy_policy";
+  taxonomyVersion: typeof TAXONOMY_VERSION;
+  primaryCategoryKey: string | null;
+  secondaryCategoryKeys: string[];
+  facets: SemanticFacet[];
 };
 
 const alternativeSchema = z.object({ value: z.string().min(1).max(120), confidence: z.number().min(0).max(1) });
@@ -93,6 +113,7 @@ const pathSchema = z.object({
   rationale: z.string().min(1).max(600),
   proposedChild: z.object({ value: z.string().min(2).max(120), description: z.string().min(20).max(500), parent: z.string().min(1).max(120), durable: z.boolean(), confidence: z.number().min(0).max(1) }).nullable().optional(),
   mergeTargetNormalizedValue: z.string().min(1).nullable().optional(),
+  categoryKey: z.string().min(1).max(160).nullable().optional(),
 });
 const modelSchema = z.object({
   rootAlternatives: z.array(alternativeSchema).min(1).max(LIFE_DOMAINS.length),
@@ -101,7 +122,41 @@ const modelSchema = z.object({
     sourceNormalizedValue: z.string().min(1), targetNormalizedValue: z.string().min(1),
     relationType: z.string().min(1).max(80), confidence: z.number().min(0).max(1), rationale: z.string().min(1).max(400),
   })).max(20).default([]),
+  primaryCategoryKey: z.string().min(1).max(160).nullable().optional(),
+  secondaryCategoryKeys: z.array(z.string().min(1).max(160)).max(4).default([]),
+  facets: z.array(z.object({
+    type: z.enum(["merchant", "account", "channel", "sender", "recipient", "location", "recurrence", "payment_method", "status"]),
+    value: z.string().min(1).max(160),
+    confidence: z.number().min(0).max(1),
+  })).max(20).default([]),
 });
+
+function deterministicFacets(entities: EntityDraft[], source: string, inferredKind: string): SemanticFacet[] {
+  const supported = new Map<string, SemanticFacet["type"]>([
+    ["merchant", "merchant"], ["sender", "sender"], ["recipient", "recipient"], ["app", "channel"],
+    ["account", "account"], ["card_last_four", "payment_method"], ["location", "location"],
+  ]);
+  const facets: SemanticFacet[] = entities.flatMap((entity) => {
+    const type = supported.get(entity.type);
+    return type ? [{ type, value: entity.value, normalizedValue: entity.normalizedValue, confidence: 0.9, source: "deterministic" as const }] : [];
+  });
+  if (source.trim() && !facets.some((facet) => facet.type === "channel" && facet.normalizedValue === normalizeEntityValue(source))) {
+    facets.push({ type: "channel", value: source.trim(), normalizedValue: normalizeEntityValue(source), confidence: 1, source: "deterministic" });
+  }
+  facets.push({ type: "status", value: inferredKind, normalizedValue: normalizeEntityValue(inferredKind), confidence: 1, source: "deterministic" });
+  return [...new Map(facets.map((facet) => [`${facet.type}:${facet.normalizedValue}`, facet])).values()];
+}
+
+function decisionCategorization(paths: SemanticPathDecision[]) {
+  const anchored = paths.filter((path) => path.eventAnchor !== false && ["activity_instance", "financial_event", "email_message"].includes(path.subject.type));
+  const primary = anchored.find((path) => path.role === "primary") ?? paths.find((path) => path.role === "primary");
+  const primaryCategoryKey = primary?.categoryKey ?? categoryKeyForPath(primary?.hierarchyPath ?? []);
+  const secondaryCategoryKeys = [...new Set(paths
+    .filter((path) => path.role === "secondary")
+    .map((path) => path.categoryKey ?? categoryKeyForPath(path.hierarchyPath))
+    .filter((key): key is string => Boolean(key)))];
+  return { primaryCategoryKey: primaryCategoryKey ?? null, secondaryCategoryKeys };
+}
 
 async function requestSemanticJson(input: {
   apiKey: string;
@@ -203,7 +258,7 @@ async function loadCanonicalContext(clientId: string | null, query: string) {
 function validatePath(path: z.infer<typeof pathSchema>, context: Awaited<ReturnType<typeof loadCanonicalContext>>, subject?: EntityDraft) {
   if (!LIFE_DOMAINS.includes(path.domain as typeof LIFE_DOMAINS[number])) return false;
   if (normalizeEntityValue(path.hierarchyPath[0] ?? "") !== normalizeEntityValue(path.domain)) return false;
-  const knownNames = new Set([...LIFE_DOMAINS, ...context.entities.map((entity) => entity.value)].map(normalizeEntityValue));
+  const knownNames = new Set([...LIFE_DOMAINS, ...context.entities.map((entity) => entity.value), ...Object.keys(ONTOLOGY_TREE)].map(normalizeEntityValue));
   const parents = new Set(context.hierarchy.map(({ child, parent }) => `${normalizeEntityValue(child)}|${normalizeEntityValue(parent)}`));
   for (let index = 1; index < path.hierarchyPath.length; index += 1) {
     const child = path.hierarchyPath[index]!;
@@ -214,7 +269,8 @@ function validatePath(path: z.infer<typeof pathSchema>, context: Awaited<ReturnT
   if (path.action === "reuse" && !knownNames.has(normalizeEntityValue(leaf))) return false;
   if (subject && ["financial_event", "email_message", "activity_instance"].includes(subject.type) && path.action === "reuse") {
     const reusableMeaning = context.entities.find((entity) => entity.normalizedValue === normalizeEntityValue(leaf));
-    if (reusableMeaning?.type !== "concept") return false;
+    if (reusableMeaning?.type !== "concept" && categoryByLabel(leaf)?.kind === "domain") return false;
+    if (!reusableMeaning && !categoryByLabel(leaf)) return false;
   }
   if (path.action === "merge" && (!path.mergeTargetNormalizedValue || !knownNames.has(normalizeEntityValue(path.mergeTargetNormalizedValue)))) return false;
   if (path.action === "create") {
@@ -228,20 +284,54 @@ function structuralDecision(input: { entities: EntityDraft[]; inferredKind: stri
   const subjects = input.entities.filter(isSemanticSubject);
   const financial = input.inferredKind === "expense" || input.inferredKind === "income" || input.inferredKind === "transfer";
   const email = input.inferredKind === "email" || /(?:gmail|outlook|email|imap)/iu.test(input.source ?? "");
+  const activityEvidence = normalizeEntityValue(`${input.source ?? ""} ${input.entities.map((entity) => entity.value).join(" ")}`);
+  const homeDeviceAlert = /(?:xiaomi home|home assistant|smartthings|google home|alexa)/u.test(activityEvidence)
+    && /(?:motion|movement|sensor|detected|detecto|device alert)/u.test(activityEvidence);
+  const musicPlayback = /(?:spotify|apple music|youtube music|tidal|deezer|now playing)/u.test(activityEvidence);
   const paths: SemanticPathDecision[] = [];
   if (financial) {
+    const categoryKey = input.inferredKind === "income" ? "finances.income"
+      : input.inferredKind === "transfer" ? "finances.transfers"
+        : "finances.spending.card_purchase";
+    const hierarchyPath = categoryPath(categoryKey).map((node) => node.label);
     const financialSubjects = subjects.filter((candidate) => candidate.type === "merchant" || candidate.type === "financial_event");
-    financialSubjects.forEach((subject, index) => paths.push({ subject, role: "primary", domain: "Finances", action: "reuse", hierarchyPath: ["Finances", "Financial activity"], steps: [], confidence: 0.9, rationale: "A classified financial subject belongs to Financial activity.", eventAnchor: index === 0 }));
+    const hasFinancialEvent = financialSubjects.some((subject) => subject.type === "financial_event");
+    financialSubjects.forEach((subject, index) => paths.push({ subject, role: "primary", domain: "Finances", action: "reuse", hierarchyPath, steps: [], confidence: 0.9, rationale: `A classified ${input.inferredKind} belongs to ${hierarchyPath[hierarchyPath.length - 1]}.`, eventAnchor: hasFinancialEvent ? subject.type === "financial_event" : index === 0, categoryKey }));
   }
   if (email) {
     const emailSubjects = subjects.filter((candidate) => ["email_message", "recipient", "sender"].includes(candidate.type));
     const emailRole = paths.some((path) => path.role === "primary") ? "secondary" as const : "primary" as const;
+    const hasEmailMessage = emailSubjects.some((subject) => subject.type === "email_message");
     emailSubjects.forEach((subject, index) => {
-      const leaf = subject.type === "recipient" ? "Email accounts" : subject.type === "sender" ? "Email contacts" : "Email";
-      paths.push({ subject, role: emailRole, domain: "Communication", action: "reuse", hierarchyPath: leaf === "Email" ? ["Communication", "Email"] : ["Communication", "Email", leaf], steps: [], confidence: 0.9, rationale: `${subject.value} belongs to the ${leaf} branch.`, eventAnchor: index === 0 });
+      const categoryKey = subject.type === "recipient" ? "communication.email.accounts" : subject.type === "sender" ? "communication.email.contacts" : "communication.email.activity";
+      const hierarchyPath = categoryPath(categoryKey).map((node) => node.label);
+      paths.push({ subject, role: emailRole, domain: "Communication", action: "reuse", hierarchyPath, steps: [], confidence: 0.9, rationale: `${subject.value} belongs to the ${hierarchyPath[hierarchyPath.length - 1]} branch.`, eventAnchor: hasEmailMessage ? subject.type === "email_message" : index === 0, categoryKey });
     });
   }
+  const activityCategoryKey = homeDeviceAlert
+    ? "home.automation.device_alert"
+    : musicPlayback
+      ? "entertainment.music"
+      : null;
+  if (activityCategoryKey) {
+    const hierarchyPath = categoryPath(activityCategoryKey).map((node) => node.label);
+    const activitySubjects = subjects.filter((candidate) => candidate.type === "activity_instance");
+    const role = paths.some((path) => path.role === "primary") ? "secondary" as const : "primary" as const;
+    activitySubjects.forEach((subject, index) => paths.push({
+      subject,
+      role,
+      domain: hierarchyPath[0]!,
+      action: "reuse",
+      hierarchyPath,
+      steps: [],
+      confidence: 0.95,
+      rationale: `Trusted provider and event signals map this activity to ${hierarchyPath[hierarchyPath.length - 1]}.`,
+      eventAnchor: index === 0,
+      categoryKey: activityCategoryKey,
+    }));
+  }
   const rootAlternatives = [...new Map(paths.map((path) => [path.domain, { value: path.domain, confidence: path.confidence }])).values()];
+  const categorization = decisionCategorization(paths);
   return {
     paths,
     associations: [],
@@ -252,10 +342,13 @@ function structuralDecision(input: { entities: EntityDraft[]; inferredKind: stri
     status: input.status ?? (input.failureReason ? "retryable" : "model_unavailable"),
     source: "structural",
     failureReason: input.failureReason,
+    taxonomyVersion: TAXONOMY_VERSION,
+    ...categorization,
+    facets: deterministicFacets(input.entities, input.source ?? "", input.inferredKind),
   };
 }
 
-export async function buildModelSemanticDecision(input: { entities: EntityDraft[]; source: string; inferredKind: string; title?: string; body?: string; clientId: string | null; independentSubjectAudit?: boolean; allowModel?: boolean }): Promise<SemanticDecision> {
+export async function buildModelSemanticDecision(input: { entities: EntityDraft[]; source: string; inferredKind: string; title?: string; body?: string; clientId: string | null; independentSubjectAudit?: boolean; allowModel?: boolean; auditEventId?: string | null }): Promise<SemanticDecision> {
   const model = process.env.DEEPSEEK_MODEL ?? "deepseek-v4-flash";
   if (input.allowModel === false) return structuralDecision({ entities: input.entities, inferredKind: input.inferredKind, source: input.source, model, failureReason: "privacy_policy", status: "review" });
   if (!process.env.DEEPSEEK_API_KEY) return structuralDecision({ entities: input.entities, inferredKind: input.inferredKind, source: input.source, model, failureReason: "missing_api_key" });
@@ -279,12 +372,15 @@ export async function buildModelSemanticDecision(input: { entities: EntityDraft[
       apiKey: process.env.DEEPSEEK_API_KEY,
       model,
       clientId: input.clientId,
-      eventId: String(input.entities.find((entity) => typeof entity.metadata?.eventId === "string")?.metadata?.eventId ?? "") || null,
+      eventId: input.auditEventId === undefined
+        ? String(input.entities.find((entity) => typeof entity.metadata?.eventId === "string")?.metadata?.eventId ?? "") || null
+        : input.auditEventId,
       policy,
       systemPrompt: `Return strict JSON only. Governance ${SEMANTIC_GOVERNANCE_VERSION}. You govern durable personal knowledge, not keywords.
 
 Roots: ${LIFE_DOMAINS.join(", ")}.
 Seed tree: ${ontologyTreePrompt()}.
+Stable category catalog: ${categoryCatalogPrompt()}.
 
 For each event choose one primary root only when confidence >= ${PRIMARY_ROOT_CONFIDENCE} and it leads the runner-up by >= ${PRIMARY_ROOT_MARGIN}. Then classify every supplied durable subject independently, descending through immediate existing children and recording one step per level. Every supplied event instance (financial_event, email_message, or activity_instance) must receive a meaningful identity and a path unless the evidence truly cannot identify what happened. Several subjects may have paths in the same domain; that does not create extra event anchors. Evaluate other roots independently and use no_relation for incidental matches. A path contains the root through the immediate parent of its supplied subject. Never include the subject itself in hierarchyPath and never skip an existing intermediate parent. Recipient addresses normally descend through Email accounts; external senders normally descend through Email contacts. A merchant must be placed by what it represents, not merely because its event contains a payment.
 
@@ -294,7 +390,9 @@ Associations are separate from hierarchy. Use only: ${[...STANDARD_ASSOCIATION_T
 
 Every path must also define the durable identity of its subject. canonicalName must be a concise, independently meaningful graph label chosen from the evidence; never copy an event title, sentence, amount, timestamp, card suffix, action word, or truncated fragment. Preserve factual proper nouns for known people, merchants, apps, and accounts while normalizing casing and noise. description must explain what the entity represents in the user's knowledge graph without inventing facts. If a safe meaningful identity cannot be produced, use discard and do not propose a node.
 
-Return {"rootAlternatives":[{"value","confidence"}],"paths":[{"subjectNormalizedValue","identity":{"canonicalName","description","confidence"},"role":"primary|secondary","domain","action":"reuse|create|merge|discard|no_relation","hierarchyPath":["Root","Immediate child"],"steps":[{"parent","decision":"descend_existing|stop|propose_child|merge|discard|no_relation","selectedChild":null,"confidence", "alternatives":[]}],"confidence","rationale","proposedChild":{"value","description","parent","durable","confidence"}|null,"mergeTargetNormalizedValue":null}],"associations":[{"sourceNormalizedValue","targetNormalizedValue","relationType","confidence","rationale"}]}.`,
+For paths ending at a catalog category, return its stable categoryKey. Return one primaryCategoryKey for the captured event, independently useful secondaryCategoryKeys only, and facets for merchant, account, channel, sender, recipient, location, recurrence, payment_method, or status. Facets never alter hierarchy.
+
+Return {"rootAlternatives":[{"value","confidence"}],"primaryCategoryKey":"stable.key|null","secondaryCategoryKeys":[],"facets":[{"type","value","confidence"}],"paths":[{"subjectNormalizedValue","identity":{"canonicalName","description","confidence"},"role":"primary|secondary","domain","action":"reuse|create|merge|discard|no_relation","hierarchyPath":["Root","Immediate child"],"categoryKey":"stable.key|null","steps":[{"parent","decision":"descend_existing|stop|propose_child|merge|discard|no_relation","selectedChild":null,"confidence", "alternatives":[]}],"confidence","rationale","proposedChild":{"value","description","parent","durable","confidence"}|null,"mergeTargetNormalizedValue":null}],"associations":[{"sourceNormalizedValue","targetNormalizedValue","relationType","confidence","rationale"}]}.`,
       userPrompt: JSON.stringify({ source: input.source, inferredKind: input.inferredKind, title: input.title ?? null, body: input.body ?? null, subjects: input.entities.filter(isSemanticSubject).map((entity) => ({ type: entity.type, value: entity.value, normalizedValue: entity.normalizedValue })), canonicalContext }),
     });
     if (!parsed) return structuralDecision({ entities: input.entities, inferredKind: input.inferredKind, source: input.source, model, failureReason: "invalid_response" });
@@ -313,7 +411,9 @@ Return {"rootAlternatives":[{"value","confidence"}],"paths":[{"subjectNormalized
         apiKey: process.env.DEEPSEEK_API_KEY,
         model,
         clientId: input.clientId,
-        eventId: typeof suppliedEvent.metadata?.eventId === "string" ? suppliedEvent.metadata.eventId : null,
+        eventId: input.auditEventId === undefined
+          ? (typeof suppliedEvent.metadata?.eventId === "string" ? suppliedEvent.metadata.eventId : null)
+          : input.auditEventId,
         policy,
         operation: "semantic_event_identity",
         systemPrompt: `Return strict JSON only. Governance ${SEMANTIC_GOVERNANCE_VERSION}. Classify exactly one captured event as reusable knowledge evidence.
@@ -359,7 +459,7 @@ Return {"rootAlternatives":[{"value","confidence"}],"paths":[{"subjectNormalized
     });
     const seenSubjects = new Set<string>();
     let primarySeen = false;
-    const paths = governedRawPaths.flatMap((rawPath): SemanticPathDecision[] => {
+    let paths = governedRawPaths.flatMap((rawPath): SemanticPathDecision[] => {
       const subject = subjectByValue.get(rawPath.subjectNormalizedValue);
       if (!subject) return [];
       const path = refineTypedExistingPath(rawPath, subject);
@@ -372,7 +472,9 @@ Return {"rootAlternatives":[{"value","confidence"}],"paths":[{"subjectNormalized
       seenSubjects.add(subjectKey);
       if (path.role === "primary") primarySeen = true;
       const governedSubject = applyModelIdentity(subject, path.identity, model);
-      return [{ subject: governedSubject, identity: path.identity, role: path.role, domain: path.domain, action: path.action, hierarchyPath: path.hierarchyPath, steps: path.steps, confidence: path.confidence, rationale: path.rationale, proposedChild: path.proposedChild, mergeTargetNormalizedValue: path.mergeTargetNormalizedValue }];
+      const derivedCategoryKey = categoryKeyForPath(path.hierarchyPath);
+      if (path.categoryKey && (!categoryByKey(path.categoryKey) || path.categoryKey !== derivedCategoryKey)) return [];
+      return [{ subject: governedSubject, identity: path.identity, role: path.role, domain: path.domain, action: path.action, hierarchyPath: path.hierarchyPath, steps: path.steps, confidence: path.confidence, rationale: path.rationale, proposedChild: path.proposedChild, mergeTargetNormalizedValue: path.mergeTargetNormalizedValue, categoryKey: derivedCategoryKey }];
     });
     const hasEventPath = paths.some((path) => ["financial_event", "email_message", "activity_instance"].includes(path.subject.type));
     const primaryContainer = paths.find((path) => path.role === "primary" && !["financial_event", "email_message", "activity_instance"].includes(path.subject.type));
@@ -407,11 +509,34 @@ Return {"rootAlternatives":[{"value","confidence"}],"paths":[{"subjectNormalized
         });
       }
     }
+    // A catalog-backed deterministic classification is a stronger signal than
+    // unconstrained model hierarchy output. Keep it as the primary event path,
+    // while allowing the model to add only catalog-backed secondary views. This
+    // prevents live inference from erasing known categories or minting a new
+    // concept for an event class the taxonomy already represents.
+    const structuralBaseline = structuralDecision({
+      entities: input.entities,
+      inferredKind: input.inferredKind,
+      source: input.source,
+      model,
+      status: "review",
+    });
+    if (structuralBaseline.primaryCategoryKey) {
+      const primaryDomain = categoryPath(structuralBaseline.primaryCategoryKey)[0]?.label;
+      const secondaryModelPaths = paths
+        .filter((path) => path.action === "reuse"
+          && Boolean(path.categoryKey)
+          && normalizeEntityValue(path.domain) !== normalizeEntityValue(primaryDomain ?? ""))
+        .map((path) => ({ ...path, role: "secondary" as const, eventAnchor: false }));
+      paths = [...structuralBaseline.paths, ...secondaryModelPaths];
+      primarySeen = paths.some((path) => path.role === "primary");
+    }
     const anchoredDomains = new Set<string>();
     for (const path of paths) {
+      if (path.eventAnchor === false) continue;
       const domainKey = normalizeEntityValue(path.domain);
-      if (path.eventAnchor !== false) path.eventAnchor = !anchoredDomains.has(domainKey);
-      anchoredDomains.add(domainKey);
+      path.eventAnchor = !anchoredDomains.has(domainKey);
+      if (path.eventAnchor) anchoredDomains.add(domainKey);
     }
     const knownSubjects = new Set(input.entities.filter(isSemanticSubject).map((entity) => entity.normalizedValue));
     const governedIdentities = new Map(paths.map((path) => [String(path.subject.metadata?.evidenceNormalizedValue ?? path.subject.normalizedValue), path.subject.normalizedValue]));
@@ -423,7 +548,15 @@ Return {"rootAlternatives":[{"value","confidence"}],"paths":[{"subjectNormalized
     const coveredSubjects = new Set(paths.map((path) => String(path.subject.metadata?.evidenceNormalizedValue ?? path.subject.normalizedValue)));
     const suppliedSubjects = input.entities.filter(isSemanticSubject);
     const needsReview = !primarySeen || suppliedSubjects.some((subject) => !coveredSubjects.has(subject.normalizedValue)) || paths.some((path) => path.action !== "reuse" || path.confidence < AUTO_APPLY_CONFIDENCE) || associations.some((association) => association.confidence < AUTO_APPLY_CONFIDENCE);
-    return { paths, associations, rootAlternatives: roots, governanceVersion: SEMANTIC_GOVERNANCE_VERSION, promptVersion: SEMANTIC_PROMPT_VERSION, model, status: paths.length ? (needsReview ? "review" : "resolved") : "unclassified", source: "deepseek" };
+    const categorization = decisionCategorization(paths);
+    const evidenceText = normalizeEntityValue([input.source, input.title, input.body, ...input.entities.map((entity) => entity.value)].filter(Boolean).join(" "));
+    const modelFacets: SemanticFacet[] = parsed.facets.flatMap((facet) => {
+      const normalizedValue = normalizeEntityValue(facet.value);
+      if (facet.confidence < PRIMARY_ROOT_CONFIDENCE || !evidenceText.includes(normalizedValue)) return [];
+      return [{ ...facet, normalizedValue, source: "deepseek" as const }];
+    });
+    const facets = [...new Map([...deterministicFacets(input.entities, input.source, input.inferredKind), ...modelFacets].map((facet) => [`${facet.type}:${facet.normalizedValue}`, facet])).values()];
+    return { paths, associations, rootAlternatives: roots, governanceVersion: SEMANTIC_GOVERNANCE_VERSION, promptVersion: SEMANTIC_PROMPT_VERSION, model, status: paths.length ? (needsReview ? "review" : "resolved") : "unclassified", source: "deepseek", taxonomyVersion: TAXONOMY_VERSION, ...categorization, facets };
   } catch (error) {
     if (process.env.DEBUG_SEMANTIC === "true") console.warn("semantic_model_error", error instanceof Error ? error.message : String(error));
     return structuralDecision({ entities: input.entities, inferredKind: input.inferredKind, source: input.source, model, failureReason: "model_error" });

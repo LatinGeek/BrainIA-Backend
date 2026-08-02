@@ -307,6 +307,17 @@ These endpoints are meant to support:
 For the MVP, the primary agent entrypoint is `GET /api/v1/agent/inspect`.
 The lower-level entity resolve and graph routes are support helpers.
 
+### `GET /api/v1/graph?projection=taxonomy&depth=1&root=finances`
+
+Returns the progressive category projection used by the mobile knowledge map.
+Without `root`, the response starts at all life domains; `root` accepts a stable
+taxonomy key and `depth` is clamped to 1-4. Category nodes add `taxonomyKey`,
+`parentEntityId`, `breadcrumb`, `childCount`, `evidenceCount`, and `hasMore`.
+The existing network projection remains the default for backward compatibility.
+
+Identity and event-evidence exploration remains explicit through the network
+projection and `includeEventEvidence=true`; evidence never becomes a category.
+
 ### `GET /api/v1/entities/resolve?id=...`
 
 or

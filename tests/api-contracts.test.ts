@@ -24,6 +24,22 @@ test("financial consolidation route is registered and validates its payload", as
   }
 });
 
+test("reclassifying a transaction as a transfer requires complete transfer context", async () => {
+  const app = await createApp();
+  try {
+    const response = await app.inject({
+      method: "PATCH",
+      url: "/api/v1/financial/transactions/financial_expense",
+      payload: { kind: "transfer", accountId: "account_uyu" },
+    });
+
+    assert.equal(response.statusCode, 400);
+    assert.equal((response.json() as { error: string }).error, "invalid_financial_transaction_context");
+  } finally {
+    await app.close();
+  }
+});
+
 test("agent tool manifest is minimal and self-describing", async () => {
   const app = await createApp();
   try {

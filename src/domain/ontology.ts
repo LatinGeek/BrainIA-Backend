@@ -5,39 +5,139 @@ export const LIFE_DOMAINS = [
   "Location", "Home", "Food", "Communication", "Learning", "Entertainment",
 ] as const;
 
-export const SEEDED_CONCEPTS = [
-  "Email", "Email accounts", "Email contacts", "Financial activity", "Food / Delivery",
-  "Food / Groceries", "Home automation", "Music", "Orders",
-] as const;
+export type CategoryDefinition = {
+  key: string;
+  label: string;
+  description: string;
+  parentKey: string | null;
+  level: number;
+  kind: "domain" | "family" | "class" | "subtype";
+  allowedEventKinds?: readonly string[];
+  aliases?: readonly string[];
+};
 
-export const ONTOLOGY_PARENT_RELATIONS = [
-  ["Food / Delivery", "Food"],
-  ["Food / Groceries", "Food"],
-  ["Home automation", "Home"],
-  ["Email", "Communication"],
-  ["Email accounts", "Email"],
-  ["Email contacts", "Email"],
-  ["Financial activity", "Finances"],
-  ["Music", "Entertainment"],
-  ["Orders", "Food / Delivery"],
-] as const;
+export const TAXONOMY_VERSION = "personal-activity-v1";
 
-export const ONTOLOGY_TREE = {
-  Food: ["Food / Delivery", "Food / Groceries"],
-  Home: ["Home automation"],
-  Communication: ["Email"],
-  Email: ["Email accounts", "Email contacts"],
-  Entertainment: ["Music"],
-  Finances: ["Financial activity"], Health: [], Social: [], Work: [], Entrepreneurship: [], Psychology: [], Location: [], Learning: [],
-} as const;
+const domain = (key: string, label: typeof LIFE_DOMAINS[number], description: string): CategoryDefinition => ({
+  key, label, description, parentKey: null, level: 0, kind: "domain",
+});
+const category = (key: string, label: string, description: string, parentKey: string, level: number, kind: CategoryDefinition["kind"] = "family", allowedEventKinds?: readonly string[], aliases?: readonly string[]): CategoryDefinition => ({
+  key, label, description, parentKey, level, kind, allowedEventKinds, aliases,
+});
 
-export const SEMANTIC_GOVERNANCE_VERSION = "semantic-governance-v4";
-export const SEMANTIC_PROMPT_VERSION = "semantic-meaning-v4";
+// Stable keys are the contract. Labels remain user-facing and may evolve
+// without invalidating model fixtures, semantic rules, or API filters.
+export const CATEGORY_CATALOG = [
+  domain("health", "Health", "Physical health, healthcare, exercise, symptoms, medication, and wellbeing."),
+  domain("social", "Social", "Relationships, social interactions, communities, and shared activities."),
+  domain("finances", "Finances", "Money, accounts, transactions, spending, income, and financial decisions."),
+  domain("work", "Work", "Employment, professional responsibilities, colleagues, and workplace activity."),
+  domain("entrepreneurship", "Entrepreneurship", "Ventures, business building, customers, and commercial activity."),
+  domain("psychology", "Psychology", "Emotional patterns, mental wellbeing, motivations, habits, and reflection."),
+  domain("location", "Location", "Places, movement, travel, and geographic context."),
+  domain("home", "Home", "Household, living environment, domestic routines, utilities, and connected devices."),
+  domain("food", "Food", "Meals, groceries, restaurants, delivery, and food-related habits."),
+  domain("communication", "Communication", "Messages, email, contacts, conversations, and communication channels."),
+  domain("learning", "Learning", "Study, research, skills, educational material, and knowledge development."),
+  domain("entertainment", "Entertainment", "Music, media, games, leisure, and recreational interests."),
+
+  category("finances.activity", "Financial activity", "Concrete movements of money and account activity.", "finances", 1, "family", ["expense", "income", "transfer"]),
+  category("finances.spending", "Spending", "Money leaving the user's accounts for purchases, bills, fees, or withdrawals.", "finances.activity", 2, "class", ["expense"]),
+  category("finances.spending.card_purchase", "Card purchases", "Completed purchases made using a debit or credit card.", "finances.spending", 3, "subtype", ["expense"], ["card payment", "card charge"]),
+  category("finances.spending.subscription", "Subscriptions", "Recurring payments for memberships or services.", "finances.spending", 3, "subtype", ["expense"]),
+  category("finances.spending.bill", "Bills and services", "Payments for utilities, invoices, and recurring household or professional services.", "finances.spending", 3, "subtype", ["expense"]),
+  category("finances.spending.fee", "Fees and charges", "Bank, platform, tax, and service fees.", "finances.spending", 3, "subtype", ["expense"]),
+  category("finances.spending.cash", "Cash withdrawals", "Cash withdrawn from an account or card.", "finances.spending", 3, "subtype", ["expense"]),
+  category("finances.income", "Income", "Money entering the user's accounts.", "finances.activity", 2, "class", ["income"]),
+  category("finances.income.salary", "Salary income", "Salary, payroll, and employment compensation.", "finances.income", 3, "subtype", ["income"], ["salary", "payroll"]),
+  category("finances.income.refund", "Refunds", "Returned money, reversals, and reimbursements.", "finances.income", 3, "subtype", ["income"]),
+  category("finances.transfers", "Transfers", "Money moved between accounts or people.", "finances.activity", 2, "class", ["transfer"]),
+  category("finances.transfers.internal", "Internal transfers", "Transfers between accounts controlled by the user.", "finances.transfers", 3, "subtype", ["transfer"]),
+  category("finances.transfers.external", "External transfers", "Transfers to or from another person or organization.", "finances.transfers", 3, "subtype", ["transfer"]),
+  category("finances.accounts", "Accounts and cards", "Financial accounts, balances, cards, and their administrative state.", "finances", 1, "family"),
+
+  category("communication.email", "Email", "Electronic messages and the identities and conversations around them.", "communication", 1, "family", ["email"]),
+  category("communication.email.activity", "Email activity", "Email messages received, sent, or acted upon.", "communication.email", 2, "class", ["email"]),
+  category("communication.email.accounts", "Email accounts", "Email identities and inboxes used by the user.", "communication.email", 2, "class"),
+  category("communication.email.contacts", "Email contacts", "People and organizations communicating with the user through email.", "communication.email", 2, "class"),
+  category("communication.messaging", "Messaging", "Chat, SMS, and direct-message activity.", "communication", 1, "family", ["notification"]),
+  category("communication.calls", "Calls", "Voice and video call activity.", "communication", 1, "family", ["notification"]),
+
+  category("food.delivery", "Food / Delivery", "Prepared-food purchases and delivery services.", "food", 1, "family", ["expense", "notification"]),
+  category("food.delivery.orders", "Orders", "Purchases and fulfillment activity for delivered food.", "food.delivery", 2, "class", ["expense", "notification"]),
+  category("food.groceries", "Food / Groceries", "Food and household provisions purchased for later use.", "food", 1, "family", ["expense"]),
+  category("food.dining", "Dining", "Meals and drinks purchased from restaurants, cafes, and bars.", "food", 1, "family", ["expense"]),
+  category("food.cooking", "Cooking", "Meal preparation and cooking activity.", "food", 1, "family", ["note", "task", "notification"]),
+
+  category("home.automation", "Home automation", "Connected devices, services, and routines that monitor or control the home.", "home", 1, "family", ["notification"]),
+  category("home.automation.device_alert", "Device alerts", "Meaningful state changes and alerts emitted by connected-home devices.", "home.automation", 2, "class", ["notification"]),
+  category("home.maintenance", "Home maintenance", "Repairs, upkeep, cleaning, and household tasks.", "home", 1, "family", ["task", "note", "notification"]),
+  category("home.utilities", "Utilities", "Electricity, water, connectivity, and other household services.", "home", 1, "family", ["expense", "notification"]),
+
+  category("entertainment.music", "Music", "Artists, tracks, listening services, playlists, and music habits.", "entertainment", 1, "family", ["notification"]),
+  category("entertainment.video", "Video and streaming", "Film, television, online video, and streaming activity.", "entertainment", 1, "family", ["notification"]),
+  category("entertainment.games", "Games", "Video games, tabletop games, and play activity.", "entertainment", 1, "family", ["notification"]),
+
+  category("work.tasks", "Work tasks", "Professional tasks, reminders, and deliverables.", "work", 1, "family", ["task", "note"]),
+  category("work.meetings", "Meetings", "Professional meetings, calls, and scheduled collaboration.", "work", 1, "family", ["notification", "email"]),
+  category("work.employment", "Employment", "Employer, payroll, role, and workplace administration.", "work", 1, "family", ["email", "notification"]),
+  category("learning.study", "Study", "Courses, lessons, practice, and planned study.", "learning", 1, "family", ["task", "note", "notification"]),
+  category("learning.research", "Research", "Research questions, sources, and investigative activity.", "learning", 1, "family", ["note", "email"]),
+  category("location.travel", "Travel", "Trips, transport, accommodation, and travel planning.", "location", 1, "family", ["expense", "email", "notification"]),
+  category("location.visits", "Places visited", "Meaningful visits and time spent at places.", "location", 1, "family", ["notification"]),
+  category("health.care", "Healthcare", "Appointments, providers, treatment, and medical administration.", "health", 1, "family", ["email", "notification", "task"]),
+  category("health.fitness", "Fitness", "Exercise, training, activity, and physical performance.", "health", 1, "family", ["notification", "note"]),
+  category("social.interactions", "Social interactions", "Conversations, gatherings, and activity with other people.", "social", 1, "family", ["notification", "email", "note"]),
+  category("psychology.reflection", "Reflection", "Journaling, moods, observations, and personal reflection.", "psychology", 1, "family", ["note"]),
+  category("entrepreneurship.operations", "Business operations", "Operational activity for a venture or independent business.", "entrepreneurship", 1, "family", ["task", "email", "expense", "income"]),
+] as const satisfies readonly CategoryDefinition[];
+
+export const SEEDED_CONCEPTS = CATEGORY_CATALOG.filter((node) => node.kind !== "domain").map((node) => node.label);
+export const ONTOLOGY_PARENT_RELATIONS = CATEGORY_CATALOG
+  .filter((node) => node.parentKey)
+  .map((node) => [node.label, CATEGORY_CATALOG.find((parent) => parent.key === node.parentKey)!.label] as const);
+export const ONTOLOGY_TREE = Object.fromEntries(CATEGORY_CATALOG.map((node) => [node.label, CATEGORY_CATALOG.filter((child) => child.parentKey === node.key).map((child) => child.label)])) as Record<string, string[]>;
+
+export const SEMANTIC_GOVERNANCE_VERSION = "semantic-governance-v5";
+export const SEMANTIC_PROMPT_VERSION = "semantic-meaning-v5";
 export const MAX_SEMANTIC_DEPTH = 8;
 export const PRIMARY_ROOT_CONFIDENCE = 0.8;
 export const PRIMARY_ROOT_MARGIN = 0.1;
 export const AUTO_APPLY_CONFIDENCE = 0.9;
 export const NEW_NODE_OBSERVATION_CONFIDENCE = 0.85;
+
+const CATEGORY_BY_KEY = new Map(CATEGORY_CATALOG.map((node) => [node.key, node]));
+const CATEGORY_BY_LABEL = new Map(CATEGORY_CATALOG.map((node) => [normalizeEntityValue(node.label), node]));
+
+export function categoryByKey(key: string) {
+  return CATEGORY_BY_KEY.get(key) ?? null;
+}
+
+export function categoryByLabel(label: string) {
+  return CATEGORY_BY_LABEL.get(normalizeEntityValue(label)) ?? null;
+}
+
+export function categoryPath(key: string) {
+  const path: CategoryDefinition[] = [];
+  let current = categoryByKey(key);
+  while (current) {
+    path.unshift(current);
+    current = current.parentKey ? categoryByKey(current.parentKey) : null;
+  }
+  return path;
+}
+
+export function categoryKeyForPath(labels: readonly string[]) {
+  for (let index = labels.length - 1; index >= 0; index -= 1) {
+    const category = categoryByLabel(labels[index]!);
+    if (category) return category.key;
+  }
+  return null;
+}
+
+export function categoryCatalogPrompt() {
+  return CATEGORY_CATALOG.map((node) => `${node.key}=${node.label}${node.parentKey ? ` < ${node.parentKey}` : ""}`).join("; ");
+}
 
 const ONTOLOGY_DESCRIPTIONS: Record<string, string> = {
   Health: "The user's physical health, healthcare, exercise, symptoms, and wellbeing.",
@@ -76,13 +176,22 @@ export function ontologyTreePrompt() {
 }
 
 export function ontologyDraft(value: string, type: "domain" | "concept" = "domain"): EntityDraft {
+  const category = categoryByLabel(value);
   return {
     type,
     value,
     normalizedValue: normalizeEntityValue(value),
-    description: ONTOLOGY_DESCRIPTIONS[value] ?? `A governed knowledge concept for ${value}.`,
+    description: category?.description ?? ONTOLOGY_DESCRIPTIONS[value] ?? `A governed knowledge concept for ${value}.`,
     identitySource: "ai_seed",
-    metadata: { source: "ontology", ontologyVersion: SEMANTIC_GOVERNANCE_VERSION, seeded: true },
+    metadata: {
+      source: "ontology",
+      ontologyVersion: SEMANTIC_GOVERNANCE_VERSION,
+      taxonomyVersion: TAXONOMY_VERSION,
+      taxonomyKey: category?.key,
+      taxonomyLevel: category?.level,
+      taxonomyKind: category?.kind,
+      seeded: true,
+    },
   };
 }
 

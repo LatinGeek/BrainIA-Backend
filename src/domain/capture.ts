@@ -248,8 +248,11 @@ export function buildWalletCaptureEvent(input: {
   amount?: string;
   currency?: string;
   note?: string;
-  transactionType?: "income" | "expense";
+  transactionType?: "income" | "expense" | "transfer";
   accountId?: string;
+  destinationAccountId?: string;
+  destinationAmount?: string;
+  destinationCurrency?: "UYU" | "USD";
   category?: string;
   timestamp?: string;
   externalId?: string;
@@ -281,6 +284,9 @@ export function buildWalletCaptureEvent(input: {
       note: input.note ?? null,
       transactionType,
       accountId: input.accountId?.trim() || null,
+      destinationAccountId: input.destinationAccountId?.trim() || null,
+      destinationAmount: input.destinationAmount?.trim() || null,
+      destinationCurrency: input.destinationCurrency?.trim() || null,
       category: input.category?.trim() || null,
     },
   });

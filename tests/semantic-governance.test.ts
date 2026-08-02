@@ -6,7 +6,7 @@ process.env.DATABASE_URL ??= "postgres://postgres:postgres@localhost:5432/braini
 const { buildSemanticProposals, hasMeaningfulAiIdentity } = await import("../src/storage/semantic-enrichment.ts");
 const { selectVerifiedReconciliationActions } = await import("../src/storage/semantic-reconciler.ts");
 const { isSemanticRestatement } = await import("../src/storage/semantic-resolver.ts");
-const { LIFE_DOMAINS, MAX_SEMANTIC_DEPTH, ontologyParentName } = await import("../src/domain/ontology.ts");
+const { LIFE_DOMAINS, MAX_SEMANTIC_DEPTH, TAXONOMY_VERSION, categoryByKey, categoryPath, ontologyParentName } = await import("../src/domain/ontology.ts");
 
 test("governance exposes the controlled roots and bounded recursive depth", () => {
   assert.ok(LIFE_DOMAINS.includes("Home"));
@@ -18,20 +18,44 @@ test("governance exposes the controlled roots and bounded recursive depth", () =
   assert.equal(ontologyParentName("Email contacts"), "Email");
 });
 
+test("stable taxonomy keys resolve complete multi-level paths", () => {
+  assert.equal(TAXONOMY_VERSION, "personal-activity-v1");
+  assert.equal(categoryByKey("finances.spending.card_purchase")?.label, "Card purchases");
+  assert.deepEqual(categoryPath("finances.spending.card_purchase").map((node) => node.label), ["Finances", "Financial activity", "Spending", "Card purchases"]);
+});
+
 test("structural financial evidence anchors only at the most-specific governed parent", () => {
   const subject = { type: "merchant", value: "PedidosYa", normalizedValue: "pedidosya", metadata: {} };
   const proposals = buildSemanticProposals({ entities: [subject], source: "Santander", inferredKind: "expense" });
   assert.equal(proposals.length, 1);
-  assert.equal(proposals[0]?.targetValue, "Financial activity");
+  assert.equal(proposals[0]?.targetValue, "Card purchases");
   assert.equal(proposals[0]?.relationType, "part_of");
 });
 
-test("structural email evidence anchors at Email rather than Communication", () => {
+test("structural email evidence anchors at Email activity rather than the transport root", () => {
   const subject = { type: "email_message", value: "Receipt", normalizedValue: "event:email-1", metadata: {} };
   const proposals = buildSemanticProposals({ entities: [subject], source: "gmail", inferredKind: "email" });
   assert.equal(proposals.length, 1);
-  assert.equal(proposals[0]?.targetValue, "Email");
+  assert.equal(proposals[0]?.targetValue, "Email activity");
   assert.equal(proposals[0]?.relationType, "part_of");
+});
+
+test("trusted smart-home and playback signals reuse governed catalog branches", () => {
+  const cases = [
+    { source: "Xiaomi Home", title: "Motion detected", expected: "Device alerts" },
+    { source: "Spotify", title: "Now playing: Teardrop", expected: "Music" },
+  ];
+
+  for (const [index, fixture] of cases.entries()) {
+    const subject = { type: "activity_instance", value: fixture.title, normalizedValue: `event:catalog-signal-${index}`, metadata: {} };
+    const proposals = buildSemanticProposals({
+      entities: [subject],
+      source: fixture.source,
+      inferredKind: "notification",
+    });
+    assert.equal(proposals.length, 1);
+    assert.equal(proposals[0]!.targetValue, fixture.expected);
+  }
 });
 
 test("every durable email subject receives its own most-specific path", () => {
@@ -39,14 +63,14 @@ test("every durable email subject receives its own most-specific path", () => {
   const recipient = { type: "recipient", value: "me@example.com", normalizedValue: "me@example.com", metadata: {} };
   const sender = { type: "sender", value: "shop@example.com", normalizedValue: "shop@example.com", metadata: {} };
   const proposals = buildSemanticProposals({ entities: [message, recipient, sender], source: "gmail", inferredKind: "email" });
-  assert.deepEqual(proposals.map((proposal) => proposal.targetValue), ["Email", "Email accounts", "Email contacts"]);
+  assert.deepEqual(proposals.map((proposal) => proposal.targetValue), ["Email activity", "Email accounts", "Email contacts"]);
 });
 
 test("financial email evidence exposes one most-specific anchor in each relevant tree", () => {
   const merchant = { type: "merchant", value: "PedidosYa", normalizedValue: "pedidosya", metadata: {} };
   const message = { type: "email_message", value: "Card alert", normalizedValue: "event:email-2", metadata: {} };
   const proposals = buildSemanticProposals({ entities: [merchant, message], source: "make.gmail", inferredKind: "expense" });
-  assert.deepEqual(proposals.map((proposal) => proposal.targetValue), ["Financial activity", "Email"]);
+  assert.deepEqual(proposals.map((proposal) => proposal.targetValue), ["Card purchases", "Email activity"]);
   assert.equal(new Set(proposals.map((proposal) => proposal.targetValue)).size, 2);
 });
 
