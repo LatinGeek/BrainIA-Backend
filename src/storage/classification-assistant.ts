@@ -197,8 +197,12 @@ export function createClassificationAssistant(deps: ClassificationAssistantDeps)
 
       const suggestion = parsed.data;
       const improved = suggestion.confidence > input.base.confidence;
-      const protectedFinancialKind = (input.base.inferredKind === "expense" || input.base.inferredKind === "transfer")
-        && input.base.confidence >= 0.95;
+      const selectedTransactionType = typeof input.event.raw?.transactionType === "string"
+        && ["income", "expense", "transfer"].includes(input.event.raw.transactionType)
+        ? input.event.raw.transactionType
+        : null;
+      const protectedFinancialKind = (input.base.inferredKind === "expense" || input.base.inferredKind === "income" || input.base.inferredKind === "transfer")
+        && (input.base.confidence >= 0.95 || selectedTransactionType === input.base.inferredKind);
       const lowInformationKinds = new Set(["notification", "other"]);
       const protectedSpecificKind = !lowInformationKinds.has(input.base.inferredKind)
         && lowInformationKinds.has(suggestion.inferredKind);

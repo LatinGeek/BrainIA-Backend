@@ -33,6 +33,7 @@ export type EntityReviewQueueRecord = {
   updatedAt: string;
   entityValue: string | null;
   entityType: string | null;
+  financialKind: "expense" | "income" | "transfer" | null;
 };
 
 function normalizeAlias(alias: string) {
@@ -232,9 +233,18 @@ export async function listEntityReviewQueue(db: Queryable, status?: EntityReview
         q.created_at as "createdAt",
         q.updated_at as "updatedAt",
         e.value as "entityValue",
-        e.type as "entityType"
+        e.type as "entityType",
+        financial.kind as "financialKind"
       from entity_review_queue q
       join entities e on e.id = q.entity_id
+      left join lateral (
+        select transaction.kind
+        from financial_transaction_events evidence
+        join financial_transactions transaction on transaction.id = evidence.transaction_id
+        where evidence.raw_event_id = q.event_id and transaction.hidden_at is null
+        order by transaction.observed_at desc
+        limit 1
+      ) financial on true
       where $1::text is null or q.status = $1
       order by q.created_at desc
     `,
@@ -329,7 +339,8 @@ export async function enqueueEntityReview(
         created_at as "createdAt",
         updated_at as "updatedAt",
         null::text as "entityValue",
-        null::text as "entityType"
+        null::text as "entityType",
+        null::text as "financialKind"
     `,
     [
       randomUUID(),
@@ -517,7 +528,8 @@ export async function resolveEntityReview(
         created_at as "createdAt",
         updated_at as "updatedAt",
         null::text as "entityValue",
-        null::text as "entityType"
+        null::text as "entityType",
+        null::text as "financialKind"
     `,
     [reviewId, createdAlias.id, input.alias.trim(), normalizeCategoryPath(input.categoryPath), input.notes ?? null],
   );
@@ -556,7 +568,8 @@ export async function ignoreEntityReview(db: Queryable, reviewId: string, notes?
         created_at as "createdAt",
         updated_at as "updatedAt",
         null::text as "entityValue",
-        null::text as "entityType"
+        null::text as "entityType",
+        null::text as "financialKind"
     `,
     [reviewId, notes ?? null],
   );

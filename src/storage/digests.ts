@@ -1,5 +1,6 @@
 import { pool } from "./postgres.js";
 import { generateNaturalLanguageSummary } from "./deepseek.js";
+import { buildDigestContent, DIGEST_JSON_PROMPT, parseDigestContent, type StructuredDigestContent } from "./generated-content.js";
 
 type Queryable = Pick<typeof pool, "query">;
 
@@ -64,6 +65,7 @@ export type KnowledgeDigest = {
     createdAt: string;
   }>;
   highlights: string[];
+  content: StructuredDigestContent;
   summary: string | null;
   model: string | null;
   summaryAvailable: boolean;
@@ -159,6 +161,13 @@ export function buildKnowledgeDigest(context: DigestBuildContext): KnowledgeDige
     ? `Digest for ${context.scope} covers ${metrics.totalEvents} events, ${metrics.uniqueEntities} entities, and ${metrics.uniqueRelations} relations.`
     : `Digest for ${context.scope} did not find any events in the requested window.`;
 
+  const content = buildDigestContent({
+    totalEvents: metrics.totalEvents,
+    topSource: metrics.eventsBySource[0],
+    topKind: metrics.eventsByKind[0],
+    highlights,
+  });
+
   return {
     scope: context.scope,
     window: context.window,
@@ -182,6 +191,7 @@ export function buildKnowledgeDigest(context: DigestBuildContext): KnowledgeDige
       createdAt: insight.createdAt,
     })),
     highlights,
+    content,
     summary: context.summary ?? fallbackSummary,
     model: context.model,
     summaryAvailable: Boolean(context.summary ?? fallbackSummary),
@@ -320,11 +330,10 @@ export async function createKnowledgeDigest(input: {
     model: null,
   });
 
-  const summary = await generateNaturalLanguageSummary({
+  const generated = await generateNaturalLanguageSummary({
     apiKey: input.apiKey,
     model: input.model,
-    systemPrompt:
-      "You are a knowledge assistant for a backend-first agent system. Summarize only the provided structured digest data. Be concise, factual, and useful for retrieval. Do not invent facts.",
+    systemPrompt: `You summarize personal activity for a calm mobile interface. ${DIGEST_JSON_PROMPT}`,
     userPrompt: JSON.stringify(
       {
         scope: baseDigest.scope,
@@ -333,17 +342,23 @@ export async function createKnowledgeDigest(input: {
         metrics: baseDigest.metrics,
         highlights: baseDigest.highlights,
         recentEvents: baseDigest.recentEvents,
-        relatedInsights: baseDigest.relatedInsights,
+        relatedInsights: baseDigest.relatedInsights.map((insight) => ({ query: insight.query, summary: insight.summary })),
       },
       null,
       2,
     ),
+    jsonMode: true,
+    audit: { operation: "knowledge_digest_synthesis", promptVersion: "knowledge-digest-v3" },
   });
+
+  const content = parseDigestContent(generated) ?? baseDigest.content;
 
   return {
     ...baseDigest,
-    summary: summary ?? baseDigest.summary,
-    model: input.apiKey ? input.model ?? "deepseek-v4-flash" : null,
-    summaryAvailable: Boolean(summary ?? baseDigest.summary),
+    content,
+    highlights: content.highlights,
+    summary: content.summary,
+    model: generated && parseDigestContent(generated) ? input.model ?? "deepseek-v4-flash" : null,
+    summaryAvailable: true,
   };
 }

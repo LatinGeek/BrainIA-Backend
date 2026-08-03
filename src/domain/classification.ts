@@ -69,12 +69,22 @@ export function classifyEvent(event: EventInput): ClassifiedEvent {
   const completedCardTransaction = isCompletedCardTransactionAlert(event);
   const rejectedCardTransaction = isRejectedCardTransactionAlert(event);
   const accountTransfer = isAccountTransferAlert(event);
+  const selectedTransactionType = typeof event.raw?.transactionType === "string"
+    && ["income", "expense", "transfer"].includes(event.raw.transactionType)
+    ? event.raw.transactionType as "income" | "expense" | "transfer"
+    : null;
 
   let inferredKind: ClassifiedEvent["inferredKind"] = "other";
   let confidence = 0.4;
   const entities: ClassifiedEvent["entities"] = [];
 
-  if (rejectedCardTransaction) {
+  // A transaction direction deliberately chosen in Capture is source-of-truth.
+  // Do this before textual payment heuristics: titles such as "fee paid" can
+  // otherwise make a user-entered income look like an expense.
+  if (selectedTransactionType && event.kind === selectedTransactionType) {
+    inferredKind = selectedTransactionType;
+    confidence = 1;
+  } else if (rejectedCardTransaction) {
     inferredKind = "notification";
     confidence = 0.98;
   } else if (accountTransfer) {
@@ -85,6 +95,12 @@ export function classifyEvent(event: EventInput): ClassifiedEvent {
     confidence = 0.99;
   } else if (event.kind === "expense") {
     inferredKind = "expense";
+    confidence = 0.88;
+  } else if (event.kind === "income") {
+    inferredKind = "income";
+    confidence = 0.88;
+  } else if (event.kind === "transfer") {
+    inferredKind = "transfer";
     confidence = 0.88;
   } else if (text.includes("compra") || text.includes("gasto")) {
     inferredKind = "expense";

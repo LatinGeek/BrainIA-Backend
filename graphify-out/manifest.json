@@ -110,8 +110,8 @@
     "semantic_hash": ""
   },
   "package.json": {
-    "mtime": 1785679162.2715068,
-    "ast_hash": "ec082e796beb700ce008f3c7e9d01a9c",
+    "mtime": 1785720639.8325334,
+    "ast_hash": "7f8b4707b83178215e2a3543c21299b1",
     "semantic_hash": ""
   },
   "serverless.ts": {
@@ -140,8 +140,8 @@
     "semantic_hash": ""
   },
   "src/domain/classification.ts": {
-    "mtime": 1785629382.90962,
-    "ast_hash": "20611cd9a97b99d8fa92fee76d757b6d",
+    "mtime": 1785721479.404876,
+    "ast_hash": "587bc77c25ba242afb89ec5f171db1e7",
     "semantic_hash": ""
   },
   "src/domain/entities.ts": {
@@ -155,8 +155,8 @@
     "semantic_hash": ""
   },
   "src/domain/financial-transactions.ts": {
-    "mtime": 1785629156.7557747,
-    "ast_hash": "2110d8204166d6bc653c6424e507e3d7",
+    "mtime": 1785759003.7261817,
+    "ast_hash": "e6360d6a802af7b55a5e8357c09d8f01",
     "semantic_hash": ""
   },
   "src/domain/relations.ts": {
@@ -265,8 +265,8 @@
     "semantic_hash": ""
   },
   "src/storage/classification-assistant.ts": {
-    "mtime": 1785683114.2060623,
-    "ast_hash": "e7bda7fd7a5a28c522f98028534b28b7",
+    "mtime": 1785721479.4053838,
+    "ast_hash": "fbd6299bb0a455f86565c4b5e57fac6e",
     "semantic_hash": ""
   },
   "src/storage/database-url.ts": {
@@ -285,13 +285,13 @@
     "semantic_hash": ""
   },
   "src/storage/digests.ts": {
-    "mtime": 1783962669.9503849,
-    "ast_hash": "2d2757b1b62b3796cf637823c3a2911b",
+    "mtime": 1785754315.499197,
+    "ast_hash": "88d8173e08703540021a6b87c3d48858",
     "semantic_hash": ""
   },
   "src/storage/entity-alias-repository.ts": {
-    "mtime": 1784469545.5759492,
-    "ast_hash": "19adcc6c759f80a84dc25ab71a60d907",
+    "mtime": 1785761797.5153892,
+    "ast_hash": "b100f6a82e62038da4d4dcc880647eb9",
     "semantic_hash": ""
   },
   "src/storage/entity-repository.ts": {
@@ -310,8 +310,8 @@
     "semantic_hash": ""
   },
   "src/storage/financial-transaction-repository.ts": {
-    "mtime": 1785612244.835503,
-    "ast_hash": "e570a8a46db02e3662774ca32ea07ecc",
+    "mtime": 1785773118.3946133,
+    "ast_hash": "a2bd6785957bcecd4cd80e261c43c7a5",
     "semantic_hash": ""
   },
   "src/storage/graph-cache.ts": {
@@ -360,8 +360,8 @@
     "semantic_hash": ""
   },
   "tests/domain.test.ts": {
-    "mtime": 1784629718.4906516,
-    "ast_hash": "f47ea751384226a70ab36fc46d072b0b",
+    "mtime": 1785759024.4970474,
+    "ast_hash": "796bfa2fb7e5285cc1ea4fa36eab0056",
     "semantic_hash": ""
   },
   "tests/e2e.test.ts": {
@@ -760,8 +760,8 @@
     "semantic_hash": ""
   },
   "src/storage/proactive-insights.ts": {
-    "mtime": 1785679266.8630824,
-    "ast_hash": "548f3107a9edd557227c67790bfe3f47",
+    "mtime": 1785759003.7288606,
+    "ast_hash": "adeeee5f8f7d544da6676a6dc9c004ff",
     "semantic_hash": ""
   },
   "src/storage/quality-metrics.ts": {
@@ -785,8 +785,8 @@
     "semantic_hash": ""
   },
   "tests/financial-consolidation.test.ts": {
-    "mtime": 1785553957.8583694,
-    "ast_hash": "df2363a001497c7d6016e172e6bdb3f1",
+    "mtime": 1785773118.3961203,
+    "ast_hash": "fcea82756005435b9136f9f20955e01b",
     "semantic_hash": ""
   },
   "src/domain/financial-categories.ts": {
@@ -847,6 +847,16 @@
   "src/scripts/semantic-harness.ts": {
     "mtime": 1785683114.2087967,
     "ast_hash": "c6384b24bc9ea54d9e438c84d51a2191",
+    "semantic_hash": ""
+  },
+  "src/storage/generated-content.ts": {
+    "mtime": 1785759003.727848,
+    "ast_hash": "70e28d2542e1474248f00b5507afb3a9",
+    "semantic_hash": ""
+  },
+  "tests/generated-content.test.ts": {
+    "mtime": 1785754195.5328348,
+    "ast_hash": "8823514e200e7b8ba9fc08eef53353da",
     "semantic_hash": ""
   }
 }

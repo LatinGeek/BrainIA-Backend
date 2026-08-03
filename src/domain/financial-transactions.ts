@@ -1,5 +1,6 @@
 import type { EventInput } from "./event.js";
 import { normalizeEntityValue, type EntityDraft } from "./entities.js";
+import { FINANCIAL_CATEGORIES } from "./financial-categories.js";
 import { MONEY_NUMBER_SOURCE, parseLocalizedMoneyNumber } from "./money.js";
 
 export type FinancialTransactionCandidate = {
@@ -242,7 +243,13 @@ export function buildFinancialTransactionCandidate(input: {
     return null;
   }
 
-  const merchantLabel = input.classified.inferredKind === "transfer"
+  const category = readRawString(raw, ["category", "categoryName", "category_name"]);
+  // Categories chosen in Capture carry an explicit money direction. Respect that
+  // direction when it conflicts with a stale/default transaction toggle.
+  const kind = category && FINANCIAL_CATEGORIES.income.includes(category as never)
+    ? "income"
+    : input.classified.inferredKind as FinancialTransactionCandidate["kind"];
+  const merchantLabel = kind === "transfer"
     ? "Transfer between accounts"
     : pickMerchantLabel({ event: input.event, merchantEntity: merchantDraft });
   if (!merchantLabel) {
@@ -260,7 +267,7 @@ export function buildFinancialTransactionCandidate(input: {
     new Date().toISOString();
 
   return {
-    kind: input.classified.inferredKind as FinancialTransactionCandidate["kind"],
+    kind,
     amount: Number(parsedAmount.amount.toFixed(2)),
     amountText: parsedAmount.amountText,
     currency: parsedAmount.currency,
@@ -282,7 +289,7 @@ export function buildFinancialTransactionCandidate(input: {
     })(),
     destinationCurrency: parseCurrencyHint(readRawString(raw, ["destinationCurrency", "destination_currency"])),
     accountName: readRawString(raw, ["accountName", "account_name", "accountLabel"]) ?? null,
-    category: readRawString(raw, ["category", "categoryName", "category_name"]) ?? null,
+    category,
   };
 }
 

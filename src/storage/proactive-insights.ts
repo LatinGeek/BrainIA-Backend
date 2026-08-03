@@ -3,6 +3,7 @@ import { config } from "../config.js";
 import { createKnowledgeDigest } from "./digests.js";
 import { insertDigestRun } from "./digest-repository.js";
 import { generateNaturalLanguageSummary } from "./deepseek.js";
+import { buildInsightContent, INSIGHT_JSON_PROMPT, parseInsightContent } from "./generated-content.js";
 import { upsertEmbedding } from "./embeddings.js";
 import { insertInsightRun } from "./insight-repository.js";
 import { pool, withTransaction } from "./postgres.js";
@@ -47,6 +48,13 @@ export function scoreInsightCandidate(candidate: Pick<InsightCandidateDraft, "no
     + 0.12 * bounded(candidate.recurrence)
     + 0.18 * bounded(candidate.utility)).toFixed(6));
 }
+
+const ACTIONABLE_DETECTORS = new Set([
+  "spending_variation",
+  "recurrence_subscription",
+  "pending_tasks",
+  "pending_review",
+]);
 
 async function persistCandidate(db: Queryable, clientId: string | null, draft: InsightCandidateDraft) {
   const score = scoreInsightCandidate(draft);
@@ -310,7 +318,7 @@ export async function synthesizeTopInsightCandidates(input: { clientId?: string 
       )
     order by score desc, created_at asc limit $2
   `, [input.clientId ?? null, limit, Number(process.env.INSIGHT_DEDUPE_DAYS ?? 30)]);
-  const candidates = result.rows;
+  const candidates = result.rows.filter((candidate) => ACTIONABLE_DETECTORS.has(candidate.detector));
   if (!candidates.length) return null;
   const evidence = candidates.map((candidate) => ({
     candidateId: candidate.id, detector: candidate.detector, title: candidate.title,
@@ -318,17 +326,19 @@ export async function synthesizeTopInsightCandidates(input: { clientId?: string 
     confidence: candidate.confidence, severity: candidate.severity,
     suggestedAction: candidate.suggestedAction, evidence: candidate.evidence,
   }));
-  const deterministicSummary = candidates.map((candidate) => candidate.title).join("; ");
-  let summary = deterministicSummary;
+  let content = buildInsightContent(candidates);
+  let summary = content.summary;
   let model: string | null = null;
   if (config.deepseekApiKey) {
     const generated = await generateNaturalLanguageSummary({
       apiKey: config.deepseekApiKey, model: config.deepseekModel,
-      systemPrompt: "Synthesize only the supplied prioritized personal-knowledge changes. Be concise, explain why they matter, preserve uncertainty, and do not invent facts. Return plain text.",
-      userPrompt: JSON.stringify({ candidates: evidence }),
-      audit: { clientId: input.clientId ?? null, operation: "proactive_insight_synthesis", promptVersion: "proactive-insight-v1" },
+      systemPrompt: `You synthesize prioritized personal-knowledge changes for a calm mobile interface. ${INSIGHT_JSON_PROMPT}`,
+      userPrompt: JSON.stringify({ candidates: evidence.map(({ evidence: _rawEvidence, ...candidate }) => candidate) }),
+      jsonMode: true,
+      audit: { clientId: input.clientId ?? null, operation: "proactive_insight_synthesis", promptVersion: "proactive-insight-v3" },
     });
-    if (generated?.trim()) { summary = generated.trim(); model = config.deepseekModel; }
+    const parsed = parseInsightContent(generated);
+    if (parsed) { content = parsed; summary = parsed.summary; model = config.deepseekModel; }
   }
   const confidence = Math.min(...candidates.map((candidate) => candidate.confidence));
   const suggestedAction = candidates.find((candidate) => candidate.suggestedAction)?.suggestedAction ?? null;
@@ -336,10 +346,10 @@ export async function synthesizeTopInsightCandidates(input: { clientId?: string 
   const run = await insertInsightRun(pool, {
     toolName: "generate_proactive_insight", query: null,
     request: { schedule: "daily", candidateIds: candidates.map((candidate) => candidate.id) },
-    response: { summary, candidates: evidence }, summary, model,
+    response: { content, summary, candidates: evidence }, summary, model,
     candidateIds: candidates.map((candidate) => candidate.id), evidence,
     confidence, suggestedAction, deliveryStatus: "delivered",
-    deliveredAt: new Date().toISOString(), expiresAt, promptVersion: "proactive-insight-v1",
+    deliveredAt: new Date().toISOString(), expiresAt, promptVersion: "proactive-insight-v3",
   });
   if (!run) return null;
   await pool.query(`

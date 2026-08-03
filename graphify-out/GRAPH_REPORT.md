@@ -1,16 +1,16 @@
-# Graph Report - BrainIA-Backend  (2026-08-02)
+# Graph Report - BrainIA-Backend  (2026-08-03)
 
 ## Corpus Check
-- 168 files · ~95,181 words
+- 170 files · ~96,892 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1162 nodes · 2181 edges · 68 communities (66 shown, 2 thin omitted)
-- Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 11 edges (avg confidence: 0.66)
+- 1178 nodes · 2215 edges · 75 communities (73 shown, 2 thin omitted)
+- Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 11 edges (avg confidence: 0.66)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `39fb049e`
+- Built from commit: `d25fa86a`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -64,20 +64,27 @@
 - [[_COMMUNITY_semantic-repository.ts|semantic-repository.ts]]
 - [[_COMMUNITY_semantic-enrichment.ts|semantic-enrichment.ts]]
 - [[_COMMUNITY_embeddings.ts|embeddings.ts]]
+- [[_COMMUNITY_ontology.ts|ontology.ts]]
 - [[_COMMUNITY_Semantic graph governance|Semantic graph governance]]
 - [[_COMMUNITY_entities.ts|entities.ts]]
 - [[_COMMUNITY_semantic-resolver.ts|semantic-resolver.ts]]
 - [[_COMMUNITY_auth.ts|auth.ts]]
+- [[_COMMUNITY_classification.ts|classification.ts]]
 - [[_COMMUNITY_capture.ts|capture.ts]]
-- [[_COMMUNITY_entity-repository.ts|entity-repository.ts]]
+- [[_COMMUNITY_entity-merge.ts|entity-merge.ts]]
 - [[_COMMUNITY_AI-governed entity identity|AI-governed entity identity]]
-- [[_COMMUNITY_entities.ts|entities.ts]]
+- [[_COMMUNITY_withTransaction|withTransaction]]
+- [[_COMMUNITY_backup-verification.ts|backup-verification.ts]]
 - [[_COMMUNITY_relation-repository.ts|relation-repository.ts]]
+- [[_COMMUNITY_job-worker.ts|job-worker.ts]]
 - [[_COMMUNITY_search-repository.ts|search-repository.ts]]
+- [[_COMMUNITY_job-repository.ts|job-repository.ts]]
 - [[_COMMUNITY_reprocess-pending-semantics.ts|reprocess-pending-semantics.ts]]
-- [[_COMMUNITY_client-diagnostic-repository.ts|client-diagnostic-repository.ts]]
-- [[_COMMUNITY_hybrid-retrieval.ts|hybrid-retrieval.ts]]
+- [[_COMMUNITY_operations.ts|operations.ts]]
+- [[_COMMUNITY_semantic-reconciler.ts|semantic-reconciler.ts]]
 - [[_COMMUNITY_metrics.ts|metrics.ts]]
+- [[_COMMUNITY_reprocess-pending-semantics.ts|reprocess-pending-semantics.ts]]
+- [[_COMMUNITY_search.ts|search.ts]]
 
 ## God Nodes (most connected - your core abstractions)
 1. `pool` - 52 edges
@@ -85,7 +92,7 @@
 3. `persistClassifiedEvent()` - 31 edges
 4. `reprocessEventUnlocked()` - 31 edges
 5. `withTransaction()` - 30 edges
-6. `scripts` - 28 edges
+6. `scripts` - 29 edges
 7. `Domain Model` - 26 edges
 8. `API` - 23 edges
 9. `buildModelSemanticDecision()` - 22 edges
@@ -94,35 +101,35 @@
 ## Surprising Connections (you probably didn't know these)
 - `interpretFinancialEvent()` --calls--> `classifyEvent()`  [INFERRED]
   tests/interpretation-harness.test.ts → src/domain/classification.ts
-- `interpretFinancialEvent()` --calls--> `buildEntityDrafts()`  [INFERRED]
-  tests/interpretation-harness.test.ts → src/domain/entities.ts
+- `interpretFinancialEvent()` --calls--> `buildFinancialTransactionCandidate()`  [INFERRED]
+  tests/interpretation-harness.test.ts → src/domain/financial-transactions.ts
 - `createApp()` --calls--> `buildApp()`  [INFERRED]
   tests/api-contracts.test.ts → src/app.ts
 - `createApp()` --calls--> `buildApp()`  [INFERRED]
   tests/e2e.test.ts → src/app.ts
-- `interpretFinancialEvent()` --calls--> `buildFinancialTransactionCandidate()`  [INFERRED]
-  tests/interpretation-harness.test.ts → src/domain/financial-transactions.ts
+- `interpretFinancialEvent()` --calls--> `buildEntityDrafts()`  [INFERRED]
+  tests/interpretation-harness.test.ts → src/domain/entities.ts
 
 ## Import Cycles
 - 3-file cycle: `src/storage/entity-repository.ts -> src/storage/graph-cache.ts -> src/storage/graph-repository.ts -> src/storage/entity-repository.ts`
 
-## Communities (68 total, 2 thin omitted)
+## Communities (75 total, 2 thin omitted)
 
 ### Community 0 - "entity-repository.ts"
-Cohesion: 0.05
-Nodes (59): allocateExploreGraphSlots(), clampInteger(), parseExploreGraphOptions(), parseGraphOptions(), inspectSchema, registerAgentInspectRoutes(), graphParamsSchema, registerGraphRoutes() (+51 more)
+Cohesion: 0.06
+Nodes (44): allocateExploreGraphSlots(), clampInteger(), parseExploreGraphOptions(), parseGraphOptions(), registerEntityResolveRoutes(), resolveQuerySchema, graphParamsSchema, registerGraphRoutes() (+36 more)
 
 ### Community 1 - "app.ts"
 Cohesion: 0.06
-Nodes (64): classifyEvent(), extractCardAlertMerchant(), isAccountTransferAlert(), isCompletedCardTransactionAlert(), isRejectedCardTransactionAlert(), normalizeForMatching(), ClassifiedEvent, EventInput (+56 more)
+Nodes (62): classifyEvent(), extractCardAlertMerchant(), isAccountTransferAlert(), isCompletedCardTransactionAlert(), isRejectedCardTransactionAlert(), normalizeForMatching(), ClassifiedEvent, EventInput (+54 more)
 
 ### Community 2 - "event-store.ts"
 Cohesion: 0.09
 Nodes (22): 1. La evidencia es inmutable, 2. Las proyecciones son reemplazables y versionadas, 3. Todo conocimiento durable debe ser gobernado, 4. Un evento es evidencia, no un concepto duplicado, 5. Recuperar antes de razonar, 6. El LLM decide semántica; el sistema impone invariantes, Arquitectura objetivo, Capas de almacenamiento (+14 more)
 
 ### Community 3 - "postgres.ts"
-Cohesion: 0.05
-Nodes (62): digestHistoryParamsSchema, digestHistoryQuerySchema, digestQuerySchema, registerDigestRoutes(), dailyInsightSchema, insightHistoryParamsSchema, insightHistoryQuerySchema, insightSchema (+54 more)
+Cohesion: 0.06
+Nodes (51): dailyInsightSchema, insightHistoryParamsSchema, insightHistoryQuerySchema, insightSchema, registerInsightsRoutes(), inspectKnowledge, insertDigestRun(), buildHighlights() (+43 more)
 
 ### Community 4 - "Domain Model"
 Cohesion: 0.06
@@ -137,20 +144,20 @@ Cohesion: 0.06
 Nodes (30): 1. Reprocess leaves orphan graph rows, 2. Heuristic entity extraction is too permissive, 3. Alias review is too eager for obvious labels, 4. Email extraction should be provider-aware but bridge-agnostic, 5. Financial dedupe should be multi-source by design, 6. Cleanup coverage should extend to support/audit tables, Classification, Classification (+22 more)
 
 ### Community 7 - "financial-transactions.ts"
-Cohesion: 0.18
-Nodes (6): buildApp(), registerCaptureRoutes(), registerEventRoutes(), createApp(), createCaptureApp(), createApp()
+Cohesion: 0.12
+Nodes (14): buildApp(), config, inspectSchema, registerAgentInspectRoutes(), registerCaptureRoutes(), registerDashboardRoutes(), webRoot, registerEventRoutes() (+6 more)
 
 ### Community 8 - "digests.ts"
-Cohesion: 0.47
-Nodes (5): buildEventInterpretation(), EventInterpretation, formattedAmount(), meaningful(), SemanticDecision
+Cohesion: 0.09
+Nodes (38): eventKindSchema, ClassificationAssistantDeps, createClassificationAssistant(), mergeEntities(), MODEL_EVIDENCE_TYPES, normalizeEntityKey(), parseSuggestion(), suggestionSchema (+30 more)
 
 ### Community 9 - "financial-transaction-repository.ts"
-Cohesion: 0.09
-Nodes (34): FINANCIAL_CATEGORIES, FinancialCategoryKind, candidateWindowBounds(), FinancialTransactionCandidate, accountSchema, adjustmentSchema, contextSchema, listQuerySchema (+26 more)
+Cohesion: 0.07
+Nodes (48): FINANCIAL_CATEGORIES, FinancialCategoryKind, buildFinancialTransactionCandidate(), candidateWindowBounds(), collapseText(), CURRENCY_CODES, CURRENCY_SYMBOLS, EntityLike (+40 more)
 
 ### Community 10 - "semantic-repository.ts"
-Cohesion: 0.06
-Nodes (54): registerOperationsRoutes(), allEvents, decided, eventContains, eventFilter, events, failed, interpretationStatus (+46 more)
+Cohesion: 0.12
+Nodes (16): allEvents, decided, eventContains, eventFilter, events, failed, interpretationStatus, limit (+8 more)
 
 ### Community 11 - "cleanup-test-data.ts"
 Cohesion: 0.10
@@ -162,7 +169,7 @@ Nodes (22): activityLog, addActivity(), escapeHtml(), graphPaths, graphSummary, 
 
 ### Community 13 - "scripts"
 Cohesion: 0.05
-Nodes (41): dependencies, fastify, pg, zod, devDependencies, tsx, @types/node, @types/pg (+33 more)
+Nodes (42): dependencies, fastify, pg, zod, devDependencies, tsx, @types/node, @types/pg (+34 more)
 
 ### Community 14 - "entity-alias-repository.ts"
 Cohesion: 0.20
@@ -281,96 +288,124 @@ Cohesion: 0.50
 Nodes (4): Digests, `GET /api/v1/digests`, `GET /api/v1/digests/history/:id`, `GET /api/v1/digests/history?limit=25`
 
 ### Community 44 - "Event reprocessing"
-Cohesion: 0.23
-Nodes (13): LIFE_DOMAINS, SEEDED_CONCEPTS, upsertEntity(), upsertRelation(), applySemanticRules(), ensureOntology(), listSemanticCandidates(), Queryable (+5 more)
+Cohesion: 0.22
+Nodes (17): normalizeRelationType(), RELATION_TYPE_ALIASES, RelationDraft, upsertEntity(), linkEventRelation(), Queryable, StoredRelation, upsertRelation() (+9 more)
 
 ### Community 47 - "entity-repository.ts"
 Cohesion: 0.17
 Nodes (21): aliasListQuerySchema, createAliasSchema, ignoreReviewSchema, registerEntityAliasRoutes(), resolveReviewSchema, reviewListQuerySchema, createEntityAlias(), enqueueEntityReview() (+13 more)
 
 ### Community 48 - "semantic-repository.ts"
-Cohesion: 0.13
-Nodes (13): resolveQuerySchema, result, typeResult, apply, events, limit, limitArgument, report (+5 more)
+Cohesion: 0.16
+Nodes (10): result, typeResult, apply, events, limit, limitArgument, report, apps (+2 more)
 
 ### Community 49 - "semantic-enrichment.ts"
-Cohesion: 0.09
-Nodes (33): normalizeEntityValue(), CATEGORY_BY_KEY, CATEGORY_BY_LABEL, categoryByKey(), categoryByLabel(), categoryCatalogPrompt(), CategoryDefinition, categoryKeyForPath() (+25 more)
+Cohesion: 0.13
+Nodes (30): normalizeEntityValue(), categoryByKey(), categoryByLabel(), categoryCatalogPrompt(), categoryKeyForPath(), categoryPath(), ontologyDraft(), ontologyTreePrompt() (+22 more)
 
 ### Community 50 - "embeddings.ts"
-Cohesion: 0.18
-Nodes (9): buildCaptureBatchEvents(), captureBatchSchema, CaptureIngestFn, CaptureRoutesOptions, commonCaptureSchema, emailCaptureSchema, noteCaptureSchema, notificationCaptureSchema (+1 more)
+Cohesion: 0.25
+Nodes (6): EntityDraft, entityId, limit, result, concurrency, result
+
+### Community 51 - "ontology.ts"
+Cohesion: 0.12
+Nodes (10): CATEGORY_BY_KEY, CATEGORY_BY_LABEL, CategoryDefinition, LIFE_DOMAINS, ONTOLOGY_DESCRIPTIONS, ONTOLOGY_PARENT_RELATIONS, ONTOLOGY_TREE, SEEDED_CONCEPTS (+2 more)
 
 ### Community 52 - "Semantic graph governance"
 Cohesion: 0.20
 Nodes (9): Durable node creation, Entity hierarchy contract, Evaluation harness, Event classification contract, LLM output and enforcement, Purpose, Reconciliation and acceptance, Semantic graph governance v5 (+1 more)
 
 ### Community 53 - "entities.ts"
-Cohesion: 0.14
-Nodes (11): config, registerDashboardRoutes(), webRoot, mergeBodySchema, mergeParamsSchema, registerEntityMergeRoutes(), registerEntityResolveRoutes(), registerMetricsRoutes() (+3 more)
+Cohesion: 0.20
+Nodes (9): digestHistoryParamsSchema, digestHistoryQuerySchema, digestQuerySchema, registerDigestRoutes(), DigestRunInput, DigestRunRecord, listDigestRuns(), loadDigestRunById() (+1 more)
 
 ### Community 54 - "semantic-resolver.ts"
-Cohesion: 0.20
-Nodes (19): linkEventRelation(), SEMANTIC_SUBJECT_TYPES, SemanticPathDecision, rootEventEvidenceFromAnchors(), settleSatisfiedSemanticCandidates(), applyAssociations(), applyPath(), candidateAlternatives() (+11 more)
+Cohesion: 0.21
+Nodes (18): SEMANTIC_SUBJECT_TYPES, SemanticPathDecision, enqueueSemanticCandidate(), settleSatisfiedSemanticCandidates(), applyAssociations(), applyPath(), candidateAlternatives(), enqueuePathCandidate() (+10 more)
 
 ### Community 55 - "auth.ts"
 Cohesion: 0.26
 Nodes (10): AuthConfig, AuthContext, AuthFailure, AuthResult, createApiAuthHook(), isAuthEnabled(), loadAuthConfig(), parseClientKeyPairs() (+2 more)
 
-### Community 57 - "capture.ts"
-Cohesion: 0.26
-Nodes (13): buildBaseEvent(), buildEmailCaptureEvent(), buildNoteCaptureEvent(), buildNotificationCaptureEvent(), buildStableEmailIdempotencyKey(), buildWalletCaptureEvent(), CaptureBatchItem, extractStringValue() (+5 more)
+### Community 56 - "classification.ts"
+Cohesion: 0.50
+Nodes (3): batchSchema, diagnosticSchema, registerClientDiagnosticRoutes()
 
-### Community 58 - "entity-repository.ts"
-Cohesion: 0.14
-Nodes (15): EntityDraft, buildRelationDrafts(), buildRelationMetadata(), getFirstEntity(), normalizeRelationType(), RELATION_TYPE_ALIASES, RelationDraft, entityId (+7 more)
+### Community 57 - "capture.ts"
+Cohesion: 0.13
+Nodes (22): buildBaseEvent(), buildCaptureBatchEvents(), buildEmailCaptureEvent(), buildNoteCaptureEvent(), buildNotificationCaptureEvent(), buildStableEmailIdempotencyKey(), buildWalletCaptureEvent(), CaptureBatchItem (+14 more)
+
+### Community 58 - "entity-merge.ts"
+Cohesion: 0.50
+Nodes (3): mergeBodySchema, mergeParamsSchema, registerEntityMergeRoutes()
 
 ### Community 59 - "AI-governed entity identity"
 Cohesion: 0.25
 Nodes (7): AI-governed entity identity, Description rules, Existing data, Ingestion behavior, Naming rules, Purpose, Required identity contract
 
-### Community 62 - "entities.ts"
-Cohesion: 0.18
-Nodes (18): buildFinancialTransactionCandidate(), collapseText(), CURRENCY_CODES, CURRENCY_SYMBOLS, EntityLike, findRawAmountText(), normalizeMerchantLabel(), parseAmountText() (+10 more)
+### Community 61 - "withTransaction"
+Cohesion: 0.27
+Nodes (9): registerPrivacyRoutes(), applyRetentionPolicies(), deletePersonalData(), exportPersonalData(), Queryable, recordKnowledgeFeedback(), setEntityVisibility(), setEventPrivacy() (+1 more)
+
+### Community 62 - "backup-verification.ts"
+Cohesion: 0.53
+Nodes (4): connectionFingerprint(), tableCounts(), TABLES, verifyConfiguredBackup()
 
 ### Community 63 - "relation-repository.ts"
 Cohesion: 0.40
 Nodes (5): `DELETE /api/v1/financial/transactions/:id`, Financial transactions, `GET /api/v1/financial/transactions/:id`, `GET /api/v1/financial/transactions?limit=50`, `POST /api/v1/financial/transactions/:id/merge`
 
+### Community 64 - "job-worker.ts"
+Cohesion: 0.24
+Nodes (12): classifyCapturedEvent(), correlateFinancialEvent(), reprocessEvent(), claimBackgroundJobs(), completeBackgroundJob(), enqueueBackgroundJob(), executeBackgroundJob(), processBackgroundJobs() (+4 more)
+
 ### Community 67 - "search-repository.ts"
 Cohesion: 0.29
 Nodes (5): Fixture, fixtures, recordArgument, recordPath, results
 
+### Community 68 - "job-repository.ts"
+Cohesion: 0.24
+Nodes (11): BACKGROUND_JOB_TYPES, BackgroundJob, BackgroundJobStatus, BackgroundJobType, failBackgroundJob(), jobProjection(), listBackgroundJobs(), Queryable (+3 more)
+
 ### Community 70 - "reprocess-pending-semantics.ts"
-Cohesion: 0.12
-Nodes (22): buildDraftMetadata(), buildEntityDrafts(), cleanMerchantCandidate(), dedupeEntityDrafts(), extractStringValue(), GENERIC_MERCHANT_PREFIXES, isMeaningfulDraft(), MERCHANT_TERMINATORS (+14 more)
+Cohesion: 0.17
+Nodes (16): buildDraftMetadata(), buildEntityDrafts(), cleanMerchantCandidate(), dedupeEntityDrafts(), extractStringValue(), GENERIC_MERCHANT_PREFIXES, isMeaningfulDraft(), MERCHANT_TERMINATORS (+8 more)
 
-### Community 71 - "client-diagnostic-repository.ts"
+### Community 72 - "operations.ts"
+Cohesion: 0.24
+Nodes (6): registerMetricsRoutes(), ClientDiagnosticInput, listClientDiagnostics(), storeClientDiagnostics(), backgroundJobMetrics(), getKnowledgeQualityMetrics()
+
+### Community 74 - "semantic-reconciler.ts"
 Cohesion: 0.29
-Nodes (6): batchSchema, diagnosticSchema, registerClientDiagnosticRoutes(), ClientDiagnosticInput, listClientDiagnostics(), storeClientDiagnostics()
+Nodes (10): mergeEntities(), invalidateGraphTraversalCache(), loadReconciliationNodes(), parseJson(), reconcileSemanticGraphUnlocked(), ReconciliationNode, reconciliationSchema, requestStructured() (+2 more)
 
-### Community 73 - "hybrid-retrieval.ts"
-Cohesion: 0.14
-Nodes (17): hybridQuerySchema, registerSearchRoutes(), searchQuerySchema, cosineSimilarity(), candidateKey(), clampLimit(), HybridRetrievalFilters, hybridRetrieve() (+9 more)
+### Community 76 - "reprocess-pending-semantics.ts"
+Cohesion: 0.22
+Nodes (8): failed, inspectOnly, limit, maintenanceOnly, pending, remaining, skipReconciliation, targetFilter
+
+### Community 79 - "search.ts"
+Cohesion: 0.29
+Nodes (8): hybridQuerySchema, registerSearchRoutes(), searchQuerySchema, buildEventSearchQuery(), buildSearchMatchHint(), normalizeSearchText(), searchKnowledge(), SearchMatchHint
 
 ## Knowledge Gaps
-- **567 isolated node(s):** `name`, `slug`, `scheme`, `version`, `orientation` (+562 more)
+- **574 isolated node(s):** `name`, `slug`, `scheme`, `version`, `orientation` (+569 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **2 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `pool` connect `semantic-repository.ts` to `entity-repository.ts`, `app.ts`, `postgres.ts`, `reprocess-pending-semantics.ts`, `client-diagnostic-repository.ts`, `financial-transaction-repository.ts`, `semantic-repository.ts`, `hybrid-retrieval.ts`, `Event reprocessing`, `entity-repository.ts`, `semantic-enrichment.ts`, `entities.ts`, `semantic-resolver.ts`, `entity-repository.ts`?**
-  _High betweenness centrality (0.061) - this node is a cross-community bridge._
+- **Why does `pool` connect `semantic-repository.ts` to `entity-repository.ts`, `app.ts`, `postgres.ts`, `digests.ts`, `financial-transaction-repository.ts`, `semantic-repository.ts`, `Event reprocessing`, `entity-repository.ts`, `semantic-enrichment.ts`, `embeddings.ts`, `ontology.ts`, `entities.ts`, `semantic-resolver.ts`, `entity-merge.ts`, `withTransaction`, `backup-verification.ts`, `job-worker.ts`, `job-repository.ts`, `operations.ts`, `semantic-reconciler.ts`, `reprocess-pending-semantics.ts`, `search.ts`?**
+  _High betweenness centrality (0.065) - this node is a cross-community bridge._
 - **Why does `API` connect `API` to `Agent tools`, `Alias review queue`, `Capture workflows`, `Knowledge queries`, `Insights`, `Digests`, `metrics.ts`, `README.md`, `Event ingestion`, `relation-repository.ts`?**
-  _High betweenness centrality (0.017) - this node is a cross-community bridge._
-- **Why does `withTransaction()` connect `semantic-repository.ts` to `entity-repository.ts`, `app.ts`, `postgres.ts`, `financial-transaction-repository.ts`, `cleanup-test-data.ts`, `Event reprocessing`, `semantic-repository.ts`?**
-  _High betweenness centrality (0.012) - this node is a cross-community bridge._
+  _High betweenness centrality (0.014) - this node is a cross-community bridge._
+- **Why does `Postgres Schema` connect `Postgres Schema` to `README.md`?**
+  _High betweenness centrality (0.010) - this node is a cross-community bridge._
 - **What connects `name`, `slug`, `scheme` to the rest of the system?**
-  _567 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _574 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `entity-repository.ts` be split into smaller, more focused modules?**
-  _Cohesion score 0.0502283105022831 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.06363636363636363 - nodes in this community are weakly interconnected._
 - **Should `app.ts` be split into smaller, more focused modules?**
-  _Cohesion score 0.06260406260406261 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.062456140350877196 - nodes in this community are weakly interconnected._
 - **Should `event-store.ts` be split into smaller, more focused modules?**
   _Cohesion score 0.08695652173913043 - nodes in this community are weakly interconnected._

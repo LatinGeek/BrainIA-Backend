@@ -27,8 +27,9 @@
     "smoke:remote": "tsx src/scripts/remote-smoke.ts",
     "worker:once": "tsx src/scripts/process-jobs.ts",
     "verify:backup": "tsx src/scripts/verify-backup.ts",
-    "test": "node --test --import tsx tests/api-contracts.test.ts tests/capture.test.ts tests/domain.test.ts tests/e2e.test.ts tests/financial-consolidation.test.ts tests/inspect.test.ts tests/interpretation-harness.test.ts tests/knowledge-platform.test.ts tests/p0-foundation.test.ts tests/p1-knowledge.test.ts tests/semantic-governance.test.ts",
+    "test": "node --test --import tsx tests/api-contracts.test.ts tests/capture.test.ts tests/domain.test.ts tests/e2e.test.ts tests/financial-consolidation.test.ts tests/generated-content.test.ts tests/inspect.test.ts tests/interpretation-harness.test.ts tests/knowledge-platform.test.ts tests/p0-foundation.test.ts tests/p1-knowledge.test.ts tests/semantic-governance.test.ts",
     "harness:interpretation": "node --test --import tsx tests/interpretation-harness.test.ts",
+    "harness:generated-content": "node --test --import tsx tests/generated-content.test.ts",
     "harness:semantics": "tsx src/scripts/semantic-harness.ts",
     "harness:semantics:live": "tsx src/scripts/semantic-harness.ts --live"
   },

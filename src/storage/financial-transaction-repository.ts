@@ -376,9 +376,9 @@ export async function updateFinancialTransactionContext(
   }
   const result = await pool.query(`
     update financial_transactions
-    set category = $2,
-        account_id = $3,
-        destination_account_id = $4,
+    set category = coalesce($2, category),
+        account_id = coalesce($3, account_id),
+        destination_account_id = coalesce($4, destination_account_id),
         currency = coalesce($5, currency),
         kind = coalesce($6, kind),
         destination_amount = case when coalesce($6, kind) = 'transfer' then coalesce($7, destination_amount) else null end,
@@ -875,8 +875,9 @@ export async function mergeFinancialTransactions(canonicalId: string, duplicateI
     const canonical = result.rows.find((transaction) => transaction.id === canonicalId);
     const duplicate = result.rows.find((transaction) => transaction.id === duplicateId);
     if (!canonical || !duplicate || canonical.hiddenAt || duplicate.hiddenAt) return null;
-    if (canonical.kind !== duplicate.kind) {
-      throw new Error("Only transactions of the same type can be consolidated");
+    const isExpenseDuplicatingTransfer = canonical.kind === "transfer" && duplicate.kind === "expense";
+    if (canonical.kind !== duplicate.kind && !isExpenseDuplicatingTransfer) {
+      throw new Error("Only transactions of the same type can be consolidated, except an expense duplicated by a transfer");
     }
     if (canonical.excludedFromReports || duplicate.excludedFromReports) {
       throw new Error("Balance adjustments cannot be consolidated");

@@ -29,6 +29,27 @@ test("classification extracts expense signals", () => {
   assert.ok(classified.entities.some((entity) => entity.type === "amount"));
 });
 
+test("an explicit wallet income remains income despite expense-like wording", () => {
+  const classified = classifyEvent({
+    id: "wallet_income_direction",
+    source: "capture.wallet",
+    kind: "income",
+    title: "Monthly maintenance fee paid to DSK Dev Services",
+    body: "DSK Dev Services 45 USD",
+    raw: { transactionType: "income", merchant: "DSK Dev Services", amount: "45", currency: "USD" },
+    tags: ["mobile", "finance", "income"],
+  });
+
+  assert.equal(classified.inferredKind, "income");
+  assert.equal(classified.confidence, 1);
+  const financial = buildFinancialTransactionCandidate({
+    event: classified,
+    classified,
+    entityDrafts: buildEntityDrafts(classified),
+  });
+  assert.equal(financial?.kind, "income");
+});
+
 test("completed Santander card alerts become expenses even with UYU prefix amounts", () => {
   const classified = classifyEvent({
     id: "santander_card_purchase",
@@ -148,6 +169,25 @@ test("an explicit currency hint takes priority over an ambiguous dollar symbol",
   });
 
   assert.equal(candidate?.currency, "USD");
+});
+
+test("an income category corrects a stale expense direction", () => {
+  const candidate = buildFinancialTransactionCandidate({
+    event: {
+      id: "client_payment",
+      source: "mobile",
+      kind: "expense",
+      title: "Client payment",
+      body: "Received USD 45.00",
+      raw: { amount: "USD 45.00", currency: "USD", merchant: "DSK Dev Services", category: "Freelance / Client" },
+      tags: [],
+    },
+    classified: { inferredKind: "expense", confidence: 1 },
+    entityDrafts: [],
+  });
+
+  assert.equal(candidate?.kind, "income");
+  assert.equal(candidate?.category, "Freelance / Client");
 });
 
 test("entity drafts discard noisy merchants and dedupe repeated drafts", () => {
@@ -404,6 +444,33 @@ test("classification assistant enriches high-confidence financial alerts", async
   const result = await assistant({ event, base: { ...event, classificationVersion: "heuristic-v2", inferredKind: "expense", confidence: 0.99, entities: [] } });
   assert.equal(calls, 1);
   assert.equal(result.entities[0]?.value, "OpenAI");
+});
+
+test("classification assistant cannot overturn an explicit wallet income direction", async () => {
+  const assistant = createClassificationAssistant({
+    apiKey: "test-key",
+    model: "test-model",
+    generateCompletion: async () => JSON.stringify({
+      inferredKind: "expense",
+      confidence: 1,
+      entities: [{ type: "merchant", value: "DSK Dev Services" }],
+    }),
+  });
+  const event = {
+    id: "wallet_income_protected",
+    source: "capture.wallet",
+    kind: "income" as const,
+    title: "Monthly maintenance fee paid",
+    body: "45 USD",
+    raw: { transactionType: "income" },
+    tags: [],
+  };
+  const result = await assistant({
+    event,
+    base: { ...event, classificationVersion: "heuristic-v3", inferredKind: "income", confidence: 1, entities: [] },
+  });
+
+  assert.equal(result.inferredKind, "income");
 });
 
 test("event interpretation uses semantic merchant identity and trusted financial facts", () => {

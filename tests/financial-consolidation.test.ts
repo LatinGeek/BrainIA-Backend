@@ -96,6 +96,54 @@ test("consolidating transactions hides the duplicate from lists and financial to
   }
 });
 
+test("a transfer can consolidate a duplicate expense without leaving it in spending totals", async () => {
+  const suffix = crypto.randomUUID().slice(0, 8);
+  const transferId = `financial_transfer_${suffix}`;
+  const expenseId = `financial_expense_${suffix}`;
+  const accountId = `account_transfer_merge_${suffix}`;
+  const destinationAccountId = `account_transfer_destination_${suffix}`;
+  const observedAt = new Date().toISOString();
+  const app = await buildApp();
+
+  try {
+    await pool.query(
+      `insert into financial_accounts (id, name, type, currency) values ($1, $2, 'bank', 'UYU'), ($3, $4, 'bank', 'UYU')`,
+      [accountId, `Transfer source ${suffix}`, destinationAccountId, `Transfer destination ${suffix}`],
+    );
+    await pool.query(
+      `
+        insert into financial_transactions (
+          id, kind, amount, currency, merchant_label, normalized_merchant,
+          observed_at, window_start, window_end, evidence_count, match_score,
+          match_strategy, primary_source, account_id, destination_account_id, destination_amount, destination_currency
+        ) values
+          ($1, 'transfer', 20000, 'UYU', 'Transfer to Prex', 'transfer to prex',
+           $5::timestamptz, $5::timestamptz, $5::timestamptz, 0, 1,
+           'test', 'test', $3, $4, 20000, 'UYU'),
+          ($2, 'expense', 20000, 'UYU', 'Transfer to another bank', 'transfer to another bank',
+           $5::timestamptz, $5::timestamptz, $5::timestamptz, 0, 1,
+           'test', 'test', $3, null, null, null)
+      `,
+      [transferId, expenseId, accountId, destinationAccountId, observedAt],
+    );
+
+    const merge = await app.inject({ method: "POST", url: `/api/v1/financial/transactions/${transferId}/merge`, payload: { duplicateId: expenseId } });
+    assert.equal(merge.statusCode, 200);
+    assert.equal((merge.json() as { id: string }).id, transferId);
+
+    const duplicate = await pool.query<{ hiddenAt: string | null; mergedIntoId: string | null }>(
+      `select hidden_at as "hiddenAt", merged_into_transaction_id as "mergedIntoId" from financial_transactions where id = $1`,
+      [expenseId],
+    );
+    assert.ok(duplicate.rows[0]?.hiddenAt);
+    assert.equal(duplicate.rows[0]?.mergedIntoId, transferId);
+  } finally {
+    await pool.query("delete from financial_transactions where id = any($1::text[])", [[transferId, expenseId]]);
+    await pool.query("delete from financial_accounts where id = any($1::text[])", [[accountId, destinationAccountId]]);
+    await app.close();
+  }
+});
+
 test("deleting an account preserves its transactions and detaches their account reference", async () => {
   const suffix = crypto.randomUUID().slice(0, 8);
   const accountId = `account_delete_${suffix}`;
