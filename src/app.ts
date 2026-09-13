@@ -10,6 +10,7 @@ import { registerEntityResolveRoutes } from "./routes/entity-resolve.js";
 import { registerEntityMergeRoutes } from "./routes/entity-merge.js";
 import { registerDigestRoutes } from "./routes/digests.js";
 import { registerEntityAliasRoutes } from "./routes/entity-aliases.js";
+import { registerEntitySemanticProfileRoutes } from "./routes/entity-semantic-profile.js";
 import { registerFinancialTransactionRoutes } from "./routes/financial-transactions.js";
 import { registerGraphRoutes } from "./routes/graph.js";
 import { registerInsightsRoutes } from "./routes/insights.js";
@@ -81,6 +82,7 @@ export async function buildApp(options: { authConfig?: AuthConfig } = {}) {
   await app.register(registerEntityResolveRoutes, { prefix: config.apiPrefix });
   await app.register(registerEntityMergeRoutes, { prefix: config.apiPrefix });
   await app.register(registerEntityAliasRoutes, { prefix: config.apiPrefix });
+  await app.register(registerEntitySemanticProfileRoutes, { prefix: config.apiPrefix });
   await app.register(registerGraphRoutes, { prefix: config.apiPrefix });
   await app.register(registerSearchRoutes, { prefix: config.apiPrefix });
   await app.register(registerSemanticRoutes, { prefix: config.apiPrefix });

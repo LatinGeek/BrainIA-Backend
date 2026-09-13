@@ -120,8 +120,8 @@
     "semantic_hash": ""
   },
   "src/app.ts": {
-    "mtime": 1785527452.142187,
-    "ast_hash": "0cd436eecbb9d67cdfd79da099d43026",
+    "mtime": 1788401452.405914,
+    "ast_hash": "40fb32bb0d5f5632768d4bfc5c4d0b2c",
     "semantic_hash": ""
   },
   "src/auth.ts": {
@@ -130,8 +130,8 @@
     "semantic_hash": ""
   },
   "src/config.ts": {
-    "mtime": 1784730741.0861497,
-    "ast_hash": "576717a304751c19640c41eaf663e70c",
+    "mtime": 1788401342.774961,
+    "ast_hash": "6a7483fece7c1819bb381891f5c3d463",
     "semantic_hash": ""
   },
   "src/domain/capture.ts": {
@@ -175,8 +175,8 @@
     "semantic_hash": ""
   },
   "src/routes/capture.ts": {
-    "mtime": 1785604597.3293047,
-    "ast_hash": "6242023d528abc7b43b8a6f87ce55644",
+    "mtime": 1788392409.6956437,
+    "ast_hash": "70fd185932870c18365494685518d71a",
     "semantic_hash": ""
   },
   "src/routes/dashboard.ts": {
@@ -210,8 +210,8 @@
     "semantic_hash": ""
   },
   "src/routes/financial-transactions.ts": {
-    "mtime": 1785612244.8344975,
-    "ast_hash": "d3edf2d624f9b427ac6198b4229cfcea",
+    "mtime": 1788395546.0000174,
+    "ast_hash": "66517e00a277663a8c003f68b6241012",
     "semantic_hash": ""
   },
   "src/routes/graph.ts": {
@@ -265,8 +265,8 @@
     "semantic_hash": ""
   },
   "src/storage/classification-assistant.ts": {
-    "mtime": 1785721479.4053838,
-    "ast_hash": "fbd6299bb0a455f86565c4b5e57fac6e",
+    "mtime": 1788401701.6503716,
+    "ast_hash": "83d6f89e2257c3d1d60282e60d26056b",
     "semantic_hash": ""
   },
   "src/storage/database-url.ts": {
@@ -305,13 +305,13 @@
     "semantic_hash": ""
   },
   "src/storage/event-store.ts": {
-    "mtime": 1784732080.9782455,
-    "ast_hash": "ded23b98beba8335462b2419684136c5",
+    "mtime": 1788394247.1684058,
+    "ast_hash": "93662b8639c2cf657e45c4e8c0a76026",
     "semantic_hash": ""
   },
   "src/storage/financial-transaction-repository.ts": {
-    "mtime": 1785773118.3946133,
-    "ast_hash": "a2bd6785957bcecd4cd80e261c43c7a5",
+    "mtime": 1786124093.0039785,
+    "ast_hash": "21c57eb7f4a2dde577c43b0e5bf132f6",
     "semantic_hash": ""
   },
   "src/storage/graph-cache.ts": {
@@ -335,8 +335,8 @@
     "semantic_hash": ""
   },
   "src/storage/postgres.ts": {
-    "mtime": 1784491927.2107432,
-    "ast_hash": "d88daa068653444d44eed2e48ea1e8e7",
+    "mtime": 1788392409.6936283,
+    "ast_hash": "51535f00644b49724e5b8b862d16ad67",
     "semantic_hash": ""
   },
   "src/storage/relation-repository.ts": {
@@ -360,8 +360,8 @@
     "semantic_hash": ""
   },
   "tests/domain.test.ts": {
-    "mtime": 1785759024.4970474,
-    "ast_hash": "796bfa2fb7e5285cc1ea4fa36eab0056",
+    "mtime": 1788394313.2700255,
+    "ast_hash": "6b280ac37abf2c05390e27eecada539b",
     "semantic_hash": ""
   },
   "tests/e2e.test.ts": {
@@ -390,8 +390,8 @@
     "semantic_hash": ""
   },
   "vercel.json": {
-    "mtime": 1784730893.8722384,
-    "ast_hash": "accd1383dd13a2c83ff5276c9f1217ff",
+    "mtime": 1788392969.7719567,
+    "ast_hash": "876df205b0386e4a25ef01f9399d5e5d",
     "semantic_hash": ""
   },
   "web/app.js": {
@@ -525,13 +525,13 @@
     "semantic_hash": ""
   },
   "src/domain/ontology.ts": {
-    "mtime": 1785679479.9598396,
-    "ast_hash": "65619eda3859b51176da7642a9bd8816",
+    "mtime": 1788400640.1061172,
+    "ast_hash": "29a4865efe8bf1e6f158017d7725ab01",
     "semantic_hash": ""
   },
   "src/routes/semantic.ts": {
-    "mtime": 1784492229.0047636,
-    "ast_hash": "76987e00c3e8a3f86396442afff42d04",
+    "mtime": 1788396885.240758,
+    "ast_hash": "28ad51397ef0635cd7a9751739b1c116",
     "semantic_hash": ""
   },
   "src/scripts/audit-semantic-graph.ts": {
@@ -570,8 +570,8 @@
     "semantic_hash": ""
   },
   "src/storage/semantic-enrichment.ts": {
-    "mtime": 1785683348.327057,
-    "ast_hash": "8fb991a3870de8025d33e424c02770a0",
+    "mtime": 1788393536.272406,
+    "ast_hash": "7af6ee20c11723b0addc074cea833009",
     "semantic_hash": ""
   },
   "src/storage/semantic-repository.ts": {
@@ -620,8 +620,8 @@
     "semantic_hash": ""
   },
   "tests/semantic-governance.test.ts": {
-    "mtime": 1785683365.2450693,
-    "ast_hash": "303ba0e33c1bd995fecd70871ef0798c",
+    "mtime": 1788400640.1076307,
+    "ast_hash": "6a066d46ac22eee374fbfa04805e602a",
     "semantic_hash": ""
   },
   "docs/entity-identity-governance.md": {
@@ -695,8 +695,8 @@
     "semantic_hash": ""
   },
   "src/routes/operations.ts": {
-    "mtime": 1785527452.142691,
-    "ast_hash": "684f23a08342fee3c94dd652be53c7c8",
+    "mtime": 1788401342.7759664,
+    "ast_hash": "2305320711676d57ecbc429db2fd8f92",
     "semantic_hash": ""
   },
   "src/routes/privacy.ts": {
@@ -730,8 +730,8 @@
     "semantic_hash": ""
   },
   "src/storage/hybrid-retrieval.ts": {
-    "mtime": 1785678795.7023754,
-    "ast_hash": "9d917206482e4850004d07a958e8d8f0",
+    "mtime": 1788401701.6513805,
+    "ast_hash": "894f940ce707ddb55a866c604a77c772",
     "semantic_hash": ""
   },
   "src/storage/job-repository.ts": {
@@ -740,8 +740,8 @@
     "semantic_hash": ""
   },
   "src/storage/job-worker.ts": {
-    "mtime": 1785678692.1943383,
-    "ast_hash": "0926458c9cb6751e1ad72ea1956f0e58",
+    "mtime": 1788401342.776474,
+    "ast_hash": "5db28fbbb3d4a37f34be6bf6041696ad",
     "semantic_hash": ""
   },
   "src/storage/knowledge-fact-repository.ts": {
@@ -760,18 +760,18 @@
     "semantic_hash": ""
   },
   "src/storage/proactive-insights.ts": {
-    "mtime": 1785759003.7288606,
-    "ast_hash": "adeeee5f8f7d544da6676a6dc9c004ff",
+    "mtime": 1788401866.9854302,
+    "ast_hash": "0f53189b9edec2fb2ca27b246f6f8791",
     "semantic_hash": ""
   },
   "src/storage/quality-metrics.ts": {
-    "mtime": 1785678811.9837966,
-    "ast_hash": "a743bccf6eb9391593d32133f45761b5",
+    "mtime": 1788401949.9852645,
+    "ast_hash": "9bcff0353d3d7f8f12681965fabe5c91",
     "semantic_hash": ""
   },
   "tests/knowledge-platform.test.ts": {
-    "mtime": 1784731386.4047508,
-    "ast_hash": "db3114804ab1fc62978e8d49d709529a",
+    "mtime": 1788393536.2744167,
+    "ast_hash": "a8b1366dc994043fac3a9ebc887eb558",
     "semantic_hash": ""
   },
   "docs/knowledge-platform-action-plan.md": {
@@ -857,6 +857,36 @@
   "tests/generated-content.test.ts": {
     "mtime": 1785754195.5328348,
     "ast_hash": "8823514e200e7b8ba9fc08eef53353da",
+    "semantic_hash": ""
+  },
+  "migrations/0034_financial_transaction_title_override.sql": {
+    "mtime": 1786037029.840364,
+    "ast_hash": "3371634b0d48cdb7b9d93892663937f4",
+    "semantic_hash": ""
+  },
+  "src/storage/classification-learning.ts": {
+    "mtime": 1788401701.6498663,
+    "ast_hash": "705159744772efbc3d9b247c3fc02b7d",
+    "semantic_hash": ""
+  },
+  "migrations/0035_financial_custom_categories.sql": {
+    "mtime": 1788395465.783108,
+    "ast_hash": "41f28e5b16d3a35b20723851910db073",
+    "semantic_hash": ""
+  },
+  "migrations/0036_entity_semantic_profiles.sql": {
+    "mtime": 1788401452.395127,
+    "ast_hash": "a8c735f048665b3e1362dfa1a23e7354",
+    "semantic_hash": ""
+  },
+  "src/routes/entity-semantic-profile.ts": {
+    "mtime": 1788401452.4054136,
+    "ast_hash": "bf4b7cf276738daac7b018742d2816a7",
+    "semantic_hash": ""
+  },
+  "src/storage/entity-semantic-profile.ts": {
+    "mtime": 1788401468.308864,
+    "ast_hash": "6ca151093856aac046b8403524113e31",
     "semantic_hash": ""
   }
 }

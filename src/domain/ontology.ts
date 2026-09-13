@@ -55,6 +55,9 @@ export const CATEGORY_CATALOG = [
   category("finances.transfers.internal", "Internal transfers", "Transfers between accounts controlled by the user.", "finances.transfers", 3, "subtype", ["transfer"]),
   category("finances.transfers.external", "External transfers", "Transfers to or from another person or organization.", "finances.transfers", 3, "subtype", ["transfer"]),
   category("finances.accounts", "Accounts and cards", "Financial accounts, balances, cards, and their administrative state.", "finances", 1, "family"),
+  category("finances.payment_methods", "Payment methods", "Cards, wallets, and other instruments used to make or receive payments.", "finances", 1, "family"),
+  category("finances.payment_methods.digital_wallets", "Digital wallets", "Digital payment wallets such as Google Pay, Apple Pay, and similar services.", "finances.payment_methods", 2, "class"),
+  category("finances.payment_methods.cards", "Payment cards", "Debit, credit, prepaid, and virtual cards used as payment methods.", "finances.payment_methods", 2, "class"),
 
   category("communication.email", "Email", "Electronic messages and the identities and conversations around them.", "communication", 1, "family", ["email"]),
   category("communication.email.activity", "Email activity", "Email messages received, sent, or acted upon.", "communication.email", 2, "class", ["email"]),
@@ -89,6 +92,15 @@ export const CATEGORY_CATALOG = [
   category("health.fitness", "Fitness", "Exercise, training, activity, and physical performance.", "health", 1, "family", ["notification", "note"]),
   category("social.interactions", "Social interactions", "Conversations, gatherings, and activity with other people.", "social", 1, "family", ["notification", "email", "note"]),
   category("psychology.reflection", "Reflection", "Journaling, moods, observations, and personal reflection.", "psychology", 1, "family", ["note"]),
+  category("entrepreneurship.businesses", "Businesses", "Commercial organizations, shops, providers, and establishments represented as entities.", "entrepreneurship", 1, "family"),
+  category("entrepreneurship.businesses.food", "Food establishments", "Restaurants, cafes, bakeries, takeaways, and other food businesses.", "entrepreneurship.businesses", 2, "class"),
+  category("entrepreneurship.businesses.hardware", "Hardware stores", "Hardware stores, construction-supply shops, and home-improvement retailers.", "entrepreneurship.businesses", 2, "class"),
+  category("entrepreneurship.businesses.electronics", "Electronics stores", "Retailers of consumer electronics, computers, phones, and related accessories.", "entrepreneurship.businesses", 2, "class"),
+  category("entrepreneurship.businesses.pharmacy", "Pharmacies", "Pharmacies, drugstores, and health-product retailers.", "entrepreneurship.businesses", 2, "class"),
+  category("entrepreneurship.businesses.fuel", "Fuel stations", "Gas stations, fuel retailers, and vehicle refueling services.", "entrepreneurship.businesses", 2, "class"),
+  category("entrepreneurship.businesses.grocery", "Grocery stores", "Supermarkets, markets, grocers, and other everyday-provision retailers.", "entrepreneurship.businesses", 2, "class"),
+  category("entrepreneurship.businesses.retail", "General retail", "Retail businesses that do not fit a more specific commercial type.", "entrepreneurship.businesses", 2, "class"),
+  category("entrepreneurship.businesses.services", "Service businesses", "Businesses that primarily deliver professional, personal, repair, or local services.", "entrepreneurship.businesses", 2, "class"),
   category("entrepreneurship.operations", "Business operations", "Operational activity for a venture or independent business.", "entrepreneurship", 1, "family", ["task", "email", "expense", "income"]),
 ] as const satisfies readonly CategoryDefinition[];
 

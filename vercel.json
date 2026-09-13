@@ -16,6 +16,10 @@
   ],
   "crons": [
     {
+      "path": "/api/v1/cron/process-jobs",
+      "schedule": "* * * * *"
+    },
+    {
       "path": "/api/v1/cron/daily-insights",
       "schedule": "0 8 * * *"
     }

@@ -382,6 +382,31 @@ test("classification assistant upgrades ambiguous events when the model is confi
   assert.equal(result.modelMetadata?.applied, true);
 });
 
+test("classification assistant supplies same-source human corrections to DeepSeek", async () => {
+  let prompt = "";
+  const assistant = createClassificationAssistant({
+    apiKey: "test-key",
+    model: "test-model",
+    loadLessons: async () => [{
+      source: "Santander",
+      observedValue: "OPENAI *CHATGPT",
+      canonicalValue: "OpenAI",
+      entityType: "merchant",
+      categoryPath: ["Software"],
+    }],
+    generateCompletion: async (request) => {
+      prompt = request.userPrompt;
+      return JSON.stringify({ inferredKind: "expense", confidence: 0.95, entities: [{ type: "merchant", value: "OpenAI" }] });
+    },
+  });
+  const event = { id: "evt_learned", source: "Santander", kind: "notification" as const, title: "Aviso", body: "USD 20 OPENAI *CHATGPT", raw: {}, tags: [] };
+  const result = await assistant({ event, base: { ...event, classificationVersion: "heuristic-v2", inferredKind: "expense", confidence: 0.7, entities: [] } });
+
+  assert.match(prompt, /OPENAI \*CHATGPT/);
+  assert.match(prompt, /OpenAI/);
+  assert.deepEqual(result.modelMetadata?.learning, { confirmedExamples: 1 });
+});
+
 test("classification assistant inspects confident email captures for transaction knowledge", async () => {
   let completionCalls = 0;
   const assistant = createClassificationAssistant({

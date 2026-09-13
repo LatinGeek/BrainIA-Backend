@@ -6,6 +6,7 @@ import { processBackgroundJobs } from "../storage/job-worker.js";
 import { verifyConfiguredBackup } from "../storage/backup-verification.js";
 import { applyRetentionPolicies } from "../storage/data-controls.js";
 import { listClientDiagnostics } from "../storage/client-diagnostic-repository.js";
+import { config } from "../config.js";
 
 function operationsAuthorized(headers: Record<string, string | string[] | undefined>) {
   const configured = process.env.BRAINIA_OPERATIONS_TOKEN?.trim();
@@ -14,7 +15,23 @@ function operationsAuthorized(headers: Record<string, string | string[] | undefi
   return (Array.isArray(supplied) ? supplied[0] : supplied) === configured;
 }
 
+function cronAuthorized(headers: Record<string, string | string[] | undefined>) {
+  const secret = process.env.CRON_SECRET?.trim();
+  const authorization = headers.authorization;
+  return Boolean(secret && authorization === `Bearer ${secret}`);
+}
+
 export const registerOperationsRoutes: FastifyPluginAsync = async (app) => {
+  app.get("/cron/process-jobs", async (request, reply) => {
+    if (!cronAuthorized(request.headers)) return reply.status(401).send({ error: "unauthorized_cron" });
+    // Keep live captures moving ahead of derived work while still draining a
+    // bounded batch on every invocation. The batch is capped in config so this
+    // endpoint remains safe for the serverless runtime.
+    const result = await processBackgroundJobs({ limit: config.workerBatchSize });
+    request.log.info({ claimed: result.claimed, results: result.results }, "background jobs processed");
+    return { ok: true, ...result };
+  });
+
   app.get("/operations/client-diagnostics", async (request, reply) => {
     if (!operationsAuthorized(request.headers)) return reply.status(401).send({ error: "unauthorized_operations" });
     const parsed = z.object({ limit: z.coerce.number().int().min(1).max(500).default(100) }).safeParse(request.query);

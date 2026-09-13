@@ -4,12 +4,14 @@ import { eventKindSchema } from "../domain/event.js";
 import { generateNaturalLanguageSummary } from "./deepseek.js";
 import { loadSourceProcessingPolicy, type SourceProcessingPolicy } from "./privacy.js";
 import { pool } from "./postgres.js";
+import { loadClassificationLessons, type ClassificationLesson } from "./classification-learning.js";
 
 type ClassificationAssistantDeps = {
   apiKey?: string;
   model: string;
   generateCompletion?: typeof generateNaturalLanguageSummary;
   resolvePolicy?: (input: { clientId: string | null; source: string }) => Promise<SourceProcessingPolicy>;
+  loadLessons?: (input: { clientId: string | null; source: string }) => Promise<ClassificationLesson[]>;
 };
 
 const suggestionSchema = z.object({
@@ -124,6 +126,16 @@ export function createClassificationAssistant(deps: ClassificationAssistantDeps)
     }
 
     const completion = deps.generateCompletion ?? generateNaturalLanguageSummary;
+    // A correction is not a one-off display preference. It is supervised
+    // evidence about how this user's source encodes real-world entities.
+    // Retrieval is bounded and best-effort so learning can never block capture.
+    let confirmedExamples: ClassificationLesson[] = [];
+    try {
+      confirmedExamples = await (deps.loadLessons?.({ clientId: input.clientId ?? null, source: input.event.source })
+        ?? Promise.resolve([]));
+    } catch {
+      confirmedExamples = [];
+    }
     const content = await completion({
       apiKey: deps.apiKey,
       model: deps.model,
@@ -132,11 +144,11 @@ export function createClassificationAssistant(deps: ClassificationAssistantDeps)
         clientId: input.clientId ?? null,
         eventId: input.auditEventId === undefined ? input.event.id : input.auditEventId,
         operation: "event_classification",
-        promptVersion: "classification-v2",
+        promptVersion: "classification-v3",
       },
       redaction: policy ?? undefined,
       systemPrompt:
-        "Return only strict JSON. Classify the real-world event semantics, not its transport type. A posted or completed card transaction is an expense even when captured as a notification and even when the title says Aviso; a rejected or declined attempt is only a notification. Preserve the exact currency and full amount, including thousands separators such as UYU 1.733,00. Extract concise evidence and generate a user-facing event identity for every event. displayTitle must state what actually happened in concise English; never copy a generic heading such as Aviso, Notification, Message, or a raw sentence. displayDescription must explain the event using only supplied facts. Always inspect financial alerts and email bodies even when deterministic classification is already confident. For card alerts, identify the real merchant from processor descriptors such as +phone/OPENAI *CHATGPT, not the generic heading. Allowed entity types are only app, merchant, sender, recipient, message, amount, and card_last_four. Do not output domains, categories, concepts, notification titles, timestamps, other IDs, raw fragments, or invented entities; a separate semantic governor decides durable graph placement.",
+        "Return only strict JSON. Classify the real-world event semantics, not its transport type. A posted or completed card transaction is an expense even when captured as a notification and even when the title says Aviso; a rejected or declined attempt is only a notification. Preserve the exact currency and full amount, including thousands separators such as UYU 1.733,00. Extract concise evidence and generate a user-facing event identity for every event. displayTitle must state what actually happened in concise English; never copy a generic heading such as Aviso, Notification, Message, or a raw sentence. displayDescription must explain the event using only supplied facts. Always inspect financial alerts and email bodies even when deterministic classification is already confident. For card alerts, identify the real merchant from processor descriptors such as +phone/OPENAI *CHATGPT, not the generic heading. confirmedExamples are explicit user corrections from this same source. Treat an exact or clearly equivalent descriptor as strong evidence for the canonical entity. taxonomyKeys and roles inside an exact confirmed example are user-confirmed facts about that entity; preserve them as evidence for the semantic governor, but never apply them to a merely similar-looking descriptor or invent an event category/relationship from them. Allowed entity types are only app, merchant, sender, recipient, message, amount, and card_last_four. Do not output domains, categories, concepts, notification titles, timestamps, other IDs, raw fragments, or invented entities; a separate semantic governor decides durable graph placement.",
       userPrompt: JSON.stringify(
         {
           event: {
@@ -154,6 +166,7 @@ export function createClassificationAssistant(deps: ClassificationAssistantDeps)
             confidence: input.base.confidence,
             entities: input.base.entities,
           },
+          confirmedExamples,
           responseShape: {
             inferredKind: "email | expense | transfer | note | notification | task | other",
             confidence: "number between 0 and 1",
@@ -229,6 +242,7 @@ export function createClassificationAssistant(deps: ClassificationAssistantDeps)
             baseConfidence: input.base.confidence,
           },
           response: suggestion,
+          learning: { confirmedExamples: confirmedExamples.length },
           rawResponse: content,
         },
       };
@@ -250,4 +264,5 @@ export const maybeEnhanceClassification = createClassificationAssistant({
   apiKey: process.env.DEEPSEEK_API_KEY,
   model: process.env.DEEPSEEK_MODEL ?? "deepseek-v4-flash",
   resolvePolicy: (input) => loadSourceProcessingPolicy(pool, input),
+  loadLessons: (input) => loadClassificationLessons(pool, input),
 });

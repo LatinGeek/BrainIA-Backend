@@ -112,7 +112,10 @@ function buildTransactionProjectionSql() {
       t.amount::text as "amount",
       t.currency,
       t.merchant_label as "merchantLabel",
-      coalesce(merchant_alias.alias, merchant_entity.value, t.merchant_label) as "displayMerchantLabel",
+      -- A title explicitly chosen by the user always wins. Otherwise, use the
+      -- event interpretation generated from the complete captured event before
+      -- falling back to merchant identity/transport text.
+      coalesce(t.title_override, anchor_classified.display_title, merchant_alias.alias, merchant_entity.value, t.merchant_label) as "displayMerchantLabel",
       t.normalized_merchant as "normalizedMerchant",
       t.merchant_entity_id as "merchantEntityId",
       t.observed_at as "observedAt",
@@ -143,6 +146,7 @@ function buildTransactionProjectionSql() {
     from financial_transactions t
     left join financial_accounts a on a.id = t.account_id
     left join financial_accounts destination on destination.id = t.destination_account_id
+    left join classified_events anchor_classified on anchor_classified.raw_event_id = t.anchor_event_id
     left join entity_merges merchant_merge on merchant_merge.alias_entity_id = t.merchant_entity_id
     left join entities merchant_entity on merchant_entity.id = coalesce(merchant_merge.canonical_entity_id, t.merchant_entity_id)
     left join lateral (
@@ -343,6 +347,7 @@ export async function createBalanceAdjustment(input: { accountId: string; target
 export async function updateFinancialTransactionContext(
   id: string,
   input: {
+    title?: string;
     category?: string | null;
     accountId?: string | null;
     destinationAccountId?: string | null;
@@ -376,18 +381,19 @@ export async function updateFinancialTransactionContext(
   }
   const result = await pool.query(`
     update financial_transactions
-    set category = coalesce($2, category),
-        account_id = coalesce($3, account_id),
-        destination_account_id = coalesce($4, destination_account_id),
-        currency = coalesce($5, currency),
-        kind = coalesce($6, kind),
-        destination_amount = case when coalesce($6, kind) = 'transfer' then coalesce($7, destination_amount) else null end,
-        destination_currency = case when coalesce($6, kind) = 'transfer' then coalesce($8, destination_currency) else null end,
+    set title_override = coalesce($2, title_override),
+        category = coalesce($3, category),
+        account_id = coalesce($4, account_id),
+        destination_account_id = coalesce($5, destination_account_id),
+        currency = coalesce($6, currency),
+        kind = coalesce($7, kind),
+        destination_amount = case when coalesce($7, kind) = 'transfer' then coalesce($8, destination_amount) else null end,
+        destination_currency = case when coalesce($7, kind) = 'transfer' then coalesce($9, destination_currency) else null end,
         updated_at = now()
     where id = $1
       and hidden_at is null
     returning id
-  `, [id, input.category?.trim() || null, input.accountId || null, input.destinationAccountId || null, input.currency ?? null, input.kind ?? null, input.destinationAmount ?? null, input.destinationCurrency ?? null]);
+  `, [id, input.title?.trim() || null, input.category?.trim() || null, input.accountId || null, input.destinationAccountId || null, input.currency ?? null, input.kind ?? null, input.destinationAmount ?? null, input.destinationCurrency ?? null]);
 
   if (!result.rowCount) return null;
   return loadFinancialTransactionById(pool, id);

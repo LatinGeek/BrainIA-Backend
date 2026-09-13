@@ -37,7 +37,18 @@ import { config } from "../config.js";
 
 export type EventIngestionContext = {
   clientId?: string | null;
+  requestId?: string | null;
 };
+
+function logCaptureStage(input: {
+  requestId?: string | null;
+  eventId: string;
+  source: string;
+  stage: string;
+  [key: string]: unknown;
+}) {
+  console.info(JSON.stringify({ capture: true, ...input }));
+}
 
 export function buildEventDedupeKey(event: EventInput, clientId: string | null | undefined) {
   const stableInput = event.idempotencyKey?.trim() || event.externalId?.trim() || event.id.trim();
@@ -57,18 +68,21 @@ function shouldPersistGraphEntity(draft: EntityDraft) {
   return ["app", "merchant", "sender", "recipient", "email_message", "financial_event", "activity_instance"].includes(draft.type);
 }
 
-function governedGraphDrafts(decision: SemanticDecision) {
+function governedGraphDrafts(decision: SemanticDecision, evidenceDrafts: EntityDraft[]) {
   // Review and unavailable decisions remain evidence/proposals only. Persisting
   // their suggested AI identities here would create visible, unrooted graph
   // nodes before semantic governance has accepted a hierarchy path.
-  if (decision.status !== "resolved") return [];
+  const identities = evidenceDrafts.filter((draft) => ["app", "merchant", "sender", "recipient"].includes(draft.type));
+  if (decision.status !== "resolved") return identities;
   const seen = new Set<string>();
-  return decision.paths
+  return [...identities, ...decision.paths
     .map((path) => path.subject)
     .filter((draft) => {
       const eligible = draft.identitySource === "ai" && Boolean(draft.description?.trim()) && draft.metadata?.aiIdentity === true;
+      return eligible;
+    })].filter((draft) => {
       const key = `${draft.type}:${draft.normalizedValue}`;
-      if (!eligible || seen.has(key)) return false;
+      if (seen.has(key)) return false;
       seen.add(key);
       return true;
     });
@@ -100,7 +114,7 @@ async function persistClassifiedEvent(
   // Model inference must happen before opening a database transaction. Holding
   // ontology row locks while waiting on the network serializes batch workers.
   const semanticDecision = await buildModelSemanticDecision({ entities: entityDrafts, source: event.source, inferredKind: classified.inferredKind, title: event.title, body: event.body, clientId });
-  const graphDrafts = governedGraphDrafts(semanticDecision);
+  const graphDrafts = governedGraphDrafts(semanticDecision, entityDrafts);
 
   return withTransaction(async (db) => {
     const inserted = await insertRawEvent(db, event, clientId, dedupeKey);
@@ -131,14 +145,14 @@ async function persistClassifiedEvent(
       }
       await linkEventEntity(db, event.id, entity.id, 0.8);
 
-      if (draft.type === "merchant" && isFinancialInferredKind(classified.inferredKind)) {
+      if (["merchant", "app", "sender", "recipient"].includes(draft.type)) {
         await enqueueEntityReview(db, {
           entityId: entity.id,
           eventId: event.id,
           source: event.source,
           originalValue: String(draft.metadata?.evidenceValue ?? draft.value),
           suggestedAlias: draft.value,
-          reason: "ai_identity_review",
+          reason: `${draft.type}_identity_candidate`,
         });
       }
     }
@@ -256,7 +270,17 @@ export async function ensureStorage() {
 export async function appendEvent(event: EventInput, context: EventIngestionContext = {}) {
   const clientId = context.clientId ?? null;
   const dedupeKey = buildEventDedupeKey(event, clientId);
+  logCaptureStage({ requestId: context.requestId, eventId: event.id, source: event.source, stage: "policy_loading" });
   const policy = await loadSourceProcessingPolicy(pool, { clientId, source: event.source });
+  logCaptureStage({
+    requestId: context.requestId,
+    eventId: event.id,
+    source: event.source,
+    stage: "policy_loaded",
+    processingMode: config.processingMode,
+    processingEnabled: policy.enabled,
+  });
+  logCaptureStage({ requestId: context.requestId, eventId: event.id, source: event.source, stage: "persistence_start" });
   const capture = await withTransaction(async (db) => {
     const inserted = await insertRawEvent(db, event, clientId, dedupeKey);
     const storedId = inserted ? event.id : await findStoredRawEventId(db, event.id, dedupeKey);
@@ -271,15 +295,57 @@ export async function appendEvent(event: EventInput, context: EventIngestionCont
           clientId, eventId: storedId, jobType: "classification",
           idempotencyKey: `classification:${storedId}:v1`,
           payload: { eventId: storedId }, provider: "deepseek",
+          // Manual money captures must reach the ledger ahead of a burst of
+          // notification imports. Lower values are claimed first.
+          priority: isFinancialInferredKind(event.kind) ? 10 : 100,
         });
       }
     }
     return { inserted, storedId };
   });
+  logCaptureStage({
+    requestId: context.requestId,
+    eventId: event.id,
+    source: event.source,
+    stage: "persistence_complete",
+    inserted: capture.inserted,
+    storedId: capture.storedId,
+  });
+
+  // Money Capture already supplies the exact direction and amount. Materialize
+  // its ledger row immediately with deterministic processing so Money updates
+  // without depending on the optional worker/semantic pipeline.
+  if (capture.inserted && config.processingMode === "queued" && isFinancialInferredKind(event.kind)) {
+    logCaptureStage({ requestId: context.requestId, eventId: event.id, source: event.source, stage: "financial_projection_start" });
+    try {
+      const classified = await classifyCapturedEvent(capture.storedId);
+      if (!classified) throw new Error("Captured financial event is unavailable for classification");
+      const correlation = await correlateFinancialEvent(capture.storedId);
+      logCaptureStage({
+        requestId: context.requestId,
+        eventId: event.id,
+        source: event.source,
+        stage: "financial_projection_complete",
+        correlated: correlation?.correlated ?? false,
+      });
+    } catch (error) {
+      // The immutable capture and its queued classification job remain intact.
+      // Do not turn a delayed projection into another failed user capture.
+      logCaptureStage({
+        requestId: context.requestId,
+        eventId: event.id,
+        source: event.source,
+        stage: "financial_projection_failed",
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
 
   if (!capture.inserted || !policy.enabled || config.processingMode === "queued") {
+    logCaptureStage({ requestId: context.requestId, eventId: event.id, source: event.source, stage: "response_loading" });
     const stored = await loadStoredEventByLookup(pool, capture.storedId, dedupeKey);
     if (!stored) throw new Error("Captured event could not be loaded");
+    logCaptureStage({ requestId: context.requestId, eventId: event.id, source: event.source, stage: "response_ready" });
     return stored;
   }
 
@@ -312,7 +378,10 @@ export async function classifyCapturedEvent(eventId: string) {
     event: rawEvent,
     base: classifyEvent(rawEvent),
     clientId: rawEvent.clientId,
-    allowModel: rawEvent.privacyStatus === "standard",
+    // Capture already provides the chosen money direction and the exact
+    // amount. Avoid turning ledger availability into a dependency on an
+    // optional external model call.
+    allowModel: rawEvent.privacyStatus === "standard" && rawEvent.source !== "capture.wallet",
   });
   const entityDrafts = buildEntityDrafts({ ...classified, raw: classified.raw });
   return withTransaction(async (db) => {
@@ -354,7 +423,7 @@ async function reprocessEventUnlocked(eventId: string, options: { ensureOntology
   const instanceDraft = semanticInstanceDraft({ eventId: rawEvent.id, inferredKind: classified.inferredKind, source: rawEvent.source, title: rawEvent.title, body: rawEvent.body, identity: classifiedEventIdentity(classified) });
   entityDrafts.push(instanceDraft);
   const semanticDecision = await buildModelSemanticDecision({ entities: entityDrafts, source: rawEvent.source, inferredKind: classified.inferredKind, title: rawEvent.title, body: rawEvent.body, clientId: rawEvent.clientId, allowModel: rawEvent.privacyStatus === "standard" });
-  const graphDrafts = governedGraphDrafts(semanticDecision);
+  const graphDrafts = governedGraphDrafts(semanticDecision, entityDrafts);
   return withTransaction(async (db) => {
     await deleteDerivedDataForEvent(db, eventId);
     await insertClassifiedEvent(db, classified, rawEvent.id, rawEvent.clientId);
@@ -374,14 +443,14 @@ async function reprocessEventUnlocked(eventId: string, options: { ensureOntology
       }
       await linkEventEntity(db, rawEvent.id, entity.id, 0.8);
 
-      if (draft.type === "merchant" && isFinancialInferredKind(classified.inferredKind)) {
+      if (["merchant", "app", "sender", "recipient"].includes(draft.type)) {
         await enqueueEntityReview(db, {
           entityId: entity.id,
           eventId: rawEvent.id,
           source: rawEvent.source,
           originalValue: String(draft.metadata?.evidenceValue ?? draft.value),
           suggestedAlias: draft.value,
-          reason: "ai_identity_review",
+          reason: `${draft.type}_identity_candidate`,
         });
       }
     }

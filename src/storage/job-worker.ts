@@ -12,6 +12,20 @@ import { detectInsightCandidates } from "./proactive-insights.js";
 import { reconcileSemanticGraph } from "./semantic-reconciler.js";
 import { SEMANTIC_GOVERNANCE_VERSION } from "../domain/ontology.js";
 
+const JOB_PRIORITY = {
+  classification: 10,
+  semanticEnrichment: 20,
+  reconciliation: 30,
+  insightDetection: 80,
+  embedding: 90,
+} as const;
+
+function insightWindowKey(now = new Date()) {
+  // Insight detection is a client-wide analytical pass. Coalescing it into a
+  // short window avoids creating one identical scan for every captured event.
+  return `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, "0")}-${String(now.getUTCDate()).padStart(2, "0")}T${String(now.getUTCHours()).padStart(2, "0")}`;
+}
+
 async function requireEventId(job: BackgroundJob) {
   const eventId = job.eventId ?? (typeof job.payload.eventId === "string" ? job.payload.eventId : null);
   if (!eventId) throw new Error(`${job.jobType} job requires an eventId`);
@@ -24,9 +38,13 @@ export async function executeBackgroundJob(job: BackgroundJob) {
       const eventId = await requireEventId(job);
       const classified = await classifyCapturedEvent(eventId);
       if (!classified) throw new Error(`Event ${eventId} is unavailable for classification`);
+      // Financial projections use deterministic classification and must be
+      // available independently of the optional semantic/LLM pipeline.
+      await correlateFinancialEvent(eventId);
       await enqueueBackgroundJob(pool, {
         clientId: job.clientId, eventId, jobType: "semantic_enrichment",
         idempotencyKey: `semantic:${eventId}:${SEMANTIC_GOVERNANCE_VERSION}`, payload: { eventId }, provider: "deepseek",
+        priority: JOB_PRIORITY.semanticEnrichment,
       });
       return classified;
     }
@@ -35,9 +53,16 @@ export async function executeBackgroundJob(job: BackgroundJob) {
       const enriched = await reprocessEvent(eventId, { reuseClassification: true, skipFinancial: true });
       if (!enriched) throw new Error(`Event ${eventId} is unavailable for semantic enrichment`);
       await Promise.all([
-        enqueueBackgroundJob(pool, { clientId: job.clientId, eventId, jobType: "financial_correlation", idempotencyKey: `finance:${eventId}:v1`, payload: { eventId } }),
-        enqueueBackgroundJob(pool, { clientId: job.clientId, eventId, jobType: "embedding", idempotencyKey: `embedding:${eventId}:${process.env.EMBEDDING_VERSION ?? "embedding-v1"}`, payload: { eventId } }),
-        enqueueBackgroundJob(pool, { clientId: job.clientId, eventId, jobType: "insight_detection", idempotencyKey: `insight-detect:${eventId}:v1`, payload: { eventId } }),
+        enqueueBackgroundJob(pool, {
+          clientId: job.clientId, eventId, jobType: "embedding",
+          idempotencyKey: `embedding:${eventId}:${process.env.EMBEDDING_VERSION ?? "embedding-v1"}`,
+          payload: { eventId }, priority: JOB_PRIORITY.embedding,
+        }),
+        enqueueBackgroundJob(pool, {
+          clientId: job.clientId, jobType: "insight_detection",
+          idempotencyKey: `insight-detect:${job.clientId ?? "global"}:${insightWindowKey()}`,
+          payload: { triggerEventId: eventId }, priority: JOB_PRIORITY.insightDetection,
+        }),
       ]);
       return enriched;
     }

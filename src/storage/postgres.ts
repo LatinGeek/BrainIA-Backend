@@ -9,6 +9,15 @@ if (!connectionString) {
 
 export const pool = new Pool({
   connectionString,
+  // Serverless instances can scale during notification bursts. Keeping one
+  // reusable connection per instance prevents a burst from exhausting the
+  // database connection limit, while bounded waits turn saturation into an
+  // observable error rather than an invocation timeout.
+  max: 1,
+  connectionTimeoutMillis: 5_000,
+  idleTimeoutMillis: 10_000,
+  query_timeout: 10_000,
+  statement_timeout: 10_000,
 });
 
 export async function withTransactionOnPool<T>(

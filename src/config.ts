@@ -6,6 +6,11 @@ export const config = {
   deepseekApiKey: process.env.DEEPSEEK_API_KEY,
   apiKey: process.env.BRAINIA_API_KEY,
   clientKeys: process.env.BRAINIA_CLIENT_KEYS,
-  processingMode: process.env.BRAINIA_PROCESSING_MODE === "queued" ? "queued" : "inline",
-  workerBatchSize: Math.min(25, Math.max(1, Number(process.env.BRAINIA_WORKER_BATCH_SIZE ?? 10))),
+  // Environment values entered through deployment UIs can include whitespace.
+  // Treat the mode as a token so a trailing newline cannot silently reactivate
+  // synchronous model processing for capture requests.
+  processingMode: process.env.BRAINIA_PROCESSING_MODE?.trim() === "queued" ? "queued" : "inline",
+  // A small bounded batch lets the minute cron keep up with captures without
+  // turning a serverless invocation into an unbounded model-processing loop.
+  workerBatchSize: Math.min(8, Math.max(1, Number(process.env.BRAINIA_WORKER_BATCH_SIZE ?? 3))),
 } as const;

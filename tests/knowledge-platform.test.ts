@@ -9,7 +9,7 @@ const { buildLocalEmbedding, cosineSimilarity } = await import("../src/storage/e
 const { redactForModel } = await import("../src/storage/privacy.ts");
 const { retryDelayMs } = await import("../src/storage/job-repository.ts");
 const { rerankRetrievalCandidate } = await import("../src/storage/hybrid-retrieval.ts");
-const { scoreInsightCandidate } = await import("../src/storage/proactive-insights.ts");
+const { isDeliverableInsightCandidate, scoreInsightCandidate } = await import("../src/storage/proactive-insights.ts");
 const { buildApp } = await import("../src/app.ts");
 const { pool } = await import("../src/storage/postgres.ts");
 
@@ -63,6 +63,16 @@ test("retrieval and insight scoring prioritize relevant, confident evidence", ()
   });
   assert.ok(high > low);
   assert.ok(scoreInsightCandidate({ novelty: 1, impact: 1, confidence: 1, recurrence: 1, utility: 1 }) > 0.99);
+  assert.equal(isDeliverableInsightCandidate({
+    detector: "source_activity_change", dedupeKey: "source:test", title: "More events", explanation: "More events arrived.",
+    evidence: { eventIds: ["a", "b", "c"] }, novelty: 1, impact: 1, confidence: 1, recurrence: 1, utility: 1,
+    severity: "low", windowFrom: "2026-01-01T00:00:00.000Z", windowTo: "2026-01-02T00:00:00.000Z", expiresAt: "2026-01-03T00:00:00.000Z",
+  }), false);
+  assert.equal(isDeliverableInsightCandidate({
+    detector: "recurrence_subscription", dedupeKey: "merchant:test", title: "Repeated spending", explanation: "Repeated purchases.",
+    evidence: { transactionIds: ["a", "b", "c", "d"] }, novelty: 0.9, impact: 0.9, confidence: 0.9, recurrence: 0.9, utility: 0.9,
+    severity: "medium", windowFrom: "2026-01-01T00:00:00.000Z", windowTo: "2026-01-02T00:00:00.000Z", expiresAt: "2026-01-03T00:00:00.000Z",
+  }), true);
 });
 
 test("captured evidence remains observable and hybrid-retrievable", async () => {
@@ -135,4 +145,3 @@ test("cron and operations surfaces reject unauthenticated callers", async () => 
     await app.close();
   }
 });
-

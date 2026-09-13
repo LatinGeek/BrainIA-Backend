@@ -22,11 +22,16 @@ test("stable taxonomy keys resolve complete multi-level paths", () => {
   assert.equal(TAXONOMY_VERSION, "personal-activity-v1");
   assert.equal(categoryByKey("finances.spending.card_purchase")?.label, "Card purchases");
   assert.deepEqual(categoryPath("finances.spending.card_purchase").map((node) => node.label), ["Finances", "Financial activity", "Spending", "Card purchases"]);
+  assert.deepEqual(categoryPath("finances.payment_methods.digital_wallets").map((node) => node.label), ["Finances", "Payment methods", "Digital wallets"]);
+  assert.deepEqual(categoryPath("entrepreneurship.businesses.electronics").map((node) => node.label), ["Entrepreneurship", "Businesses", "Electronics stores"]);
+  assert.deepEqual(categoryPath("entrepreneurship.businesses.pharmacy").map((node) => node.label), ["Entrepreneurship", "Businesses", "Pharmacies"]);
+  assert.deepEqual(categoryPath("entrepreneurship.businesses.fuel").map((node) => node.label), ["Entrepreneurship", "Businesses", "Fuel stations"]);
 });
 
-test("structural financial evidence anchors only at the most-specific governed parent", () => {
-  const subject = { type: "merchant", value: "PedidosYa", normalizedValue: "pedidosya", metadata: {} };
-  const proposals = buildSemanticProposals({ entities: [subject], source: "Santander", inferredKind: "expense" });
+test("structural financial evidence anchors the transaction, not its merchant", () => {
+  const merchant = { type: "merchant", value: "PedidosYa", normalizedValue: "pedidosya", metadata: {} };
+  const event = { type: "financial_event", value: "PedidosYa purchase", normalizedValue: "event:expense-1", metadata: {} };
+  const proposals = buildSemanticProposals({ entities: [merchant, event], source: "Santander", inferredKind: "expense" });
   assert.equal(proposals.length, 1);
   assert.equal(proposals[0]?.targetValue, "Card purchases");
   assert.equal(proposals[0]?.relationType, "part_of");
@@ -58,18 +63,19 @@ test("trusted smart-home and playback signals reuse governed catalog branches", 
   }
 });
 
-test("every durable email subject receives its own most-specific path", () => {
+test("email identities remain relationship evidence rather than hierarchy subjects", () => {
   const message = { type: "email_message", value: "Receipt", normalizedValue: "event:email-3", metadata: {} };
   const recipient = { type: "recipient", value: "me@example.com", normalizedValue: "me@example.com", metadata: {} };
   const sender = { type: "sender", value: "shop@example.com", normalizedValue: "shop@example.com", metadata: {} };
   const proposals = buildSemanticProposals({ entities: [message, recipient, sender], source: "gmail", inferredKind: "email" });
-  assert.deepEqual(proposals.map((proposal) => proposal.targetValue), ["Email activity", "Email accounts", "Email contacts"]);
+  assert.deepEqual(proposals.map((proposal) => proposal.targetValue), ["Email activity"]);
 });
 
 test("financial email evidence exposes one most-specific anchor in each relevant tree", () => {
   const merchant = { type: "merchant", value: "PedidosYa", normalizedValue: "pedidosya", metadata: {} };
+  const financialEvent = { type: "financial_event", value: "PedidosYa purchase", normalizedValue: "event:expense-2", metadata: {} };
   const message = { type: "email_message", value: "Card alert", normalizedValue: "event:email-2", metadata: {} };
-  const proposals = buildSemanticProposals({ entities: [merchant, message], source: "make.gmail", inferredKind: "expense" });
+  const proposals = buildSemanticProposals({ entities: [merchant, financialEvent, message], source: "make.gmail", inferredKind: "expense" });
   assert.deepEqual(proposals.map((proposal) => proposal.targetValue), ["Card purchases", "Email activity"]);
   assert.equal(new Set(proposals.map((proposal) => proposal.targetValue)).size, 2);
 });

@@ -10,6 +10,7 @@ export async function getKnowledgeQualityMetrics() {
     inputTokens: number; outputTokens: number; estimatedCostUsd: number;
     failedModelCalls: number; queuedJobs: number; deadLetterJobs: number;
     categorizedEvents: number; level2CategorizedEvents: number; level3CategorizedEvents: number; shallowCategorizedEvents: number;
+    profiledEntities: number; acceptedInsights: number; rejectedInsights: number;
   }>(`
     with recursive
     visible as (
@@ -61,7 +62,10 @@ export async function getKnowledgeQualityMetrics() {
       (select count(*)::int from semantic_event_decisions where primary_category_key is not null) as "categorizedEvents",
       (select count(*)::int from semantic_event_decisions where primary_category_key like '%.%') as "level2CategorizedEvents",
       (select count(*)::int from semantic_event_decisions where primary_category_key like '%.%.%') as "level3CategorizedEvents",
-      (select count(*)::int from semantic_event_decisions where primary_category_key is not null and primary_category_key not like '%.%') as "shallowCategorizedEvents"
+      (select count(*)::int from semantic_event_decisions where primary_category_key is not null and primary_category_key not like '%.%') as "shallowCategorizedEvents",
+      (select count(*)::int from entity_semantic_profiles) as "profiledEntities",
+      (select count(*)::int from insight_runs where feedback_status in ('accepted','useful')) as "acceptedInsights",
+      (select count(*)::int from insight_runs where feedback_status in ('rejected','not_useful')) as "rejectedInsights"
   `);
   const row = result.rows[0]!;
   const percentage = (numerator: number, denominator: number) => denominator ? Number(((numerator / denominator) * 100).toFixed(2)) : 100;
@@ -75,6 +79,11 @@ export async function getKnowledgeQualityMetrics() {
       level3CategoryPercent: percentage(row.level3CategorizedEvents, row.categorizedEvents),
     },
     counts: row,
+    feedback: {
+      insightsRated: row.acceptedInsights + row.rejectedInsights,
+      acceptedInsightPercent: percentage(row.acceptedInsights, row.acceptedInsights + row.rejectedInsights),
+      profiledEntities: row.profiledEntities,
+    },
     gates: {
       allEventsObservable: row.observableEvents === row.totalEvents,
       allVisibleEntitiesRooted: row.rootedVisibleEntities === row.visibleDurableEntities,

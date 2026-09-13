@@ -1,5 +1,6 @@
 import type { FastifyPluginAsync } from "fastify";
 import { z } from "zod";
+import { CLIENT_ID_HEADER } from "../auth.js";
 import { pool } from "../storage/postgres.js";
 import { FINANCIAL_CATEGORIES } from "../domain/financial-categories.js";
 import {
@@ -16,12 +17,15 @@ import {
 } from "../storage/financial-transaction-repository.js";
 
 const listQuerySchema = z.object({
-  limit: z.coerce.number().int().min(1).max(100).default(25),
+  // Financial reports must include an entire cycle, not only its 100 most
+  // recent records. Keep a bounded upper limit for the mobile client.
+  limit: z.coerce.number().int().min(1).max(1000).default(25),
   from: z.string().datetime({ offset: true }).optional(),
   to: z.string().datetime({ offset: true }).optional(),
 });
 
 const contextSchema = z.object({
+  title: z.string().trim().min(1).max(200).optional(),
   category: z.string().trim().max(120).nullable().optional(),
   accountId: z.string().trim().max(200).nullable().optional(),
   destinationAccountId: z.string().trim().max(200).nullable().optional(),
@@ -57,8 +61,48 @@ const mergeSchema = z.object({
   duplicateId: z.string().trim().min(1).max(200),
 });
 
+const categorySchema = z.object({
+  kind: z.enum(["expense", "income"]),
+  name: z.string().trim().min(1).max(120),
+});
+
+function categoryScope(request: { headers: Record<string, string | string[] | undefined> }) {
+  const header = request.headers[CLIENT_ID_HEADER];
+  const clientId = (Array.isArray(header) ? header[0] : header)?.trim();
+  return clientId || "anonymous";
+}
+
+function normalizeCategoryName(name: string) {
+  return name.split("/").map((part) => part.trim()).filter(Boolean).join(" / ");
+}
+
 export const registerFinancialTransactionRoutes: FastifyPluginAsync = async (app) => {
-  app.get("/financial/categories", async () => ({ categories: FINANCIAL_CATEGORIES }));
+  app.get("/financial/categories", async (request) => {
+    const custom = await pool.query<{ kind: "expense" | "income"; name: string }>(
+      `select kind, name from financial_custom_categories where client_scope = $1 order by created_at asc`,
+      [categoryScope(request)],
+    );
+    const categories: { expense: string[]; income: string[] } = { expense: [...FINANCIAL_CATEGORIES.expense], income: [...FINANCIAL_CATEGORIES.income] };
+    for (const item of custom.rows) {
+      if (!categories[item.kind].some((name) => name.toLowerCase() === item.name.toLowerCase())) categories[item.kind].push(item.name);
+    }
+    return { categories };
+  });
+
+  app.post("/financial/categories", async (request, reply) => {
+    const parsed = categorySchema.safeParse(request.body);
+    if (!parsed.success) return reply.status(400).send({ error: "invalid_financial_category", issues: parsed.error.flatten() });
+    const name = normalizeCategoryName(parsed.data.name);
+    if (!name) return reply.status(400).send({ error: "invalid_financial_category" });
+    const result = await pool.query<{ kind: "expense" | "income"; name: string }>(
+      `insert into financial_custom_categories (client_scope, kind, name, normalized_name)
+       values ($1, $2, $3, lower($3))
+       on conflict (client_scope, kind, normalized_name) do update set name = excluded.name
+       returning kind, name`,
+      [categoryScope(request), parsed.data.kind, name],
+    );
+    return reply.status(201).send({ category: result.rows[0] });
+  });
 
   app.get("/financial/accounts", async () => ({ accounts: await listFinancialAccounts() }));
 

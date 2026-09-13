@@ -238,10 +238,12 @@ export async function retrieveSemanticContext(
   const retrieval = await hybridRetrieve(query, { clientId, limit, includeGraph: true, objectTypes: ["entity"] }, db);
   const ids = retrieval.results.map((result) => result.objectId);
   if (!ids.length) return { entities: [], hierarchy: [], retrieval };
-  const entities = await db.query<{ id: string; type: string; value: string; normalizedValue: string; description: string; aliases: string[] }>(`
+  const entities = await db.query<{ id: string; type: string; value: string; normalizedValue: string; description: string; aliases: string[]; taxonomyKeys: string[]; roles: string[] }>(`
     select distinct entity.id, entity.type, entity.value, entity.normalized_value as "normalizedValue",
-      entity.description, coalesce((select array_agg(alias.alias order by alias.alias) from entity_aliases alias where alias.entity_id = entity.id), '{}') as aliases
+      entity.description, coalesce((select array_agg(alias.alias order by alias.alias) from entity_aliases alias where alias.entity_id = entity.id), '{}') as aliases,
+      coalesce(profile.taxonomy_keys, '{}'::text[]) as "taxonomyKeys", coalesce(profile.roles, '{}'::text[]) as roles
     from entities entity left join entity_merges merged on merged.alias_entity_id = entity.id
+    left join entity_semantic_profiles profile on profile.entity_id = entity.id
     where entity.id = any($1::text[]) and merged.alias_entity_id is null
       and entity.visibility <> 'hidden' and entity.identity_source in ('ai','ai_seed','user')
       and length(btrim(entity.description)) > 0

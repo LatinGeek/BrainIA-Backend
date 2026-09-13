@@ -210,13 +210,24 @@ export const registerCaptureRoutes = (options: CaptureRoutesOptions): FastifyPlu
         return reply.status(auth.statusCode).send({ error: auth.error, message: auth.message });
       }
 
-      const stored = await ingestEvent(
-        buildWalletCaptureEvent({
-          ...parsed.data,
-          raw: parsed.data.raw,
-        }),
-        { clientId: getAuthClientId(auth) },
-      );
+      const event = buildWalletCaptureEvent({
+        ...parsed.data,
+        raw: parsed.data.raw,
+      });
+      request.log.info({ eventId: event.id, source: event.source, kind: event.kind }, "wallet capture accepted");
+
+      let stored;
+      try {
+        stored = await ingestEvent(event, {
+          clientId: getAuthClientId(auth),
+          requestId: request.id,
+        });
+      } catch (error) {
+        request.log.error({ err: error, eventId: event.id, source: event.source }, "wallet capture failed");
+        throw error;
+      }
+
+      request.log.info({ eventId: stored.id, source: stored.source, inferredKind: stored.inferredKind }, "wallet capture persisted");
 
       return reply.status(201).send(stored);
     });

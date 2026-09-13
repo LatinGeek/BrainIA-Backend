@@ -5,7 +5,7 @@ import { CLIENT_ID_HEADER } from "../auth.js";
 import { pool, withTransaction } from "../storage/postgres.js";
 import { ensureOntology, listSemanticCandidates, resolveSemanticCandidate } from "../storage/semantic-repository.js";
 import { listEvents, previewEventSemantics, reprocessEvent } from "../storage/event-store.js";
-import { SEMANTIC_GOVERNANCE_VERSION } from "../domain/ontology.js";
+import { CATEGORY_CATALOG, SEMANTIC_GOVERNANCE_VERSION, TAXONOMY_VERSION } from "../domain/ontology.js";
 import { reconcileSemanticGraph } from "../storage/semantic-reconciler.js";
 
 function clientId(request: { headers: Record<string, string | string[] | undefined> }) {
@@ -14,6 +14,18 @@ function clientId(request: { headers: Record<string, string | string[] | undefin
 }
 
 export const registerSemanticRoutes: FastifyPluginAsync = async (app) => {
+  app.get("/semantic/taxonomy", async () => ({
+    version: TAXONOMY_VERSION,
+    categories: CATEGORY_CATALOG.map((category) => ({
+      key: category.key,
+      label: category.label,
+      description: category.description,
+      parentKey: category.parentKey,
+      level: category.level,
+      kind: category.kind,
+    })),
+  }));
+
   app.post("/semantic/seed", async (request) => {
     const domains = await withTransaction((db) => ensureOntology(db, clientId(request)));
     return { domains };

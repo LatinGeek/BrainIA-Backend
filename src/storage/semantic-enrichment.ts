@@ -26,7 +26,12 @@ import { pool } from "./postgres.js";
 import { loadSourceProcessingPolicy, type SourceProcessingPolicy } from "./privacy.js";
 import { retrieveSemanticContext } from "./hybrid-retrieval.js";
 
-export const SEMANTIC_SUBJECT_TYPES = new Set(["app", "merchant", "email_message", "sender", "recipient", "financial_event", "activity_instance"]);
+// Hierarchy is for the meaning of an occurrence, never for the systems and
+// actors mentioned by it. Apps, merchants, senders and recipients remain
+// first-class identity/evidence nodes (and deterministic facets), but letting
+// the model place them in a life-domain tree made a payment processor look
+// like a durable personal concept.
+export const SEMANTIC_SUBJECT_TYPES = new Set(["email_message", "financial_event", "activity_instance"]);
 export const STANDARD_ASSOCIATION_TYPES = new Set(["spent_at", "sent_by", "sent_to", "received_from", "uses_service", "produced_by_app", "represents_order", "paid_for", "has_transaction", "occurred_at", "received_via", "controls", "mentions", "related_to"]);
 
 export type SemanticStep = {
@@ -294,16 +299,15 @@ function structuralDecision(input: { entities: EntityDraft[]; inferredKind: stri
       : input.inferredKind === "transfer" ? "finances.transfers"
         : "finances.spending.card_purchase";
     const hierarchyPath = categoryPath(categoryKey).map((node) => node.label);
-    const financialSubjects = subjects.filter((candidate) => candidate.type === "merchant" || candidate.type === "financial_event");
-    const hasFinancialEvent = financialSubjects.some((subject) => subject.type === "financial_event");
-    financialSubjects.forEach((subject, index) => paths.push({ subject, role: "primary", domain: "Finances", action: "reuse", hierarchyPath, steps: [], confidence: 0.9, rationale: `A classified ${input.inferredKind} belongs to ${hierarchyPath[hierarchyPath.length - 1]}.`, eventAnchor: hasFinancialEvent ? subject.type === "financial_event" : index === 0, categoryKey }));
+    const financialSubjects = subjects.filter((candidate) => candidate.type === "financial_event");
+    financialSubjects.forEach((subject, index) => paths.push({ subject, role: "primary", domain: "Finances", action: "reuse", hierarchyPath, steps: [], confidence: 0.9, rationale: `A classified ${input.inferredKind} belongs to ${hierarchyPath[hierarchyPath.length - 1]}.`, eventAnchor: index === 0, categoryKey }));
   }
   if (email) {
-    const emailSubjects = subjects.filter((candidate) => ["email_message", "recipient", "sender"].includes(candidate.type));
+    const emailSubjects = subjects.filter((candidate) => candidate.type === "email_message");
     const emailRole = paths.some((path) => path.role === "primary") ? "secondary" as const : "primary" as const;
     const hasEmailMessage = emailSubjects.some((subject) => subject.type === "email_message");
     emailSubjects.forEach((subject, index) => {
-      const categoryKey = subject.type === "recipient" ? "communication.email.accounts" : subject.type === "sender" ? "communication.email.contacts" : "communication.email.activity";
+      const categoryKey = "communication.email.activity";
       const hierarchyPath = categoryPath(categoryKey).map((node) => node.label);
       paths.push({ subject, role: emailRole, domain: "Communication", action: "reuse", hierarchyPath, steps: [], confidence: 0.9, rationale: `${subject.value} belongs to the ${hierarchyPath[hierarchyPath.length - 1]} branch.`, eventAnchor: hasEmailMessage ? subject.type === "email_message" : index === 0, categoryKey });
     });
@@ -382,7 +386,7 @@ Roots: ${LIFE_DOMAINS.join(", ")}.
 Seed tree: ${ontologyTreePrompt()}.
 Stable category catalog: ${categoryCatalogPrompt()}.
 
-For each event choose one primary root only when confidence >= ${PRIMARY_ROOT_CONFIDENCE} and it leads the runner-up by >= ${PRIMARY_ROOT_MARGIN}. Then classify every supplied durable subject independently, descending through immediate existing children and recording one step per level. Every supplied event instance (financial_event, email_message, or activity_instance) must receive a meaningful identity and a path unless the evidence truly cannot identify what happened. Several subjects may have paths in the same domain; that does not create extra event anchors. Evaluate other roots independently and use no_relation for incidental matches. A path contains the root through the immediate parent of its supplied subject. Never include the subject itself in hierarchyPath and never skip an existing intermediate parent. Recipient addresses normally descend through Email accounts; external senders normally descend through Email contacts. A merchant must be placed by what it represents, not merely because its event contains a payment.
+For each event choose one primary root only when confidence >= ${PRIMARY_ROOT_CONFIDENCE} and it leads the runner-up by >= ${PRIMARY_ROOT_MARGIN}. Then classify every supplied event instance independently, descending through immediate existing children and recording one step per level. Every supplied event instance (financial_event, email_message, or activity_instance) must receive a meaningful identity and a path unless the evidence truly cannot identify what happened. Several subjects may have paths in the same domain; that does not create extra event anchors. Evaluate other roots independently and use no_relation for incidental matches. A path contains the root through the immediate parent of its supplied subject. Never include the subject itself in hierarchyPath and never skip an existing intermediate parent. Merchants, apps, senders, recipients and accounts are identity facets or relationship endpoints, never hierarchy subjects and never personal concepts merely because an event mentions them.
 
 Actions: reuse an existing parent; create only a reusable independently meaningful child; merge only for the same identity; discard raw fragments; no_relation for an unrelated domain. For every event instance, compare its meaning with every existing concept in canonicalContext before proposing a child. If an existing concept has the same meaning, descend to and reuse it even when wording differs. Only create a child when no existing concept represents that meaning. Event instances and activity instances are evidence, never reusable merge targets; if only equivalent occurrences exist but no concept exists yet, create the reusable concept. The proposed child must name the reusable event class (for example Home motion detection), never a dated occurrence or a paraphrase of the event title. Repeated occurrences remain evidence instances below that one concept. Never create amounts, timestamps, IDs, package names, notification titles, truncated strings, or one-off text. There may be at most one path per subject per domain and exactly one primary event anchor. Multiple supplied subjects may share a domain and immediate parent. Secondary paths need strong independent evidence.
 

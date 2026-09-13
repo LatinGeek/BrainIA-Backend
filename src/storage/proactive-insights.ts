@@ -7,7 +7,7 @@ import { buildInsightContent, INSIGHT_JSON_PROMPT, parseInsightContent } from ".
 import { upsertEmbedding } from "./embeddings.js";
 import { insertInsightRun } from "./insight-repository.js";
 import { pool, withTransaction } from "./postgres.js";
-import { TAXONOMY_VERSION } from "../domain/ontology.js";
+import { TAXONOMY_VERSION, categoryByKey } from "../domain/ontology.js";
 
 type Queryable = Pick<typeof pool, "query">;
 
@@ -52,9 +52,30 @@ export function scoreInsightCandidate(candidate: Pick<InsightCandidateDraft, "no
 const ACTIONABLE_DETECTORS = new Set([
   "spending_variation",
   "recurrence_subscription",
-  "pending_tasks",
-  "pending_review",
+  "entity_taxonomy_spending_variation",
 ]);
+
+const MIN_DELIVERABLE_INSIGHT_SCORE = 0.72;
+
+function evidenceCount(candidate: Pick<InsightCandidateDraft, "evidence">) {
+  const evidence = candidate.evidence as { transactionIds?: unknown; eventIds?: unknown };
+  const ids = Array.isArray(evidence.transactionIds) ? evidence.transactionIds : Array.isArray(evidence.eventIds) ? evidence.eventIds : [];
+  return new Set(ids.filter((id): id is string => typeof id === "string" && Boolean(id))).size;
+}
+
+// Detection is deliberately conservative: counts of notifications, taxonomy
+// changes and graph writes are operational telemetry, not a conclusion about
+// the user's life. A user-facing insight needs independent evidence plus a
+// material enough score to justify interrupting them.
+export function isDeliverableInsightCandidate(candidate: InsightCandidateDraft & { score?: number }) {
+  if (!ACTIONABLE_DETECTORS.has(candidate.detector)) return false;
+  const score = candidate.score ?? scoreInsightCandidate(candidate);
+  if (score < MIN_DELIVERABLE_INSIGHT_SCORE) return false;
+  if (candidate.detector === "spending_variation") return evidenceCount(candidate) >= 2;
+  if (candidate.detector === "entity_taxonomy_spending_variation") return evidenceCount(candidate) >= 2 && candidate.confidence >= 0.85;
+  if (candidate.detector === "recurrence_subscription") return evidenceCount(candidate) >= 4 && candidate.confidence >= 0.85;
+  return false;
+}
 
 async function persistCandidate(db: Queryable, clientId: string | null, draft: InsightCandidateDraft) {
   const score = scoreInsightCandidate(draft);
@@ -147,18 +168,54 @@ export async function detectInsightCandidates(input: { clientId?: string | null;
     from financial_transactions transaction left join raw_events event on event.id = transaction.anchor_event_id
     where transaction.kind = 'expense' and not transaction.excluded_from_reports and transaction.hidden_at is null
       and transaction.observed_at >= $1 and ($2::text is null or event.client_id is not distinct from $2)
-    group by transaction.normalized_merchant, transaction.currency having count(*) >= 3
+    group by transaction.normalized_merchant, transaction.currency having count(*) >= 4
   `, [time.quarterAgo, clientId]);
   for (const row of recurring.rows) drafts.push({
     detector: "recurrence_subscription", dedupeKey: `recurring:${row.merchant}:${row.currency}`,
-    title: `Recurring activity at ${row.merchant}`,
-    explanation: `${row.count} similar ${row.currency} expenses were observed in the last 90 days (average ${Number(row.averageAmount).toFixed(2)}).`,
-    suggestedAction: "Confirm whether this is an expected subscription or recurring purchase.",
+    title: `Repeated spending at ${row.merchant}`,
+    explanation: `${row.count} ${row.currency} expenses at this merchant were observed in the last 90 days (average ${Number(row.averageAmount).toFixed(2)}). This is repeated activity, not proof of a subscription.`,
+    suggestedAction: "Review whether these repeated purchases are expected and worth budgeting for.",
     evidence: { merchant: row.merchant, currency: row.currency, transactionIds: row.transactionIds, averageAmount: row.averageAmount },
     novelty: 0.65, impact: 0.6, confidence: Math.min(0.98, 0.65 + row.count * 0.06),
     recurrence: Math.min(1, row.count / 6), utility: 0.85, severity: "medium",
     windowFrom: time.quarterAgo, windowTo: time.to, expiresAt: time.expiresAt,
   });
+
+  // This is where entity curation becomes user value: a confirmed business
+  // type (for example Food establishments or Pharmacies) can explain changes
+  // across many merchants without relying on a fragile merchant-name heuristic.
+  const taggedSpending = await pool.query<{ taxonomyKey: string; currency: string; currentTotal: number; previousTotal: number; transactionIds: string[] }>(`
+    select tag.taxonomy_key as "taxonomyKey", transaction.currency,
+      coalesce(sum(transaction.amount) filter (where transaction.observed_at >= $2), 0)::float8 as "currentTotal",
+      coalesce(sum(transaction.amount) filter (where transaction.observed_at >= $1 and transaction.observed_at < $2), 0)::float8 as "previousTotal",
+      array_agg(transaction.id order by transaction.observed_at desc) filter (where transaction.observed_at >= $2) as "transactionIds"
+    from financial_transactions transaction
+    join entity_semantic_profiles profile on profile.entity_id = transaction.merchant_entity_id
+    cross join lateral unnest(profile.taxonomy_keys) as tag(taxonomy_key)
+    left join raw_events event on event.id = transaction.anchor_event_id
+    where transaction.kind = 'expense' and not transaction.excluded_from_reports and transaction.hidden_at is null
+      and transaction.observed_at >= $1 and transaction.observed_at <= $3
+      and ($4::text is null or event.client_id is not distinct from $4)
+    group by tag.taxonomy_key, transaction.currency
+  `, [time.fortnightAgo, time.weekAgo, time.to, clientId]);
+  for (const row of taggedSpending.rows) {
+    const previous = Number(row.previousTotal);
+    const current = Number(row.currentTotal);
+    if (previous <= 0 || current <= 0) continue;
+    const change = (current - previous) / previous;
+    if (Math.abs(change) < 0.25 || (row.transactionIds ?? []).length < 2) continue;
+    const label = categoryByKey(row.taxonomyKey)?.label ?? row.taxonomyKey.replace(/[._]/g, ' ');
+    drafts.push({
+      detector: "entity_taxonomy_spending_variation", dedupeKey: `taxonomy-spending:${row.taxonomyKey}:${row.currency}:${time.weekAgo.slice(0, 10)}`,
+      title: `${label} spending ${change > 0 ? "increased" : "decreased"} ${Math.round(Math.abs(change) * 100)}%`,
+      explanation: `Confirmed ${label.toLowerCase()} entities account for ${current.toFixed(2)} ${row.currency} this week versus ${previous.toFixed(2)} in the prior week.`,
+      suggestedAction: `Review the ${label.toLowerCase()} entities and transactions behind this change.`,
+      evidence: { taxonomyVersion: TAXONOMY_VERSION, taxonomyKey: row.taxonomyKey, currency: row.currency, current, previous, transactionIds: row.transactionIds ?? [] },
+      novelty: 0.9, impact: Math.min(1, Math.abs(change)), confidence: 0.92,
+      recurrence: 0.55, utility: 0.92, severity: Math.abs(change) >= 0.75 ? "high" : "medium",
+      windowFrom: time.fortnightAgo, windowTo: time.to, expiresAt: time.expiresAt,
+    });
+  }
 
   const activity = await pool.query<{ source: string; currentCount: number; previousCount: number; eventIds: string[] }>(`
     select event.source,
@@ -292,10 +349,11 @@ export async function detectInsightCandidates(input: { clientId?: string | null;
     windowFrom: time.dayAgo, windowTo: time.to, expiresAt: time.expiresAt,
   });
 
+  const deliverableDrafts = drafts.filter(isDeliverableInsightCandidate);
   const stored: StoredInsightCandidate[] = [];
   await withTransaction(async (db) => {
     await db.query(`update insight_candidates set status = 'expired', updated_at = now() where status in ('pending','selected') and expires_at <= now()`);
-    for (const draft of drafts) stored.push(await persistCandidate(db, clientId, draft));
+    for (const draft of deliverableDrafts) stored.push(await persistCandidate(db, clientId, draft));
   });
   return stored.sort((left, right) => right.score - left.score);
 }
@@ -318,7 +376,7 @@ export async function synthesizeTopInsightCandidates(input: { clientId?: string 
       )
     order by score desc, created_at asc limit $2
   `, [input.clientId ?? null, limit, Number(process.env.INSIGHT_DEDUPE_DAYS ?? 30)]);
-  const candidates = result.rows.filter((candidate) => ACTIONABLE_DETECTORS.has(candidate.detector));
+  const candidates = result.rows.filter(isDeliverableInsightCandidate);
   if (!candidates.length) return null;
   const evidence = candidates.map((candidate) => ({
     candidateId: candidate.id, detector: candidate.detector, title: candidate.title,
