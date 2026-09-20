@@ -602,6 +602,10 @@ export async function listEvents() {
   return listStoredEvents();
 }
 
+export async function getEvent(eventId: string) {
+  return loadStoredEventById(pool, eventId);
+}
+
 export async function getMetrics() {
   return countKnowledgeMetrics(pool);
 }

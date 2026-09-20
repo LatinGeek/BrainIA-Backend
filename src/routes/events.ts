@@ -1,7 +1,7 @@
 import type { FastifyPluginAsync } from "fastify";
 import { resolveAuthContext, type AuthConfig } from "../auth.js";
 import { eventSchema } from "../domain/event.js";
-import { appendEvent, listEvents, reprocessEvent } from "../storage/event-store.js";
+import { appendEvent, getEvent, listEvents, reprocessEvent } from "../storage/event-store.js";
 
 type EventRoutesOptions = {
   authConfig: AuthConfig;
@@ -10,6 +10,22 @@ type EventRoutesOptions = {
 export const registerEventRoutes = (options: EventRoutesOptions): FastifyPluginAsync => {
   return async (app) => {
     app.get("/events", async () => listEvents());
+
+    app.get("/events/:id", async (request, reply) => {
+      const eventId = (request.params as { id?: string }).id?.trim();
+      if (!eventId) {
+        return reply.status(400).send({
+          error: "invalid_event_id",
+          message: "The event id is required",
+        });
+      }
+
+      const event = await getEvent(eventId);
+      return event ?? reply.status(404).send({
+        error: "event_not_found",
+        message: "No stored event matches the provided id",
+      });
+    });
 
     app.post("/events", async (request, reply) => {
       const parsed = eventSchema.safeParse(request.body);
