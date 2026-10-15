@@ -1,0 +1,1315 @@
+{
+  "manifest_version": "1.0.0",
+  "plan_version": "2.0.0-draft.1",
+  "contract_version": "2.0.0",
+  "contract_status": "proposed_unapproved",
+  "generated_at": "2026-10-15",
+  "planning_only": true,
+  "supervisor_role": "orchestration_only",
+  "cross_repository_spawning_assumed": false,
+  "gate_tasks": {
+    "G0": "B00",
+    "G1": "B03",
+    "G2": "B12",
+    "G3": "B18",
+    "G4": "B24",
+    "G5": "B30",
+    "release": "B32"
+  },
+  "implementation_order": [
+    "B00",
+    "M00",
+    "B01",
+    "B02",
+    "B03",
+    "B09",
+    "B04",
+    "B05",
+    "M01",
+    "B06",
+    "B08",
+    "M02",
+    "B07",
+    "B10",
+    "B11",
+    "B12",
+    "B13",
+    "B14",
+    "B15",
+    "M03",
+    "B16",
+    "M04",
+    "B17",
+    "M05",
+    "M06",
+    "B18",
+    "B19",
+    "B20",
+    "B21",
+    "B22",
+    "B23",
+    "M07",
+    "B24",
+    "B25",
+    "B26",
+    "B28",
+    "M08",
+    "B27",
+    "B29",
+    "M09",
+    "B30",
+    "B31",
+    "B32"
+  ],
+  "dependency_layers": [
+    [
+      "B00",
+      "M00"
+    ],
+    [
+      "B01",
+      "B02"
+    ],
+    [
+      "B03",
+      "B09"
+    ],
+    [
+      "B04",
+      "B05",
+      "M01"
+    ],
+    [
+      "B06",
+      "B08",
+      "M02"
+    ],
+    [
+      "B07",
+      "B10"
+    ],
+    [
+      "B11"
+    ],
+    [
+      "B12"
+    ],
+    [
+      "B13"
+    ],
+    [
+      "B14"
+    ],
+    [
+      "B15",
+      "M03"
+    ],
+    [
+      "B16",
+      "M04"
+    ],
+    [
+      "B17"
+    ],
+    [
+      "M05"
+    ],
+    [
+      "M06"
+    ],
+    [
+      "B18"
+    ],
+    [
+      "B19"
+    ],
+    [
+      "B20"
+    ],
+    [
+      "B21"
+    ],
+    [
+      "B22",
+      "B23"
+    ],
+    [
+      "M07"
+    ],
+    [
+      "B24"
+    ],
+    [
+      "B25"
+    ],
+    [
+      "B26",
+      "B28",
+      "M08"
+    ],
+    [
+      "B27"
+    ],
+    [
+      "B29"
+    ],
+    [
+      "M09"
+    ],
+    [
+      "B30"
+    ],
+    [
+      "B31"
+    ],
+    [
+      "B32"
+    ]
+  ],
+  "external_dependency_resolution": "Resolve IDs absent in repository-specific manifest through master manifest; never treat absent dependency as satisfied",
+  "status_policy": [
+    "planned",
+    "awaiting_approval",
+    "ready",
+    "in_progress",
+    "awaiting_verification",
+    "verified",
+    "blocked",
+    "cancelled"
+  ],
+  "manifest_scope": "BrainIA-Mobile",
+  "task_count": 10,
+  "tasks": [
+    {
+      "id": "M00",
+      "target_repository": "BrainIA-Mobile",
+      "objective": "Read-only mobile capture and signing feasibility audit",
+      "phase": 0,
+      "priority": "P0",
+      "dependencies": [],
+      "workstreams": [
+        "WS02",
+        "WS05",
+        "WS13"
+      ],
+      "expected_files": [
+        "docs/reports/v2/mobile-baseline.md"
+      ],
+      "worker_specialization": "Mobile architecture investigator",
+      "complexity": {
+        "size": "M",
+        "engineer_days": [
+          3,
+          5
+        ]
+      },
+      "implementation_steps": [
+        "Inspect mobile dirty source and APK metadata read-only",
+        "Validate F11-F14, key lifecycle, empty selection and native credential path",
+        "Privately assess signing provenance without key material",
+        "Review Room/SQLite encryption and contract feasibility with Android/OEM gaps"
+      ],
+      "database_migration_requirements": "None",
+      "test_requirements": [
+        "E06",
+        "E10"
+      ],
+      "acceptance_criteria": [
+        "Static findings distinguished from native evidence",
+        "Every mobile uncertainty resolved or assigned gate blocker",
+        "No application edits or native implementation before G1"
+      ],
+      "implementation_order": 2,
+      "external_dependencies": [],
+      "parallelization": {
+        "eligible": true,
+        "condition": "Dependencies and approvals satisfied; exclusive file path reservations disjoint; do not equate DAG readiness with safe concurrent edits"
+      },
+      "worktree_ownership": {
+        "target_repository": "BrainIA-Mobile",
+        "isolation": "Repository-local isolated worktree if supported, else exclusive checkout reservation",
+        "exclusive_write_paths": [
+          "docs/reports/v2/mobile-baseline.md"
+        ],
+        "forbidden_repository": "BrainIA-Backend",
+        "migration_owner": "Dedicated schema worker reserves migrations and expected-object manifest; feature worker supplies reviewed DDL requirements"
+      },
+      "required_approvals": [
+        "Explicit human approval for any destructive migration or production deployment"
+      ],
+      "verification_requirements": {
+        "independent": true,
+        "worker_role": "Distinct verifier from implementer; mandatory independent security/release verification",
+        "commands": [
+          "Read-only evidence review and hash comparison; no application build or implementation in this audit/approval task"
+        ],
+        "command_status": "Existing vs future commands distinguished in EVALUATION; owners create missing harness first. Never run against production. Backend worker consumes mobile E10 reports, not native execution.",
+        "procedure": "Check each acceptance item using named EVALUATION fixtures; record environment, input hashes, command exit codes, measured metrics, failures and pass/fail. Missing infrastructure blocks gate.",
+        "evidence_path": "docs/reports/v2/M00-<revision>.md"
+      },
+      "expected_deliverables": [
+        "Read-only mobile capture and signing feasibility audit reviewed change/report",
+        "Independent verification evidence",
+        "Repository-local rollback and compatibility notes"
+      ],
+      "risks_and_rollback": [
+        "Shared files must be serialized under Supervisor reservation; no cross-repository edits",
+        "Disable new read/publication flags on failure; retain immutable evidence/additive tables",
+        "Do not let old writers destroy new projections; pause incompatible writes",
+        "Preserve queue/correction data; do not downgrade local DB destructively",
+        "Delegate fixes and independent re-verification; never ask Supervisor to implement"
+      ],
+      "definition_of_done": [
+        "All acceptance criteria pass with current independent evidence",
+        "Prerequisites and exact approval hashes recorded",
+        "No changes outside target repository/reserved paths",
+        "Migration/compatibility/rollback reviewed",
+        "Update graphify after application code edits; do not claim planning-only validation as product verification"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "M01",
+      "target_repository": "BrainIA-Mobile",
+      "objective": "Import approved contract and mobile conformance validation",
+      "phase": 1,
+      "priority": "P0",
+      "dependencies": [
+        "B03",
+        "M00"
+      ],
+      "workstreams": [
+        "WS05",
+        "WS13"
+      ],
+      "expected_files": [
+        "contracts/brain-ai/2.0.0/",
+        "lib/api.ts",
+        "lib/domain.ts",
+        "package.json"
+      ],
+      "worker_specialization": "Mobile API engineer",
+      "complexity": {
+        "size": "M",
+        "engineer_days": [
+          3,
+          5
+        ]
+      },
+      "implementation_steps": [
+        "Import exact G1 bundle bytes through mobile worker",
+        "Verify hashes and strict response/request validation",
+        "Add contracts:verify for Unicode/hash/receipts/decimals/errors",
+        "Hold v2 queue on unsupported server"
+      ],
+      "database_migration_requirements": "None",
+      "test_requirements": [
+        "E02",
+        "E06",
+        "E10"
+      ],
+      "acceptance_criteria": [
+        "Imported hash matches G1",
+        "Cross-language positive/negative fixtures pass",
+        "No runtime backend filesystem dependency or writes"
+      ],
+      "implementation_order": 9,
+      "external_dependencies": [
+        {
+          "id": "B03",
+          "target_repository": "BrainIA-Backend",
+          "handoff": "Supervisor obtains report/artifact hash; no assumed cross-repository spawning or filesystem writes"
+        }
+      ],
+      "parallelization": {
+        "eligible": true,
+        "condition": "Dependencies and approvals satisfied; exclusive file path reservations disjoint; do not equate DAG readiness with safe concurrent edits"
+      },
+      "worktree_ownership": {
+        "target_repository": "BrainIA-Mobile",
+        "isolation": "Repository-local isolated worktree if supported, else exclusive checkout reservation",
+        "exclusive_write_paths": [
+          "contracts/brain-ai/2.0.0/",
+          "lib/api.ts",
+          "lib/domain.ts",
+          "package.json"
+        ],
+        "forbidden_repository": "BrainIA-Backend",
+        "migration_owner": "Dedicated schema worker reserves migrations and expected-object manifest; feature worker supplies reviewed DDL requirements"
+      },
+      "required_approvals": [
+        "Explicit human approval for any destructive migration or production deployment",
+        "G1 current API bundle SHA256, human approval and backend/mobile reviewers before any mobile implementation"
+      ],
+      "verification_requirements": {
+        "independent": true,
+        "worker_role": "Distinct verifier from implementer; mandatory independent security/release verification",
+        "commands": [
+          "npm run lint",
+          "npm run typecheck",
+          "npm run contracts:verify"
+        ],
+        "command_status": "Existing vs future commands distinguished in EVALUATION; owners create missing harness first. Never run against production. Backend worker consumes mobile E10 reports, not native execution.",
+        "procedure": "Check each acceptance item using named EVALUATION fixtures; record environment, input hashes, command exit codes, measured metrics, failures and pass/fail. Missing infrastructure blocks gate.",
+        "evidence_path": "docs/reports/v2/M01-<revision>.md"
+      },
+      "expected_deliverables": [
+        "Import approved contract and mobile conformance validation reviewed change/report",
+        "Independent verification evidence",
+        "Repository-local rollback and compatibility notes"
+      ],
+      "risks_and_rollback": [
+        "Shared files must be serialized under Supervisor reservation; no cross-repository edits",
+        "Disable new read/publication flags on failure; retain immutable evidence/additive tables",
+        "Do not let old writers destroy new projections; pause incompatible writes",
+        "Preserve queue/correction data; do not downgrade local DB destructively",
+        "Delegate fixes and independent re-verification; never ask Supervisor to implement"
+      ],
+      "definition_of_done": [
+        "All acceptance criteria pass with current independent evidence",
+        "Prerequisites and exact approval hashes recorded",
+        "No changes outside target repository/reserved paths",
+        "Migration/compatibility/rollback reviewed",
+        "Update graphify after application code edits; do not claim planning-only validation as product verification"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "M02",
+      "target_repository": "BrainIA-Mobile",
+      "objective": "Secure native credentials and explicit capture consent",
+      "phase": 1,
+      "priority": "P0",
+      "dependencies": [
+        "M01"
+      ],
+      "workstreams": [
+        "WS02"
+      ],
+      "expected_files": [
+        "lib/storage.ts",
+        "lib/notification-bridge.ts",
+        "app/settings.tsx",
+        "android/app/src/main/java/com/brainia/mobile/notification/NotificationBridgeConfig.kt",
+        "android/app/src/main/java/com/brainia/mobile/notification/NotificationBridgeModule.kt",
+        "android/app/src/main/java/com/brainia/mobile/notification/NotificationBridgeService.kt",
+        "android/app/build.gradle",
+        "android/app/src/main/AndroidManifest.xml"
+      ],
+      "worker_specialization": "Android security engineer",
+      "complexity": {
+        "size": "L",
+        "engineer_days": [
+          5,
+          8
+        ]
+      },
+      "implementation_steps": [
+        "Unify Keystore-backed credentials with JS storage and remove preference secret copy",
+        "Separate unconfigured from explicit empty selection",
+        "Exclude secrets from backup/logs",
+        "Privately assess signing/Play relationship and externalize release credentials"
+      ],
+      "database_migration_requirements": "Versioned local credential/consent migration only",
+      "test_requirements": [
+        "E06",
+        "E10"
+      ],
+      "acceptance_criteria": [
+        "Empty selection captures zero notifications",
+        "No plaintext key in prefs/logs/backup",
+        "Secure migration preserves session or prompts visible reauth",
+        "Rotation/history rewrite only with human approval"
+      ],
+      "implementation_order": 12,
+      "external_dependencies": [],
+      "parallelization": {
+        "eligible": true,
+        "condition": "Dependencies and approvals satisfied; exclusive file path reservations disjoint; do not equate DAG readiness with safe concurrent edits"
+      },
+      "worktree_ownership": {
+        "target_repository": "BrainIA-Mobile",
+        "isolation": "Repository-local isolated worktree if supported, else exclusive checkout reservation",
+        "exclusive_write_paths": [
+          "lib/storage.ts",
+          "lib/notification-bridge.ts",
+          "app/settings.tsx",
+          "android/app/src/main/java/com/brainia/mobile/notification/NotificationBridgeConfig.kt",
+          "android/app/src/main/java/com/brainia/mobile/notification/NotificationBridgeModule.kt",
+          "android/app/src/main/java/com/brainia/mobile/notification/NotificationBridgeService.kt",
+          "android/app/build.gradle",
+          "android/app/src/main/AndroidManifest.xml"
+        ],
+        "forbidden_repository": "BrainIA-Backend",
+        "migration_owner": "Dedicated schema worker reserves migrations and expected-object manifest; feature worker supplies reviewed DDL requirements"
+      },
+      "required_approvals": [
+        "Explicit human approval for any destructive migration or production deployment",
+        "G1 current API bundle SHA256, human approval and backend/mobile reviewers before any mobile implementation"
+      ],
+      "verification_requirements": {
+        "independent": true,
+        "worker_role": "Distinct verifier from implementer; mandatory independent security/release verification",
+        "commands": [
+          "npm run lint",
+          "npm run typecheck",
+          "npm run agent:harness",
+          "npm run contracts:verify",
+          "android/: .\\gradlew.bat testDebugUnitTest",
+          "android/: .\\gradlew.bat connectedDebugAndroidTest (security/consent fixtures created by this task)"
+        ],
+        "command_status": "Existing vs future commands distinguished in EVALUATION; owners create missing harness first. Never run against production. Backend worker consumes mobile E10 reports, not native execution.",
+        "procedure": "Check each acceptance item using named EVALUATION fixtures; record environment, input hashes, command exit codes, measured metrics, failures and pass/fail. Missing infrastructure blocks gate.",
+        "evidence_path": "docs/reports/v2/M02-<revision>.md"
+      },
+      "expected_deliverables": [
+        "Secure native credentials and explicit capture consent reviewed change/report",
+        "Independent verification evidence",
+        "Repository-local rollback and compatibility notes"
+      ],
+      "risks_and_rollback": [
+        "Shared files must be serialized under Supervisor reservation; no cross-repository edits",
+        "Disable new read/publication flags on failure; retain immutable evidence/additive tables",
+        "Do not let old writers destroy new projections; pause incompatible writes",
+        "Preserve queue/correction data; do not downgrade local DB destructively",
+        "Delegate fixes and independent re-verification; never ask Supervisor to implement"
+      ],
+      "definition_of_done": [
+        "All acceptance criteria pass with current independent evidence",
+        "Prerequisites and exact approval hashes recorded",
+        "No changes outside target repository/reserved paths",
+        "Migration/compatibility/rollback reviewed",
+        "Update graphify after application code edits; do not claim planning-only validation as product verification"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "M03",
+      "target_repository": "BrainIA-Mobile",
+      "objective": "Encrypted durable Android outbox",
+      "phase": 2,
+      "priority": "P1",
+      "dependencies": [
+        "M02",
+        "B14"
+      ],
+      "workstreams": [
+        "WS05"
+      ],
+      "expected_files": [
+        "android/app/src/main/java/com/brainia/mobile/notification/NotificationOutbox.kt",
+        "android/app/src/main/java/com/brainia/mobile/notification/NotificationBridgeService.kt",
+        "android/app/build.gradle",
+        "android/app/src/main/AndroidManifest.xml",
+        "package.json"
+      ],
+      "worker_specialization": "Android persistence engineer",
+      "complexity": {
+        "size": "XL",
+        "engineer_days": [
+          8,
+          12
+        ]
+      },
+      "implementation_steps": [
+        "Select pinned Room/SQLite and Keystore encryption from M00 feasibility",
+        "Persist content/source mapping/sequence before HTTP or scheduling",
+        "Add delivery states/restart recovery and test:outbox",
+        "Enforce queue bounds without silent pending eviction"
+      ],
+      "database_migration_requirements": "Versioned local outbox schema and upgrade tests only",
+      "test_requirements": [
+        "E10",
+        "E02",
+        "E06"
+      ],
+      "acceptance_criteria": [
+        "Process death between commit/schedule loses zero persisted items",
+        "Storage full pauses capture visibly",
+        "Acked content removed <=24h",
+        "Backup excludes payload and keys"
+      ],
+      "implementation_order": 20,
+      "external_dependencies": [
+        {
+          "id": "B14",
+          "target_repository": "BrainIA-Backend",
+          "handoff": "Supervisor obtains report/artifact hash; no assumed cross-repository spawning or filesystem writes"
+        }
+      ],
+      "parallelization": {
+        "eligible": true,
+        "condition": "Dependencies and approvals satisfied; exclusive file path reservations disjoint; do not equate DAG readiness with safe concurrent edits"
+      },
+      "worktree_ownership": {
+        "target_repository": "BrainIA-Mobile",
+        "isolation": "Repository-local isolated worktree if supported, else exclusive checkout reservation",
+        "exclusive_write_paths": [
+          "android/app/src/main/java/com/brainia/mobile/notification/NotificationOutbox.kt",
+          "android/app/src/main/java/com/brainia/mobile/notification/NotificationBridgeService.kt",
+          "android/app/build.gradle",
+          "android/app/src/main/AndroidManifest.xml",
+          "package.json"
+        ],
+        "forbidden_repository": "BrainIA-Backend",
+        "migration_owner": "Dedicated schema worker reserves migrations and expected-object manifest; feature worker supplies reviewed DDL requirements"
+      },
+      "required_approvals": [
+        "Explicit human approval for any destructive migration or production deployment",
+        "G1 current API bundle SHA256, human approval and backend/mobile reviewers before any mobile implementation"
+      ],
+      "verification_requirements": {
+        "independent": true,
+        "worker_role": "Distinct verifier from implementer; mandatory independent security/release verification",
+        "commands": [
+          "npm run lint",
+          "npm run typecheck",
+          "npm run agent:harness",
+          "npm run contracts:verify",
+          "npm run test:outbox",
+          "android/: .\\gradlew.bat testDebugUnitTest",
+          "android/: .\\gradlew.bat connectedDebugAndroidTest"
+        ],
+        "command_status": "Existing vs future commands distinguished in EVALUATION; owners create missing harness first. Never run against production. Backend worker consumes mobile E10 reports, not native execution.",
+        "procedure": "Check each acceptance item using named EVALUATION fixtures; record environment, input hashes, command exit codes, measured metrics, failures and pass/fail. Missing infrastructure blocks gate.",
+        "evidence_path": "docs/reports/v2/M03-<revision>.md"
+      },
+      "expected_deliverables": [
+        "Encrypted durable Android outbox reviewed change/report",
+        "Independent verification evidence",
+        "Repository-local rollback and compatibility notes"
+      ],
+      "risks_and_rollback": [
+        "Shared files must be serialized under Supervisor reservation; no cross-repository edits",
+        "Disable new read/publication flags on failure; retain immutable evidence/additive tables",
+        "Do not let old writers destroy new projections; pause incompatible writes",
+        "Preserve queue/correction data; do not downgrade local DB destructively",
+        "Delegate fixes and independent re-verification; never ask Supervisor to implement"
+      ],
+      "definition_of_done": [
+        "All acceptance criteria pass with current independent evidence",
+        "Prerequisites and exact approval hashes recorded",
+        "No changes outside target repository/reserved paths",
+        "Migration/compatibility/rollback reviewed",
+        "Update graphify after application code edits; do not claim planning-only validation as product verification"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "M04",
+      "target_repository": "BrainIA-Mobile",
+      "objective": "Revision identity and single WorkManager delivery pipeline",
+      "phase": 2,
+      "priority": "P1",
+      "dependencies": [
+        "M03",
+        "B14"
+      ],
+      "workstreams": [
+        "WS05"
+      ],
+      "expected_files": [
+        "android/app/src/main/java/com/brainia/mobile/notification/NotificationBridgeService.kt",
+        "android/app/src/main/java/com/brainia/mobile/notification/NotificationReconciliationWorker.kt",
+        "android/app/src/main/java/com/brainia/mobile/notification/NotificationDeliveryWorker.kt",
+        "android/app/src/main/java/com/brainia/mobile/notification/NotificationOutbox.kt"
+      ],
+      "worker_specialization": "Android background engineer",
+      "complexity": {
+        "size": "XL",
+        "engineer_days": [
+          8,
+          12
+        ]
+      },
+      "implementation_steps": [
+        "Persist Android key lifecycle generations/fingerprint/sequence",
+        "Record updates/removals",
+        "Unique drain work/network constraints/jitter and separate health recovery",
+        "Ack only supported matching receipt",
+        "Reconcile active snapshots with queue history"
+      ],
+      "database_migration_requirements": "Local outbox migration if needed; no backend DDL",
+      "test_requirements": [
+        "E02",
+        "E10",
+        "E06"
+      ],
+      "acceptance_criteria": [
+        "Offline update+dismiss survives process death",
+        "A-B-A/key reuse correct",
+        "Retries retain producer/delivery IDs",
+        "Malformed2xx stays pending",
+        "Android force-stop/Doze gaps surfaced"
+      ],
+      "implementation_order": 22,
+      "external_dependencies": [
+        {
+          "id": "B14",
+          "target_repository": "BrainIA-Backend",
+          "handoff": "Supervisor obtains report/artifact hash; no assumed cross-repository spawning or filesystem writes"
+        }
+      ],
+      "parallelization": {
+        "eligible": true,
+        "condition": "Dependencies and approvals satisfied; exclusive file path reservations disjoint; do not equate DAG readiness with safe concurrent edits"
+      },
+      "worktree_ownership": {
+        "target_repository": "BrainIA-Mobile",
+        "isolation": "Repository-local isolated worktree if supported, else exclusive checkout reservation",
+        "exclusive_write_paths": [
+          "android/app/src/main/java/com/brainia/mobile/notification/NotificationBridgeService.kt",
+          "android/app/src/main/java/com/brainia/mobile/notification/NotificationReconciliationWorker.kt",
+          "android/app/src/main/java/com/brainia/mobile/notification/NotificationDeliveryWorker.kt",
+          "android/app/src/main/java/com/brainia/mobile/notification/NotificationOutbox.kt"
+        ],
+        "forbidden_repository": "BrainIA-Backend",
+        "migration_owner": "Dedicated schema worker reserves migrations and expected-object manifest; feature worker supplies reviewed DDL requirements"
+      },
+      "required_approvals": [
+        "Explicit human approval for any destructive migration or production deployment",
+        "G1 current API bundle SHA256, human approval and backend/mobile reviewers before any mobile implementation"
+      ],
+      "verification_requirements": {
+        "independent": true,
+        "worker_role": "Distinct verifier from implementer; mandatory independent security/release verification",
+        "commands": [
+          "npm run lint",
+          "npm run typecheck",
+          "npm run agent:harness",
+          "npm run contracts:verify",
+          "npm run test:outbox",
+          "android/: .\\gradlew.bat testDebugUnitTest",
+          "android/: .\\gradlew.bat connectedDebugAndroidTest"
+        ],
+        "command_status": "Existing vs future commands distinguished in EVALUATION; owners create missing harness first. Never run against production. Backend worker consumes mobile E10 reports, not native execution.",
+        "procedure": "Check each acceptance item using named EVALUATION fixtures; record environment, input hashes, command exit codes, measured metrics, failures and pass/fail. Missing infrastructure blocks gate.",
+        "evidence_path": "docs/reports/v2/M04-<revision>.md"
+      },
+      "expected_deliverables": [
+        "Revision identity and single WorkManager delivery pipeline reviewed change/report",
+        "Independent verification evidence",
+        "Repository-local rollback and compatibility notes"
+      ],
+      "risks_and_rollback": [
+        "Shared files must be serialized under Supervisor reservation; no cross-repository edits",
+        "Disable new read/publication flags on failure; retain immutable evidence/additive tables",
+        "Do not let old writers destroy new projections; pause incompatible writes",
+        "Preserve queue/correction data; do not downgrade local DB destructively",
+        "Delegate fixes and independent re-verification; never ask Supervisor to implement"
+      ],
+      "definition_of_done": [
+        "All acceptance criteria pass with current independent evidence",
+        "Prerequisites and exact approval hashes recorded",
+        "No changes outside target repository/reserved paths",
+        "Migration/compatibility/rollback reviewed",
+        "Update graphify after application code edits; do not claim planning-only validation as product verification"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "M05",
+      "target_repository": "BrainIA-Mobile",
+      "objective": "Capture state, provenance, corrections and exact-money UI",
+      "phase": 2,
+      "priority": "P1",
+      "dependencies": [
+        "M04",
+        "B17"
+      ],
+      "workstreams": [
+        "WS05",
+        "WS06",
+        "WS07"
+      ],
+      "expected_files": [
+        "lib/api.ts",
+        "lib/domain.ts",
+        "lib/financial-summary.ts",
+        "lib/format.ts",
+        "lib/app-state.tsx",
+        "app/(tabs)/capture.tsx",
+        "app/(tabs)/financials.tsx",
+        "app/(tabs)/review.tsx",
+        "app/settings.tsx",
+        "components/"
+      ],
+      "worker_specialization": "React Native product engineer",
+      "complexity": {
+        "size": "L",
+        "engineer_days": [
+          5,
+          8
+        ]
+      },
+      "implementation_steps": [
+        "Render delivery/processing/review independently",
+        "Use decimal server summaries and remove fixed implicit FX",
+        "Handle corrections/stale versions and distinguish facts/interpretations",
+        "Follow mobile UI skill notes/accessibility/runtime harness"
+      ],
+      "database_migration_requirements": "None",
+      "test_requirements": [
+        "E03",
+        "E05",
+        "E10",
+        "E12"
+      ],
+      "acceptance_criteria": [
+        "No mixed-currency total without explicit rate/time",
+        "Offline/auth/full queue/unknown enum states clear",
+        "TalkBack/font scaling/compact-large/native-web checks pass"
+      ],
+      "implementation_order": 24,
+      "external_dependencies": [
+        {
+          "id": "B17",
+          "target_repository": "BrainIA-Backend",
+          "handoff": "Supervisor obtains report/artifact hash; no assumed cross-repository spawning or filesystem writes"
+        }
+      ],
+      "parallelization": {
+        "eligible": true,
+        "condition": "Dependencies and approvals satisfied; exclusive file path reservations disjoint; do not equate DAG readiness with safe concurrent edits"
+      },
+      "worktree_ownership": {
+        "target_repository": "BrainIA-Mobile",
+        "isolation": "Repository-local isolated worktree if supported, else exclusive checkout reservation",
+        "exclusive_write_paths": [
+          "lib/api.ts",
+          "lib/domain.ts",
+          "lib/financial-summary.ts",
+          "lib/format.ts",
+          "lib/app-state.tsx",
+          "app/(tabs)/capture.tsx",
+          "app/(tabs)/financials.tsx",
+          "app/(tabs)/review.tsx",
+          "app/settings.tsx",
+          "components/"
+        ],
+        "forbidden_repository": "BrainIA-Backend",
+        "migration_owner": "Dedicated schema worker reserves migrations and expected-object manifest; feature worker supplies reviewed DDL requirements"
+      },
+      "required_approvals": [
+        "Explicit human approval for any destructive migration or production deployment",
+        "G1 current API bundle SHA256, human approval and backend/mobile reviewers before any mobile implementation"
+      ],
+      "verification_requirements": {
+        "independent": true,
+        "worker_role": "Distinct verifier from implementer; mandatory independent security/release verification",
+        "commands": [
+          "npm run lint",
+          "npm run typecheck",
+          "npm run agent:harness",
+          "npm run contracts:verify",
+          "npm run test:outbox",
+          "android/: .\\gradlew.bat testDebugUnitTest",
+          "android/: .\\gradlew.bat connectedDebugAndroidTest"
+        ],
+        "command_status": "Existing vs future commands distinguished in EVALUATION; owners create missing harness first. Never run against production. Backend worker consumes mobile E10 reports, not native execution.",
+        "procedure": "Check each acceptance item using named EVALUATION fixtures; record environment, input hashes, command exit codes, measured metrics, failures and pass/fail. Missing infrastructure blocks gate.",
+        "evidence_path": "docs/reports/v2/M05-<revision>.md"
+      },
+      "expected_deliverables": [
+        "Capture state, provenance, corrections and exact-money UI reviewed change/report",
+        "Independent verification evidence",
+        "Repository-local rollback and compatibility notes"
+      ],
+      "risks_and_rollback": [
+        "Shared files must be serialized under Supervisor reservation; no cross-repository edits",
+        "Disable new read/publication flags on failure; retain immutable evidence/additive tables",
+        "Do not let old writers destroy new projections; pause incompatible writes",
+        "Preserve queue/correction data; do not downgrade local DB destructively",
+        "Delegate fixes and independent re-verification; never ask Supervisor to implement"
+      ],
+      "definition_of_done": [
+        "All acceptance criteria pass with current independent evidence",
+        "Prerequisites and exact approval hashes recorded",
+        "No changes outside target repository/reserved paths",
+        "Migration/compatibility/rollback reviewed",
+        "Update graphify after application code edits; do not claim planning-only validation as product verification"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "M06",
+      "target_repository": "BrainIA-Mobile",
+      "objective": "Independent native capture and contract certification",
+      "phase": 2,
+      "priority": "P1",
+      "dependencies": [
+        "M05"
+      ],
+      "workstreams": [
+        "WS05",
+        "WS02",
+        "WS13"
+      ],
+      "expected_files": [
+        "docs/reports/v2/mobile-G3.md",
+        "android/app/src/androidTest/",
+        "android/app/src/test/"
+      ],
+      "worker_specialization": "Independent Android verifier",
+      "complexity": {
+        "size": "L",
+        "engineer_days": [
+          5,
+          8
+        ]
+      },
+      "implementation_steps": [
+        "Run 10k persisted captures through offline/kill/reboot/ack-loss/update/dismiss",
+        "Verify two-owner/security/backup/consent",
+        "Test old/new backend contract matrix on approved test service",
+        "Record physical OEM coverage and exact APK/contract hashes"
+      ],
+      "database_migration_requirements": "None",
+      "test_requirements": [
+        "E02",
+        "E06",
+        "E10"
+      ],
+      "acceptance_criteria": [
+        "Zero persisted capture loss/revision discard",
+        "Receipt/count reconciliation exact",
+        "No private/foreign data path",
+        "OS-unobserved gaps explicitly separate"
+      ],
+      "implementation_order": 25,
+      "external_dependencies": [],
+      "parallelization": {
+        "eligible": true,
+        "condition": "Dependencies and approvals satisfied; exclusive file path reservations disjoint; do not equate DAG readiness with safe concurrent edits"
+      },
+      "worktree_ownership": {
+        "target_repository": "BrainIA-Mobile",
+        "isolation": "Repository-local isolated worktree if supported, else exclusive checkout reservation",
+        "exclusive_write_paths": [
+          "docs/reports/v2/mobile-G3.md",
+          "android/app/src/androidTest/",
+          "android/app/src/test/"
+        ],
+        "forbidden_repository": "BrainIA-Backend",
+        "migration_owner": "Dedicated schema worker reserves migrations and expected-object manifest; feature worker supplies reviewed DDL requirements"
+      },
+      "required_approvals": [
+        "Explicit human approval for any destructive migration or production deployment",
+        "G1 current API bundle SHA256, human approval and backend/mobile reviewers before any mobile implementation"
+      ],
+      "verification_requirements": {
+        "independent": true,
+        "worker_role": "Distinct verifier from implementer; mandatory independent security/release verification",
+        "commands": [
+          "npm run lint",
+          "npm run typecheck",
+          "npm run agent:harness",
+          "npm run contracts:verify",
+          "npm run test:outbox",
+          "android/: .\\gradlew.bat testDebugUnitTest",
+          "android/: .\\gradlew.bat connectedDebugAndroidTest"
+        ],
+        "command_status": "Existing vs future commands distinguished in EVALUATION; owners create missing harness first. Never run against production. Backend worker consumes mobile E10 reports, not native execution.",
+        "procedure": "Check each acceptance item using named EVALUATION fixtures; record environment, input hashes, command exit codes, measured metrics, failures and pass/fail. Missing infrastructure blocks gate.",
+        "evidence_path": "docs/reports/v2/M06-<revision>.md"
+      },
+      "expected_deliverables": [
+        "Independent native capture and contract certification reviewed change/report",
+        "Independent verification evidence",
+        "Repository-local rollback and compatibility notes"
+      ],
+      "risks_and_rollback": [
+        "Shared files must be serialized under Supervisor reservation; no cross-repository edits",
+        "Disable new read/publication flags on failure; retain immutable evidence/additive tables",
+        "Do not let old writers destroy new projections; pause incompatible writes",
+        "Preserve queue/correction data; do not downgrade local DB destructively",
+        "Delegate fixes and independent re-verification; never ask Supervisor to implement"
+      ],
+      "definition_of_done": [
+        "All acceptance criteria pass with current independent evidence",
+        "Prerequisites and exact approval hashes recorded",
+        "No changes outside target repository/reserved paths",
+        "Migration/compatibility/rollback reviewed",
+        "Update graphify after application code edits; do not claim planning-only validation as product verification"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "M07",
+      "target_repository": "BrainIA-Mobile",
+      "objective": "Grounded retrieval and episodic UI",
+      "phase": 3,
+      "priority": "P1",
+      "dependencies": [
+        "M06",
+        "B21",
+        "B23",
+        "B22"
+      ],
+      "workstreams": [
+        "WS09",
+        "WS10"
+      ],
+      "expected_files": [
+        "lib/api.ts",
+        "lib/intelligence.ts",
+        "app/(tabs)/search.tsx",
+        "app/(tabs)/index.tsx",
+        "components/"
+      ],
+      "worker_specialization": "Mobile intelligence UX engineer",
+      "complexity": {
+        "size": "L",
+        "engineer_days": [
+          5,
+          8
+        ]
+      },
+      "implementation_steps": [
+        "Use approved query DTO/capabilities",
+        "Obtain reapproval for any new episode wire schema before coding dependent UI",
+        "Show citations/coverage/uncertainty/asynchronous state",
+        "Handle revoked/deleted evidence and local query privacy"
+      ],
+      "database_migration_requirements": "None",
+      "test_requirements": [
+        "E06",
+        "E08",
+        "E09",
+        "E12"
+      ],
+      "acceptance_criteria": [
+        "No fabricated citation/causal/financial statement",
+        "Unknown/pending/incomplete states handled",
+        "Independent QA evidence for G4",
+        "No query upload without authorization"
+      ],
+      "implementation_order": 32,
+      "external_dependencies": [
+        {
+          "id": "B21",
+          "target_repository": "BrainIA-Backend",
+          "handoff": "Supervisor obtains report/artifact hash; no assumed cross-repository spawning or filesystem writes"
+        },
+        {
+          "id": "B23",
+          "target_repository": "BrainIA-Backend",
+          "handoff": "Supervisor obtains report/artifact hash; no assumed cross-repository spawning or filesystem writes"
+        },
+        {
+          "id": "B22",
+          "target_repository": "BrainIA-Backend",
+          "handoff": "Supervisor obtains report/artifact hash; no assumed cross-repository spawning or filesystem writes"
+        }
+      ],
+      "parallelization": {
+        "eligible": true,
+        "condition": "Dependencies and approvals satisfied; exclusive file path reservations disjoint; do not equate DAG readiness with safe concurrent edits"
+      },
+      "worktree_ownership": {
+        "target_repository": "BrainIA-Mobile",
+        "isolation": "Repository-local isolated worktree if supported, else exclusive checkout reservation",
+        "exclusive_write_paths": [
+          "lib/api.ts",
+          "lib/intelligence.ts",
+          "app/(tabs)/search.tsx",
+          "app/(tabs)/index.tsx",
+          "components/"
+        ],
+        "forbidden_repository": "BrainIA-Backend",
+        "migration_owner": "Dedicated schema worker reserves migrations and expected-object manifest; feature worker supplies reviewed DDL requirements"
+      },
+      "required_approvals": [
+        "Explicit human approval for any destructive migration or production deployment",
+        "G1 current API bundle SHA256, human approval and backend/mobile reviewers before any mobile implementation",
+        "Current hash approval of any newly exposed episode/connector wire schema before dependent mobile coding"
+      ],
+      "verification_requirements": {
+        "independent": true,
+        "worker_role": "Distinct verifier from implementer; mandatory independent security/release verification",
+        "commands": [
+          "npm run lint",
+          "npm run typecheck",
+          "npm run agent:harness",
+          "npm run contracts:verify",
+          "npm run test:outbox",
+          "android/: .\\gradlew.bat testDebugUnitTest",
+          "android/: .\\gradlew.bat connectedDebugAndroidTest"
+        ],
+        "command_status": "Existing vs future commands distinguished in EVALUATION; owners create missing harness first. Never run against production. Backend worker consumes mobile E10 reports, not native execution.",
+        "procedure": "Check each acceptance item using named EVALUATION fixtures; record environment, input hashes, command exit codes, measured metrics, failures and pass/fail. Missing infrastructure blocks gate.",
+        "evidence_path": "docs/reports/v2/M07-<revision>.md"
+      },
+      "expected_deliverables": [
+        "Grounded retrieval and episodic UI reviewed change/report",
+        "Independent verification evidence",
+        "Repository-local rollback and compatibility notes"
+      ],
+      "risks_and_rollback": [
+        "Shared files must be serialized under Supervisor reservation; no cross-repository edits",
+        "Disable new read/publication flags on failure; retain immutable evidence/additive tables",
+        "Do not let old writers destroy new projections; pause incompatible writes",
+        "Preserve queue/correction data; do not downgrade local DB destructively",
+        "Delegate fixes and independent re-verification; never ask Supervisor to implement"
+      ],
+      "definition_of_done": [
+        "All acceptance criteria pass with current independent evidence",
+        "Prerequisites and exact approval hashes recorded",
+        "No changes outside target repository/reserved paths",
+        "Migration/compatibility/rollback reviewed",
+        "Update graphify after application code edits; do not claim planning-only validation as product verification"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "M08",
+      "target_repository": "BrainIA-Mobile",
+      "objective": "Granular email/activity/location consent and adapters",
+      "phase": 4,
+      "priority": "P2",
+      "dependencies": [
+        "B25",
+        "M07"
+      ],
+      "workstreams": [
+        "WS11",
+        "WS02"
+      ],
+      "expected_files": [
+        "lib/api.ts",
+        "lib/notification-bridge.ts",
+        "app/settings.tsx",
+        "android/app/src/main/AndroidManifest.xml",
+        "android/app/src/main/java/com/brainia/mobile/signals/"
+      ],
+      "worker_specialization": "Mobile permissions engineer",
+      "complexity": {
+        "size": "XL",
+        "engineer_days": [
+          8,
+          12
+        ]
+      },
+      "implementation_steps": [
+        "Approved OAuth handoff with no provider refresh tokens",
+        "Granular opt-ins/revoke/capability checks",
+        "Validate background permission and coarse sampling",
+        "Reuse encrypted signal outbox",
+        "Measure daily battery against control"
+      ],
+      "database_migration_requirements": "Local signal settings only",
+      "test_requirements": [
+        "E06",
+        "E09",
+        "E10"
+      ],
+      "acceptance_criteria": [
+        "Absent/revoked consent captures zero signals",
+        "No provider tokens in return links",
+        "Battery<=2 percentage points/day over control or feature remains off",
+        "Contract hash current"
+      ],
+      "implementation_order": 37,
+      "external_dependencies": [
+        {
+          "id": "B25",
+          "target_repository": "BrainIA-Backend",
+          "handoff": "Supervisor obtains report/artifact hash; no assumed cross-repository spawning or filesystem writes"
+        }
+      ],
+      "parallelization": {
+        "eligible": true,
+        "condition": "Dependencies and approvals satisfied; exclusive file path reservations disjoint; do not equate DAG readiness with safe concurrent edits"
+      },
+      "worktree_ownership": {
+        "target_repository": "BrainIA-Mobile",
+        "isolation": "Repository-local isolated worktree if supported, else exclusive checkout reservation",
+        "exclusive_write_paths": [
+          "lib/api.ts",
+          "lib/notification-bridge.ts",
+          "app/settings.tsx",
+          "android/app/src/main/AndroidManifest.xml",
+          "android/app/src/main/java/com/brainia/mobile/signals/"
+        ],
+        "forbidden_repository": "BrainIA-Backend",
+        "migration_owner": "Dedicated schema worker reserves migrations and expected-object manifest; feature worker supplies reviewed DDL requirements"
+      },
+      "required_approvals": [
+        "Explicit human approval for any destructive migration or production deployment",
+        "G1 current API bundle SHA256, human approval and backend/mobile reviewers before any mobile implementation",
+        "Current hash approval of any newly exposed episode/connector wire schema before dependent mobile coding"
+      ],
+      "verification_requirements": {
+        "independent": true,
+        "worker_role": "Distinct verifier from implementer; mandatory independent security/release verification",
+        "commands": [
+          "npm run lint",
+          "npm run typecheck",
+          "npm run agent:harness",
+          "npm run contracts:verify",
+          "npm run test:outbox",
+          "android/: .\\gradlew.bat testDebugUnitTest",
+          "android/: .\\gradlew.bat connectedDebugAndroidTest"
+        ],
+        "command_status": "Existing vs future commands distinguished in EVALUATION; owners create missing harness first. Never run against production. Backend worker consumes mobile E10 reports, not native execution.",
+        "procedure": "Check each acceptance item using named EVALUATION fixtures; record environment, input hashes, command exit codes, measured metrics, failures and pass/fail. Missing infrastructure blocks gate.",
+        "evidence_path": "docs/reports/v2/M08-<revision>.md"
+      },
+      "expected_deliverables": [
+        "Granular email/activity/location consent and adapters reviewed change/report",
+        "Independent verification evidence",
+        "Repository-local rollback and compatibility notes"
+      ],
+      "risks_and_rollback": [
+        "Shared files must be serialized under Supervisor reservation; no cross-repository edits",
+        "Disable new read/publication flags on failure; retain immutable evidence/additive tables",
+        "Do not let old writers destroy new projections; pause incompatible writes",
+        "Preserve queue/correction data; do not downgrade local DB destructively",
+        "Delegate fixes and independent re-verification; never ask Supervisor to implement"
+      ],
+      "definition_of_done": [
+        "All acceptance criteria pass with current independent evidence",
+        "Prerequisites and exact approval hashes recorded",
+        "No changes outside target repository/reserved paths",
+        "Migration/compatibility/rollback reviewed",
+        "Update graphify after application code edits; do not claim planning-only validation as product verification"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "M09",
+      "target_repository": "BrainIA-Mobile",
+      "objective": "Mobile integration and independent final certification",
+      "phase": 4,
+      "priority": "P2",
+      "dependencies": [
+        "M08",
+        "B26",
+        "B27",
+        "B28",
+        "B29"
+      ],
+      "workstreams": [
+        "WS11",
+        "WS13"
+      ],
+      "expected_files": [
+        "docs/reports/v2/mobile-G5.md",
+        "tests/",
+        "android/app/src/androidTest/",
+        "lib/",
+        "app/"
+      ],
+      "worker_specialization": "Mobile integration worker plus distinct verifier",
+      "complexity": {
+        "size": "L",
+        "engineer_days": [
+          5,
+          8
+        ]
+      },
+      "implementation_steps": [
+        "Integrate reviewed mobile-only commits",
+        "Fix mobile compatibility and request backend fixes through Supervisor",
+        "Distinct verifier checks OAuth/revoke/deletion/receipts/battery/UX/native flows",
+        "Publish APK/source/contract hashes and outbox-safe rollback"
+      ],
+      "database_migration_requirements": "Local upgrade/backward compatibility only",
+      "test_requirements": [
+        "E02",
+        "E03",
+        "E05",
+        "E06",
+        "E09",
+        "E10",
+        "E12"
+      ],
+      "acceptance_criteria": [
+        "All applicable Q1-Q10 evidence current",
+        "No backend writes",
+        "Independent final verifier after integration",
+        "Rollback preserves queue or safely pauses"
+      ],
+      "implementation_order": 40,
+      "external_dependencies": [
+        {
+          "id": "B26",
+          "target_repository": "BrainIA-Backend",
+          "handoff": "Supervisor obtains report/artifact hash; no assumed cross-repository spawning or filesystem writes"
+        },
+        {
+          "id": "B27",
+          "target_repository": "BrainIA-Backend",
+          "handoff": "Supervisor obtains report/artifact hash; no assumed cross-repository spawning or filesystem writes"
+        },
+        {
+          "id": "B28",
+          "target_repository": "BrainIA-Backend",
+          "handoff": "Supervisor obtains report/artifact hash; no assumed cross-repository spawning or filesystem writes"
+        },
+        {
+          "id": "B29",
+          "target_repository": "BrainIA-Backend",
+          "handoff": "Supervisor obtains report/artifact hash; no assumed cross-repository spawning or filesystem writes"
+        }
+      ],
+      "parallelization": {
+        "eligible": true,
+        "condition": "Dependencies and approvals satisfied; exclusive file path reservations disjoint; do not equate DAG readiness with safe concurrent edits"
+      },
+      "worktree_ownership": {
+        "target_repository": "BrainIA-Mobile",
+        "isolation": "Repository-local isolated worktree if supported, else exclusive checkout reservation",
+        "exclusive_write_paths": [
+          "docs/reports/v2/mobile-G5.md",
+          "tests/",
+          "android/app/src/androidTest/",
+          "lib/",
+          "app/"
+        ],
+        "forbidden_repository": "BrainIA-Backend",
+        "migration_owner": "Dedicated schema worker reserves migrations and expected-object manifest; feature worker supplies reviewed DDL requirements"
+      },
+      "required_approvals": [
+        "Explicit human approval for any destructive migration or production deployment",
+        "G1 current API bundle SHA256, human approval and backend/mobile reviewers before any mobile implementation"
+      ],
+      "verification_requirements": {
+        "independent": true,
+        "worker_role": "Distinct verifier from implementer; mandatory independent security/release verification",
+        "commands": [
+          "npm run lint",
+          "npm run typecheck",
+          "npm run agent:harness",
+          "npm run contracts:verify",
+          "npm run test:outbox",
+          "android/: .\\gradlew.bat testDebugUnitTest",
+          "android/: .\\gradlew.bat connectedDebugAndroidTest"
+        ],
+        "command_status": "Existing vs future commands distinguished in EVALUATION; owners create missing harness first. Never run against production. Backend worker consumes mobile E10 reports, not native execution.",
+        "procedure": "Check each acceptance item using named EVALUATION fixtures; record environment, input hashes, command exit codes, measured metrics, failures and pass/fail. Missing infrastructure blocks gate.",
+        "evidence_path": "docs/reports/v2/M09-<revision>.md"
+      },
+      "expected_deliverables": [
+        "Mobile integration and independent final certification reviewed change/report",
+        "Independent verification evidence",
+        "Repository-local rollback and compatibility notes"
+      ],
+      "risks_and_rollback": [
+        "Shared files must be serialized under Supervisor reservation; no cross-repository edits",
+        "Disable new read/publication flags on failure; retain immutable evidence/additive tables",
+        "Do not let old writers destroy new projections; pause incompatible writes",
+        "Preserve queue/correction data; do not downgrade local DB destructively",
+        "Delegate fixes and independent re-verification; never ask Supervisor to implement"
+      ],
+      "definition_of_done": [
+        "All acceptance criteria pass with current independent evidence",
+        "Prerequisites and exact approval hashes recorded",
+        "No changes outside target repository/reserved paths",
+        "Migration/compatibility/rollback reviewed",
+        "Update graphify after application code edits; do not claim planning-only validation as product verification"
+      ],
+      "status": "planned"
+    }
+  ]
+}
