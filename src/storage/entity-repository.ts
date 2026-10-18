@@ -290,8 +290,8 @@ export async function upsertEntity(db: Queryable, draft: EntityDraft): Promise<E
   return storedEntity;
 }
 
-export async function listEntities(ownerId?: string) {
-  const result = await pool.query<EntityRecord>(
+export async function listEntities(ownerId?: string, db: Queryable = pool) {
+  const result = await db.query<EntityRecord>(
     `
       ${selectEntityProjectionSql()}
       where e.visibility <> 'hidden'

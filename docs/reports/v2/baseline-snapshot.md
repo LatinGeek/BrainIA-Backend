@@ -36,3 +36,14 @@ Compare `manifest_sha256` before and after a worker's changes; any difference ou
 - Hash equality proves byte identity, not correctness, review or approval.
 - Ignored files (secrets, native build output, graphify caches outside git) are not covered.
 - `HEAD` remains `b71c4cc`; nothing in this snapshot is committed.
+
+## Post-implementation snapshot — 2026-10-18
+
+After committing the v2 safety foundation and mobile M01/M02, and closing the first condition-debt round:
+
+| Repository | Backend commit | Mobile commit | Files hashed | Manifest SHA-256 |
+|---|---|---|---|---|
+| Backend | `ccc960d` (plus working changes) | — | 493 | `f537e1c6b375fda662cf20b1ed0c9339c7f1170085072d5eff8793b63afba8a3` |
+| Mobile | — | `cd39363` (plus working changes) | 1775 | `a8219cc11e3538f35757230cfea602430dcbaefd55e9f99e00584bea179dd727` |
+
+Machine-readable: `snapshot-2026-10-18-backend.json`, `snapshot-2026-10-18-mobile.json`. Sensitive `.env*` files are excluded by name and now ignored by git. These snapshots are attribution baselines, not approvals.

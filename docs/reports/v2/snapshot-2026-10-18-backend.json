@@ -1,0 +1,2975 @@
+{
+    "snapshot_version":  1,
+    "repository":  "D:/Coding/BrainIA/BrainIA-Backend",
+    "branch":  "main",
+    "head":  "ccc960d27df7374b898fc0f45bce17a09615a7ee",
+    "captured_at_utc":  "2026-10-18T20:27:49Z",
+    "file_count":  493,
+    "tracked_count":  488,
+    "untracked_count":  5,
+    "manifest_sha256":  "f537e1c6b375fda662cf20b1ed0c9339c7f1170085072d5eff8793b63afba8a3",
+    "excluded_sensitive_paths":  [
+                                     ".env.example"
+                                 ],
+    "dirty_porcelain_sha256":  "cf27ffd4f335377eaad13a7cfa1660155d8775b3968164e5822bbf924fdb63f2",
+    "files":  [
+                  {
+                      "path":  ".github/workflows/production-smoke.yml",
+                      "sha256":  "e75c532b79fc97ea9e1bdb30425384807f869b35cff1d4e9714d03c23af196be",
+                      "bytes":  535,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  ".gitignore",
+                      "sha256":  "302bbfd40841b11ebdb4d2428e83e681a460c4f9aa738f21b0547c79a0a90839",
+                      "bytes":  328,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  ".vercelignore",
+                      "sha256":  "5d2997160aef00c3eecc7901c62fe4746de1c71fa0aee5f615281560ff2e890a",
+                      "bytes":  112,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "AGENTS.md",
+                      "sha256":  "3cf5b08de12fa6b0ea229a994951457e08ea5fff4a503407aef93567c92f96b8",
+                      "bytes":  16180,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "contracts/brain-ai/2.0.0/ajv.LICENSE",
+                      "sha256":  "a05350a88e318e4f5f2c2a1ff1e2e88daa4dd38e6e78b71cccae422bdc762cc3",
+                      "bytes":  1090,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "contracts/brain-ai/2.0.0/ajv-formats.LICENSE",
+                      "sha256":  "9df3bb69929a3b650ed73b3bfa1756725aaff0ac296461605753547004eafeaf",
+                      "bytes":  1074,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "contracts/brain-ai/2.0.0/build-bundle.mjs",
+                      "sha256":  "af4650faa553585a3c85a740e728fd5f217b2d6f31ef9200b4cf44a764d3b208",
+                      "bytes":  48689,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "contracts/brain-ai/2.0.0/build-fixtures.mjs",
+                      "sha256":  "1b25ba03234e0ae442c0b191930b178bd79bc4d615d02e4f56f002eae94ce4a5",
+                      "bytes":  33820,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "contracts/brain-ai/2.0.0/canonical.mjs",
+                      "sha256":  "6be30ad2aa4c48ce3bcbe3f76eb9677592a19c9058e00053116b36c48951c61a",
+                      "bytes":  1320,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "contracts/brain-ai/2.0.0/fixtures.json",
+                      "sha256":  "cfc5b5b063438cb5733de445e971249f6f28b3cfbdaebe5e526b4211c9b1b541",
+                      "bytes":  1775846,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "contracts/brain-ai/2.0.0/openapi.json",
+                      "sha256":  "40c4ea56ac31246863811712e555541e195e76c27b2a930ad566ce6f2610cc2c",
+                      "bytes":  102524,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "contracts/brain-ai/2.0.0/open-items.json",
+                      "sha256":  "a9bbd64880170914b1e98bac80abce77da21cf66a65b303f8716c158fd5e7cf5",
+                      "bytes":  26687,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "contracts/brain-ai/2.0.0/README.md",
+                      "sha256":  "57d6743a99881bb988513fc58c1004efbcf3751f0b620b6dce837c88772f6af9",
+                      "bytes":  3510,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "contracts/brain-ai/2.0.0/schema.json",
+                      "sha256":  "5654550269532eb1515c0633d55515813cece9a096a6722c7a541807351e7113",
+                      "bytes":  138338,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "contracts/brain-ai/2.0.0/seal.mjs",
+                      "sha256":  "9618ae503a31ba6bcd1143409f7d687290ff139161f9e55ec65c7ad1d991ad1b",
+                      "bytes":  822,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "contracts/brain-ai/2.0.0/SHA256SUMS.json",
+                      "sha256":  "666af99fd84d08d43217c380993abcd1540dac66e9a99f618b43a79b2bebfb55",
+                      "bytes":  1452,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "contracts/brain-ai/2.0.0/spec.md",
+                      "sha256":  "461864a300fd3eb6a611f6f911ef5d111a8ba4e2e013b458858cf08ed31769f1",
+                      "bytes":  34291,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "contracts/brain-ai/2.0.0/validator-provenance.json",
+                      "sha256":  "f75145fbfe85ff53ec58db005ba92fa05bc340bc88ecf03aba4cdb3aebc4d171",
+                      "bytes":  182,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "contracts/brain-ai/2.0.0/validators.cjs",
+                      "sha256":  "f051ad351d0105e5ef5c19dc54946b482c1667872c756041596765fed9f960db",
+                      "bytes":  1570917,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "contracts/brain-ai/2.0.0/verify.mjs",
+                      "sha256":  "fa1617d25bd201af472e03cf49be366250da45038b9783efe647375f7bdc0203",
+                      "bytes":  17819,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "contracts/schema/catalog.sql",
+                      "sha256":  "50015c86ae67b2406a0e6417799b0e8a7671af940056304022ef750656640873",
+                      "bytes":  4078,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "contracts/schema/E11-isolated.json",
+                      "sha256":  "4fc83abb7a14d7b25aec54e338075dc6527556b8371eb61879bafe5d38bca12f",
+                      "bytes":  31946,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "contracts/schema/generate.mjs",
+                      "sha256":  "544ca1b477263a81359dd12acd6cdd26d282a10384e2bc96c7a1814f1fed4628",
+                      "bytes":  913,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "contracts/schema/isolated.mjs",
+                      "sha256":  "0ad1a0570d13c2188121566a7507a4e8468cc2ecb09f3c7156f7afa218b87714",
+                      "bytes":  1847,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "contracts/schema/manifest.json",
+                      "sha256":  "7fe4df67844f33c331f565670bf2d8117d71b36895f72b8fdf7f1fd1db7fcde3",
+                      "bytes":  314862,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "contracts/schema/preload-isolated.mjs",
+                      "sha256":  "296cacee2bd849f0d89c81f746fe96f95fe559d6474c4e2b8223b32b7e6b73a5",
+                      "bytes":  760,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "contracts/schema/README.md",
+                      "sha256":  "aa21af4ac27737c1e56f5d2622b2aedd945272a8901d8d0e8e74a28749d7409b",
+                      "bytes":  3290,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "contracts/schema/verify.test.mjs",
+                      "sha256":  "daf884baf9f090984be642156fb2f5e0c4488017286c32c65303b308f8278a0b",
+                      "bytes":  9326,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "docs/agent.md",
+                      "sha256":  "b8d4534cfa445a7d51c8e73056860d08e573323cdc4dd2ba292735357b1327ca",
+                      "bytes":  6314,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "docs/api.md",
+                      "sha256":  "0dfdfa3ca2a1cd1417d7d450bbfe0ef92434a497612ee1b4439ef2d1100d21d4",
+                      "bytes":  25094,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "docs/architecture.md",
+                      "sha256":  "4900355661a3a953efb0d9cfcb447c8021fda5cf2fd51250e248f29a36977d09",
+                      "bytes":  4820,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "docs/backlog.md",
+                      "sha256":  "6dec1988405a9d879ab069d18e2a681e0f71f573d205a78db34feb0b3df0fefb",
+                      "bytes":  2515,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "docs/BRAIN_AI_V2_API_CONTRACT_v2.0.0.md",
+                      "sha256":  "461864a300fd3eb6a611f6f911ef5d111a8ba4e2e013b458858cf08ed31769f1",
+                      "bytes":  34291,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "docs/BRAIN_AI_V2_ARCHITECTURE.md",
+                      "sha256":  "1ca457395cee00d323743cdac6b10821c45b0750d5c4a593760bbf42a51ed9e2",
+                      "bytes":  23137,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "docs/BRAIN_AI_V2_BACKEND_TASKS.json",
+                      "sha256":  "8effbfd79a23cd2621e3cb89c89e0311aedd982eb87f1a8a438f4c9c92ed98ba",
+                      "bytes":  152282,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "docs/BRAIN_AI_V2_DATA_MODEL.md",
+                      "sha256":  "273f0d03da7104364072f1b2585a523a1a6f8523277a358d97fd2b2b2ce09a23",
+                      "bytes":  21273,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "docs/BRAIN_AI_V2_EVALUATION.md",
+                      "sha256":  "94eb844cc0b1eeca5cff8679d6a3819cd358e58d7fb4a064116de21c0fcc1acd",
+                      "bytes":  14100,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "docs/BRAIN_AI_V2_EXECUTION_PLAN.md",
+                      "sha256":  "2f2ad98eb8221e9140c67dbb60da09ae5c942b58932b9f5933047e39a9ea73df",
+                      "bytes":  22995,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "docs/BRAIN_AI_V2_MOBILE_TASKS.json",
+                      "sha256":  "6b61aba2fbc4596224e18be752ce71e6f783da23463de4921ab6c0c556861048",
+                      "bytes":  53172,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "docs/BRAIN_AI_V2_PLANNING_VALIDATION.md",
+                      "sha256":  "1a357ab82ec50c16ebc4f21170689f85849767c05de9b77ec4eba51c163182ad",
+                      "bytes":  2408,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "docs/BRAIN_AI_V2_PRD.md",
+                      "sha256":  "68f717778003c91a73b80fd906d6696e2dc3fc60a1e4229445cfd1e00e3369e3",
+                      "bytes":  8544,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "docs/BRAIN_AI_V2_TASK_SPECIFICATIONS.md",
+                      "sha256":  "02073fab3e4dbfa383cbe0d3a00db8de1ed01b27ec25e7feab4d1df59fa00f06",
+                      "bytes":  100797,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "docs/BRAIN_AI_V2_TASKS.json",
+                      "sha256":  "154addaa651c8f6e6fc8521578df9454cf73b0a64e588d20081b078722c8a4ef",
+                      "bytes":  203149,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "docs/brainia-next.md",
+                      "sha256":  "7ff657acf277966dde7f9991ec9a6345b8b7589bc61dff1adde6bd86e1d44642",
+                      "bytes":  2349,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "docs/changelog.md",
+                      "sha256":  "367e447b95c5efc4305386e30aad7b08e3aa924fa6e707960e8f866c4c14804e",
+                      "bytes":  3696,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "docs/domain.md",
+                      "sha256":  "521c6418319f5294aaceb58dd50fb1821847acd33e42189ea60dfdd3719166a3",
+                      "bytes":  10090,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "docs/entity-identity-governance.md",
+                      "sha256":  "8de46cfe1649fddbbd4226d5702914101593301e4719c2b053145e22a692a651",
+                      "bytes":  2889,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "docs/future-features.md",
+                      "sha256":  "47664e3f4b38476796c44acfd069ba6dc7f4b716310040d8f7361d156828ffce",
+                      "bytes":  1595,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "docs/future-roadmap.md",
+                      "sha256":  "9af55dd42b557c1a8c358bc70ef66609b01c9cd713e283f8ad2b9cbacb17cb6e",
+                      "bytes":  1194,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "docs/ingestion-flow.md",
+                      "sha256":  "ecf4c23473be6045b5753951c4c185043b9e2dd185f7b06437e235e02001f60f",
+                      "bytes":  6771,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "docs/insights-digests.md",
+                      "sha256":  "5a3d4560f76895b7f238e9b292ab83d6d71c481b9a5684813ee3a2cc32468a20",
+                      "bytes":  2874,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "docs/knowledge-platform-action-plan.md",
+                      "sha256":  "647178d0e33ecf0c8fc46e8a38041408ec4402dac269b9a324d4d245046ff74f",
+                      "bytes":  13486,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "docs/laya-local.md",
+                      "sha256":  "eeb907c6d5ceda95a29149da19215ab667da87fa5cfe53e7f221e95db66d8332",
+                      "bytes":  1223,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "docs/mvp.md",
+                      "sha256":  "9f3d16662d80175e1a6c7f7330e85fbcde7d3a83f8b9163ce7b480d73eba4efb",
+                      "bytes":  1771,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "docs/operations.md",
+                      "sha256":  "21d1bea2a55241716a19bdd80e35ab370aa5a3ebb9f4b7b4e693afb8b9bd85e3",
+                      "bytes":  9255,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "docs/postgres-schema.md",
+                      "sha256":  "5825cd89ab4da4b942c0f938db76ab3cbd5f855409e2bcce4713f358d65b6fab",
+                      "bytes":  8626,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "docs/reports/laya-calibration-2026-09-23.md",
+                      "sha256":  "e12ae2742ac23491e96561e16868b737beed014b462c569743ae21bec387b7db",
+                      "bytes":  1430,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "docs/reports/live-event-analysis-2026-07-13.md",
+                      "sha256":  "07b61271bbe7ffdc9b1868570676b5d734749439f98df80c42eabb9ab94fc2ef",
+                      "bytes":  9394,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "docs/reports/v2/approvals.json",
+                      "sha256":  "438005a9399d3a7700d677199e0173f9cf7e0a35551aeb7c1cbf03728842f67e",
+                      "bytes":  48861,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "docs/reports/v2/B00-verification.md",
+                      "sha256":  "f3be41ded7a793ac223c76ea2bdea4ce1f602a3a79f635c7ba2338060fb20900",
+                      "bytes":  16384,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "docs/reports/v2/B01-b71c4cc.md",
+                      "sha256":  "089bae3674b7b91a0a27b87077f0834d463f52a7bf476822cbe6f0311786031f",
+                      "bytes":  10564,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "docs/reports/v2/B01-verification.md",
+                      "sha256":  "c543ea07d1fdb59b1ca770536f2dedd969fedcad268eb49c9012a1d5d2ea582f",
+                      "bytes":  15267,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "docs/reports/v2/B02-r1.md",
+                      "sha256":  "4970810dd38f3c3ee665d80138c4d28d67822495c3589c6a5dfcbcd5f43d4362",
+                      "bytes":  16018,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "docs/reports/v2/B02-r2.md",
+                      "sha256":  "bfe4812d0a8156b981049c034fae7bd24636febeae679ad4916ab4af67975d1d",
+                      "bytes":  14793,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "docs/reports/v2/B02-r3.md",
+                      "sha256":  "0bf97db33e992a456a923f26c438ea9b189dfa313a240cad1a0f51df2c2e2d57",
+                      "bytes":  10481,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "docs/reports/v2/B02-verification.md",
+                      "sha256":  "77d6fabc9a291c874bd9b61500e209edfa776390d68fb3613527ac9ae9fb7096",
+                      "bytes":  11243,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "docs/reports/v2/B02-verification-r2.md",
+                      "sha256":  "ac62516fcf70df23b01bd8816574dd5ecabf886e00335cce40fd49d332c51ebe",
+                      "bytes":  35894,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "docs/reports/v2/B03-g1.md",
+                      "sha256":  "55d30874b5a3ec7bec44afae63c6fd89c337996668813588549104a7777b4a73",
+                      "bytes":  6198,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "docs/reports/v2/B03-verification.md",
+                      "sha256":  "51391a2ecf5089998c1d1d0178de89050ea76c9b41d3dac933d2491dd99cde22",
+                      "bytes":  11064,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "docs/reports/v2/B04-r1.md",
+                      "sha256":  "8cafa0f58e98b45f38bbfbdb16ce8b0a9266fe5ee8551c88124b7d1bcd9c6054",
+                      "bytes":  5181,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "docs/reports/v2/B04-r2.md",
+                      "sha256":  "5a803ca3499fba57dcc91996ad561e7f7052b177d1cb5315eb27097923e17ddf",
+                      "bytes":  5001,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "docs/reports/v2/B04-verification.md",
+                      "sha256":  "259a07bb350f84cb51c0b890dbe2770c30f7894b6cc982a527657be6ab2a0c3b",
+                      "bytes":  11243,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "docs/reports/v2/B04-verification-r2.md",
+                      "sha256":  "e2474cf979aebf7692c0528557caeff203790ceb4db9609eb9f2871642b56228",
+                      "bytes":  19450,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "docs/reports/v2/B05-r1.md",
+                      "sha256":  "f04ac216922e83e0bc5c04aa0022ff7e4fdc52a572e4bd1f764749501f7fdbf6",
+                      "bytes":  7598,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "docs/reports/v2/B05-r2.md",
+                      "sha256":  "a93a4b2b5b73d09262096b0c7c41e9ee0253efb87fb545bee910ee165bac93d6",
+                      "bytes":  4371,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "docs/reports/v2/B05-verification.md",
+                      "sha256":  "3598bcff870f7f77e697890e481ac57303a5f240b1e726768c4d6102397ed1af",
+                      "bytes":  35845,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "docs/reports/v2/B06-r1.md",
+                      "sha256":  "58340e5a1a100734cacf20be699e6dc7bf7b6f2c9a417c328fa501cb940518de",
+                      "bytes":  7803,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "docs/reports/v2/B06-r2.md",
+                      "sha256":  "c25185f8b72f8de08b8b6b0aabc1cdcf5d8d8ae3c952a4c85ed8a63c96ea6187",
+                      "bytes":  13228,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "docs/reports/v2/B06-r3.md",
+                      "sha256":  "0d26d30068bccdf22d25ea7b3139775550e5cf0d671e19ace966302b5eedb4ce",
+                      "bytes":  10572,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "docs/reports/v2/B06-r4.md",
+                      "sha256":  "1ba091c9a256c106fc77ecfd246540c2e3c632f39a2b14be8a231681167e440f",
+                      "bytes":  12801,
+                      "tracked":  false
+                  },
+                  {
+                      "path":  "docs/reports/v2/B06-verification.md",
+                      "sha256":  "d7c08301255a8192be7a0ee23db4ea55fbe3db3a89fadf4c95a3d3c365d8148a",
+                      "bytes":  61175,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "docs/reports/v2/B07-r1.md",
+                      "sha256":  "8dd75ca2b825f5c006afd8de7db1cea7162fbf2e1a6741c376c169692f860e51",
+                      "bytes":  12482,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "docs/reports/v2/B07-r2.md",
+                      "sha256":  "196c1a9ec4e5b1280cdd1ff53215229d01b159320f5bed8750d243004bb87e2e",
+                      "bytes":  10239,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "docs/reports/v2/B07-r3.md",
+                      "sha256":  "f67ac5ebf5479ace928487abde89444eb54a9097a21fdf76ca618eccba203b1c",
+                      "bytes":  10398,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "docs/reports/v2/B07-r4.md",
+                      "sha256":  "c4604ea7361a868845efb42b3561d747a0967853f3431916ae8511ade1428882",
+                      "bytes":  5127,
+                      "tracked":  false
+                  },
+                  {
+                      "path":  "docs/reports/v2/B07-verification.md",
+                      "sha256":  "8f48268e7576d45d6c87f24ed346c8fc4263cf037c3856e205b110bdec1e9082",
+                      "bytes":  46264,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "docs/reports/v2/B08-r1.md",
+                      "sha256":  "8eef6617a930ec90087c796a1aa8b52a1632aa0feadd55f0e80d798124650894",
+                      "bytes":  13609,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "docs/reports/v2/B08-r2.md",
+                      "sha256":  "b26eca36672e85b00c78c13fc64e14819b2c54517c8f5df93808eb9f13dc6656",
+                      "bytes":  11689,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "docs/reports/v2/B08-r3.md",
+                      "sha256":  "92ee91bbf4550772abb1e8bd53db287a2766883419ca854c6288f76edc7a64c6",
+                      "bytes":  8095,
+                      "tracked":  false
+                  },
+                  {
+                      "path":  "docs/reports/v2/B08-verification.md",
+                      "sha256":  "2a61abe15e4ff23948210bf1cbe177a65915e7645badfa50a8a8a5f6ef3761ec",
+                      "bytes":  34600,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "docs/reports/v2/B09-r1.md",
+                      "sha256":  "60d6a0354266ac4d62136cda69c4b955b44587cd342c30bd0b78944bdb9cf8b9",
+                      "bytes":  8597,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "docs/reports/v2/B09-verification.md",
+                      "sha256":  "983c1984ff66b6b3bd0457bafbc5a876492a8ee34cc9ecc4d17e90057fd3afff",
+                      "bytes":  12897,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "docs/reports/v2/B10-r1.md",
+                      "sha256":  "8852b119ca12259a65d85ac00dd0099cd814b6e052e7bd957b52e412f762f7d4",
+                      "bytes":  13701,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "docs/reports/v2/B10-r2.md",
+                      "sha256":  "ca62dfe86ce8254d2aafe2fe7f7f782eb0382b0a5f535263f4c1203a12df0ab7",
+                      "bytes":  11429,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "docs/reports/v2/B10-r3.md",
+                      "sha256":  "cdf136cda703400b580b8f7a6cda2b9fc096c4098651dbbf492ef5eebb5a87da",
+                      "bytes":  7898,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "docs/reports/v2/B10-r4.md",
+                      "sha256":  "6250dbd4c65fedbf760717ec2f7ed62ef0fed76b3d2302b2b5b69041b83151a7",
+                      "bytes":  7470,
+                      "tracked":  false
+                  },
+                  {
+                      "path":  "docs/reports/v2/B10-verification.md",
+                      "sha256":  "23a705e00925d2c4974fe478fbff5506ecb55e6a7f42a2fc60181181ccc254a9",
+                      "bytes":  12145,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "docs/reports/v2/B11-r1.md",
+                      "sha256":  "aeaa2f233d04a647c3f614a87bdd2d47782964ebb7ba344c02a9393425a319e6",
+                      "bytes":  9745,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "docs/reports/v2/B11-r2.md",
+                      "sha256":  "8ae40818d70e00c9cdceed19185f8801b25c055825e1c3dd6f87693d8a28ceeb",
+                      "bytes":  12601,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "docs/reports/v2/B11-r3.md",
+                      "sha256":  "0df5907bd1f3181619894d495ae7735a42d0bb9a99a18fbabd8e382738d72950",
+                      "bytes":  9294,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "docs/reports/v2/B11-r4.md",
+                      "sha256":  "ea7a2d6cfece9b41563296c44b6af77411788f67effb9f67747592d7ed83de0f",
+                      "bytes":  6505,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "docs/reports/v2/B11-r5.md",
+                      "sha256":  "54fcca63f837a5382ae103b4fc4b382ecffe9c113654ef9b6855ab94c8ecd989",
+                      "bytes":  7199,
+                      "tracked":  false
+                  },
+                  {
+                      "path":  "docs/reports/v2/B11-verification.md",
+                      "sha256":  "f14855e95b9a7bdb0893df3b67933db912cf2283a87666673461d9452ea4ca88",
+                      "bytes":  44308,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "docs/reports/v2/baseline.md",
+                      "sha256":  "8b8b11928ded595e367e929fb0ec4c615db72a77b287931d8514be8d213a7f1d",
+                      "bytes":  101086,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "docs/reports/v2/baseline-snapshot.md",
+                      "sha256":  "0e711e8cd441eb5ee7ebd0e2391c579de705bf01f0c8478cc3687dd197cfc374",
+                      "bytes":  2695,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "docs/reports/v2/execution-status.md",
+                      "sha256":  "38119e38c2f1b069d3b81c7f87ea544b57b0d69c6bd9f9c65c0a3e8f76d67313",
+                      "bytes":  8663,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "docs/reports/v2/G0-evidence-request.md",
+                      "sha256":  "7ec65755e164d1f97014c41d8818d3de53d88e302be57219aaea707e8ff438ef",
+                      "bytes":  24755,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "docs/reports/v2/G1-decision-package.md",
+                      "sha256":  "6281273b1d99980a60e441c0030f03650249ceb4c844cb59b5089835847efbde",
+                      "bytes":  7754,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "docs/reports/v2/G2.md",
+                      "sha256":  "08543a98ea4c24ed6336ddc2b8927d8aa6d968624e760e0c305f79c5c0997708",
+                      "bytes":  23105,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "docs/reports/v2/snapshot-backend.json",
+                      "sha256":  "6a8c47da267480e24bb2704b617c21306ec1027ed6c6a5b963b507112033da38",
+                      "bytes":  137399,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "docs/reports/v2/snapshot-mobile.json",
+                      "sha256":  "d73aba332b229b860caba9e1d12fedf6cca91bb28a5906fdbff504ea695edad2",
+                      "bytes":  618703,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "docs/runbooks.md",
+                      "sha256":  "4034f2c92addd8dca82dfa21d8f17511fa58477b1e45aa69de08cd2d7042d3ec",
+                      "bytes":  3818,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "docs/semantic-governance.md",
+                      "sha256":  "0950befdfac868065ab9de671435270815bf414fff02dbacf7f6ce8fcef462a9",
+                      "bytes":  6398,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/.graphify_labels.json",
+                      "sha256":  "b86322bc00a3e5e7e694c7e7299d25a9379a68533c31714a982374a928783fea",
+                      "bytes":  8373,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/.graphify_root",
+                      "sha256":  "cdb4ee2aea69cc6a83331bbe96dc2caa9a299d21329efb0336fc02a82e1839a8",
+                      "bytes":  1,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/2026-07-15/.graphify_labels.json",
+                      "sha256":  "5358f2fdf450bb288498e0c0cf2e9dee641941e82a7151b49eaa56ab81b2c58a",
+                      "bytes":  1254,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/2026-07-15/graph.json",
+                      "sha256":  "5a35bd9b4e931e980b6165b77101abf0219e132ba85c7bfb6f0bc455d0856a24",
+                      "bytes":  613640,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/2026-07-15/GRAPH_REPORT.md",
+                      "sha256":  "4bb7da82dbd92529486e16ddb25c8f82542d9a0c815b1167caad3fff9a79c74a",
+                      "bytes":  14703,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/2026-07-15/manifest.json",
+                      "sha256":  "f146f077b53314f13f53d6606879e4acfcbd66474a57bc8e6d8adf18fa2f3fa6",
+                      "bytes":  15410,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/2026-07-16/.graphify_labels.json",
+                      "sha256":  "26aa333bb7141547f205c237c7af7116ce5814c23f5d6f265ef16bac5bd42a5c",
+                      "bytes":  1287,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/2026-07-16/graph.json",
+                      "sha256":  "83fc1c451cd7f06dbe6766a11df30fc56668bc81754f00d71892202ab0f8dd7d",
+                      "bytes":  629794,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/2026-07-16/GRAPH_REPORT.md",
+                      "sha256":  "fcfd100e60fb1efd44407eaa20795c867d3bf72ee7e3bb6acfe4be8279a85722",
+                      "bytes":  14970,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/2026-07-16/manifest.json",
+                      "sha256":  "d8bc4c536164500f5325b2a8117d7e46c5f9fff15a81cbe819fa936f29edaba3",
+                      "bytes":  15757,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/2026-07-17/.graphify_labels.json",
+                      "sha256":  "62b98a03efb78e9a1aaf32b15627d15b43f4ee0beab383c1eb7567a0cedcc979",
+                      "bytes":  1461,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/2026-07-17/graph.json",
+                      "sha256":  "ca86820f2b716d2f5152c32f161d434c6d3e610d52201448c6f40aa0b7cfb077",
+                      "bytes":  716200,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/2026-07-17/GRAPH_REPORT.md",
+                      "sha256":  "9e48ba877231b05e0ca25e1cd973b2438642c1c3d8e340bf232b39250d83345b",
+                      "bytes":  16470,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/2026-07-17/manifest.json",
+                      "sha256":  "2c04b444ac35d6e2aa8644cf21e683e60061e19351cf2f584b1dc7b1e9fc4f5d",
+                      "bytes":  18038,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/2026-07-18/.graphify_labels.json",
+                      "sha256":  "62b98a03efb78e9a1aaf32b15627d15b43f4ee0beab383c1eb7567a0cedcc979",
+                      "bytes":  1461,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/2026-07-18/graph.json",
+                      "sha256":  "a63665130d089bcb28f680482178e3152cb9df07deb80db6a9f76c808188536e",
+                      "bytes":  716946,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/2026-07-18/GRAPH_REPORT.md",
+                      "sha256":  "c230667c266b0f9eca8b80e0d4b012dcaf16859e5797456b1444aec00a45c633",
+                      "bytes":  16164,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/2026-07-18/manifest.json",
+                      "sha256":  "6435aea3fd4988acd0982e23d03eff2adc393eae3f4ff71b85ab3eee86d928f2",
+                      "bytes":  18039,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/2026-07-19/.graphify_labels.json",
+                      "sha256":  "a4b0cd53b8ffef7f835ba3339395df2b198d0a6aeac5b042f290570b6edf7d8d",
+                      "bytes":  1883,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/2026-07-19/graph.json",
+                      "sha256":  "94e41302e7e9874b91944286e9e1476cc37a487b82779db361b7ddaa57344664",
+                      "bytes":  843084,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/2026-07-19/GRAPH_REPORT.md",
+                      "sha256":  "338a24ac2375d698e4fd428fa10067d2ad426ca8ac0d6398d3983954ea54f1b0",
+                      "bytes":  20105,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/2026-07-19/manifest.json",
+                      "sha256":  "d091ec40bce1c892ebbb71db725c84667cdfd367d6667104c9a406b35bc6240a",
+                      "bytes":  20198,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/2026-07-20/.graphify_labels.json",
+                      "sha256":  "4418d850d1240dff1e0cf4fed9ef780f7cf974996840d0122504648debfdebca",
+                      "bytes":  1567,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/2026-07-20/graph.json",
+                      "sha256":  "15954bc21381a0ca9789b64360f070ce1dc192ec720e73d75db93da0141cbfe8",
+                      "bytes":  854829,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/2026-07-20/GRAPH_REPORT.md",
+                      "sha256":  "02f964ba40aea83baa45d65d8fa2a1a532e0d6225d8ef39aa6ecbad7ce28170b",
+                      "bytes":  17238,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/2026-07-20/manifest.json",
+                      "sha256":  "70c06592d83aa8f444874961999e4f1aa4e8b0f348ad4309d7a3118b7e45dcc6",
+                      "bytes":  20367,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/2026-07-21/.graphify_labels.json",
+                      "sha256":  "30462107a81fd001aa0ff9d5834e69f63a1d0d4d1ff4991e8e2fc1ba758f9b02",
+                      "bytes":  1890,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/2026-07-21/graph.json",
+                      "sha256":  "2317be52cbb465e60c7eba6511fd925e9aa3894679edc5983a685ddf408fe3ab",
+                      "bytes":  856324,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/2026-07-21/GRAPH_REPORT.md",
+                      "sha256":  "853a4fb04b1b600d6ff922ac6c245e849b4a94590d6dee77ca103995aba4114d",
+                      "bytes":  20221,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/2026-07-21/manifest.json",
+                      "sha256":  "b86022a65c111b54d2ba1b3e9fd420ded278611ece0e020c563b9b4f5db792e6",
+                      "bytes":  20537,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/2026-07-22/.graphify_labels.json",
+                      "sha256":  "a4eac1fb35a55f140d08d84e68c4396080eb36eb5afc4bafe0d4152ddf57e4f9",
+                      "bytes":  1836,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/2026-07-22/graph.json",
+                      "sha256":  "7a9f531f20cb9e381832b88be5e8c026e4ffb94d80ea41170ad2c46eda6dc1ee",
+                      "bytes":  869444,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/2026-07-22/GRAPH_REPORT.md",
+                      "sha256":  "f96966f7c8141931895b33f01d994c243bd980ce7487c709011484f9e90bbbaa",
+                      "bytes":  20061,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/2026-07-22/manifest.json",
+                      "sha256":  "8b2984a8991cf1733a0ad39cb2c602101c8f7f6ffecb145c7d533b39e133e3ca",
+                      "bytes":  21235,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/2026-07-31/.graphify_labels.json",
+                      "sha256":  "1b1126e0273c0f6549b7e798b9113827c1d7d759c1d1155df288fc57b0d45a7d",
+                      "bytes":  1908,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/2026-07-31/graph.json",
+                      "sha256":  "d312671f0527a3c482bf8ea440e24dcb5989b7832ebe18c6d0763236d2f85eeb",
+                      "bytes":  1056371,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/2026-07-31/GRAPH_REPORT.md",
+                      "sha256":  "db59f7998c35d8b11fae76eb5d011832bcbd9658f62e0c30b81dd5f0876e1dd1",
+                      "bytes":  20327,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/2026-07-31/manifest.json",
+                      "sha256":  "898be167121dc0be7d282ff28e03529151aca783bd5489d71b9b7406badefd46",
+                      "bytes":  24877,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/2026-08-01/.graphify_labels.json",
+                      "sha256":  "d43f2ec7ff14d78c4c4aa3573d4b2900016e3b55b065d8a1a0dd633d14b48820",
+                      "bytes":  1917,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/2026-08-01/graph.json",
+                      "sha256":  "2493a6da6dde18c8898e1a59889a02736a83ffceb9a4cd79eb301e754440877f",
+                      "bytes":  1074268,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/2026-08-01/GRAPH_REPORT.md",
+                      "sha256":  "08ddae021c840372e0b05fe1a1ea1045d7c38cdedb163c4357bdaa705047f4a5",
+                      "bytes":  20067,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/2026-08-01/manifest.json",
+                      "sha256":  "9ab66ea330af3266e4781db940f3d01f7e01b51b3f90c2d2bb29c11c7c8920a7",
+                      "bytes":  25713,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/2026-08-02/.graphify_labels.json",
+                      "sha256":  "560c958c7d8e07f0e09594743ffc141513dfd7721ccb2618432b12e127d925e5",
+                      "bytes":  2166,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/2026-08-02/graph.json",
+                      "sha256":  "2ac6fa15eb0ed4c1e12fd31bb0576ab21a4fd500278842e79c8472b458181a08",
+                      "bytes":  1115453,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/2026-08-02/GRAPH_REPORT.md",
+                      "sha256":  "e465aeabeaf20a18a4495a603a7dd39c87c9bc8b579cf5d35066fdda43b4f770",
+                      "bytes":  22985,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/2026-08-02/manifest.json",
+                      "sha256":  "daf54440a2d4759ea2524f36fad49233a095e9f388c0e246b6a6058ae0ebcf1e",
+                      "bytes":  26673,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/2026-08-03/.graphify_labels.json",
+                      "sha256":  "486b06beb69f2845540378f4a21a3d5754f5cc7d2a83f3354b775f1322f1a8ae",
+                      "bytes":  2145,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/2026-08-03/graph.json",
+                      "sha256":  "489be780230bbe06db080fd15a710ee7af8b4cbc9ce0285cda5810bc6e8e0caa",
+                      "bytes":  1133475,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/2026-08-03/GRAPH_REPORT.md",
+                      "sha256":  "a6ecbb9d3b7785fdae712187cfc8b7d7ab908b415e547c9ff7fde9f92162f3e8",
+                      "bytes":  22312,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/2026-08-03/manifest.json",
+                      "sha256":  "6cbd3c5c1702c34668872981b53a529131c443d5144e93ef0eddffbc0f80156f",
+                      "bytes":  26990,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/2026-08-07/.graphify_labels.json",
+                      "sha256":  "0a40b579e026ac98db9e7f0d199533875d570603505fa37bd20db11430a75901",
+                      "bytes":  2141,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/2026-08-07/graph.json",
+                      "sha256":  "cf0b9f3169b7e5ce00ca7b4fe7f9323e51949f133f549adca3075b1abdbc89fe",
+                      "bytes":  1133475,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/2026-08-07/GRAPH_REPORT.md",
+                      "sha256":  "7d09640635e822df9695385026e55080e8cd613a1a0a3ee76f6677500df11021",
+                      "bytes":  22281,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/2026-08-07/manifest.json",
+                      "sha256":  "e5dbeddfca9d1a504218b727f735d80f6e3a5e0da11934ffcc413d41963c07ef",
+                      "bytes":  26990,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/2026-08-28/.graphify_labels.json",
+                      "sha256":  "0a40b579e026ac98db9e7f0d199533875d570603505fa37bd20db11430a75901",
+                      "bytes":  2141,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/2026-08-28/graph.json",
+                      "sha256":  "e52d8c930baf032af5f3b6861ec34d65f952527c52ebeaee22255ae7c5c113d5",
+                      "bytes":  1133474,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/2026-08-28/GRAPH_REPORT.md",
+                      "sha256":  "b9736a9fb321324546ca23363f83c68637f1a0ebc07ec62c3f203a446eae4204",
+                      "bytes":  22007,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/2026-08-28/manifest.json",
+                      "sha256":  "5dd1b7fe6f77516480d4b72eabc39b94a7e9791cb0bbf13047c367ff85de30e8",
+                      "bytes":  27172,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/2026-09-02/.graphify_labels.json",
+                      "sha256":  "ef7c8b44a4dce4b6f490cc0813cb3cb6cdd27cd5380f05652227b734ecffa156",
+                      "bytes":  2331,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/2026-09-02/graph.json",
+                      "sha256":  "162f7c8440f46787bc8bf67cb9f22009718d1576c23741d302671f59edf826d0",
+                      "bytes":  1168326,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/2026-09-02/GRAPH_REPORT.md",
+                      "sha256":  "5c8993eb465f8d30aa93e75ab8a38b0931609f2dad7fd1436049537c33734428",
+                      "bytes":  23839,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/2026-09-02/manifest.json",
+                      "sha256":  "b8462f34a2f67cd3851ec6133600a250ed3e0123c70ab81d6067546b9fd76679",
+                      "bytes":  28006,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/cache/ast/v0.9.4/0a2793da2a824775f0e593861d3d842f277476a29b73c394ea1216f68867ad4f.json",
+                      "sha256":  "2d16b14d95a829e91e400cc882f461cb9109b04052193c0da4e4205285c97c12",
+                      "bytes":  5531,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/cache/ast/v0.9.4/0b6df146e8ee301b88d154be8ff0a8013f33f08e5e10cc55598c76f07d93bf0a.json",
+                      "sha256":  "c4ffaca0f8e0afab3b592df11c5a0b7b0d1b8630e275924a8287f381ff19ba60",
+                      "bytes":  1126,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/cache/ast/v0.9.4/0d8fd99908cf52413e1800975d55179c74c0d9269c7426e98024fcb63a808d4b.json",
+                      "sha256":  "cbe70d3993766ed873cf4232f07f46ac66c5ea4c39d5c651cd1554a4ac513899",
+                      "bytes":  18656,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/cache/ast/v0.9.4/154c59a137c41557c9126258e39b4585713c3981eca188c51725d8051a1337d6.json",
+                      "sha256":  "e3d45e9adffdee9b2852fa975f7c581fec8483b1c42e19cd5bfa35b1e4da9e14",
+                      "bytes":  4296,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/cache/ast/v0.9.4/1581d51c13d4173b26a7b4622d1f289c9f4f32a6e7ec1d9a9bd32ef56223b6f1.json",
+                      "sha256":  "097b4e67506fca5313fad87903c72858c2cb5c064cb9ebabc0b28230c06fb914",
+                      "bytes":  2178,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/cache/ast/v0.9.4/1a11251d213617917aa9468811d8617ce476d1cbbc308b05d2d18b0e19705eb5.json",
+                      "sha256":  "cd4068a7f2302326a9646096b73c0d7e40980f31fd67a75966bb5cfaf7bc34f2",
+                      "bytes":  2250,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/cache/ast/v0.9.4/261b092546a1120ad4347deea81c7d206c820e845a84d84bb137d2268eb926f7.json",
+                      "sha256":  "800d75b22b68993ff0086eec453515b0bf36632edb7f67615c22aae0e0a26080",
+                      "bytes":  16817,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/cache/ast/v0.9.4/266cf9b70edcd3aea2d6665ec5a4b70c0b0b3254d8a6bf2d1e1fa1ea3911e4f3.json",
+                      "sha256":  "d1b34ce2f8fbe8bd37fdc21447151d8a67c13f8904d5ec3486db8c3cedc9ae6e",
+                      "bytes":  10339,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/cache/ast/v0.9.4/28799aff958409300a828a73bf84e742d96bd97ff8d1aede45481d9929053912.json",
+                      "sha256":  "52f0ce097ea370143ea959c298011bc7292241c1a6d2090a4b7ab2e1237c97b9",
+                      "bytes":  2517,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/cache/ast/v0.9.4/30d1e16ae8611b104e4bfe51d12de0f52c80dd78e1942855a271d81dc30f07bb.json",
+                      "sha256":  "8da36cb5956c2fcffe6789eee09c5c8e25848fbac5240601cce3321e2117d7fd",
+                      "bytes":  29012,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/cache/ast/v0.9.4/37c72687d5a84e9e42c1c8121c8b22dd1405555ba8cec1e2f04281925e66c0dc.json",
+                      "sha256":  "1532bc3e526adf497786f1e96b1b73295db630edb260e3f43b46d55befa9fb57",
+                      "bytes":  4994,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/cache/ast/v0.9.4/43e3de67fb68af02a7fec85a4088821199e4255b2ca76a7ca6d3038a78dc115f.json",
+                      "sha256":  "9dd10315831c0c90e20bb51772cecb0340e38f82334bea98fc54f95a2234f144",
+                      "bytes":  14423,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/cache/ast/v0.9.4/46f583dfbd198ab1b25b0e125094fa0e21f9de306889c446f2a8b73f645a6384.json",
+                      "sha256":  "d8fa2b3531e0f3bc2b13a3e6518d8c6ca49dcf2442dd0cc82419ff01df76fbea",
+                      "bytes":  4549,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/cache/ast/v0.9.4/4711b1d980b0e9a1145ec943d0418444c3fd5fd8d1ec7f684f62e6eb4225a23c.json",
+                      "sha256":  "f7786a484a1fcb5e84029cb452639f61d4253a93f730bc7bf894442b566e3bcd",
+                      "bytes":  2792,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/cache/ast/v0.9.4/4865520ad4dff333d1414fec6cdb1db3c6b5677fa5885d4ad86d2f1d525a28e9.json",
+                      "sha256":  "00b822fd1424a1e446c38c87e327edc3d529d5de5bebe3b998fe252536c11d0a",
+                      "bytes":  3953,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/cache/ast/v0.9.4/4a1e2c83f2a0a19df944aa301d025ccb168bb5476400075e42b0879bd31d6d0a.json",
+                      "sha256":  "1a5916360c1bf95f1b33ee5683eb65ac45c49e68beb3df39c766adb1a6b0fb35",
+                      "bytes":  3464,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/cache/ast/v0.9.4/4b4adb80f35119ff5e5d6330b257fe40d1047a12f5c9bbe284ca58350a32f935.json",
+                      "sha256":  "de82d72610feb5b1778c4cfa2f75acbb0011ad09264e30ad784affb9dfd1c733",
+                      "bytes":  3751,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/cache/ast/v0.9.4/4c7a91f3c4432c283d7e32d6975509fabb34c2bf609239cbf060a1cc6bd119b4.json",
+                      "sha256":  "d6abf5e4a6662878da0e96c0bb1adae178d32fd6fd96251c3ccd9a1cb3fbdd3a",
+                      "bytes":  3522,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/cache/ast/v0.9.4/4ce7061360d8303994201e6e339c3476d595fa92c7a940dba72a075fa023910d.json",
+                      "sha256":  "08861bcc4decaafbd743ab23230f79e7d656eb4d8d1075aef63c58e7b39e10b2",
+                      "bytes":  2571,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/cache/ast/v0.9.4/516882d43c233a2a8ff8f4edb32e11cd9c63edc2755a3fb835f2f5e0779b4ded.json",
+                      "sha256":  "a2fb5b94275d3eb24d6773628f4826d3cb0b0d9b9a6585209a577023c3f74274",
+                      "bytes":  2779,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/cache/ast/v0.9.4/51d25a37fb1a9fc70a61e8c520510f3ce1fefc9547e0fff76c8e6601d4145f91.json",
+                      "sha256":  "448736b20af474cdbc919cf750a2418c44a66aecffeafc309cab0ffaaffcf36f",
+                      "bytes":  4333,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/cache/ast/v0.9.4/56607f0f7086dafd705c608ef54d1fba3e5e1e5fdad0f24d26f5fd184c869a86.json",
+                      "sha256":  "8f8d490352f2e3578a31729647ce5b6ac009b626032235e86929f78640a2b3a0",
+                      "bytes":  20060,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/cache/ast/v0.9.4/5ac598053acf9b47bdde0d0e37eed6a1b8df8d703cb2f167ae1fd44dfcf6363c.json",
+                      "sha256":  "08861bcc4decaafbd743ab23230f79e7d656eb4d8d1075aef63c58e7b39e10b2",
+                      "bytes":  2571,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/cache/ast/v0.9.4/6288123027904b7a7fc88369510a630627734f3a30b1a205aaccc8b33472f2ea.json",
+                      "sha256":  "097b4e67506fca5313fad87903c72858c2cb5c064cb9ebabc0b28230c06fb914",
+                      "bytes":  2178,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/cache/ast/v0.9.4/63d1d02f5a9201f17c7d3c34c9f1735dc4342714768dc51401af07474a20cba4.json",
+                      "sha256":  "158b1bf317818fdc80711470a2df7155a5a9fce747879a6ff2e52e54ca35534e",
+                      "bytes":  20048,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/cache/ast/v0.9.4/68c069939c817c852ad7919de2014bd90c9129fec97b3d61e36f0812ac3c330d.json",
+                      "sha256":  "8a0b43d5802cfcac27b5ab6a8bcd6682bc9494430ebec5b21337a7cf4c7f6ded",
+                      "bytes":  4908,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/cache/ast/v0.9.4/6c58783058f4c10c586e73cd074ef3a57817fe2ffc01b5fd85dabbaca9936f6a.json",
+                      "sha256":  "5cf6d7cc9b12843a4d2158600cf651ea521cc6b53ffb630e373f48e88000a261",
+                      "bytes":  15973,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/cache/ast/v0.9.4/6f042d753bad8fbf603a06b5b4990f2868adfecc4abbde87a1ff7760864a3c32.json",
+                      "sha256":  "f983e344ac85c1ed09c86076a6c73f2cc45344b990e612140b40a862f36545fb",
+                      "bytes":  15973,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/cache/ast/v0.9.4/71d03f81b27191681ed318b8b324baa0c6f58af65c4c6e4cc3fce1ce35609a6d.json",
+                      "sha256":  "05f19f12496401c73d1c6f08e917caa5ee723332d64f2bd7f96e41b27e2c2165",
+                      "bytes":  11174,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/cache/ast/v0.9.4/7a3c980752b71415dbbf3815dc2affb2882274b05ee7406d1747b878e0f2401c.json",
+                      "sha256":  "233dc69430c67302190709e6a7ddc0b4ba83420cb7583bbde3ca175d214e76a8",
+                      "bytes":  7655,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/cache/ast/v0.9.4/7b3c2485eb86e9ce16518cb97d8b0c402131fb03ebb97cf9184b71a2a256e596.json",
+                      "sha256":  "7e5aeef58bef7edc86961d35669c9d9cdd7062e854e6f045456a4d31c4bc5c23",
+                      "bytes":  7868,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/cache/ast/v0.9.4/7e042404844d0f1bb989c0fa3a74116d953b060ec4a39dce2be5bd530c2d041b.json",
+                      "sha256":  "1cd73afe29eeacf0153b648b1a00de5c366558609547ffc25966db8a5df7659e",
+                      "bytes":  32942,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/cache/ast/v0.9.4/8ecbac724a95ff9ed3c22f24b2d44575cc785cb2b2e70cdc9ba68f93f14e49d0.json",
+                      "sha256":  "60b779a7a55b1a67265232d74ffd8b4703e4d2306d732986140209b4f3616e41",
+                      "bytes":  5311,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/cache/ast/v0.9.4/9e9830048a16bad7e8c01f5a1454a89416947efb3e00fc2d601ac3836a311681.json",
+                      "sha256":  "8ddafebae41bfc3af6a74d3329d957c313699054c09919ae5425370d37a740f4",
+                      "bytes":  7655,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/cache/ast/v0.9.4/a90ed0846b0b79b0828aa34e0234d59ba6cd3a0294b2ff84b8d403ababe6ad35.json",
+                      "sha256":  "96eed5234e7ff3d3db69d9b6701b073ab51f5d1232f4740dee1d0d7af36561cf",
+                      "bytes":  32362,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/cache/ast/v0.9.4/aba1a68802c901e7b0cc92f347265e52536d317b193e6eaa3e6edcce9a5247ff.json",
+                      "sha256":  "99616da75c05085200b7ab523346d058e053a66f592ea7d710e7807875358356",
+                      "bytes":  5045,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/cache/ast/v0.9.4/ac84aaf8bbd19db8c426a965dee421e6241a8c458823411bc73b42d0761c78fb.json",
+                      "sha256":  "b1ba1e77242e546b015227d035ee5c0847822fae11b4047db6c13cb6c28afc2f",
+                      "bytes":  28566,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/cache/ast/v0.9.4/ae8ec642a13057516feda2d69bd1186696832b4f36fe82fc53b835f3842a5a6a.json",
+                      "sha256":  "469c1a2b0798d8f6c40016b15ba0f95ceb1089f28896dd97b4e5917992658c5e",
+                      "bytes":  3113,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/cache/ast/v0.9.4/af429a19cdda9b97fa5e8997b3637e18c3108f76913c7738f907c6baaeba4be6.json",
+                      "sha256":  "5864d3743a652a9fd5925fc8bc56727c85f84bf12a1ec752ea8e510a391174b5",
+                      "bytes":  31292,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/cache/ast/v0.9.4/b09007ea54d7047cdb1844c94fc170b5356c9e3e0d528d0e355e8b94a71c874b.json",
+                      "sha256":  "feb3227f3dc013516e567d582c7957201eb212de72caf566c7bd7e4f8add0bf0",
+                      "bytes":  15973,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/cache/ast/v0.9.4/b2f731284e5a5e7d40947abab8fefc26f333f131e11bdc80c2c6cac284c1c7be.json",
+                      "sha256":  "522cd22b18a452d3ccc2eed9da44b3c0ca6bafbda9cfc9ac2aa70d52dce7ac71",
+                      "bytes":  5531,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/cache/ast/v0.9.4/bb39f5758be6cdd6d6b220805ca64ee297668f0dd7262de42a72e71cddd1dedc.json",
+                      "sha256":  "2fd9c409451e01838e2f7a23dc19bc6c5701c7d58d11cfda4f716c21afc73877",
+                      "bytes":  7655,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/cache/ast/v0.9.4/c39522cb1401391d9e08d51e5cd32ab19fce4c7bd65ec5d6d77ba443aa1bec08.json",
+                      "sha256":  "19a65ef5531513ead6f6ee5c408a29f15d8794024df15a8870d49f43f7b9b666",
+                      "bytes":  2479,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/cache/ast/v0.9.4/d2a2835d80b013fbc26e820e6b038368b324bb73ac56130c700a46f8d735aef1.json",
+                      "sha256":  "d893426b0c642de1e263cd4d7b2755a69cbc5f6b5126d3b7c1b60450cdfedbc2",
+                      "bytes":  5710,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/cache/ast/v0.9.4/d428d6c335701c51c1eb4804d6bb8d0c2ab851837410ddeb06dc4f6861834555.json",
+                      "sha256":  "3d274d222c0f33edcbafa75f37cf26cd6f4e488b458ebd7edb06c59f6924b46a",
+                      "bytes":  14633,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/cache/ast/v0.9.4/d94024aa03faa7f59c1edd2e05edd6b6f3df1e022b1d2b5207e9e522a60fc69c.json",
+                      "sha256":  "f1830d3e25cb4f61c2cc59713ec05de793dafe8138717d73a786c4c017024621",
+                      "bytes":  16331,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/cache/ast/v0.9.4/dab4f22860991dceda12e02b664b3d20d16af0c0ef032a2e956604e609672de4.json",
+                      "sha256":  "c91afd386e89c63af361b08ad3817708a8469a39ae0b15f586957c817440540e",
+                      "bytes":  18188,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/cache/ast/v0.9.4/df3190e14f9b662844d298865186e600fae9654e2a1710bb09bc360c3a3f6ee2.json",
+                      "sha256":  "6e55051840707dbb1f00a09142713edbe16df6331bec23814181f5a49d320539",
+                      "bytes":  6597,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/cache/ast/v0.9.4/df3e0d23f0a6943b74222612c7a938110d9f56eb708d624cef9a08f498eded4b.json",
+                      "sha256":  "7803b7260bdbf55c0783fb83d2b4a356870ba87067c285ce0a8bcb44b9ae363c",
+                      "bytes":  17312,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/cache/ast/v0.9.4/e2f62a376ae86e9b6567fbae2ada6ba3ea1ebdd8ac4de31517b845c38e92d612.json",
+                      "sha256":  "542a8b4c81107db62191200f558f814618c7486413f247ec9a2af85d20833791",
+                      "bytes":  3113,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/cache/ast/v0.9.4/e3afa4de95b441a7038d92ec34c65b0e02e8bd07d03eb6ac175d09caf39c482c.json",
+                      "sha256":  "07871c50f8c7dd7c0f62bc9f82826925435d88863818ec95c096d8500d73e04a",
+                      "bytes":  15299,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/cache/ast/v0.9.4/e780ab8a7f81c37c9e3648d1179e54317b0048a5474f51145ccf8f4c8a2cd941.json",
+                      "sha256":  "c91afd386e89c63af361b08ad3817708a8469a39ae0b15f586957c817440540e",
+                      "bytes":  18188,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/cache/ast/v0.9.4/e80d0c4331faad3e1c7b4f142ffc87cf63d9919ebdad936e78f282dfd10884b2.json",
+                      "sha256":  "071f344a885852b50b0abd72c0d87db4b02e294fabaf0038170f8ddb7afb921c",
+                      "bytes":  20525,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/cache/ast/v0.9.4/e9df87721b1bb319a37b237dcf8916712d5341ed877de7b87057ee55ec11758c.json",
+                      "sha256":  "171812c74001bb0c80b65c42ccdcce0a919514ca8f07aa2d07b6964c5d288db3",
+                      "bytes":  15851,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/cache/ast/v0.9.4/ee048ef305d3770252f79b29dacb53387ce393e77e8d16085a896c4dadf033dc.json",
+                      "sha256":  "aba183b7b7b8d7b24cc64eab4dab38d509fc68cc174d921885370202baf232ad",
+                      "bytes":  5345,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/cache/ast/v0.9.4/f02f42d7f3452b0eb6e2b2f8d9cdedb3431b9b0430afee97115767fee6e65cf6.json",
+                      "sha256":  "cf7c0fbbf72b4ef78076d53083a8be84ee8ee6ec6d7453808de48753c3880fb0",
+                      "bytes":  5311,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/cache/ast/v0.9.4/f3b62fc32f1c014f21a3ae39df6d2792bf9b5a99463f3e7eb614c3f39b8c4ca1.json",
+                      "sha256":  "a82ab70bb6f7c71185c6aef32503f52cab3fb880635b52900dbf64acad1c803e",
+                      "bytes":  4717,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/cache/ast/v0.9.4/f90a9b2a21e76c55f11955bc25cf48fe2032d94196335e891f22fea1a1ce11a1.json",
+                      "sha256":  "edd30cbb40fdd2e394c2ff5437d1290414f2634e3833408f1d91546353043a95",
+                      "bytes":  5269,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/cache/stat-index.json",
+                      "sha256":  "3fd7783352684ae0641afc299cba200faf525b028c4a2b0db0661704c248bf21",
+                      "bytes":  35403,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/graph.html",
+                      "sha256":  "837e6e9afcb5817da30cef357cdbf896bdb21392bd08633a24a66a89f99c83f5",
+                      "bytes":  2917877,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/graph.json",
+                      "sha256":  "35f30a3218f2f95bb550c361d134e05cd3b538a276e56c8383806e56bb284c33",
+                      "bytes":  3110164,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/GRAPH_REPORT.md",
+                      "sha256":  "53f30e202191b068e6b8ff7eebc91836cbdce758e14fcb7acf8b5a6eed24e447",
+                      "bytes":  71927,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "graphify-out/manifest.json",
+                      "sha256":  "c62c1b4093eac8817eafbe6e4c30752617ef267b014e6cfb0e4cb89c59ff71fd",
+                      "bytes":  55187,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "logs-backend-live.err",
+                      "sha256":  "f95ffa0b10c565a57bc3732ff54855444644fd923e399624d09fdf73bd52d942",
+                      "bytes":  548,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "memory.md",
+                      "sha256":  "e3734f5b4dc0ec6321e894861067d55b4c6ed5d50b55f634479093ffd384508c",
+                      "bytes":  6501,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "migrations/0001_create_events.sql",
+                      "sha256":  "97a20db2b6bf38025f67635d125a8341e2c648187b11e1ce6ceb8b6716155c7a",
+                      "bytes":  860,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "migrations/0002_split_knowledge_model.sql",
+                      "sha256":  "f0532ce45ec383cb771712a238d7e820da00bd35841fdcb66aa10859b5f4a9ee",
+                      "bytes":  2723,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "migrations/0003_entities_and_event_links.sql",
+                      "sha256":  "df5110084815b072d8a64bb7f27b46c5f953dedd4d5e9c07e80f0cbbbda3b4e4",
+                      "bytes":  1515,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "migrations/0004_relations_and_event_relations.sql",
+                      "sha256":  "d414a12623debfc57df5d51014286f906d3856cb1c3f7745eb2945b9a0af987f",
+                      "bytes":  1348,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "migrations/0005_event_contract_versioning_and_idempotency.sql",
+                      "sha256":  "3feb74354925cba68992189a345674ef28b0b412c5083ad893e9689d3b238168",
+                      "bytes":  1553,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "migrations/0006_entity_merges.sql",
+                      "sha256":  "01dc9b5fb94032b80e6fb5d83b6b613072c6dfabe9eee8f0f38ddc1a94ddd859",
+                      "bytes":  523,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "migrations/0007_classification_model_metadata.sql",
+                      "sha256":  "a6dc660e1a6ba7b29bc406d6047090a4782635ddcf69b82a2529f694d9e4e8e5",
+                      "bytes":  84,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "migrations/0008_insight_runs.sql",
+                      "sha256":  "85b89af5e507a921f377f4ed7f42dd5d2bf5a570eaf289f89692fb06800c29a9",
+                      "bytes":  504,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "migrations/0009_digest_runs.sql",
+                      "sha256":  "662f8530a64df7a853680c1840a61dc93974f81c3ef2caa84bbb33f23d219014",
+                      "bytes":  735,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "migrations/0010_relations_and_link_columns.sql",
+                      "sha256":  "c7ed57905f140a3f1e108f8084a6cc9b75779f6af77a17bcd77b99f6b2faa985",
+                      "bytes":  933,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "migrations/0011_event_link_conflict_indexes.sql",
+                      "sha256":  "116040c3e4538fd7f6fcdd2eb906f585f18805260744bbb97467b8c0f8343220",
+                      "bytes":  248,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "migrations/0012_relation_natural_key_index.sql",
+                      "sha256":  "2ebd3d34cdb9b6b355d8640a52a4e737e6bc71ebaf087b954616dc7d1a1540f4",
+                      "bytes":  164,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "migrations/0013_entity_aliases_and_review_queue.sql",
+                      "sha256":  "dcd65f4d9161edf7752561b0efc399ba698ebe1f6bb6cfd1a781fdcfc96c0dec",
+                      "bytes":  1624,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "migrations/0014_financial_transaction_correlations.sql",
+                      "sha256":  "aa8977c4123f0812b8904919eb9892843733b2cf9ce37ab0b5a9787ce244f292",
+                      "bytes":  2287,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "migrations/0015_financial_transaction_context.sql",
+                      "sha256":  "569fe47bb7ee9a741c86f745b1e2edfa9e6a36cb1f8912b82f1007b7d9a47672",
+                      "bytes":  654,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "migrations/0016_financial_account_currency.sql",
+                      "sha256":  "795343c06afdeec43ed555bd5d5a086abcee017d7a99ec9bbcbab1a0b9a0ba92",
+                      "bytes":  308,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "migrations/0017_backfill_uyu_finance_currency.sql",
+                      "sha256":  "c15d2e57385bb6bc8581895f2b42779c4e8a0e9d880261b83ea9d638bcec706e",
+                      "bytes":  291,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "migrations/0018_semantic_knowledge_layer.sql",
+                      "sha256":  "ec5b29076ef3523d8adf2e916ec7cd09c27f5aaee2f6b588db3e2c085cc43282",
+                      "bytes":  2013,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "migrations/0019_semantic_candidate_parent.sql",
+                      "sha256":  "0e5d002984ae008db89749cc541484fa36eeaedbf3b34fd11b53b6ba1c85b17c",
+                      "bytes":  149,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "migrations/0020_semantic_governance_v2.sql",
+                      "sha256":  "f914da248ea568b6129a55fe35e90e4bd00b9d48b9f898d42843c72ece7e34c1",
+                      "bytes":  3636,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "migrations/0021_single_hierarchy_parent.sql",
+                      "sha256":  "ab41dab31a5d04fea6769c2882aaf5677c838e626ad8205cc4348fca7867635c",
+                      "bytes":  1972,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "migrations/0022_entity_semantic_identity.sql",
+                      "sha256":  "966e96db1429de87f8f2bd8322cc8917e767dff3f3d9e773981b5781843beb30",
+                      "bytes":  296,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "migrations/0023_event_interpretation.sql",
+                      "sha256":  "044dd9052696d9efb30e5cc5eb171b86467cf6ec0fe31cb95492f2d06b95d88a",
+                      "bytes":  651,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "migrations/0024_semantic_retryable_status.sql",
+                      "sha256":  "83b4ef68fbcb378bf7656d2d5d1fe3f78b5031eecdcc93fe7fe891f0e94162ae",
+                      "bytes":  291,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "migrations/0025_financial_transfer_accounts.sql",
+                      "sha256":  "8acaefa9491d345f0b0298a1ca8e7859f59f224ec0510641021ad000a4190c91",
+                      "bytes":  277,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "migrations/0026_prevent_cross_type_entity_merges.sql",
+                      "sha256":  "d09046f0f206d1e9d5fb1a601820a93877ec5173c88be3d67349ec6d832f53db",
+                      "bytes":  656,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "migrations/0027_financial_account_balances.sql",
+                      "sha256":  "b30baba5fb09819f60b2b813a15136cbdefb3e3d111d71f1b0de74b73d5df990",
+                      "bytes":  321,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "migrations/0028_knowledge_platform.sql",
+                      "sha256":  "e1dba17de72c15a5d4c38a2bb839513ec4cc0e6a7f1dbe5a8d7c1f0ded065421",
+                      "bytes":  14200,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "migrations/0029_financial_transaction_consolidation.sql",
+                      "sha256":  "d9dde607280a3223a1286367c2fda070e79c5230f98e522e8b292d48f4e532de",
+                      "bytes":  1224,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "migrations/0030_financial_account_colors.sql",
+                      "sha256":  "7fba2e1086a521094401a93aad6dbe6e2c317ef93e246e733556f85a0c44c6bb",
+                      "bytes":  384,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "migrations/0031_client_diagnostic_logs.sql",
+                      "sha256":  "137053816a31095d97616759f155481b6fc5c34b6642240026093cdc7535fa38",
+                      "bytes":  659,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "migrations/0032_financial_cross_currency_transfers.sql",
+                      "sha256":  "113c745a73281b499deb28604b3455f68a9b2c945c07ec4579b6569e18445cd4",
+                      "bytes":  383,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "migrations/0033_versioned_event_taxonomy.sql",
+                      "sha256":  "edef75fabb2577d2eae20d1b2ab0c8da20e13e5f1c3fd1fa1c48c232bcd50265",
+                      "bytes":  1177,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "migrations/0034_financial_transaction_title_override.sql",
+                      "sha256":  "123258cede8df99062d6c18b8124bba90e7c7c3d485d8a361be5f04ac131a1c2",
+                      "bytes":  83,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "migrations/0035_financial_custom_categories.sql",
+                      "sha256":  "2d30db07241b6ab67027b3c788797966ee7498afc429c6547b32c57d457329fc",
+                      "bytes":  467,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "migrations/0036_entity_semantic_profiles.sql",
+                      "sha256":  "8c96424aed9ba95541d0ff9b84bbcddecd16fb1bfd3a6971cb385d56cb8afb84",
+                      "bytes":  924,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "migrations/0037_lockdown_supabase_public_api.sql",
+                      "sha256":  "a4ccf438364ae397f5c7f56912c6b90d9ea7a32e26151a456661b6d63385f1cc",
+                      "bytes":  758,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "migrations/0038_revoke_public_rls_helper.sql",
+                      "sha256":  "e31f1bbf477aead9a44d90639ee9ce461ebb4c68e8f376837b8c14839441aff6",
+                      "bytes":  354,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "migrations/0039_financial_transaction_detail_performance.sql",
+                      "sha256":  "c4ee2ea0ac93dcbbf8dffb2b9a298fea3424f7aa7a78b34b651fba9f5f2f3018",
+                      "bytes":  380,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "migrations/20260922200339_brainia_next_intelligence.sql",
+                      "sha256":  "663a3141f835075d003b37d9803d31adf806514c417d8993078a2219e0d1343e",
+                      "bytes":  9286,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "migrations/20261003000000_pending_financial_transactions.sql",
+                      "sha256":  "4d18ebd9faf816ed7a4dd66b6f5097a33c4e31549d104df89902bcb225c5f913",
+                      "bytes":  1461,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "migrations/20261004000000_expand_classification_learning_fields.sql",
+                      "sha256":  "b7477d17ccd1dc3460ad4af2a2dafb8ad42b26fcdb3c983da7e390ecff9cd9a2",
+                      "bytes":  493,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "migrations/20261015000000_reconcile_runtime_schema.sql",
+                      "sha256":  "d8b292ad5c7889f55a4dc61f7a90a5380c2ffe90962bf412059ef7e5e3609ff9",
+                      "bytes":  12480,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "migrations/20261017100000_owner_identity.sql",
+                      "sha256":  "b9eaa15ca6c98374426040f0e80f33cbd7c0239f5c7b06382a0523768be943fa",
+                      "bytes":  14663,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "migrations/20261017110000_owner_rls.sql",
+                      "sha256":  "52ad1d3570957d7a05d5c008ba1d7d0efe093067c0e5043b0b69577b29042540",
+                      "bytes":  3114,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "migrations/20261017120000_owner_runs.sql",
+                      "sha256":  "7c9780978c4b9c7f40c6562aae43a085ad8401f27ccdfb31845d755f4054e96f",
+                      "bytes":  1001,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "migrations/20261017130000_privacy_policy_versioning.sql",
+                      "sha256":  "165b01f103abfc1482e01c8a6e1ec2eb58f9604844b402af8140b0955b862214",
+                      "bytes":  2994,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "migrations/20261017140000_job_leases_fences.sql",
+                      "sha256":  "bfc14eaf859b6adf03d64e51a4680bc4b8ba89eed0b3bc4e1452964910a5a4e4",
+                      "bytes":  3900,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "migrations/20261017160000_job_service_table_lockdown.sql",
+                      "sha256":  "a13c8ff72ab4321f8c7b3336b0f71abadd2026148af2982720c3d35e5faee59e",
+                      "bytes":  1376,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "migrations/20261017170000_deletion_tombstones.sql",
+                      "sha256":  "8148224b99d9909dea43cc2be95d2d6e2cf21484963ebd6d524eb99ae35e23c9",
+                      "bytes":  9234,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "migrations/20261017180000_deletion_replay_guards.sql",
+                      "sha256":  "a82b65dd466af7f56eb15fe719289b5c6c84f7d6e80b67ea92c6c7a450546b13",
+                      "bytes":  6920,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "migrations/20261017190000_deletion_run_read_eligibility.sql",
+                      "sha256":  "a8d71b3266b467a39c79f11fb8d8c2857703a2d1a9cc41fa22a630450af7bf9c",
+                      "bytes":  6716,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "migrations/20261017200000_finance_currency_safety.sql",
+                      "sha256":  "0bb473d1f84f4c7ef32598fc0b3250cefa7bc8486e50028b339d6eee4ed3e408",
+                      "bytes":  5094,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "migrations/20261017220000_fx_rate_governance.sql",
+                      "sha256":  "dbf0a623066489dc4247c892002e2ebe75d1c7495f9ba604da3a9629a52c86e9",
+                      "bytes":  1973,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "mobile/app.json",
+                      "sha256":  "67153be9e1e31372014a8697861b04580ce78547f9cccc8f8e37f36d63298cf6",
+                      "bytes":  268,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "mobile/App.tsx",
+                      "sha256":  "8defc0b258d2cbfad05b63be29c80fd923d1d9ff4ee7c85d5823f4398ce367a1",
+                      "bytes":  338,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "mobile/package.json",
+                      "sha256":  "a443148e6cedf899e1c3b7e2aa35ec29110cf208ba456e5506341e500be66b76",
+                      "bytes":  507,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "mobile/README.md",
+                      "sha256":  "8f151acc71fdc13614a02fcdcec0a1ac68fa936420dc87b22a8a44e0e1618fe9",
+                      "bytes":  569,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "mobile/src/components/MetricCard.tsx",
+                      "sha256":  "fc2d81ad4c2b9d777b4fdef27acacafd0f98fca634a4238b540cea8eda4d7681",
+                      "bytes":  647,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "mobile/src/lib/api.ts",
+                      "sha256":  "d1317de1a3ccc34ed9282c583d080f9f861ca98089ad27d0c931728c351454a0",
+                      "bytes":  2517,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "mobile/src/screens/HomeScreen.tsx",
+                      "sha256":  "e7da8079ee9790733fe79e3d3b4fe7c5eff921f32fe5bc68bb9ff4b3feb80115",
+                      "bytes":  6597,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "mobile/tsconfig.json",
+                      "sha256":  "6d837d6330651c31e76922390dbd636c252cb4c48fbdb02d2d812542bff7d00a",
+                      "bytes":  212,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "package.json",
+                      "sha256":  "a9e07da282701d928e19910c4c41001fcd20801594235d700c4e5d4efc71b527",
+                      "bytes":  3561,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "package-lock.json",
+                      "sha256":  "4f9658090d39bc824df3455426db407bdde3810f5b66c86d3b1d5bdadf1ed75a",
+                      "bytes":  46016,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "README.md",
+                      "sha256":  "39ecfaa2a072fa18210e947d214c8f557fcbe8131ebac2e54ed3ef924bf0978a",
+                      "bytes":  2834,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "scripts/start-brainia-with-laya.ps1",
+                      "sha256":  "61c7b86319a430e2cdc903488a7446762212c031e36950e9ebf006d542a52ad9",
+                      "bytes":  535,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "scripts/start-laya.ps1",
+                      "sha256":  "81768f34445d69f81f5aca88135226a99749a18113efd01e056e54de64efbcb3",
+                      "bytes":  799,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "serverless.ts",
+                      "sha256":  "a0e5ec9c7e83c064789fbd9aeb5208802009c8ad0c82b425fcb1cca0354837ec",
+                      "bytes":  295,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/app.ts",
+                      "sha256":  "0e25e252eb0ef3bbd216db2b7eff078a472e3cbbda5d0e284dcf07e0f1095bba",
+                      "bytes":  5097,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/auth.ts",
+                      "sha256":  "04d449a2592887a7ecb57552587bb311a171d1aed09460e34dd6a51735615e16",
+                      "bytes":  8764,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/config.ts",
+                      "sha256":  "86e77a77624216b7ea2a2969cf15a8d809bc548b9c2ee770f24e1383fddc0e9f",
+                      "bytes":  935,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/domain/capture.ts",
+                      "sha256":  "83e1cd6e47c3f5ccfd41729bcee85df63e75146698bfd03d7b23741ff4be523a",
+                      "bytes":  9417,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/domain/classification.ts",
+                      "sha256":  "e59168638a00df2ed9e02f39ece943016b05512c253ae69ec67077e67441d77e",
+                      "bytes":  7315,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/domain/entities.ts",
+                      "sha256":  "89cc0c77d98b00ec55577c376259523fb541b0faf75b9569e59a00ad6e4a40f6",
+                      "bytes":  9081,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/domain/event.ts",
+                      "sha256":  "9d4808769fa266bf6271bbed1214bc305d39f8e5b0c188429d12d5d54a54530e",
+                      "bytes":  973,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/domain/event-interpretation.ts",
+                      "sha256":  "8bfbe88a6c8fc2316d1a47af3e7d836f5938a1391957d2de494ae5a0104c404c",
+                      "bytes":  3841,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/domain/financial-categories.ts",
+                      "sha256":  "58c27c0a37c6f58031e2a12e8fa87c9e87a4846c5b255730c0296f6834daf979",
+                      "bytes":  484,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/domain/financial-transactions.ts",
+                      "sha256":  "246f30845fcd71ae987700f1990345a5221dbae5b601b49787bd9fbc62da8443",
+                      "bytes":  19774,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/domain/graph-options.ts",
+                      "sha256":  "ae83d83cd4c1d331a4a8ffe3cbec9ebf8bdd5c8ab67b22c83aa4e3ae8305411b",
+                      "bytes":  1588,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/domain/intelligence.ts",
+                      "sha256":  "2542d4b6c77001a0924589dd1ba797b3a0fd2858b4fe78ef1d57f3e759c85033",
+                      "bytes":  3147,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/domain/knowledge-fact.ts",
+                      "sha256":  "7e70e8faf730b16c244b7dbc473db5788a6bb6091242e0cdf69d95894bf97ff2",
+                      "bytes":  1461,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/domain/money.ts",
+                      "sha256":  "ab2c10c7f93796e8572f4035a6c3586e5af941bbdf232d3e5302d99fc97955e0",
+                      "bytes":  12035,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/domain/ontology.ts",
+                      "sha256":  "ebe69f0c24ab0b453702ed00ce213306716fec13a5f4d37ef5472600675ff83f",
+                      "bytes":  19199,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/domain/relations.ts",
+                      "sha256":  "f8de9485a35329af5a495cbadf89562eacef9851e61242c57f6a3a44f4b5d0cb",
+                      "bytes":  6074,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/routes/agent.ts",
+                      "sha256":  "7443f7e4710a20bccefc10fa5722777c3e5b2b0ac016de5e8e79304b1e13ea7c",
+                      "bytes":  33142,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/routes/agent-inspect.ts",
+                      "sha256":  "ed99aa0ad4ab27c22ffac83e2d610b6a1d8afaf0a52fc62218e9796906e30a4d",
+                      "bytes":  1766,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/routes/capture.ts",
+                      "sha256":  "d0a8576800f585896189dad02e215f6598b678752d59817e22503c8fce40afa2",
+                      "bytes":  8697,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/routes/client-diagnostics.ts",
+                      "sha256":  "aad5c7e0117dea4d9e9e1da0a9ebbf61fe02d118396ae30fc1977fde32369339",
+                      "bytes":  1339,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/routes/dashboard.ts",
+                      "sha256":  "6008c2251c54c7a1d1aa49ddeef266ab67f6053cb736e01ebf5976d6c35a7f83",
+                      "bytes":  893,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/routes/digests.ts",
+                      "sha256":  "ec65fbd04e56431203b25ffaa9b69042304f0ecab0e58873962713fb170fd79e",
+                      "bytes":  5025,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/routes/entity-aliases.ts",
+                      "sha256":  "e814e447ab1c7f418d88015f9486003db9433737e8127ac20110a4e87be0967e",
+                      "bytes":  5942,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/routes/entity-merge.ts",
+                      "sha256":  "40050ce8498321583c21e3dd1f99ef4479016dcb7b3a0b23ea3c3fcee892ba68",
+                      "bytes":  2093,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/routes/entity-resolve.ts",
+                      "sha256":  "e57525afa14ce90bda82ec839441d12041ab57460c97e2e7cc7474625bc3e73a",
+                      "bytes":  1535,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/routes/entity-semantic-profile.ts",
+                      "sha256":  "30ffe28e1a81ab36767f9b42134ab6ff693844d86ccc78e9ffb631606f597a0c",
+                      "bytes":  2140,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/routes/events.ts",
+                      "sha256":  "33a547aed07db1e643ef81e5d14614cb3548a63153d4568b2b27b7b43fbb6154",
+                      "bytes":  4931,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/routes/financial-transactions.ts",
+                      "sha256":  "8e9219ebcc3f8bf581d172eeca5c763acf2b1f1b3c5e59caed18379724795197",
+                      "bytes":  22491,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/routes/graph.ts",
+                      "sha256":  "360cf2b0b23878ddf0e8d6e7c4c451c490defe1032837b82d68a53ab4ceba772",
+                      "bytes":  4230,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/routes/insights.ts",
+                      "sha256":  "949c7e0b93631039e19b88b15700028e889b8e76c29369890de5ee45cd0f6e4e",
+                      "bytes":  10266,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/routes/intelligence.ts",
+                      "sha256":  "548d832e8e660e1352ec6d9ce40990aca0935883e6a3fc0c3592db0e667c09a1",
+                      "bytes":  18772,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/routes/knowledge.ts",
+                      "sha256":  "844055bfc60e91894485d6eb21457836c92004b4942ccc5933e0644b0c5cc47a",
+                      "bytes":  686,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/routes/metrics.ts",
+                      "sha256":  "9b85262ae1c92a1809a0c2b7b29e2cfca67aaaa5043690803f7b5b5640bb7729",
+                      "bytes":  1185,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/routes/operations.ts",
+                      "sha256":  "05b0ac9a99e44daeb79715c25be36da1aee0a5f9cdceb2ec026869828430f6d4",
+                      "bytes":  6877,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/routes/privacy.ts",
+                      "sha256":  "24fcb5683ad7ae206fd246a9ceae45e486a90119b7f1d50bb6bca190b3a781d3",
+                      "bytes":  4211,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/routes/search.ts",
+                      "sha256":  "dfc2dfce78522327bb9267c9a93a0ade76d2f861594fc653dc9638f5c979911f",
+                      "bytes":  2298,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/routes/semantic.ts",
+                      "sha256":  "a3179bd87cb6374963f662b6e20468795086b928c8b62264f1b51b06293132a6",
+                      "bytes":  5252,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/scripts/audit-rooted-semantics.ts",
+                      "sha256":  "b839308c8bd77431987a1377b0952d6a22e1950011bf61c1f8037a1088838a0e",
+                      "bytes":  3613,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/scripts/audit-semantic-graph.ts",
+                      "sha256":  "9d6c3d96d1352987c4d0dffeb0127d1a8990006ccc6d893c80cef34480812df1",
+                      "bytes":  8221,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/scripts/backfill-event-evidence-parents.ts",
+                      "sha256":  "c18db6f67090a2ab593d789d4cbfe880faf6ee125b98415b5b5b78ab9e554486",
+                      "bytes":  490,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/scripts/backfill-event-taxonomy.ts",
+                      "sha256":  "a5e39a2a962e23a406190106f5dac7adbf19dd1cf30330299c1af912868ec4ae",
+                      "bytes":  2096,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/scripts/backfill-financial-merchant-links.ts",
+                      "sha256":  "e7d2dceaa2715f2523ea0f47b7c3d607b0ab5ceae502db47bc8f6d365a752b6a",
+                      "bytes":  1321,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/scripts/backfill-missing-semantic-subjects.ts",
+                      "sha256":  "9211cc32799ca05f5b21d38ebbc6e624588f2653528043b296bfb02a4645d861",
+                      "bytes":  3613,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/scripts/backfill-orphan-semantics.ts",
+                      "sha256":  "76f9eb0e691cced68cfd51c25d6f26885a1f0e8c03e0c92c5dd4c552d1e68d76",
+                      "bytes":  4320,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/scripts/backfill-ownership.ts",
+                      "sha256":  "bda75ed231f001c9cee2a8b5112d82c69c1c95d21a628ea3a735022c4494972c",
+                      "bytes":  1314,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/scripts/backfill-semantics.ts",
+                      "sha256":  "242821ad8d9d4d7d988d8d813d0571b8e36f8c4474e8cd08e0091bb23fcdb9ad",
+                      "bytes":  4439,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/scripts/cleanup-test-data.ts",
+                      "sha256":  "9a216c9b08e0b515b060de395bcfc90fcec0b0d9ecb6720e6e3c67602189ea3e",
+                      "bytes":  23690,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/scripts/evaluate-jev.ts",
+                      "sha256":  "ace67b07e5cc6e675c5d81dc49df4d74a02d8793d87b6878e92cb0aed4ac5ca6",
+                      "bytes":  2339,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/scripts/evaluate-laya.ts",
+                      "sha256":  "85d508c0a73c2579f52b5cb779d18c9fa77557f4de12a2652c6fcc35b5c5663e",
+                      "bytes":  4991,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/scripts/inspect-semantic-proposals.ts",
+                      "sha256":  "8910071b6e2232fa53dc80902894dfc09f8b73be1ed96bcbf82b94c7efd9c7cb",
+                      "bytes":  1278,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/scripts/migrate.ts",
+                      "sha256":  "1274fef43529148356f1ce389b287a5154ca90fd8cb58cfe1daa0e9b6439767a",
+                      "bytes":  9916,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/scripts/normalize-hierarchy-relations.ts",
+                      "sha256":  "4bac3d60b6d2d01305ad98a0ec9727f884370782552cc8eff5a02535871f5b77",
+                      "bytes":  1709,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/scripts/normalize-provider-identities.ts",
+                      "sha256":  "6c2166c5e09e4a6f12551ed130fe96b3ac33e6a2a2bfc00f774704e5ac363380",
+                      "bytes":  1024,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/scripts/probe-deepseek-semantic.ts",
+                      "sha256":  "76f4b06fcad611c198cf8627139b26fda51c1ec6d764bc08e2d8b541c376ec7c",
+                      "bytes":  381,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/scripts/process-jobs.ts",
+                      "sha256":  "318a74c0ee0d1f86c67a456fda108cd5d580248d19062b548e13775b2b6fff8b",
+                      "bytes":  413,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/scripts/reconcile-semantic-governance.ts",
+                      "sha256":  "da1b3f45399440732a4d3af224cb54eea4f1ac6bf34424a46eebe94009969119",
+                      "bytes":  11276,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/scripts/remote-smoke.ts",
+                      "sha256":  "b564cc663321c3dd1b87070b009d2edd9d537964afd948326c5854a53212ebb3",
+                      "bytes":  3579,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/scripts/reprocess-pending-semantics.ts",
+                      "sha256":  "9146dd17e0dfe8f252417869f4e9fac65b069c42a0ead2f186498bb4135502ab",
+                      "bytes":  3320,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/scripts/semantic-harness.ts",
+                      "sha256":  "dec4a12352cd8839888599f0594cf06ea7acb1c1319d1d742257f195289e6e94",
+                      "bytes":  5004,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/scripts/validate-live-intelligence.ts",
+                      "sha256":  "2d8109f97d764411625b2aad7c2dec9bfd33a64ae2a944fb7db999a9ed6ddd96",
+                      "bytes":  2959,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/scripts/verify-backup.ts",
+                      "sha256":  "55d9a57b8e4606e2f91d45b394befc878d639a799e67c8f7acacdcab039d098d",
+                      "bytes":  320,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/server.ts",
+                      "sha256":  "817cc0f4e0719b370bee39144c2984373f4ff9b746d0e87e4d8321df03d252fc",
+                      "bytes":  1350,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/storage/agent-inspect.ts",
+                      "sha256":  "4f9a089c1cd79c6ee2b7cb09b05f5f1790b2c78e7a9e6b4a4ccac88abf14710d",
+                      "bytes":  14145,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/storage/backup-verification.ts",
+                      "sha256":  "2247c58db029a18d8e47bd024933ab783e67371a4baa7e9d3f0341ad747a9de2",
+                      "bytes":  7285,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/storage/classification-assistant.ts",
+                      "sha256":  "7ce39c440e5a163c854d2a18301dff5431d1358f90d8a44be6762c088037696a",
+                      "bytes":  13873,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/storage/classification-learning.ts",
+                      "sha256":  "81ce8c0c9308fd9c6af38b179031118a3b3261b8546b268d4427ea5e23d6ea87",
+                      "bytes":  1813,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/storage/client-diagnostic-repository.ts",
+                      "sha256":  "7f9733933a9f51c6cbcc4475c89755f6165c75eb6e7e068934c0f0f689e2ccb7",
+                      "bytes":  1555,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/storage/correction-memory.ts",
+                      "sha256":  "71148b1c969eaeffcc67c3e41cc8bf03f796a62048fc532cb5552c1a880fe51a",
+                      "bytes":  3446,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/storage/correction-projection.ts",
+                      "sha256":  "051157231aef04ddbd3fb819d45c3a3031b05a392901d25e7ec08c93e0bd7ba9",
+                      "bytes":  5254,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/storage/database-url.ts",
+                      "sha256":  "b5e37c0931dca7282adbf120a7de99a8304fa119e1cf9fa131caf09e934b5278",
+                      "bytes":  602,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/storage/data-controls.ts",
+                      "sha256":  "5ea1e56838ac82b30aa6affd3154a2e2ad0c8354745ae520fc05931d233104ec",
+                      "bytes":  58325,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/storage/deepseek.ts",
+                      "sha256":  "31ce0ff2102c86d85ae2fd1ede430ba05cdd859f289e862fe6734c016ff9391d",
+                      "bytes":  6262,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/storage/digest-repository.ts",
+                      "sha256":  "1e9626d4fac4e54874a78c0887bf2c3507b74385e1149f354d9d64f4185505c3",
+                      "bytes":  4776,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/storage/digests.ts",
+                      "sha256":  "cd8d1744b2e348817e9aa27168b4949a1b07ca61ca7fda50c1880928af37244d",
+                      "bytes":  13205,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/storage/embeddings.ts",
+                      "sha256":  "8990ac58394bcad2c04bde2781fadfb2e2d6eb5b927d041c08a06fbe18dbd00e",
+                      "bytes":  15116,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/storage/entity-alias-repository.ts",
+                      "sha256":  "b7279024a20e5411517676c4c333851e656d4ae27ac401f97b5dbe011c713538",
+                      "bytes":  16756,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/storage/entity-repository.ts",
+                      "sha256":  "8058090f53d3004a9c33fe26386de7e1fced0023288d95ab2d9c6207337c4c38",
+                      "bytes":  20791,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/storage/entity-semantic-profile.ts",
+                      "sha256":  "96c59043087f2bdc21f514e4e401e3871518873e5a3e6f1d6ce0ce2d7865bcba",
+                      "bytes":  5714,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/storage/event-repository.ts",
+                      "sha256":  "43fb55f40a02987f499b2480a2ab1d84f7e0e3d9641bf3130c30edebf97e6c26",
+                      "bytes":  20968,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/storage/event-store.ts",
+                      "sha256":  "552b8e213644f611da0f4b955401c1ad37d17c3dbb9b7c41c77701a7707c936a",
+                      "bytes":  35655,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/storage/financial-transaction-repository.ts",
+                      "sha256":  "40a724c9273a71dddf9bfb48de55abffed58a5564db7afeb06a6014b2d3872d4",
+                      "bytes":  71012,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/storage/generated-content.ts",
+                      "sha256":  "e465177d221e92c65eb40b28a587f41e1b70369ca217d63231b3d07207b1eaa1",
+                      "bytes":  6541,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/storage/graph-cache.ts",
+                      "sha256":  "9f4d0b76da02828cec8a56abeee7cdf5b40a474192c7f002e62ec86f51bdf5ed",
+                      "bytes":  1583,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/storage/graph-repository.ts",
+                      "sha256":  "57feb7ca19316b9be62bc178de0d6422cd260ad9d768f48509b2edde5d3bc6a3",
+                      "bytes":  27678,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/storage/hybrid-retrieval.ts",
+                      "sha256":  "d0b70aa8510fc7856be9af9fd043329c89f41d1c38a337326f5aa2892e182808",
+                      "bytes":  19330,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/storage/insight-repository.ts",
+                      "sha256":  "68431f0210d55260c0059462b55e969226b4c622d018e7470bf27adecb92d865",
+                      "bytes":  6648,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/storage/insights.ts",
+                      "sha256":  "10a5b35cd1eaa67970afae8f17ec757814ac6a24a7d864f73dd4233474e557d3",
+                      "bytes":  5725,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/storage/intelligence.ts",
+                      "sha256":  "c7da0bb392df6f886a971648cf99bf6240bf40d43e1e2b5e3330b2de4830c8f6",
+                      "bytes":  18328,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/storage/intelligence-evidence.ts",
+                      "sha256":  "18e75a1cf80ba6e331ca75e05803cd7daba0ac72692edeff17920dd1e1b2a440",
+                      "bytes":  4841,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/storage/intelligence-schema.ts",
+                      "sha256":  "4415f5fc0b0a4bb0285c79f4db5b89f67a4a0b6aa8afea240913b1ad8fdb0ff2",
+                      "bytes":  2552,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/storage/jev.ts",
+                      "sha256":  "0068d7a46c04b95fc28cf77b72e4f1825271493c1575861bedef240682817f8a",
+                      "bytes":  8781,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/storage/job-repository.ts",
+                      "sha256":  "edb399494b54b8eb96e749e8de3feb620801164f905ebe25582e71fe5620b4f7",
+                      "bytes":  30289,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/storage/job-worker.ts",
+                      "sha256":  "55526caed89bfaf0b2f1aa25f7953488cc40b58842df7e584067e2776a7e2d01",
+                      "bytes":  10641,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/storage/knowledge-fact-repository.ts",
+                      "sha256":  "221df4468d3c1f04ce1cdd8a8785f820f99e12fdd94d4453c347bd31e2d129a2",
+                      "bytes":  3518,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/storage/model-audit.ts",
+                      "sha256":  "84139cb37bd819d642bbbf72c4de63ffb016130ac8eb38e2817b06821acd6efb",
+                      "bytes":  2722,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/storage/ownership.ts",
+                      "sha256":  "17d3b1ab37b98cd0eec073c924d3db7f79b90fd2a1b4609c6bfad53ed5492c4f",
+                      "bytes":  23057,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/storage/pending-financial-schema.ts",
+                      "sha256":  "0276f76d81fb2404cbcd96ba39d077f8dc4dbc6e602dc2f32696991564618251",
+                      "bytes":  926,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/storage/postgres.ts",
+                      "sha256":  "1b1f77d7c42447cd2be69bc6561fcf301370052b21961e3ee68b24f5b7e470f3",
+                      "bytes":  3640,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/storage/privacy.ts",
+                      "sha256":  "c26fdef62d758a8568fec455e3c1d3ce0c16b0465d090ceb87963c572e2bef28",
+                      "bytes":  21531,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/storage/proactive-insights.ts",
+                      "sha256":  "b8988b4acc9c07c1b14350b94ac210e7333d013a3cd5acdfcd74d4ddbc3e4bea",
+                      "bytes":  33282,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/storage/quality-metrics.ts",
+                      "sha256":  "3b84c2f40efdc92604f013875d7c052685361e21988c2a827f0490d17d642e14",
+                      "bytes":  6699,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/storage/relation-repository.ts",
+                      "sha256":  "a1f23d63bb6b95bf9ad905f571811e694286c6123a34323b2cceafafad298eab",
+                      "bytes":  4115,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/storage/search-repository.ts",
+                      "sha256":  "4037599b18226ab8e18bc217d7a3c5c02aba22f24382ac0accb6ae448fe35362",
+                      "bytes":  17786,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/storage/semantic-enrichment.ts",
+                      "sha256":  "4e8a5f56ff47398f92f447ae8ba9f0b8fd6d84bf207b43f1aa67eb05bf7dbb49",
+                      "bytes":  40736,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/storage/semantic-reconciler.ts",
+                      "sha256":  "f4cb1d17f6dc31dd7e99681740f1bd1e596d144b24bf9b1057f1c85a04cc9c37",
+                      "bytes":  12759,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/storage/semantic-repository.ts",
+                      "sha256":  "7a2eaea334a938450bb79709cb1cc5da17f8ed90bccf2c27fbd34d380e5538f6",
+                      "bytes":  26681,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "src/storage/semantic-resolver.ts",
+                      "sha256":  "3529f8dffacfc40627d1008df9ef41b0c394b1898c676657fde334e5cc6301b4",
+                      "bytes":  29142,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "tests/api-contracts.test.ts",
+                      "sha256":  "f89c39a37f22a66a8f066ec9b5a92450da4b3f1c7b80e6365a19a633160ef7c0",
+                      "bytes":  11858,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "tests/capture.test.ts",
+                      "sha256":  "ad146f743d3297bb5fa65c9dfa279e0322db1a55f8697350cc06d13db092ce23",
+                      "bytes":  7141,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "tests/domain.test.ts",
+                      "sha256":  "acea6865a81aa27452c32980310f3d9e281905fce8c67a8270e9e63cda3e8dbc",
+                      "bytes":  22541,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "tests/e2e.test.ts",
+                      "sha256":  "eab97d18f8d53dac42c852a6cd2019ea6f529f10eb047d22975f8079e7aa22f4",
+                      "bytes":  16293,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "tests/financial-consolidation.test.ts",
+                      "sha256":  "d985d4aab602e2c997ef66c8b27db00c3edbd0c599b69f19b9092986e13fa7e6",
+                      "bytes":  8379,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "tests/fixtures/semantic-events.jsonl",
+                      "sha256":  "e84df22e4af534fa810d44a6372f657c85689f05dd0d478bb50e4dc996c16af8",
+                      "bytes":  3381,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "tests/fixtures/v2/E01.jsonl",
+                      "sha256":  "7fb422534db2bfcc00f8f298258d407cc59cb2ad3d9178029634d513e91805a9",
+                      "bytes":  444155,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "tests/fixtures/v2/E02.jsonl",
+                      "sha256":  "97f30a7c7c31cd4da5c0947612bf11b808a7d908119dbf0f6eb4ab391e6a0abc",
+                      "bytes":  202973,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "tests/fixtures/v2/E03.jsonl",
+                      "sha256":  "334190b2e7021c6071061cf8fd9c981eeffcb2e2f44fdd85062051bf977ce11f",
+                      "bytes":  182224,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "tests/fixtures/v2/E04.jsonl",
+                      "sha256":  "e731758a8d3bf35fe2a2c1b994bd9903764552ec55f34128f99513f4a96d58e2",
+                      "bytes":  92503,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "tests/fixtures/v2/E05.jsonl",
+                      "sha256":  "a80566d53857a1629358701aa545acd7ee6636706b3fb43587fce3a6fdfbad7e",
+                      "bytes":  113844,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "tests/fixtures/v2/E06.jsonl",
+                      "sha256":  "d983eedbbd1a04c4a4a99e0d08be20f28a45fc6a2f958dd4dd86c08d08eade95",
+                      "bytes":  144184,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "tests/fixtures/v2/E07.jsonl",
+                      "sha256":  "59bed2ced7e1072da8850928bd7d572c7bc2b26716f314039c4e4695831c1a9f",
+                      "bytes":  1553679,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "tests/fixtures/v2/E08.jsonl",
+                      "sha256":  "c5985483bdd20e2bcba179edee6a0f42a4e458796ef8d572102a061a52fe96f2",
+                      "bytes":  171006,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "tests/fixtures/v2/E09.jsonl",
+                      "sha256":  "061291a1da464ec5b301dda24c74c76c7e7fb2af2486a682683241932d7b8eb4",
+                      "bytes":  90989,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "tests/fixtures/v2/E10.jsonl",
+                      "sha256":  "ea790a90d8f77605a8822c9cc6db88aefc0cf3d9dc905e0c1c9346637c3434c6",
+                      "bytes":  7406313,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "tests/fixtures/v2/E11.jsonl",
+                      "sha256":  "2fb7099ab985e65b7871416e2dfbb1d7231581166263361e190c9c3cff652eb3",
+                      "bytes":  71122,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "tests/fixtures/v2/E12.jsonl",
+                      "sha256":  "c89d4aaf4fad780b259af6623741debb61d334da7e73c6e5f543fd1bc4b390ea",
+                      "bytes":  93449,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "tests/fixtures/v2/index.json",
+                      "sha256":  "9224cee8483242c8b949bf5d7d7592e4d25ebe892f76eda8324b3877e26581fd",
+                      "bytes":  7512,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "tests/fixtures/v2/index.sha256",
+                      "sha256":  "a4fa93a2026e123ba2239795b3001acc0735de1b395974b2f65358043ccd94b3",
+                      "bytes":  65,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "tests/fixtures/v2/sanitizer-audit.json",
+                      "sha256":  "c1b7244d633475c36aa566439e678dbb7623c23900ceb72fc2b7e2f851ab185a",
+                      "bytes":  167,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "tests/generated-content.test.ts",
+                      "sha256":  "8c6972757ead76390cb0cd572952e05f297f8a4e063d71281fe64cf06f304d36",
+                      "bytes":  2249,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "tests/graph-explore-options.test.ts",
+                      "sha256":  "3996593a67fe4f057e75c521321fe1a438a877813d747ec38e1ca9581d0da389",
+                      "bytes":  1291,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "tests/inspect.test.ts",
+                      "sha256":  "df60d53a1e858aaebd83e0cab43abf992ed129226d13f606a3505e64f788173d",
+                      "bytes":  1841,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "tests/intelligence.test.ts",
+                      "sha256":  "6f15d4e8b5b015b646541bbb06739c24b85007b660b3ec8065ccda48d6229bcf",
+                      "bytes":  13924,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "tests/interpretation-harness.test.ts",
+                      "sha256":  "608f93d6a7ffc8e2163b6294c3419fff202ef09b8008b6a6bd6916a608b6203a",
+                      "bytes":  4083,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "tests/knowledge-platform.test.ts",
+                      "sha256":  "ac517223ed344008b5d13509c2523bd790636e197c289f08092839115369c7a5",
+                      "bytes":  7459,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "tests/p0-foundation.test.ts",
+                      "sha256":  "c33a663497768380899c877e64ab2379cb19b71051e5ca6d1c5e5685e362bebb",
+                      "bytes":  2718,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "tests/p1-knowledge.test.ts",
+                      "sha256":  "9832ff0056a3443cb934c79fb1ce715f794fed235027e86e758da380c4bb6037",
+                      "bytes":  12206,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "tests/pending-financial-transactions.test.ts",
+                      "sha256":  "32e8549358c3cb872273f6a388d6f3548bb3639db3f2123eb2d9195d45a961ec",
+                      "bytes":  5016,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "tests/pglite-setup.mjs",
+                      "sha256":  "a9fe077837cbd88cec6c3e0eec519c88bf4d468757622b3a204559325533c021",
+                      "bytes":  1276,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "tests/run-isolated.mjs",
+                      "sha256":  "4cded9fde2c92cacea376addc1676b1e6ee46dc133013aee8f14ddcce9adbc94",
+                      "bytes":  399,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "tests/semantic-governance.test.ts",
+                      "sha256":  "29094e5ec4125d3329b72ce18b4e2e30a96ddd42b9f3e1d962738dc8e14f1bd0",
+                      "bytes":  9408,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "tests/v2-authorization.test.ts",
+                      "sha256":  "d64e6415cc31667df2789f2340a8e4943a1c798cd4f143506b88ff6e1d44b54d",
+                      "bytes":  26210,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "tests/v2-deletion.test.ts",
+                      "sha256":  "4dc40d6825b416134f963d9941f7ac5fadea0688644a5245171256a4f6406e6a",
+                      "bytes":  62880,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "tests/v2-finance-safety.test.ts",
+                      "sha256":  "096ef8045a67d16f5cd9ba2d7e834064971508366c0deeb39622f56b73fff896",
+                      "bytes":  32880,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "tests/v2-harness/artifacts/after-build.exit.txt",
+                      "sha256":  "9585fbece5c402088f2d6a2def7e60d1c7ffecc24b16d32d5823a064b008935b",
+                      "bytes":  6,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "tests/v2-harness/artifacts/after-eval-v2.exit.txt",
+                      "sha256":  "07846b783c23904a75834c1932bc2fad41e388e18bc32ffd73ed87bfa3844d87",
+                      "bytes":  6,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "tests/v2-harness/artifacts/after-isolated.exit.txt",
+                      "sha256":  "9585fbece5c402088f2d6a2def7e60d1c7ffecc24b16d32d5823a064b008935b",
+                      "bytes":  6,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "tests/v2-harness/artifacts/after-lint.exit.txt",
+                      "sha256":  "9585fbece5c402088f2d6a2def7e60d1c7ffecc24b16d32d5823a064b008935b",
+                      "bytes":  6,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "tests/v2-harness/artifacts/after-selftest.exit.txt",
+                      "sha256":  "9585fbece5c402088f2d6a2def7e60d1c7ffecc24b16d32d5823a064b008935b",
+                      "bytes":  6,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "tests/v2-harness/artifacts/after-test-v2.exit.txt",
+                      "sha256":  "07846b783c23904a75834c1932bc2fad41e388e18bc32ffd73ed87bfa3844d87",
+                      "bytes":  6,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "tests/v2-harness/artifacts/B04-r1.json",
+                      "sha256":  "bb94fbb00329574c05d436231d0bf13c66c3bd90e2d02143514e039c28373cd9",
+                      "bytes":  160266,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "tests/v2-harness/artifacts/B04-r2.json",
+                      "sha256":  "de6e04e9062f87ec4f73d55234a42ebc04071600d18c534d9fe1462a39fd13a5",
+                      "bytes":  160264,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "tests/v2-harness/artifacts/B04-verification.json",
+                      "sha256":  "6608658464ea8516f77fa118ca881a230a9eea19ce2c1f8abed27c94fec7c818",
+                      "bytes":  160266,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "tests/v2-harness/artifacts/B05-r1.json",
+                      "sha256":  "215034ea3586a23b8721e57083e8c24317dec8640410e6dececc0c89ab78ca7e",
+                      "bytes":  83062,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "tests/v2-harness/artifacts/B06-r1.json",
+                      "sha256":  "1bc5d51f45a21bf418343f3492ce424687ae23cbda298332d8f0df3af74b24ab",
+                      "bytes":  83064,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "tests/v2-harness/artifacts/baseline-evaluation.json",
+                      "sha256":  "969191bbefbe31ed7ff8e9b050a06fbe394544597c65c88ee7cd27ed47c755bd",
+                      "bytes":  4230591,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "tests/v2-harness/artifacts/before-build.exit.txt",
+                      "sha256":  "9585fbece5c402088f2d6a2def7e60d1c7ffecc24b16d32d5823a064b008935b",
+                      "bytes":  6,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "tests/v2-harness/artifacts/before-checkout.json",
+                      "sha256":  "cc7fc0986cafea691ac42cb1d3a47bd26fe2cc8b6afd5e956d6c3efa339890d3",
+                      "bytes":  59903,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "tests/v2-harness/artifacts/before-isolated.exit.txt",
+                      "sha256":  "9585fbece5c402088f2d6a2def7e60d1c7ffecc24b16d32d5823a064b008935b",
+                      "bytes":  6,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "tests/v2-harness/artifacts/before-lint.exit.txt",
+                      "sha256":  "9585fbece5c402088f2d6a2def7e60d1c7ffecc24b16d32d5823a064b008935b",
+                      "bytes":  6,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "tests/v2-harness/artifacts/before-test-v2.exit.txt",
+                      "sha256":  "07846b783c23904a75834c1932bc2fad41e388e18bc32ffd73ed87bfa3844d87",
+                      "bytes":  6,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "tests/v2-harness/artifacts/evaluation.json",
+                      "sha256":  "97b8f878b51114b7f3f026f6bb1d088e94b24b8c3c9d8125fa6fa53dc177d701",
+                      "bytes":  4264861,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "tests/v2-harness/artifacts/latest.json",
+                      "sha256":  "ce6673777fefcabd5f1ef884fcb742f5fb338089cc1bc8b2504eae859374f717",
+                      "bytes":  557624,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "tests/v2-harness/artifacts/negative-production-target.exit.txt",
+                      "sha256":  "07846b783c23904a75834c1932bc2fad41e388e18bc32ffd73ed87bfa3844d87",
+                      "bytes":  6,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "tests/v2-harness/artifacts/scope-audit.json",
+                      "sha256":  "e5b2d986fccf81986b0c3d9910815749a7047d72cc0c29da050b70de3961f109",
+                      "bytes":  591,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "tests/v2-harness/artifacts/selftest-E01.json",
+                      "sha256":  "5f195a7af1a01e1317cd4f355d03948ec24c7a7f9eb4525376a65babe609f21a",
+                      "bytes":  712279,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "tests/v2-harness/artifacts/selftest-E07.json",
+                      "sha256":  "b84d4ec5cb7c0609e6dfdc2c4576a6e2d72fb4da61d7cef92d5fbb1438ee7586",
+                      "bytes":  532013,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "tests/v2-harness/artifacts/supplementary.json",
+                      "sha256":  "17209a2688af610c8b30e52a29b81ef4c2d1e9d19b761f0d11eee0f217b5c080",
+                      "bytes":  2803952,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "tests/v2-harness/baseline.mjs",
+                      "sha256":  "488e27852be985de97d6eb1c82804cef24c896bbe8fe4a3ac24d191f86e8b1f6",
+                      "bytes":  1952,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "tests/v2-harness/corpus.mjs",
+                      "sha256":  "8e4d076ce2c9a2562fd92acf5998bf02c2e2a934626f3662397b834494a9bb66",
+                      "bytes":  4943,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "tests/v2-harness/current-adapter.mjs",
+                      "sha256":  "7dd95e4ce1139c4cd8094aaedaf269ff07307a799ddb9beca3a3703da03badf1",
+                      "bytes":  4173,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "tests/v2-harness/generate.mjs",
+                      "sha256":  "d8ab32ceb944679581c14a497cb8cb63a5ff3414aed378b7cb7b5f5a64c135bc",
+                      "bytes":  12785,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "tests/v2-harness/harness.test.mjs",
+                      "sha256":  "cccc96f969cf65eec91cf2edf9344537849e553e385d8f110f40ab128e6309c4",
+                      "bytes":  6485,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "tests/v2-harness/metrics.mjs",
+                      "sha256":  "63521a452143b1a04cbebb2833fcd94ff5eabc632a90d3d49e8d00c38b03576b",
+                      "bytes":  3833,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "tests/v2-harness/README.md",
+                      "sha256":  "95368af93506d06b10603817887e9729f3172d753df93969710407234c8051c0",
+                      "bytes":  9158,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "tests/v2-harness/run.mjs",
+                      "sha256":  "7818dee72f15855f5c9651ea76dfa95b500aae03bc8566de11877ec885eb6afd",
+                      "bytes":  9820,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "tests/v2-harness/safety.mjs",
+                      "sha256":  "91ae4884162d286ae73290dfd37f823f8520856a527cce4f4b77fc75a421fb27",
+                      "bytes":  3769,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "tests/v2-jobs.test.ts",
+                      "sha256":  "1653719a3e7a0265998dc8783ac6e8ce9d3a8dd004c15bf9f6a3f4ee8ba84c06",
+                      "bytes":  26876,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "tests/v2-ownership.test.ts",
+                      "sha256":  "99a0e0c4855157ab569494c5dd3879bff4c61a9867d2cfce026914d746905de6",
+                      "bytes":  10399,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "tests/v2-privacy-boundary.test.ts",
+                      "sha256":  "c11a3a2b5b8045c345dc89a5cc398c504ca95c486a1ed10b01e52f595a38bfad",
+                      "bytes":  37810,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "tests/v2-projections.test.ts",
+                      "sha256":  "b56035c8f32a1471c55394366929f2ed5039ba0fcf5e08bf597a8343679e70d7",
+                      "bytes":  14832,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "tsconfig.json",
+                      "sha256":  "5ab18a2012015cebebb78d24796c0e58876aca9a8c76141690f220e250114e04",
+                      "bytes":  337,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "vercel.json",
+                      "sha256":  "522483170d116df9e0eeab664712e26cf02a3b14825496b71c636bd4265dd227",
+                      "bytes":  483,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "web/app.js",
+                      "sha256":  "3ede28e8bbeecc30a6f2a10f29ed780c3d377fc1459d2bf307137d2a7fb5db3c",
+                      "bytes":  11067,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "web/index.html",
+                      "sha256":  "48fee2d81ef7a525c1274747d43ea4561d3cd2d35e49833573c00e183ea88532",
+                      "bytes":  3722,
+                      "tracked":  true
+                  },
+                  {
+                      "path":  "web/styles.css",
+                      "sha256":  "bee3b47cff9a9566e118b563e2a9839b19a6848a00c638bed091b4fdd5569a34",
+                      "bytes":  5682,
+                      "tracked":  true
+                  }
+              ]
+}

@@ -1,7 +1,7 @@
 ﻿import type { FastifyPluginAsync } from "fastify";
 import { z } from "zod";
 import { ownerScope } from "../auth.js";
-import { pool } from "../storage/postgres.js";
+import { pool, withOwnerRead } from "../storage/postgres.js";
 import { FINANCIAL_CATEGORIES } from "../domain/financial-categories.js";
 import {
   createFinancialAccount,
@@ -184,7 +184,10 @@ export const registerFinancialTransactionRoutes: FastifyPluginAsync = async (app
     return reply.status(201).send({ category: result.rows[0] });
   });
 
-  app.get("/financial/accounts", async (request) => ({ accounts: await listFinancialAccounts(ownerScope(request)) }));
+  app.get("/financial/accounts", async (request) => {
+    const ownerId = ownerScope(request);
+    return { accounts: await withOwnerRead(ownerId, (db) => listFinancialAccounts(ownerId, db)) };
+  });
 
   app.post("/financial/accounts", async (request, reply) => {
     const parsed = accountSchema.safeParse(request.body);
@@ -230,9 +233,12 @@ export const registerFinancialTransactionRoutes: FastifyPluginAsync = async (app
     }
   });
 
-  app.get("/financial/pending-transactions", async (request) => ({
-    items: await listPendingFinancialTransactions(ownerScope(request)),
-  }));
+  app.get("/financial/pending-transactions", async (request) => {
+    const ownerId = ownerScope(request);
+    return {
+      items: await withOwnerRead(ownerId, (db) => listPendingFinancialTransactions(ownerId, db)),
+    };
+  });
 
   app.post("/financial/pending-transactions", async (request, reply) => {
     const parsed = pendingTransactionSchema.safeParse(request.body);
@@ -327,11 +333,12 @@ export const registerFinancialTransactionRoutes: FastifyPluginAsync = async (app
       });
     }
 
-    const items = await listFinancialTransactions(parsed.data.limit, {
-      ownerId: ownerScope(request),
+    const ownerId = ownerScope(request);
+    const items = await withOwnerRead(ownerId, (db) => listFinancialTransactions(parsed.data.limit, {
+      ownerId,
       from: parsed.data.from,
       to: parsed.data.to,
-    });
+    }, db));
     return {
       count: items.length,
       items,
@@ -361,7 +368,8 @@ export const registerFinancialTransactionRoutes: FastifyPluginAsync = async (app
       });
     }
 
-    const transaction = await loadFinancialTransactionById(pool, id, ownerScope(request));
+    const ownerId = ownerScope(request);
+    const transaction = await withOwnerRead(ownerId, (db) => loadFinancialTransactionById(db, id, ownerId));
     if (!transaction) {
       return reply.status(404).send({
         error: "financial_transaction_not_found",

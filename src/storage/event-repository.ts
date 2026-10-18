@@ -485,8 +485,8 @@ export async function loadStoredEventByLookup(
   return loadStoredEventById(db, rawEventId);
 }
 
-export async function listStoredEvents(clientId?: string) {
-  const result = await pool.query<StoredEventRecord>(
+export async function listStoredEvents(clientId?: string, db: Queryable = pool) {
+  const result = await db.query<StoredEventRecord>(
     `
       select
         r.id,

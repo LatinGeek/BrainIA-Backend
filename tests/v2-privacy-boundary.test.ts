@@ -769,6 +769,59 @@ test("B07 inspect omits unlineaged graph neighbours from the external payload", 
   assert.ok(result.graph?.nodes.some((node) => node.id === neighbour.id));
 });
 
+test("B07 inspect omits a denied-source neighbour without poisoning allowed dispatch", async () => {
+  const owner = `inspect-denied-neighbour-owner-${randomUUID()}`;
+  const allowedSource = `capture.allowed-neighbour.${randomUUID()}`;
+  const deniedSource = `mail.denied-neighbour.${randomUUID()}`;
+  const rootMarker = `INSPECT_DENIED_ROOT_SECRET_${randomUUID()}`;
+  const allowedMarker = `INSPECT_ALLOWED_NEIGHBOUR_${randomUUID()}`;
+  const deniedMarker = `INSPECT_DENIED_NEIGHBOUR_${randomUUID()}`;
+
+  const root = await seedEntity(owner, rootMarker);
+  const allowedNeighbour = await seedEntity(owner, allowedMarker);
+  const deniedNeighbour = await seedEntity(owner, deniedMarker);
+
+  const rootEvent = await seedEvent(owner, allowedSource, "Root evidence heading");
+  await linkEventEntity(rootEvent, root.id, owner);
+  const allowedEvent = await seedEvent(owner, allowedSource, "Allowed neighbour heading");
+  await linkEventEntity(allowedEvent, allowedNeighbour.id, owner);
+  const deniedEvent = await seedEvent(owner, deniedSource, "Denied neighbour heading");
+  await linkEventEntity(deniedEvent, deniedNeighbour.id, owner);
+  await setPolicy(owner, allowedSource, true);
+  await setPolicy(owner, deniedSource, false);
+
+  for (const target of [allowedNeighbour.id, deniedNeighbour.id]) {
+    await pool.query(`
+      insert into relations (id, source_entity_id, target_entity_id, relation_type, label, description, confidence, owner_id)
+      values ($1,$2,$3,'related_to','Related to','Related entity',1,$4)
+    `, [randomUUID(), root.id, target, owner]);
+  }
+
+  const previousKey = process.env.DEEPSEEK_API_KEY;
+  process.env.DEEPSEEK_API_KEY = "test-key";
+  const { inspectKnowledge } = await import("../src/storage/agent-inspect.ts");
+  const spy = spyFetch();
+  let result: Awaited<ReturnType<typeof inspectKnowledge>> | undefined;
+  try {
+    result = await inspectKnowledge({
+      id: root.id, clientId: owner, depth: 2, maxNodes: 100, maxRelations: 100,
+    });
+  } finally {
+    spy.restore();
+    if (previousKey === undefined) delete process.env.DEEPSEEK_API_KEY;
+    else process.env.DEEPSEEK_API_KEY = previousKey;
+  }
+  assert.ok(result);
+  assert.equal(result.summary, "safe summary");
+  assert.equal(spy.calls.length, 1, `expected exactly one dispatch, got ${spy.calls.length}`);
+  assert.ok(spy.calls[0]!.body.includes(rootMarker));
+  assert.ok(spy.calls[0]!.body.includes(allowedMarker));
+  assert.ok(!spy.calls[0]!.body.includes(deniedMarker), "denied-source neighbour description was dispatched");
+  assert.ok(!spy.calls[0]!.body.includes(deniedNeighbour.id), "denied-source neighbour id was dispatched");
+  // The local inspection payload still shows the full graph for the owner.
+  assert.ok(result.graph?.nodes.some((node) => node.id === deniedNeighbour.id));
+});
+
 test("B07 evaluate-laya refuses ungated direct provider dispatch", () => {
   const env = { ...process.env };
   delete env.LAYA_EVALUATION_OWNER;

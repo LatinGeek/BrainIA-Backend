@@ -3,7 +3,12 @@ import { getEntityGraph } from "./graph-repository.js";
 import { searchKnowledge } from "./search-repository.js";
 import { pool } from "./postgres.js";
 import { generateNaturalLanguageSummary } from "./deepseek.js";
-import { stillAuthorized, type PrivacyAuthorization } from "./privacy.js";
+import {
+  loadOwnerSourcePolicies,
+  sourcePolicyAllowsEgress,
+  stillAuthorized,
+  type PrivacyAuthorization,
+} from "./privacy.js";
 
 type InspectLineageEvent = { id: string; source: string | null; ownerId: string | null };
 
@@ -64,12 +69,24 @@ export async function loadInspectEntityLineage(input: {
   const eventsById = new Map<string, InspectLineageEvent>();
   const eligibility = new Map<string, boolean>();
   const entityEventIds = new Map<string, Set<string>>();
+  // Source policy is applied per linked event, so a neighbour whose evidence
+  // comes from a denied source is excluded instead of poisoning the whole
+  // request. Missing policy rows are denials, mirroring authorizeModelDispatch.
+  const policies = await loadOwnerSourcePolicies(pool, {
+    ownerId: input.ownerId,
+    sources: result.rows
+      .map((row) => row.source)
+      .filter((source): source is string => Boolean(source)),
+  });
   for (const row of result.rows) {
     eventsById.set(row.id, { id: row.id, source: row.source, ownerId: row.ownerId });
     const eligible = Boolean(row.ownerId)
       && row.ownerId === input.ownerId
       && row.privacyStatus === "standard"
-      && row.processingAllowed;
+      && row.processingAllowed
+      && sourcePolicyAllowsEgress(
+        row.source ? policies.get(row.source.toLowerCase()) : undefined,
+      );
     // Conservative: one ineligible linked event blocks that entity entirely.
     eligibility.set(row.entityId, (eligibility.get(row.entityId) ?? true) && eligible);
     const linked = entityEventIds.get(row.entityId) ?? new Set<string>();

@@ -6,6 +6,7 @@ import {
   deletePersonalData,
   exportPersonalData,
   recordDeletionTombstone,
+  revalidateDerivedRun,
   tombstoneDeletion,
 } from "../src/storage/data-controls.ts";
 import { applyDeletionTombstonesAfterRestore } from "../src/storage/backup-verification.ts";
@@ -1073,6 +1074,150 @@ test("B11 r4/R3 digest related insights exclude tombstoned legacy runs from resp
   assert.equal(await count(`select count(*)::int as count from digest_runs where owner_id = $1`, [ownerId]), 1);
   assert.equal(await count(`select count(*)::int as count from raw_events where id = $1`, [eventId]), 1);
   assert.equal(await count(`select count(*)::int as count from raw_events where id = $1`, [liveEventId]), 1);
+});
+
+test("B11 r5 revalidation rejects foreign, denied-source and lineage-less runs", async () => {
+  const ownerId = `deletion-revalidate-deny-${randomUUID()}`;
+  const otherOwner = `deletion-revalidate-other-${randomUUID()}`;
+  const allowedSource = `mail.revalidate.allowed.${randomUUID()}`;
+  const deniedSource = `mail.revalidate.denied.${randomUUID()}`;
+  const marker = `REVALIDATE_DENY_${randomUUID()}`;
+  await seedPolicy(ownerId, allowedSource);
+  await upsertSourceProcessingPolicy(pool, {
+    ownerId, clientId: ownerId, source: deniedSource, enabled: true,
+    sendToLlm: false, redactEmails: true, redactFinancialIdentifiers: true, retentionDays: null,
+  });
+
+  const allowedEvent = await seedEvent(ownerId, allowedSource, `${marker}_ALLOWED`);
+  const deniedEvent = await seedEvent(ownerId, deniedSource, `${marker}_DENIED`);
+  const sweepEvent = await seedEvent(ownerId, allowedSource, `${marker}_SWEEP`);
+
+  const foreignRun = await insertInsightRun(pool, {
+    ownerId, toolName: "revalidate_foreign",
+    request: { eventIds: [allowedEvent] },
+    response: { summary: `${marker} foreign summary` },
+    summary: `${marker} foreign summary`,
+    evidence: [{ eventIds: [allowedEvent], source: allowedSource }],
+  });
+  const deniedRun = await insertInsightRun(pool, {
+    ownerId, toolName: "revalidate_denied",
+    request: { eventIds: [deniedEvent] },
+    response: { summary: `${marker} denied summary` },
+    summary: `${marker} denied summary`,
+    evidence: [{ eventIds: [deniedEvent], source: deniedSource }],
+  });
+  // Legacy entity-only shape: no event lineage at all.
+  const lineageLessRun = await insertInsightRun(pool, {
+    ownerId, toolName: "revalidate_lineage_less",
+    request: {}, response: { summary: `${marker} lineage-less summary` },
+    summary: `${marker} lineage-less summary`, evidence: [],
+  });
+  assert.ok(foreignRun && deniedRun && lineageLessRun);
+
+  // A ledger tombstone for an unrelated event hides every pre-tombstone run
+  // for this owner without removing the live events above.
+  const tombstone = await recordDeletionTombstone(pool, {
+    ownerId, targetType: "event", targetId: sweepEvent, mode: "delete_knowledge",
+    reason: "r5-revalidation-deny",
+  });
+  assert.ok(tombstone);
+
+  const foreign = await revalidateDerivedRun({
+    ownerId: otherOwner, runType: "insight", runId: foreignRun!.id,
+  });
+  assert.equal(foreign.revalidated, false);
+  if (!foreign.revalidated) assert.equal(foreign.reason, "run_not_found");
+
+  const denied = await revalidateDerivedRun({
+    ownerId, runType: "insight", runId: deniedRun!.id,
+  });
+  assert.equal(denied.revalidated, false);
+  if (!denied.revalidated) assert.equal(denied.reason, "source_policy_denied");
+
+  const lineageLess = await revalidateDerivedRun({
+    ownerId, runType: "insight", runId: lineageLessRun!.id,
+  });
+  assert.equal(lineageLess.revalidated, false);
+  if (!lineageLess.revalidated) assert.equal(lineageLess.reason, "no_live_lineage");
+
+  const rows = await pool.query<{ id: string; revalidatedAt: string | null }>(`
+    select id, revalidated_at as "revalidatedAt" from insight_runs
+    where id = any($1::text[])
+  `, [[foreignRun!.id, deniedRun!.id, lineageLessRun!.id]]);
+  assert.equal(rows.rows.length, 3);
+  assert.deepEqual(
+    rows.rows.filter((row) => row.revalidatedAt !== null).map((row) => row.id),
+    [],
+    "a rejected revalidation must not set revalidated_at",
+  );
+  assert.equal(await loadInsightRunById(deniedRun!.id, ownerId), null);
+  assert.equal(await loadInsightRunById(lineageLessRun!.id, ownerId), null);
+});
+
+test("B11 r5 a live-lineage run becomes readable only after deliberate revalidation", async () => {
+  const ownerId = `deletion-revalidate-live-${randomUUID()}`;
+  const source = `mail.revalidate.live.${randomUUID()}`;
+  const marker = `REVALIDATE_LIVE_${randomUUID()}`;
+  await seedPolicy(ownerId, source);
+
+  const liveEvent = await seedEvent(ownerId, source, `${marker}_LIVE`);
+  const sweepEvent = await seedEvent(ownerId, source, `${marker}_SWEEP`);
+  const insight = await insertInsightRun(pool, {
+    ownerId, toolName: "revalidate_live_insight", query: marker,
+    request: { eventIds: [liveEvent] },
+    response: { summary: `${marker} live insight` },
+    summary: `${marker} live insight`,
+    evidence: [{ eventIds: [liveEvent], source }],
+  });
+  const digest = await insertDigestRun(pool, {
+    ownerId, toolName: "revalidate_live_digest", scope: marker,
+    request: { eventIds: [liveEvent] },
+    response: { summary: `${marker} live digest` },
+    summary: `${marker} live digest`,
+  });
+  assert.ok(insight && digest);
+
+  const tombstone = await recordDeletionTombstone(pool, {
+    ownerId, targetType: "event", targetId: sweepEvent, mode: "delete_knowledge",
+    reason: "r5-revalidation-live",
+  });
+  assert.ok(tombstone);
+
+  // The conservative pre-tombstone rule hides both runs even though their own
+  // evidence is still live.
+  assert.equal(await loadInsightRunById(insight!.id, ownerId), null);
+  assert.equal(await loadDigestRunById(digest!.id, ownerId), null);
+  assert.deepEqual(await listInsightRuns(25, ownerId), []);
+  assert.deepEqual(await listDigestRuns(25, ownerId), []);
+
+  const insightResult = await revalidateDerivedRun({
+    ownerId, runType: "insight", runId: insight!.id,
+  });
+  assert.equal(insightResult.revalidated, true);
+  if (insightResult.revalidated) {
+    assert.deepEqual(insightResult.lineageEventIds, [liveEvent]);
+    assert.ok(Date.parse(insightResult.revalidatedAt) > Date.parse(tombstone.createdAt));
+  }
+  const digestResult = await revalidateDerivedRun({
+    ownerId, runType: "digest", runId: digest!.id,
+  });
+  assert.equal(digestResult.revalidated, true);
+  if (digestResult.revalidated) {
+    assert.deepEqual(digestResult.lineageEventIds, [liveEvent]);
+  }
+
+  const reloadedInsight = await loadInsightRunById(insight!.id, ownerId);
+  assert.ok(reloadedInsight);
+  assert.equal(reloadedInsight!.summary, `${marker} live insight`);
+  const reloadedDigest = await loadDigestRunById(digest!.id, ownerId);
+  assert.ok(reloadedDigest);
+  assert.equal(reloadedDigest!.summary, `${marker} live digest`);
+  assert.equal((await listInsightRuns(25, ownerId)).some((run) => run.id === insight!.id), true);
+  assert.equal((await listDigestRuns(25, ownerId)).some((run) => run.id === digest!.id), true);
+
+  const exported = await exportPersonalData(ownerId);
+  assert.equal(exported.data.insights.some((run) => (run as { id: string }).id === insight!.id), true);
+  assert.equal(exported.data.digests.some((run) => (run as { id: string }).id === digest!.id), true);
 });
 
 // Keep an explicit reference so the exported cleanup helper remains covered by

@@ -3,6 +3,7 @@ import { z } from "zod";
 import { searchKnowledge, filterEligibleRetrievalResults } from "../storage/search-repository.js";
 import { hybridRetrieve } from "../storage/hybrid-retrieval.js";
 import { ownerScope } from "../auth.js";
+import { withOwnerRead } from "../storage/postgres.js";
 
 const searchQuerySchema = z.object({
   q: z.string().min(1),
@@ -25,13 +26,15 @@ export const registerSearchRoutes: FastifyPluginAsync = async (app) => {
     const parsed = hybridQuerySchema.safeParse(request.query);
     if (!parsed.success) return reply.status(400).send({ error: "invalid_hybrid_retrieval_query", issues: parsed.error.flatten() });
     const clientId = ownerScope(request);
-    const retrieval = await hybridRetrieve(parsed.data.q, {
-      clientId, source: parsed.data.source, kind: parsed.data.kind,
-      from: parsed.data.from, to: parsed.data.to, currency: parsed.data.currency,
-      account: parsed.data.account, category: parsed.data.category,
-      limit: parsed.data.limit, includeGraph: parsed.data.includeGraph,
+    return withOwnerRead(clientId, async (db) => {
+      const retrieval = await hybridRetrieve(parsed.data.q, {
+        clientId, source: parsed.data.source, kind: parsed.data.kind,
+        from: parsed.data.from, to: parsed.data.to, currency: parsed.data.currency,
+        account: parsed.data.account, category: parsed.data.category,
+        limit: parsed.data.limit, includeGraph: parsed.data.includeGraph,
+      }, db);
+      return filterEligibleRetrievalResults(retrieval, clientId, db);
     });
-    return filterEligibleRetrievalResults(retrieval, clientId);
   });
 
   app.get("/search", async (request, reply) => {
@@ -43,12 +46,13 @@ export const registerSearchRoutes: FastifyPluginAsync = async (app) => {
       });
     }
 
-    return searchKnowledge(parsed.data.q, {
-      clientId: ownerScope(request),
+    const ownerId = ownerScope(request);
+    return withOwnerRead(ownerId, (db) => searchKnowledge(parsed.data.q, {
+      clientId: ownerId,
       source: parsed.data.source,
       kind: parsed.data.kind,
       from: parsed.data.from,
       to: parsed.data.to,
-    });
+    }, db));
   });
 };

@@ -32,7 +32,7 @@ import { buildModelSemanticDecision } from "./semantic-enrichment.js";
 import type { SemanticDecision } from "./semantic-enrichment.js";
 import { buildEventInterpretation } from "../domain/event-interpretation.js";
 import { deriveKnowledgeFacts } from "./knowledge-fact-repository.js";
-import { enqueueBackgroundJob, claimBackgroundJob, completeBackgroundJob, failBackgroundJob, StaleJobClaimError } from "./job-repository.js";
+import { enqueueBackgroundJob, claimBackgroundJob, completeBackgroundJob, failBackgroundJob, assertJobFence, StaleJobClaimError, type JobFence } from "./job-repository.js";
 import { loadSourceProcessingPolicy } from "./privacy.js";
 import { config } from "../config.js";
 import { SEMANTIC_GOVERNANCE_VERSION } from "../domain/ontology.js";
@@ -335,9 +335,9 @@ export async function appendEvent(event: EventInput, context: EventIngestionCont
     });
     try {
       if (!claim) throw new StaleJobClaimError(capture.storedId, 0, "inline_financial_claim");
-      const classified = await classifyCapturedEvent(capture.storedId);
+      const classified = await classifyCapturedEvent(capture.storedId, { fence: claim });
       if (!classified) throw new Error("Captured financial event is unavailable for classification");
-      const correlation = await correlateFinancialEvent(capture.storedId);
+      const correlation = await correlateFinancialEvent(capture.storedId, { fence: claim });
       await completeBackgroundJob(claim, async (db) => {
         // The queued semantic stage is published atomically with the successful
         // classification completion; a stale attempt never reaches this code.
@@ -419,7 +419,7 @@ export async function appendEvent(event: EventInput, context: EventIngestionCont
   }
 }
 
-export async function classifyCapturedEvent(eventId: string) {
+export async function classifyCapturedEvent(eventId: string, options: { fence?: JobFence | null } = {}) {
   const rawEvent = await loadRawEventById(pool, eventId);
   if (!rawEvent || !rawEvent.processingAllowed || rawEvent.privacyStatus === "hidden") return null;
   let classified: ClassifiedEvent = await maybeEnhanceClassification({
@@ -433,6 +433,11 @@ export async function classifyCapturedEvent(eventId: string) {
   });
   return withTransaction(async (db) => {
     await db.query('select id from raw_events where id=$1 for update', [eventId]);
+    // Fence the main-work projection before any classification row is written.
+    // The share lock on the job row is held for the whole transaction, so a
+    // stale attempt cannot commit classification/financial work after a newer
+    // claim has advanced the fence.
+    if (options.fence) await assertJobFence(db, options.fence, "classify");
     classified = await preserveCorrectionOverlay(db, eventId, classified);
     const entityDrafts = buildEntityDrafts({ ...classified, raw: classified.raw });
     await insertClassifiedEvent(db, classified, rawEvent.id, rawEvent.clientId);
@@ -694,8 +699,11 @@ export async function correlateFinancialEventWithDb(db:Queryable,eventId: string
   return { eventId, correlated: true, transaction };
 }
 
-export async function correlateFinancialEvent(eventId: string) {
-  return withTransaction(db=>correlateFinancialEventWithDb(db,eventId));
+export async function correlateFinancialEvent(eventId: string, options: { fence?: JobFence | null } = {}) {
+  return withTransaction(async (db) => {
+    if (options.fence) await assertJobFence(db, options.fence, "financial_correlation");
+    return correlateFinancialEventWithDb(db, eventId);
+  });
 }
 
 export async function previewEventSemantics(eventId: string) {

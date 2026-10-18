@@ -115,13 +115,13 @@ export function redactForModel(
   return redacted;
 }
 
-type PolicyRow = SourceProcessingPolicy & { source: string; version: number };
+export type SourcePolicyRow = SourceProcessingPolicy & { source: string; version: number };
 
 async function loadPolicyRows(
   db: Queryable,
   ownerId: string,
   sources: string[],
-): Promise<Map<string, PolicyRow>> {
+): Promise<Map<string, SourcePolicyRow>> {
   if (!sources.length) return new Map();
   const result = await db.query<{
     source: string;
@@ -152,6 +152,28 @@ async function loadPolicyRows(
     retentionDays: row.retentionDays,
     version: row.version,
   }]));
+}
+
+/**
+ * Loads the effective owner-scoped source policies for several sources at
+ * once. Callers that authorize a set of evidence before dispatch must treat a
+ * missing row as a denial: there is no permissive default for external egress.
+ */
+export async function loadOwnerSourcePolicies(
+  db: Queryable,
+  input: { ownerId?: string | null; sources: string[] },
+): Promise<Map<string, SourcePolicyRow>> {
+  const ownerId = input.ownerId?.trim();
+  if (!ownerId) return new Map();
+  const sources = [...new Set(input.sources.filter((source) => Boolean(source)))];
+  return loadPolicyRows(db, ownerId, sources);
+}
+
+/** True only when an explicit owner policy row permits external model egress. */
+export function sourcePolicyAllowsEgress(
+  policy: Pick<SourceProcessingPolicy, "enabled" | "sendToLlm"> | undefined,
+) {
+  return Boolean(policy?.enabled && policy.sendToLlm);
 }
 
 /**

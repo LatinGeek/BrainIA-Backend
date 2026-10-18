@@ -3,7 +3,7 @@ import { z } from "zod";
 import { insertDigestRun, listDigestRuns, loadDigestRunById } from "../storage/digest-repository.js";
 import { createKnowledgeDigest } from "../storage/digests.js";
 import { config } from "../config.js";
-import { pool } from "../storage/postgres.js";
+import { pool, withOwnerRead } from "../storage/postgres.js";
 import { upsertEmbedding } from "../storage/embeddings.js";
 import { ownerScope } from "../auth.js";
 
@@ -125,7 +125,8 @@ export const registerDigestRoutes: FastifyPluginAsync = async (app) => {
     }
 
     const limit = parsePositiveInteger(parsed.data.limit, 25, 1, 100);
-    const runs = (await listDigestRuns(limit, ownerScope(request)))
+    const ownerId = ownerScope(request);
+    const runs = (await withOwnerRead(ownerId, (db) => listDigestRuns(limit, ownerId, db)))
       .filter((run) => run.summary !== null);
 
     return {
@@ -144,7 +145,8 @@ export const registerDigestRoutes: FastifyPluginAsync = async (app) => {
       });
     }
 
-    const run = await loadDigestRunById(params.data.id, ownerScope(request));
+    const ownerId = ownerScope(request);
+    const run = await withOwnerRead(ownerId, (db) => loadDigestRunById(params.data.id, ownerId, db));
     if (!run || run.summary === null) {
       return reply.status(404).send({
         error: "digest_run_not_found",

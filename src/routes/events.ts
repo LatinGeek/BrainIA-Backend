@@ -1,14 +1,15 @@
 ﻿import type { FastifyPluginAsync } from "fastify";
 import { ownerScope, type AuthConfig } from "../auth.js";
 import { eventSchema } from "../domain/event.js";
+import { withOwnerRead } from "../storage/postgres.js";
 import {
   appendEvent,
   classifyCapturedEvent,
   correlateFinancialEvent,
   getEvent,
-  listEvents,
   reprocessEvent,
 } from "../storage/event-store.js";
+import { listStoredEvents, loadStoredEventById } from "../storage/event-repository.js";
 
 type EventRoutesOptions = {
   authConfig: AuthConfig;
@@ -16,7 +17,10 @@ type EventRoutesOptions = {
 
 export const registerEventRoutes = (options: EventRoutesOptions): FastifyPluginAsync => {
   return async (app) => {
-    app.get("/events", async (request) => listEvents(ownerScope(request)));
+    app.get("/events", async (request) => {
+      const ownerId = ownerScope(request);
+      return withOwnerRead(ownerId, (db) => listStoredEvents(ownerId, db));
+    });
 
     app.get("/events/:id", async (request, reply) => {
       const eventId = (request.params as { id?: string }).id?.trim();
@@ -27,7 +31,8 @@ export const registerEventRoutes = (options: EventRoutesOptions): FastifyPluginA
         });
       }
 
-      const event = await getEvent(eventId, ownerScope(request));
+      const ownerId = ownerScope(request);
+      const event = await withOwnerRead(ownerId, (db) => loadStoredEventById(db, eventId, ownerId));
       return event ?? reply.status(404).send({
         error: "event_not_found",
         message: "No stored event matches the provided id",

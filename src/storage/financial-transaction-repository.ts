@@ -254,8 +254,8 @@ export type FinancialAccountRecord = {
   balance: string;
 };
 
-export async function listFinancialAccounts(ownerId?: string) {
-  const result = await pool.query<FinancialAccountRecord>(
+export async function listFinancialAccounts(ownerId?: string, db: Queryable = pool) {
+  const result = await db.query<FinancialAccountRecord>(
     `
       select
         a.id,
@@ -558,9 +558,9 @@ function pendingTransactionProjectionSql() {
   `;
 }
 
-export async function listPendingFinancialTransactions(ownerId?: string) {
+export async function listPendingFinancialTransactions(ownerId?: string, db: Queryable = pool) {
   await ensurePendingFinancialTransactionsSchema();
-  const result = await pool.query<PendingFinancialTransactionRecord>(`
+  const result = await db.query<PendingFinancialTransactionRecord>(`
     ${pendingTransactionProjectionSql()}
     where p.status = 'pending'
       and ($1::text is null or p.owner_id = $1)
@@ -941,6 +941,7 @@ export async function loadFinancialTransactionById(db: Queryable, id: string, ow
 export async function listFinancialTransactions(
   limit = 50,
   range: { from?: string; to?: string; ownerId?: string } = {},
+  db: Queryable = pool,
 ) {
   const filters: string[] = [];
   const params: unknown[] = [];
@@ -971,7 +972,7 @@ export async function listFinancialTransactions(
   }
   params.push(limit);
 
-  const result = await pool.query<FinancialTransactionRecord>(
+  const result = await db.query<FinancialTransactionRecord>(
     `
       ${buildTransactionProjectionSql()}
       ${filters.length ? `where ${filters.join(" and ")}` : ""}
@@ -982,7 +983,7 @@ export async function listFinancialTransactions(
   );
 
   const evidenceByTransaction = await loadFinancialTransactionEvidenceBatch(
-    pool,
+    db,
     result.rows.map((transaction) => transaction.id),
   );
   const items = result.rows.map((transaction) => ({

@@ -90,7 +90,7 @@ export async function linkEventRelation(
   );
 }
 
-export async function listRelations(ownerId?: string) {
+export async function listRelations(ownerId?: string, db: Queryable = pool) {
   const params: string[] = [];
   const conditions = [
     `source.visibility <> 'hidden'`,

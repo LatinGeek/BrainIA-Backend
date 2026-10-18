@@ -93,8 +93,8 @@ export async function insertDigestRun(db: Queryable, input: DigestRunInput & { o
   return result.rows[0] ?? null;
 }
 
-export async function listDigestRuns(limit: number, ownerId?: string) {
-  const result = await pool.query<DigestRunRecord>(
+export async function listDigestRuns(limit: number, ownerId?: string, db: Queryable = pool) {
+  const result = await db.query<DigestRunRecord>(
     `
       select
         id,
@@ -126,8 +126,8 @@ export async function listDigestRuns(limit: number, ownerId?: string) {
   return result.rows;
 }
 
-export async function loadDigestRunById(id: string, ownerId?: string) {
-  const result = await pool.query<DigestRunRecord>(
+export async function loadDigestRunById(id: string, ownerId?: string, db: Queryable = pool) {
+  const result = await db.query<DigestRunRecord>(
     `
       select
         id,

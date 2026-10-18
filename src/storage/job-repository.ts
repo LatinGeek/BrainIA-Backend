@@ -63,6 +63,29 @@ export class StaleJobClaimError extends Error {
   }
 }
 
+export type JobFence = Pick<BackgroundJob, "id" | "fenceToken"> &
+  Partial<Pick<BackgroundJob, "lockedBy" | "leaseId">>;
+
+/**
+ * Fence a main-work projection inside the transaction that writes it. This is
+ * deliberately checked after the caller has already opened its transaction and
+ * acquired any business-row lock: a stale attempt that lost its fence can no
+ * longer commit classification/financial main work before completion. The
+ * `for share` row lock makes the fence atomic with the projection: a claim that
+ * has not advanced the fence yet waits for this transaction instead of racing
+ * it, and a claim that already advanced it makes this check fail.
+ */
+export async function assertJobFence(db: Queryable, job: JobFence, operation = "projection") {
+  const result = await db.query(`
+    select 1 from background_jobs
+    where id = $1 and fence_token = $2 and status = 'running'
+      and ($3::text is null or locked_by = $3)
+      and lease_expires_at is not null and lease_expires_at > now()
+    for share
+  `, [job.id, job.fenceToken, job.lockedBy ?? null]);
+  if (!result.rows[0]) throw new StaleJobClaimError(job.id, job.fenceToken, operation);
+}
+
 /**
  * Claimability predicate shared by every claim statement and by the guarded
  * outer UPDATE. Both inline and poller claims must use it in the UPDATE itself,
@@ -74,6 +97,19 @@ export const CLAIMABLE_JOB_SQL = `(
   (job.status in ('queued','retry_scheduled') and job.run_after <= now())
   or (job.status = 'running' and (job.lease_expires_at is null or job.lease_expires_at <= now()))
 )`;
+
+/**
+ * Attempt numbers are monotonic. A row revived by pre-r2 code can still have
+ * `attempt_count = 0` while attempt 1 history exists; incrementing blindly would
+ * insert a duplicate `(job_id, attempt)` and fail the claim with 23505. Clamp to
+ * the highest historical attempt before incrementing so the next claim appends
+ * a genuinely new attempt. This is a lazy repair, not a destructive backfill.
+ */
+export const NEXT_ATTEMPT_COUNT_SQL = `greatest(
+  job.attempt_count,
+  coalesce((select max(history.attempt) from background_job_attempts history where history.job_id = job.id), 0)
+) + 1`;
+
 
 function jobProjection(alias?: string) {
   const prefix = alias ? `${alias}.` : "";
@@ -294,7 +330,7 @@ export async function claimBackgroundJobs(input: {
         returning lease.job_id
       )
       update background_jobs job set status = 'running', locked_at = now(),
-        locked_by = $1, attempt_count = job.attempt_count + 1,
+        locked_by = $1, attempt_count = ${NEXT_ATTEMPT_COUNT_SQL},
         lease_id = 'lease_' || substr(md5(random()::text || clock_timestamp()::text || job.id || $1), 1, 32),
         fence_token = job.fence_token + 1,
         lease_expires_at = now() + ($3::int * interval '1 second'),
@@ -350,7 +386,7 @@ export async function claimBackgroundJob(input: {
         returning lease.job_id
       )
       update background_jobs job set status = 'running', locked_at = now(),
-        locked_by = $4, attempt_count = job.attempt_count + 1,
+        locked_by = $4, attempt_count = ${NEXT_ATTEMPT_COUNT_SQL},
         lease_id = 'lease_' || substr(md5(random()::text || clock_timestamp()::text || job.id || $4), 1, 32),
         fence_token = job.fence_token + 1,
         lease_expires_at = now() + ($5::int * interval '1 second'),

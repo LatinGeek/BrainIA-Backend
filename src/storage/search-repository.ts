@@ -1,5 +1,7 @@
 import { pool } from "./postgres.js";
 
+type Queryable = Pick<typeof pool, "query">;
+
 export type SearchMatchHint = {
   matchedFields: string[];
   relevanceScore: number;
@@ -206,7 +208,7 @@ export async function filterEligibleRetrievalResults<
     results: RetrievalResultLike[];
     evidencePackage: RetrievalPackageLike[];
   },
->(retrieval: T, clientId?: string | null): Promise<T> {
+>(retrieval: T, clientId?: string | null, db: Queryable = pool): Promise<T> {
   const relationIds = retrieval.results
     .filter((result) => result.objectType === "relation")
     .map((result) => result.objectId);
@@ -215,7 +217,7 @@ export async function filterEligibleRetrievalResults<
     .map((result) => result.objectId);
   const [relationRows, eligibleRunRows] = await Promise.all([
     relationIds.length
-      ? pool.query<{ id: string; eventId: string | null; hasLinks: boolean }>(`
+      ? db.query<{ id: string; eventId: string | null; hasLinks: boolean }>(`
           select relation.id,
             (
               select event.id
@@ -254,7 +256,7 @@ export async function filterEligibleRetrievalResults<
         `, [relationIds, clientId ?? null])
       : Promise.resolve({ rows: [] as Array<{ id: string; eventId: string | null; hasLinks: boolean }> }),
     runIds.length
-      ? pool.query<{ id: string }>(`
+      ? db.query<{ id: string }>(`
           select run.id from insight_runs run
           where run.id = any($1::text[]) and (run.summary is not null or run.query is not null)
             and ${derivedRunReadEligibilitySql("insight_runs", "run")}
@@ -298,12 +300,13 @@ export async function searchKnowledge(
     to?: string;
     clientId?: string;
   } = {},
+  db: Queryable = pool,
 ) {
   const { eventParams, eventWhereClause } = buildEventSearchQuery(query, filters);
   const term = eventParams[0];
 
   const [events, entities, relations] = await Promise.all([
-    pool.query(
+    db.query(
       `
         select
           r.id,
@@ -325,7 +328,7 @@ export async function searchKnowledge(
       `,
       eventParams,
     ),
-    pool.query(
+    db.query(
       `
         select
           id,
@@ -378,7 +381,7 @@ export async function searchKnowledge(
       `,
       [term, filters.clientId?.trim() ?? null],
     ),
-    pool.query(
+    db.query(
       `
         select
           r.id,

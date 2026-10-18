@@ -1,6 +1,14 @@
 import { Pool, type PoolClient } from "pg";
 import { resolveRuntimeDatabaseUrl } from "./database-url.js";
 
+/**
+ * Minimal query surface shared by the pool and an owner-scoped transaction
+ * client. Repositories accept this so a route can run a read on the
+ * transaction that carries `brainia.owner_id` (and, when enforced, the
+ * `brainia_runtime` role) instead of the legacy table-owner pool.
+ */
+export type Queryable = Pick<Pool, "query">;
+
 const connectionString = resolveRuntimeDatabaseUrl();
 
 if (!connectionString) {
@@ -58,6 +66,25 @@ export async function withOwnerTransaction<T>(
     if (enforceRls) await client.query("set local role brainia_runtime");
     return fn(client);
   });
+}
+
+/**
+ * Runs an owner-facing repository read on an owner-scoped transaction.
+ *
+ * - A resolved owner always gets `withOwnerTransaction`, so every query sees
+ *   the transaction-local owner setting and, when `BRAINIA_DB_ENFORCE_RLS`
+ *   (or an explicit override) is on, the restricted runtime role.
+ * - The legacy local/test mode has no owner (`undefined`). It deliberately
+ *   falls back to the plain pool so existing fixtures that run as the table
+ *   owner keep their bypass.
+ */
+export async function withOwnerRead<T>(
+  ownerId: string | undefined,
+  fn: (db: Queryable) => Promise<T>,
+  options: { enforceRls?: boolean } = {},
+): Promise<T> {
+  if (!ownerId) return fn(pool);
+  return withOwnerTransaction(ownerId, fn, options);
 }
 
 /**

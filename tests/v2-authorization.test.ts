@@ -5,6 +5,7 @@ import { buildApp } from '../src/app.ts';
 import type { AuthConfig } from '../src/auth.ts';
 import { pool, withOwnerTransaction } from '../src/storage/postgres.ts';
 import { insertRawEvent } from '../src/storage/event-repository.ts';
+import { repairLegacyNullOwnerFinance } from '../src/storage/data-controls.ts';
 
 const clientAuth: AuthConfig = { globalApiKey: null, clientKeys: new Map([['owner-a', 'key-a'], ['owner-b', 'key-b']]) };
 const headersA = { 'x-brainia-client-id': 'owner-a', 'x-brainia-api-key': 'key-a' };
@@ -260,6 +261,11 @@ test('B06 restricted runtime role enforces owner isolation transaction-locally',
   assert.ok(visibleToA.includes(eventA));
   assert.ok(!visibleToA.includes(eventB));
 
+  const role = await withOwnerTransaction(ownerA, async (db) => (
+    await db.query<{ role: string }>('select current_user as role')
+  ).rows[0]?.role, { enforceRls: true });
+  assert.equal(role, 'brainia_runtime');
+
   await assert.rejects(
     () => withOwnerTransaction(ownerA, async (db) => db.query(
       `insert into raw_events(id,source,kind,title,body,timestamp,raw,tags,contract_version,client_id,owner_id,idempotency_key,dedupe_key)
@@ -274,4 +280,199 @@ test('B06 restricted runtime role enforces owner isolation transaction-locally',
   ).rows.map((row) => row.id), { enforceRls: true });
   assert.ok(after.includes(eventB));
   assert.ok(!after.includes(eventA));
+});
+
+test('B06 routed reads switch to the restricted role and hide legacy null-owner rows', async () => {
+  const ownedA = await captured('owner-a', `Routed RLS owned ${randomUUID()}`);
+  const ownedB = await captured('owner-b', `Routed RLS foreign ${randomUUID()}`);
+  // Pre-fix row: the surviving client scope is owner-a but owner_id was never
+  // backfilled. The legacy owner filter would return it; RLS must not.
+  const legacy = { id: randomUUID(), source: 'capture.wallet', contractVersion: 1 as const, kind: 'expense' as const,
+    title: `Routed RLS legacy ${randomUUID()}`, body: 'legacy null owner', timestamp: '2026-10-17T12:00:00Z',
+    raw: { amount: 1, currency: 'UYU', merchant: 'legacy' }, tags: [] };
+  await insertRawEvent(pool, legacy, 'owner-a', `owner-a:${legacy.id}`);
+
+  const app = await buildApp({ authConfig: clientAuth });
+  try {
+    const legacyVisible = await app.inject({ method: 'GET', url: '/api/v1/events', headers: headersA });
+    assert.equal(legacyVisible.statusCode, 200);
+    const beforeIds = (legacyVisible.json() as Array<{ id: string }>).map((event) => event.id);
+    assert.ok(beforeIds.includes(legacy.id));
+
+    const previous = process.env.BRAINIA_DB_ENFORCE_RLS;
+    process.env.BRAINIA_DB_ENFORCE_RLS = 'true';
+    try {
+      const scoped = await app.inject({ method: 'GET', url: '/api/v1/events', headers: headersA });
+      assert.equal(scoped.statusCode, 200);
+      const ids = (scoped.json() as Array<{ id: string }>).map((event) => event.id);
+      assert.ok(ids.includes(ownedA));
+      assert.ok(!ids.includes(legacy.id));
+      assert.ok(!ids.includes(ownedB));
+
+      const detail = await app.inject({ method: 'GET', url: `/api/v1/events/${legacy.id}`, headers: headersA });
+      assert.equal(detail.statusCode, 404);
+
+      const foreign = await app.inject({ method: 'GET', url: `/api/v1/events/${ownedB}`, headers: headersA });
+      assert.equal(foreign.statusCode, 404);
+    } finally {
+      if (previous === undefined) delete process.env.BRAINIA_DB_ENFORCE_RLS;
+      else process.env.BRAINIA_DB_ENFORCE_RLS = previous;
+    }
+  } finally { await app.close(); }
+});
+
+test('B06 legacy null-owner finance repair is dry-run first, evidence-only and idempotent', async () => {
+  const account = `account_legacy_${randomUUID()}`;
+  const pending = `pending_legacy_${randomUUID()}`;
+  const ambiguousAccount = `account_ambiguous_${randomUUID()}`;
+  const txn = `financial_legacy_${randomUUID()}`;
+  const caseA = await captured('owner-a', `Legacy repair A ${randomUUID()}`);
+
+  await pool.query(`insert into financial_accounts(id,name,type,currency,owner_id) values($1,'Legacy Account','bank','UYU',null)`, [account]);
+  await pool.query(`insert into pending_financial_transactions(id,title,kind,amount,currency,account_id,estimated_execution_date,owner_id)
+    values($1,'Legacy Pending','expense',5,'UYU',$2,current_date + 5,null)`, [pending, account]);
+  await pool.query(`insert into financial_transactions(id,kind,amount,currency,merchant_label,normalized_merchant,
+    observed_at,window_start,window_end,evidence_count,match_score,match_strategy,primary_source,account_id,owner_id)
+    values($1,'expense',5,'UYU','legacy','legacy',now(),now(),now(),1,1,'test','test',$2,'owner-a')`, [txn, account]);
+  await pool.query(`insert into financial_transaction_events(id,transaction_id,raw_event_id,source,kind,amount,currency,
+    merchant_label,normalized_merchant,observed_at,match_score,match_reason,owner_id)
+    values($1,$2,$3,'capture.wallet','expense',5,'UYU','legacy','legacy',now(),1,'test','owner-a')`,
+    [randomUUID(), txn, caseA]);
+
+  // An account referenced by two owners must never be guessed.
+  const ambiguousA = await captured('owner-a', `Legacy ambiguous A ${randomUUID()}`);
+  const ambiguousB = await captured('owner-b', `Legacy ambiguous B ${randomUUID()}`);
+  await pool.query(`insert into financial_accounts(id,name,type,currency,owner_id) values($1,'Ambiguous Account','bank','UYU',null)`, [ambiguousAccount]);
+  for (const [owner, event] of [['owner-a', ambiguousA], ['owner-b', ambiguousB]] as const) {
+    const id = `financial_ambiguous_${randomUUID()}`;
+    await pool.query(`insert into financial_transactions(id,kind,amount,currency,merchant_label,normalized_merchant,
+      observed_at,window_start,window_end,evidence_count,match_score,match_strategy,primary_source,account_id,owner_id)
+      values($1,'expense',2,'UYU','ambiguous','ambiguous',now(),now(),now(),1,1,'test','test',$2,$3)`,
+      [id, ambiguousAccount, owner]);
+    await pool.query(`insert into financial_transaction_events(id,transaction_id,raw_event_id,source,kind,amount,currency,
+      merchant_label,normalized_merchant,observed_at,match_score,match_reason,owner_id)
+      values($1,$2,$3,'capture.wallet','expense',2,'UYU','ambiguous','ambiguous',now(),1,'test',$4)`,
+      [randomUUID(), id, event, owner]);
+  }
+
+  const dryRun = await repairLegacyNullOwnerFinance(pool, { tables: ['financial_accounts', 'pending_financial_transactions'] });
+  assert.equal(dryRun.dryRun, true);
+  assert.equal(dryRun.tables.financial_accounts.applied, 0);
+  assert.equal(dryRun.tables.financial_accounts.ambiguous, 1);
+  assert.ok(dryRun.tables.financial_accounts.assignments.some((row) => row.id === account && row.ownerId === 'owner-a'));
+  assert.equal((await pool.query<{ ownerId: string | null }>('select owner_id as "ownerId" from financial_accounts where id=$1', [account])).rows[0].ownerId, null);
+
+  const applied = await repairLegacyNullOwnerFinance(pool, {
+    dryRun: false,
+    approvedBy: 'b06-r4-test',
+    tables: ['financial_accounts', 'pending_financial_transactions'],
+  });
+  assert.ok(applied.tables.financial_accounts.applied >= 1);
+  assert.equal((await pool.query<{ ownerId: string | null }>('select owner_id as "ownerId" from financial_accounts where id=$1', [account])).rows[0].ownerId, 'owner-a');
+  assert.equal((await pool.query<{ ownerId: string | null }>('select owner_id as "ownerId" from pending_financial_transactions where id=$1', [pending])).rows[0].ownerId, 'owner-a');
+  assert.equal((await pool.query<{ ownerId: string | null }>('select owner_id as "ownerId" from financial_accounts where id=$1', [ambiguousAccount])).rows[0].ownerId, null);
+
+  const quarantine = await pool.query<{ reason: string }>(
+    `select reason from owner_quarantine where table_name='financial_accounts' and row_id=$1`, [ambiguousAccount],
+  );
+  assert.equal(quarantine.rows[0]?.reason, 'legacy_null_owner_requires_review');
+
+  // The repaired account is now reachable by its scoped owner, and only them.
+  const app = await buildApp({ authConfig: clientAuth });
+  try {
+    const accountsA = await app.inject({ method: 'GET', url: '/api/v1/financial/accounts', headers: headersA });
+    const idsA = (accountsA.json() as { accounts: Array<{ id: string }> }).accounts.map((row) => row.id);
+    assert.ok(idsA.includes(account));
+    assert.ok(!idsA.includes(ambiguousAccount));
+    const accountsB = await app.inject({ method: 'GET', url: '/api/v1/financial/accounts', headers: headersB });
+    assert.ok(!(accountsB.json() as { accounts: Array<{ id: string }> }).accounts.some((row) => row.id === account));
+  } finally { await app.close(); }
+});
+
+test('B06 legacy null-owner derived runs are repaired only with single-owner evidence', async () => {
+  const caseA = await captured('owner-a', `Legacy run A ${randomUUID()}`);
+  const caseB = await captured('owner-b', `Legacy run B ${randomUUID()}`);
+  const insightA = `insight_legacy_${randomUUID()}`;
+  const insightMixed = `insight_legacy_mixed_${randomUUID()}`;
+  const digestA = `digest_legacy_${randomUUID()}`;
+
+  await pool.query(`insert into insight_runs(id,tool_name,request,response,summary,evidence,owner_id)
+    values($1,'test','{}','{}','legacy insight',$2::jsonb,null)`, [insightA, JSON.stringify([{ eventIds: [caseA] }])]);
+  await pool.query(`insert into insight_runs(id,tool_name,request,response,summary,evidence,owner_id)
+    values($1,'test','{}','{}','mixed insight',$2::jsonb,null)`, [insightMixed, JSON.stringify([{ eventIds: [caseA] }, { eventIds: [caseB] }])]);
+  await pool.query(`insert into digest_runs(id,tool_name,request,response,summary,window_from,window_to,owner_id)
+    values($1,'test','{}','{}','legacy digest','2026-01-01T00:00:00Z','2026-12-31T23:59:59Z',null)`, [digestA]);
+
+  const dryRun = await repairLegacyNullOwnerFinance(pool, { tables: ['insight_runs', 'digest_runs'] });
+  assert.equal(dryRun.tables.insight_runs.applied, 0);
+  assert.ok(dryRun.tables.insight_runs.assignments.some((row) => row.id === insightA && row.ownerId === 'owner-a'));
+  // The digest window covers both owners, so it must stay ambiguous.
+  assert.ok(dryRun.tables.digest_runs.ambiguous >= 1);
+
+  const applied = await repairLegacyNullOwnerFinance(pool, { dryRun: false, tables: ['insight_runs', 'digest_runs'] });
+  assert.ok(applied.tables.insight_runs.applied >= 1);
+  assert.equal((await pool.query<{ ownerId: string | null }>('select owner_id as "ownerId" from insight_runs where id=$1', [insightA])).rows[0].ownerId, 'owner-a');
+  assert.equal((await pool.query<{ ownerId: string | null }>('select owner_id as "ownerId" from insight_runs where id=$1', [insightMixed])).rows[0].ownerId, null);
+  assert.equal((await pool.query<{ ownerId: string | null }>('select owner_id as "ownerId" from digest_runs where id=$1', [digestA])).rows[0].ownerId, null);
+});
+
+test('B06 cron and empty daily evaluation stay global and never appear in owner history', async () => {
+  const insightId = `insight_global_${randomUUID()}`;
+  const digestId = `digest_global_${randomUUID()}`;
+  await pool.query(`insert into insight_runs(id,tool_name,request,response,summary,owner_id)
+    values($1,'test','{"scope":"global","writer":"cron"}','{}','global cron insight',null)`, [insightId]);
+  await pool.query(`insert into digest_runs(id,tool_name,request,response,summary,owner_id)
+    values($1,'test','{"scope":"global","writer":"cron"}','{}','global cron digest',null)`, [digestId]);
+
+  const app = await buildApp({ authConfig: clientAuth });
+  const previousSecret = process.env.CRON_SECRET;
+  const previousToken = process.env.BRAINIA_DAILY_INSIGHTS_TOKEN;
+  process.env.CRON_SECRET = `cron-${randomUUID()}`;
+  process.env.BRAINIA_DAILY_INSIGHTS_TOKEN = `daily-${randomUUID()}`;
+  try {
+    const insightHistory = await app.inject({ method: 'GET', url: '/api/v1/insights/history?limit=100', headers: headersA });
+    assert.equal(insightHistory.statusCode, 200);
+    assert.ok(!insightHistory.body.includes(insightId));
+
+    const digestHistory = await app.inject({ method: 'GET', url: '/api/v1/digests/history?limit=100', headers: headersA });
+    assert.equal(digestHistory.statusCode, 200);
+    assert.ok(!digestHistory.body.includes(digestId));
+
+    const nullRunsBefore = (await pool.query<{ count: number }>(
+      'select count(*)::int as count from insight_runs where owner_id is null',
+    )).rows[0].count;
+    const emptyDaily = await app.inject({
+      method: 'POST', url: '/api/v1/insights/daily',
+      headers: { ...headersA, 'x-brainia-daily-insights-token': process.env.BRAINIA_DAILY_INSIGHTS_TOKEN! },
+      payload: {},
+    });
+    assert.equal(emptyDaily.statusCode, 400);
+    assert.equal((emptyDaily.json() as { error: string }).error, 'owner_scoped_daily_insight_required');
+    const nullRunsAfter = (await pool.query<{ count: number }>(
+      'select count(*)::int as count from insight_runs where owner_id is null',
+    )).rows[0].count;
+    assert.equal(nullRunsAfter, nullRunsBefore);
+
+    const cron = await app.inject({
+      method: 'GET', url: '/api/v1/cron/daily-insights',
+      headers: { authorization: `Bearer ${process.env.CRON_SECRET}` },
+    });
+    assert.equal(cron.statusCode, 200);
+    const payload = cron.json() as { scope: string; writer: string; digest?: { id?: string } | null };
+    assert.equal(payload.scope, 'global');
+    assert.equal(payload.writer, 'cron');
+    if (payload.digest?.id) {
+      const run = (await pool.query<{ ownerId: string | null; scope: string | null }>(
+        `select owner_id as "ownerId", request->>'scope' as scope from digest_runs where id=$1`, [payload.digest.id],
+      )).rows[0];
+      assert.equal(run?.ownerId, null);
+      assert.equal(run?.scope, 'global');
+      const afterCron = await app.inject({ method: 'GET', url: '/api/v1/digests/history?limit=100', headers: headersA });
+      assert.ok(!afterCron.body.includes(payload.digest.id));
+    }
+  } finally {
+    await app.close();
+    if (previousSecret === undefined) delete process.env.CRON_SECRET; else process.env.CRON_SECRET = previousSecret;
+    if (previousToken === undefined) delete process.env.BRAINIA_DAILY_INSIGHTS_TOKEN; else process.env.BRAINIA_DAILY_INSIGHTS_TOKEN = previousToken;
+  }
 });

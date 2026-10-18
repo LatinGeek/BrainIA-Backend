@@ -3,7 +3,7 @@ import { z } from "zod";
 import type { FastifyRequest } from "fastify";
 import { ownerScope } from "../auth.js";
 import { deletePersonalData, exportPersonalData, recordKnowledgeFeedback, setEntityVisibility, setEventPrivacy } from "../storage/data-controls.js";
-import { pool } from "../storage/postgres.js";
+import { pool, withOwnerRead } from "../storage/postgres.js";
 import { upsertSourceProcessingPolicy } from "../storage/privacy.js";
 
 function clientId(request: FastifyRequest) {
@@ -11,7 +11,10 @@ function clientId(request: FastifyRequest) {
 }
 
 export const registerPrivacyRoutes: FastifyPluginAsync = async (app) => {
-  app.get("/privacy/export", async (request) => exportPersonalData(clientId(request)));
+  app.get("/privacy/export", async (request) => {
+    const ownerId = clientId(request);
+    return withOwnerRead(ownerId ?? undefined, (db) => exportPersonalData(ownerId, db));
+  });
 
   app.patch("/privacy/events/:id", async (request, reply) => {
     const parsed = z.object({ id: z.string().min(1) }).safeParse(request.params);

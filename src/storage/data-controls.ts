@@ -3,7 +3,9 @@ import { normalizeEntityValue } from "../domain/entities.js";
 import { mergeEntities } from "./entity-repository.js";
 import { transitionEventProcessingStatus } from "./event-repository.js";
 import { invalidateGraphTraversalCache } from "./graph-cache.js";
+import { quarantineRow } from "./ownership.js";
 import { pool, withTransaction } from "./postgres.js";
+import { loadOwnerSourcePolicies } from "./privacy.js";
 import { derivedRunReadEligibilitySql } from "./search-repository.js";
 import { setImmediateHierarchyParent } from "./semantic-repository.js";
 
@@ -516,9 +518,148 @@ function fingerprint(value: string) {
   return crypto.createHash("sha256").update(value).digest("hex");
 }
 
-export async function exportPersonalData(clientId: string | null) {
+export type DerivedRunType = "insight" | "digest";
+
+export type DerivedRunRevalidation =
+  | {
+      revalidated: true;
+      runType: DerivedRunType;
+      runId: string;
+      ownerId: string;
+      revalidatedAt: string;
+      lineageEventIds: string[];
+    }
+  | {
+      revalidated: false;
+      runType: DerivedRunType;
+      runId: string;
+      ownerId: string | null;
+      reason: "run_not_found" | "no_live_lineage" | "source_policy_denied" | "policy_stale";
+    };
+
+/**
+ * Operator action for a tombstone-hidden insight/digest run. `revalidated_at`
+ * is deliberately set only after proving, inside one transaction, that:
+ *
+ * 1. the run exists for this owner (foreign ids are indistinguishable from
+ *    missing ids and are never mutated);
+ * 2. the run still has at least one live, owner-scoped lineage event
+ *    (standard privacy, processing allowed, id present in the run payload, or
+ *    a digest window that contains it);
+ * 3. every live lineage source has an explicit owner policy that permits LLM
+ *    egress; and
+ * 4. the run was derived under the owner's current policy version, so a policy
+ *    change still requires regeneration rather than a timestamp.
+ *
+ * This is an internal/admin storage function, not a public route. It does not
+ * restore redacted payload text; it only makes a run that is still backed by
+ * live lineage readable again after an operator has reviewed it.
+ */
+export async function revalidateDerivedRun(input: {
+  ownerId?: string | null;
+  runType: DerivedRunType;
+  runId: string;
+}): Promise<DerivedRunRevalidation> {
+  const ownerId = input.ownerId?.trim() || null;
+  const runId = input.runId?.trim() || "";
+  const runType = input.runType;
+  const reject = (
+    reason: Extract<DerivedRunRevalidation, { revalidated: false }>["reason"],
+  ): DerivedRunRevalidation => ({ revalidated: false, runType, runId, ownerId, reason });
+  if (!ownerId || !runId || (runType !== "insight" && runType !== "digest")) {
+    return reject("run_not_found");
+  }
+  const table = runType === "insight" ? "insight_runs" : "digest_runs";
+
+  return withTransaction(async (db) => {
+    const runResult = await db.query<{
+      id: string;
+      ownerId: string;
+      policyVersion: number | null;
+      createdAt: string;
+    }>(`
+      select id, owner_id as "ownerId", policy_version as "policyVersion",
+        created_at as "createdAt"
+      from ${table}
+      where id = $1 and owner_id = $2
+      for update
+    `, [runId, ownerId]);
+    const run = runResult.rows[0];
+    if (!run) return reject("run_not_found");
+
+    const versionResult = await db.query<{ version: number }>(`
+      select coalesce(max(policy_version), 0)::int as version
+      from source_processing_policies
+      where owner_id = $1 or (owner_id is null and client_scope = $1)
+    `, [ownerId]);
+    const currentVersion = versionResult.rows[0]?.version ?? 0;
+    if (run.policyVersion === null || Number(run.policyVersion) < currentVersion) {
+      return reject("policy_stale");
+    }
+
+    // Mirror the lineage branch of derivedRunReadEligibilitySql: evidence ids
+    // for insights, request/response ids (and the digest window) for digests.
+    const windowLineage = runType === "digest"
+      ? `or (
+          run.window_from is not null and run.window_to is not null
+          and coalesce(event.timestamp, event.created_at)
+            between run.window_from and run.window_to
+        )`
+      : "";
+    const insightLineage = runType === "insight"
+      ? `or strpos(coalesce(run.evidence::text, ''), event.id) > 0`
+      : "";
+    const lineage = await db.query<{ id: string; source: string | null }>(`
+      select distinct event.id, event.source
+      from ${table} run
+      join raw_events event on (
+        coalesce(event.owner_id, event.client_id) = run.owner_id
+        and event.privacy_status = 'standard'
+        and event.processing_allowed
+        and (
+          strpos(coalesce(run.request::text, ''), event.id) > 0
+          or strpos(coalesce(run.response::text, ''), event.id) > 0
+          ${insightLineage}
+          ${windowLineage}
+        )
+      )
+      where run.id = $1 and run.owner_id = $2
+      order by event.id
+    `, [runId, ownerId]);
+    if (!lineage.rows.length) return reject("no_live_lineage");
+
+    const policies = await loadOwnerSourcePolicies(db, {
+      ownerId,
+      sources: lineage.rows
+        .map((event) => event.source)
+        .filter((source): source is string => Boolean(source)),
+    });
+    for (const event of lineage.rows) {
+      const policy = event.source ? policies.get(event.source.toLowerCase()) : undefined;
+      if (!policy?.enabled || !policy.sendToLlm) return reject("source_policy_denied");
+    }
+
+    const updated = await db.query<{ revalidatedAt: string }>(`
+      update ${table} set revalidated_at = now()
+      where id = $1 and owner_id = $2
+      returning revalidated_at as "revalidatedAt"
+    `, [runId, ownerId]);
+    const revalidatedAt = updated.rows[0]?.revalidatedAt;
+    if (!revalidatedAt) return reject("run_not_found");
+    return {
+      revalidated: true,
+      runType,
+      runId,
+      ownerId,
+      revalidatedAt: new Date(revalidatedAt).toISOString(),
+      lineageEventIds: lineage.rows.map((event) => event.id),
+    };
+  });
+}
+
+export async function exportPersonalData(clientId: string | null, db: Queryable = pool) {
   const [events, facts, entities, relations, insights, digests, feedback, policies] = await Promise.all([
-    pool.query(`
+    db.query(`
       select * from raw_events event
       where ($1::text is null or event.client_id is not distinct from $1)
         and event.privacy_status <> 'hidden'
@@ -529,7 +670,7 @@ export async function exportPersonalData(clientId: string | null) {
         )
       order by event.created_at
     `, [clientId]),
-    pool.query(`
+    db.query(`
       select fact.* from knowledge_facts fact
       where ($1::text is null or fact.client_id is not distinct from $1)
         and fact.visibility <> 'hidden'
@@ -544,7 +685,7 @@ export async function exportPersonalData(clientId: string | null) {
         )
       order by fact.created_at
     `, [clientId]),
-    pool.query(`
+    db.query(`
       select distinct entity.* from entities entity
       left join event_entities link on link.entity_id = entity.id
       left join raw_events event on event.id = link.event_id
@@ -557,7 +698,7 @@ export async function exportPersonalData(clientId: string | null) {
         )
       order by entity.created_at
     `, [clientId]),
-    pool.query(`
+    db.query(`
       select distinct relation.* from relations relation
       join entities source on source.id = relation.source_entity_id
       join entities target on target.id = relation.target_entity_id
@@ -577,21 +718,21 @@ export async function exportPersonalData(clientId: string | null) {
         )
       order by relation.created_at
     `, [clientId]),
-    pool.query(`
+    db.query(`
       select * from insight_runs run
       where ($1::text is null or run.owner_id is not distinct from $1)
         and run.summary is not null
         and ${derivedRunReadEligibilitySql("insight_runs", "run")}
       order by run.created_at
     `, [clientId]),
-    pool.query(`
+    db.query(`
       select * from digest_runs run
       where ($1::text is null or run.owner_id is not distinct from $1)
         and run.summary is not null
         and ${derivedRunReadEligibilitySql("digest_runs", "run")}
       order by run.created_at
     `, [clientId]),
-    pool.query(`
+    db.query(`
       select * from knowledge_feedback item
       where ($1::text is null or item.client_id is not distinct from $1)
         and not exists (
@@ -601,7 +742,7 @@ export async function exportPersonalData(clientId: string | null) {
         )
       order by item.created_at
     `, [clientId]),
-    pool.query(`select * from source_processing_policies where client_scope = $1 order by source`, [clientId ?? "anonymous"]),
+    db.query(`select * from source_processing_policies where client_scope = $1 order by source`, [clientId ?? "anonymous"]),
   ]);
   return {
     format: "brainia-personal-data-v1",
@@ -922,4 +1063,195 @@ export async function applyRetentionPolicies(now = new Date()) {
     byScope.set(key, (byScope.get(key) ?? 0) + 1);
   }
   return { processedAt: now.toISOString(), deleted, scopes: Object.fromEntries(byScope) };
+}
+
+const LEGACY_REPAIR_TABLES = [
+  "financial_accounts",
+  "pending_financial_transactions",
+  "insight_runs",
+  "digest_runs",
+] as const;
+
+export type LegacyOwnerRepairTable = (typeof LEGACY_REPAIR_TABLES)[number];
+
+export type LegacyOwnerRepairTableReport = {
+  reviewed: number;
+  assignable: number;
+  ambiguous: number;
+  applied: number;
+  assignments: Array<{ id: string; ownerId: string; evidence: string }>;
+};
+
+export type LegacyOwnerRepairReport = {
+  dryRun: boolean;
+  tables: Record<LegacyOwnerRepairTable, LegacyOwnerRepairTableReport>;
+};
+
+/**
+ * Reviewed repair for pre-B06 finance and derived-run rows that still have
+ * `owner_id IS NULL`.
+ *
+ * Policy:
+ * - Scoped owners no longer see or mutate these rows; this is an availability
+ *   repair, not a confidentiality fix.
+ * - Nothing is guessed. A row is assignable only when its own evidence names
+ *   exactly one owner (`owner_id` of an evidencing event/transaction), or the
+ *   operator supplies an explicit `mapping[rowId] = ownerId`.
+ * - Ambiguous or evidence-free rows stay null and are recorded in
+ *   `owner_quarantine` for manual review. No row is deleted, merged or
+ *   re-keyed, and no transaction/run payload is modified.
+ * - `dryRun` is the default. Apply requires `dryRun: false` and only writes
+ *   `owner_id` on rows that are still null.
+ *
+ * Run (dry-run):
+ *   npx tsx -e "import {pool} from './src/storage/postgres.ts'; \
+ *     import {repairLegacyNullOwnerFinance} from './src/storage/data-controls.ts'; \
+ *     console.log(JSON.stringify(await repairLegacyNullOwnerFinance(pool), null, 2)); \
+ *     await pool.end();"
+ * Add `{ dryRun: false }` or `{ mapping: { '<row id>': 'owner-id' } }` to apply.
+ */
+export async function repairLegacyNullOwnerFinance(
+  db: Queryable,
+  options: {
+    dryRun?: boolean;
+    mapping?: Record<string, string>;
+    approvedBy?: string;
+    tables?: LegacyOwnerRepairTable[];
+  } = {},
+): Promise<LegacyOwnerRepairReport> {
+  const dryRun = options.dryRun !== false;
+  const mapping = options.mapping ?? {};
+  const requested = new Set<LegacyOwnerRepairTable>(
+    options.tables?.filter((table): table is LegacyOwnerRepairTable =>
+      (LEGACY_REPAIR_TABLES as readonly string[]).includes(table)) ?? LEGACY_REPAIR_TABLES,
+  );
+  const report: LegacyOwnerRepairReport = {
+    dryRun,
+    tables: {
+      financial_accounts: { reviewed: 0, assignable: 0, ambiguous: 0, applied: 0, assignments: [] },
+      pending_financial_transactions: { reviewed: 0, assignable: 0, ambiguous: 0, applied: 0, assignments: [] },
+      insight_runs: { reviewed: 0, assignable: 0, ambiguous: 0, applied: 0, assignments: [] },
+      digest_runs: { reviewed: 0, assignable: 0, ambiguous: 0, applied: 0, assignments: [] },
+    },
+  };
+
+  const candidates: Record<LegacyOwnerRepairTable, string> = {
+    // The account owner is proven by the owner of any transaction that names
+    // it, or by an already-owned pending row that points at it.
+    financial_accounts: `
+      select a.id,
+        array_remove(array_agg(distinct candidate.owner_id), null) as "evidenceOwners"
+      from financial_accounts a
+      left join (
+        select t.account_id as account_id, coalesce(t.owner_id, e.owner_id, e.client_id) as owner_id
+        from financial_transactions t
+        left join financial_transaction_events fte on fte.transaction_id = t.id
+        left join raw_events e on e.id = fte.raw_event_id
+        where t.account_id is not null
+        union all
+        select t.destination_account_id, coalesce(t.owner_id, e.owner_id, e.client_id)
+        from financial_transactions t
+        left join financial_transaction_events fte on fte.transaction_id = t.id
+        left join raw_events e on e.id = fte.raw_event_id
+        where t.destination_account_id is not null
+        union all
+        select p.account_id, p.owner_id from pending_financial_transactions p
+        where p.account_id is not null and p.owner_id is not null
+      ) candidate on candidate.account_id = a.id and candidate.owner_id is not null
+      where a.owner_id is null
+      group by a.id`,
+    // Pending rows carry no evidence of their own before B06. An already-owned
+    // account is the only non-guessed signal.
+    pending_financial_transactions: `
+      select p.id,
+        array_remove(array_agg(distinct a.owner_id), null) as "evidenceOwners"
+      from pending_financial_transactions p
+      left join financial_accounts a on a.id = p.account_id and a.owner_id is not null
+      where p.owner_id is null
+      group by p.id`,
+    // Insight runs persist exact event lineage in evidence/request/response.
+    insight_runs: `
+      select run.id,
+        array_remove(array_agg(distinct coalesce(event.owner_id, event.client_id)), null) as "evidenceOwners"
+      from insight_runs run
+      left join raw_events event
+        on strpos(
+          coalesce(run.evidence::text, '') || coalesce(run.request::text, '') || coalesce(run.response::text, ''),
+          event.id
+        ) > 0
+      where run.owner_id is null
+      group by run.id`,
+    // Digests may name event ids or cover a window. Both are evidence, never a
+    // guess: a window spanning several owners stays ambiguous.
+    digest_runs: `
+      select run.id,
+        array_remove(array_agg(distinct coalesce(event.owner_id, event.client_id)), null) as "evidenceOwners"
+      from digest_runs run
+      left join raw_events event on (
+        strpos(coalesce(run.request::text, '') || coalesce(run.response::text, ''), event.id) > 0
+        or (
+          run.window_from is not null and run.window_to is not null
+          and coalesce(event.timestamp, event.created_at) between run.window_from and run.window_to
+        )
+      )
+      where run.owner_id is null
+      group by run.id`,
+  };
+
+  for (const table of LEGACY_REPAIR_TABLES) {
+    if (!requested.has(table)) continue;
+    const rows = (await db.query<{ id: string; evidenceOwners: string[] | null }>(candidates[table])).rows;
+    const tableReport = report.tables[table];
+    tableReport.reviewed = rows.length;
+    for (const row of rows) {
+      const evidenceOwners = [...new Set((row.evidenceOwners ?? []).filter((owner): owner is string => Boolean(owner)))];
+      const mapped = mapping[row.id]?.trim();
+      const ownerId = mapped || (evidenceOwners.length === 1 ? evidenceOwners[0] : null);
+      if (!ownerId) {
+        tableReport.ambiguous += 1;
+        if (!dryRun) {
+          await quarantineRow(db, {
+            table,
+            rowId: row.id,
+            reason: "legacy_null_owner_requires_review",
+            ownerCandidate: evidenceOwners[0] ?? null,
+            evidence: { evidenceOwners, approvedBy: options.approvedBy ?? null, repair: "legacy_null_owner" },
+          });
+        }
+        continue;
+      }
+      tableReport.assignable += 1;
+      tableReport.assignments.push({
+        id: row.id,
+        ownerId,
+        evidence: mapped ? "explicit_mapping" : "single_evidence_owner",
+      });
+      if (dryRun) continue;
+      // Additive and idempotent: never overwrite an owner that appeared after
+      // the review, and never touch the payload or identifiers.
+      const applied = await db.query(
+        `update ${table} set owner_id = $2 where id = $1 and owner_id is null`,
+        [row.id, ownerId],
+      );
+      tableReport.applied += applied.rowCount ?? 0;
+      if (!applied.rowCount) continue;
+      await quarantineRow(db, {
+        table,
+        rowId: row.id,
+        reason: "legacy_null_owner_assigned",
+        ownerCandidate: ownerId,
+        evidence: {
+          evidenceOwners,
+          approvedBy: options.approvedBy ?? (mapped ? "explicit_mapping" : "single_evidence_owner"),
+          repair: "legacy_null_owner",
+        },
+      });
+      await db.query(
+        `update owner_quarantine set status = 'remediated', released_at = now() where table_name = $1 and row_id = $2`,
+        [table, row.id],
+      );
+    }
+  }
+
+  return report;
 }

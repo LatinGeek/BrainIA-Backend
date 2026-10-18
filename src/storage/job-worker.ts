@@ -61,7 +61,7 @@ export async function executeBackgroundJob(job: BackgroundJob): Promise<Backgrou
       return { value: await runIntelligenceStep(String(job.payload.artifactId), Number(job.payload.revision)), effects: [] };
     case "classification": {
       const eventId = await requireEventId(job);
-      const classified = await classifyCapturedEvent(eventId);
+      const classified = await classifyCapturedEvent(eventId, { fence: job });
       if (!classified) throw new Error(`Event ${eventId} is unavailable for classification`);
       // classifyCapturedEvent atomically materializes a financial projection
       // whenever the final classification is financial.
@@ -99,7 +99,7 @@ export async function executeBackgroundJob(job: BackgroundJob): Promise<Backgrou
     case "embedding":
       return { value: await refreshEventEmbeddings(pool, await requireEventId(job)), effects: [] };
     case "financial_correlation":
-      return { value: await correlateFinancialEvent(await requireEventId(job)), effects: [] };
+      return { value: await correlateFinancialEvent(await requireEventId(job), { fence: job }), effects: [] };
     case "insight_detection":
       return { value: await detectInsightCandidates({ clientId: job.clientId }), effects: [] };
     case "semantic_reconciliation":

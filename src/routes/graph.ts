@@ -1,7 +1,7 @@
 import type { FastifyPluginAsync } from "fastify";
 import { z } from "zod";
 import { getEntityGraph, getExploreGraph, getTaxonomyGraph, parseExploreGraphOptions, parseGraphOptions } from "../storage/graph-repository.js";
-import { pool } from "../storage/postgres.js";
+import { pool, withOwnerRead } from "../storage/postgres.js";
 import { ownerScope, requireScope } from "../auth.js";
 
 const graphParamsSchema = z.object({
@@ -30,6 +30,32 @@ export const registerGraphRoutes: FastifyPluginAsync = async (app) => {
 
     const options = parseGraphOptions(request.query as Record<string, string | undefined>);
     const ownerId = ownerScope(request);
+
+    if (ownerId) {
+      // RLS-enforced preflight: the restricted role can only see the owner's
+      // rows (plus public taxonomy). A foreign or unknown root is
+      // indistinguishable from missing and never reaches the traversal.
+      const visibleRoot = await withOwnerRead(ownerId, async (db) => {
+        const canonical = await db.query<{ id: string }>(`
+          select coalesce(merge.canonical_entity_id, entity.id) as id
+          from entities entity
+          left join entity_merges merge on merge.alias_entity_id = entity.id
+          where entity.id = $1
+          limit 1
+        `, [params.data.id]);
+        const canonicalId = canonical.rows[0]?.id;
+        if (!canonicalId) return false;
+        const root = await db.query<{ id: string }>(
+          `select id from entities where id = $1 and visibility <> 'hidden' limit 1`,
+          [canonicalId],
+        );
+        return root.rows.length > 0;
+      });
+      if (!visibleRoot) {
+        return reply.status(404).send({ error: "entity_not_found" });
+      }
+    }
+
     const graph = await getEntityGraph(params.data.id, options.depth, options.maxNodes, options.maxRelations);
 
     if (!graph) {

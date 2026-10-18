@@ -129,8 +129,8 @@ export async function insertInsightRun(db: Queryable, input: InsightRunInput & {
   return result.rows[0] ?? null;
 }
 
-export async function listInsightRuns(limit: number, ownerId?: string) {
-  const result = await pool.query<InsightRunRecord>(
+export async function listInsightRuns(limit: number, ownerId?: string, db: Queryable = pool) {
+  const result = await db.query<InsightRunRecord>(
     `
       select
         id,
@@ -169,8 +169,8 @@ export async function listInsightRuns(limit: number, ownerId?: string) {
   return result.rows;
 }
 
-export async function loadInsightRunById(id: string, ownerId?: string) {
-  const result = await pool.query<InsightRunRecord>(
+export async function loadInsightRunById(id: string, ownerId?: string, db: Queryable = pool) {
+  const result = await db.query<InsightRunRecord>(
     `
       select
         id,

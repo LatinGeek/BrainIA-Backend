@@ -400,6 +400,101 @@ test('B08/E07 concurrent inline and poller claims produce exactly one live attem
   }
 });
 
+test('B08/E07 stale fence cannot publish classification or financial main work', async () => {
+  const clientId = randomUUID();
+  const event = {
+    id: randomUUID(), source: 'capture.wallet', contractVersion: 1, kind: 'expense' as const,
+    title: `Stale Shop ${randomUUID()}`, body: 'Compra en Stale Shop por UYU 654',
+    timestamp: '2026-10-16T11:00:00Z',
+    raw: { amount: 654, currency: 'UYU', merchant: 'Stale Shop', transactionType: 'expense' }, tags: [],
+  };
+  await insertRawEvent(pool, event, clientId, `${clientId}:${event.id}`);
+  const job = await enqueueBackgroundJob(pool, {
+    clientId, eventId: event.id, jobType: 'classification',
+    idempotencyKey: `classification:${event.id}:v1`, payload: { eventId: event.id }, priority: 10,
+  });
+
+  const stale = await claimBackgroundJob({ id: job.id, workerId: 'stale-classifier', leaseMs: 1_000 });
+  assert.ok(stale);
+  await expireLease(job.id);
+  const current = await claimBackgroundJob({ id: job.id, workerId: 'current-classifier', leaseMs: 5_000 });
+  assert.ok(current);
+
+  // The stale attempt lost its fence before executing. Its classification and
+  // financial projection must not commit, even though execution happens before
+  // completion is attempted.
+  await assert.rejects(
+    () => executeBackgroundJob(stale),
+    (error: unknown) => error instanceof StaleJobClaimError,
+  );
+  const blocked = await pool.query<{ count: number }>(`
+    select count(*)::int as count from financial_transaction_events where raw_event_id = $1
+  `, [event.id]);
+  assert.equal(blocked.rows[0]!.count, 0, 'a stale attempt must not materialize financial evidence');
+
+  const execution = await executeBackgroundJob(current);
+  await completeBackgroundJob(current, async (db) => {
+    for (const effect of execution.effects) await effect(db);
+  });
+  const finance = await pool.query<{ count: number }>(`
+    select count(*)::int as count from financial_transaction_events where raw_event_id = $1
+  `, [event.id]);
+  assert.equal(finance.rows[0]!.count, 1, 'the current fenced attempt still projects exactly once');
+});
+
+test('B08/E07 reviveFailed repairs a legacy attempt_count=0 row before claiming', async () => {
+  const revivedIds: string[] = [];
+  for (const tag of ['legacy-inline', 'legacy-poller']) {
+    const clientId = randomUUID();
+    const job = await enqueueBackgroundJob(pool, {
+      clientId, jobType: 'retention', idempotencyKey: uniqueKey(tag),
+      payload: { marker: tag }, maxAttempts: 1,
+    });
+    const first = await claimBackgroundJob({ id: job.id, workerId: `${tag}-a`, leaseMs: 5_000 });
+    assert.ok(first);
+    const failed = await failBackgroundJob(first, new Error('deterministic dead letter'));
+    assert.equal(failed.deadLetter, true);
+    // Reproduce the pre-r2 revive shape: queued with attempt history but a
+    // rewound attempt_count. Under the old increment this claim produced
+    // 23505 duplicate key on (job_id, attempt).
+    await pool.query(`
+      update background_jobs set status = 'queued', attempt_count = 0, max_attempts = 2,
+        run_after = now(), locked_at = null, locked_by = null, lease_id = null,
+        lease_expires_at = null, heartbeat_at = null, dead_lettered_at = null,
+        completed_at = null, updated_at = now()
+      where id = $1
+    `, [job.id]);
+    revivedIds.push(job.id);
+  }
+
+  const inline = await claimBackgroundJob({ id: revivedIds[0]!, workerId: 'legacy-inline-b', leaseMs: 5_000 });
+  assert.ok(inline, 'the inline claim repairs attempt_count instead of inserting a duplicate attempt');
+  assert.equal(inline.attemptCount, 2);
+  assert.equal(inline.fenceToken, 2);
+  await completeBackgroundJob(inline);
+
+  const polled = await claimBackgroundJobs({
+    workerId: 'legacy-poller-b', limit: 25, jobTypes, globalCapacity: 4, perOwnerCapacity: 1, leaseMs: 5_000,
+  });
+  const row = polled.find((job) => job.id === revivedIds[1]);
+  assert.ok(row, 'the poller claim repairs attempt_count instead of inserting a duplicate attempt');
+  assert.equal(row.attemptCount, 2);
+  assert.equal(row.fenceToken, 2);
+  await completeBackgroundJob(row);
+
+  const history = await pool.query<{ id: string; attempt: number; status: string }>(`
+    select job_id as id, attempt, status from background_job_attempts
+    where job_id = any($1::text[]) order by job_id, attempt
+  `, [revivedIds]);
+  for (const id of revivedIds) {
+    assert.deepEqual(
+      history.rows.filter((attempt) => attempt.id === id).map((attempt) => [attempt.attempt, attempt.status]),
+      [[1, 'dead_letter'], [2, 'succeeded']],
+      'the repaired claim appends a new attempt and never overwrites history',
+    );
+  }
+});
+
 test('B08/E07 service lease and replay ledgers are RLS default-deny with no public grants', async () => {
   const tables = ['background_job_leases', 'background_job_replays'];
   const rls = await pool.query<{ relname: string; rls: boolean }>(`
