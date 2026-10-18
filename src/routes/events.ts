@@ -1,7 +1,14 @@
-import type { FastifyPluginAsync } from "fastify";
-import { resolveAuthContext, type AuthConfig } from "../auth.js";
+﻿import type { FastifyPluginAsync } from "fastify";
+import { ownerScope, type AuthConfig } from "../auth.js";
 import { eventSchema } from "../domain/event.js";
-import { appendEvent, getEvent, listEvents, reprocessEvent } from "../storage/event-store.js";
+import {
+  appendEvent,
+  classifyCapturedEvent,
+  correlateFinancialEvent,
+  getEvent,
+  listEvents,
+  reprocessEvent,
+} from "../storage/event-store.js";
 
 type EventRoutesOptions = {
   authConfig: AuthConfig;
@@ -9,7 +16,7 @@ type EventRoutesOptions = {
 
 export const registerEventRoutes = (options: EventRoutesOptions): FastifyPluginAsync => {
   return async (app) => {
-    app.get("/events", async () => listEvents());
+    app.get("/events", async (request) => listEvents(ownerScope(request)));
 
     app.get("/events/:id", async (request, reply) => {
       const eventId = (request.params as { id?: string }).id?.trim();
@@ -20,7 +27,7 @@ export const registerEventRoutes = (options: EventRoutesOptions): FastifyPluginA
         });
       }
 
-      const event = await getEvent(eventId);
+      const event = await getEvent(eventId, ownerScope(request));
       return event ?? reply.status(404).send({
         error: "event_not_found",
         message: "No stored event matches the provided id",
@@ -43,17 +50,8 @@ export const registerEventRoutes = (options: EventRoutesOptions): FastifyPluginA
         });
       }
 
-      const auth = resolveAuthContext(request.headers, options.authConfig);
-      if ("ok" in auth && !auth.ok) {
-        return reply.status(auth.statusCode).send({
-          error: auth.error,
-          message: auth.message,
-        });
-      }
-
-      const stored = await appendEvent(parsed.data, {
-        clientId: "mode" in auth ? (auth.mode === "disabled" ? null : auth.clientId) : null,
-      });
+      const clientId = ownerScope(request);
+      const stored = await appendEvent(parsed.data, { clientId });
 
       request.log.info(
         {
@@ -62,7 +60,7 @@ export const registerEventRoutes = (options: EventRoutesOptions): FastifyPluginA
           inferredKind: stored.inferredKind,
           contractVersion: stored.contractVersion,
           dedupeKey: stored.dedupeKey,
-          clientId: "mode" in auth ? (auth.mode === "disabled" ? null : auth.clientId) : null,
+          clientId,
         },
         "event ingested",
       );
@@ -81,11 +79,12 @@ export const registerEventRoutes = (options: EventRoutesOptions): FastifyPluginA
         });
       }
 
-      const auth = resolveAuthContext(request.headers, options.authConfig);
-      if ("ok" in auth && !auth.ok) {
-        return reply.status(auth.statusCode).send({
-          error: auth.error,
-          message: auth.message,
+      const clientId = ownerScope(request);
+      const existing = await getEvent(eventId, clientId);
+      if (!existing) {
+        return reply.status(404).send({
+          error: "event_not_found",
+          message: "No stored event matches the provided id",
         });
       }
 
@@ -109,6 +108,33 @@ export const registerEventRoutes = (options: EventRoutesOptions): FastifyPluginA
       );
 
       return reply.send(stored);
+    });
+
+    app.post("/events/:id/reconcile-financial", async (request, reply) => {
+      const eventId = (request.params as { id?: string }).id?.trim();
+      if (!eventId) {
+        return reply.status(400).send({ error: "invalid_event_id", message: "The event id is required" });
+      }
+
+      const clientId = ownerScope(request);
+
+      // Do not run semantic enrichment here. This narrow recovery operation is
+      // for an already-captured notification whose financial ledger row was
+      // delayed or missed by the background worker.
+      const existing = await getEvent(eventId, clientId);
+      if (!existing) {
+        return reply.status(404).send({ error: "event_not_found", message: "No stored event matches the provided id" });
+      }
+      if (!existing.classificationVersion) {
+        const classified = await classifyCapturedEvent(eventId);
+        if (!classified) {
+          return reply.status(409).send({ error: "event_not_processable", message: "This event cannot be classified" });
+        }
+      }
+      const correlation = await correlateFinancialEvent(eventId);
+      const stored = await getEvent(eventId, clientId);
+      request.log.info({ eventId, correlated: correlation?.correlated ?? false }, "financial event reconciled");
+      return reply.send({ event: stored, correlated: correlation?.correlated ?? false });
     });
   };
 };

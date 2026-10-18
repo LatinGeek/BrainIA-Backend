@@ -1,0 +1,21 @@
+{
+  "checkedAt": "2026-10-15T16:18:48.844Z",
+  "preexistingSourceBytesPreserved": true,
+  "newFilesOutsideScope": [],
+  "changedFilesOutsideScope": [],
+  "packageOnlyRequestedScriptsAdded": true,
+  "commandExitCodes": {
+    "after-build": 0,
+    "after-eval-v2": 1,
+    "after-isolated": 0,
+    "after-lint": 0,
+    "after-selftest": 0,
+    "after-test-v2": 1,
+    "before-build": 0,
+    "before-isolated": 0,
+    "before-lint": 0,
+    "before-test-v2": 1,
+    "negative-production-target": 1
+  },
+  "buildGeneratedOutput": "normal ignored dist/ output produced by required npm run build"
+}

@@ -137,6 +137,7 @@ export async function getTaxonomyGraph(options: ReturnType<typeof parseExploreGr
         0 as local_depth, array[entity.value]::text[] as breadcrumb
       from entities entity
       where entity.taxonomy_key is not null
+        and entity.visibility <> 'hidden'
         and (($1::text is null and entity.type = 'domain') or entity.taxonomy_key = $1)
       union all
       select child.id, child.type, child.value, child.description, child.metadata,
@@ -146,6 +147,7 @@ export async function getTaxonomyGraph(options: ReturnType<typeof parseExploreGr
         and relation.relation_type in ('part_of', 'belongs_to_domain')
       join entities child on child.id = relation.source_entity_id
       where parent.local_depth < $2 and child.taxonomy_key is not null
+        and child.visibility <> 'hidden'
     )
     select selected.id, selected.type, selected.value, selected.description,
       (select count(*)::float8 from event_semantic_anchors anchor where anchor.anchor_entity_id = selected.id) as "importanceScore",
@@ -165,6 +167,7 @@ export async function getTaxonomyGraph(options: ReturnType<typeof parseExploreGr
       order by relation.confidence desc limit 1
     ) parent_relation on true
     join entities domain on domain.taxonomy_key = split_part(selected.metadata ->> 'taxonomyKey', '.', 1)
+      and domain.visibility <> 'hidden'
     order by "hierarchyDepth", "evidenceCount" desc, selected.value
     limit $3
   `, [options.root, options.depth, options.limit]);
@@ -247,6 +250,7 @@ export async function getExploreGraph(options: ReturnType<typeof parseExploreGra
         from entities entity
         left join entity_merges merged on merged.alias_entity_id = entity.id
         where entity.type = 'domain'
+          and entity.visibility <> 'hidden'
           and merged.alias_entity_id is null
           and entity.identity_source in ('ai', 'ai_seed', 'user')
           and length(btrim(entity.description)) > 0
@@ -258,6 +262,7 @@ export async function getExploreGraph(options: ReturnType<typeof parseExploreGra
         join entities child on child.id = relation.source_entity_id
         left join entity_merges merged on merged.alias_entity_id = child.id
         where merged.alias_entity_id is null
+          and child.visibility <> 'hidden'
           and child.type in ('domain', 'concept', 'app', 'merchant', 'sender', 'recipient', 'financial_event', 'email_message', 'activity_instance')
           and (child.identity_source in ('ai', 'ai_seed', 'user')
             or ($2::boolean
@@ -282,6 +287,7 @@ export async function getExploreGraph(options: ReturnType<typeof parseExploreGra
         left join relations r on (r.source_entity_id = e.id or r.target_entity_id = e.id)
           and r.relation_type in ('part_of', 'belongs_to_domain')
         where merged.alias_entity_id is null
+          and e.visibility <> 'hidden'
           and (e.type in ('domain', 'concept', 'app', 'merchant', 'sender', 'recipient')
             or ($2::boolean and e.type in ('financial_event', 'email_message', 'activity_instance')))
           and (e.identity_source in ('ai', 'ai_seed', 'user')
@@ -332,6 +338,7 @@ export async function getExploreGraph(options: ReturnType<typeof parseExploreGra
       left join entity_merges merged on merged.alias_entity_id = parent.id
       where relation.relation_type in ('part_of', 'belongs_to_domain')
         and merged.alias_entity_id is null
+        and parent.visibility <> 'hidden'
         and parent.type in ('domain', 'concept', 'app', 'merchant', 'sender', 'recipient', 'financial_event', 'email_message', 'activity_instance')
         and parent.identity_source in ('ai', 'ai_seed', 'user')
         and length(btrim(parent.description)) > 0
@@ -345,6 +352,7 @@ export async function getExploreGraph(options: ReturnType<typeof parseExploreGra
       and relation.relation_type in ('part_of', 'belongs_to_domain')
     where e.id in (select id from lineage)
       and merged.alias_entity_id is null
+      and e.visibility <> 'hidden'
       and e.type in ('domain', 'concept', 'app', 'merchant', 'sender', 'recipient', 'financial_event', 'email_message', 'activity_instance')
       and e.identity_source in ('ai', 'ai_seed', 'user')
       and length(btrim(e.description)) > 0
@@ -439,6 +447,11 @@ export async function getEntityGraph(entityId: string, depth: number, maxNodes: 
         created_at as "createdAt"
       from entities
       where id = $1
+        and visibility <> 'hidden'
+        and not exists (
+          select 1 from deletion_tombstones tombstone
+          where tombstone.target_type = 'entity' and tombstone.target_id = entities.id
+        )
       limit 1
     `,
     [canonicalRoot.id],
@@ -463,6 +476,11 @@ export async function getEntityGraph(entityId: string, depth: number, maxNodes: 
           0 as depth
         from entities e
         where e.id = $1
+          and e.visibility <> 'hidden'
+          and not exists (
+            select 1 from deletion_tombstones tombstone
+            where tombstone.target_type = 'entity' and tombstone.target_id = e.id
+          )
 
         union
 
@@ -484,6 +502,11 @@ export async function getEntityGraph(entityId: string, depth: number, maxNodes: 
             when r.source_entity_id = walk.id then r.target_entity_id
             else r.source_entity_id
           end
+          and next_e.visibility <> 'hidden'
+          and not exists (
+            select 1 from deletion_tombstones tombstone
+            where tombstone.target_type = 'entity' and tombstone.target_id = next_e.id
+          )
         where walk.depth < $2
       )
       select distinct on (id)
@@ -511,6 +534,11 @@ export async function getEntityGraph(entityId: string, depth: number, maxNodes: 
           0 as depth
         from entities e
         where e.id = $1
+          and e.visibility <> 'hidden'
+          and not exists (
+            select 1 from deletion_tombstones tombstone
+            where tombstone.target_type = 'entity' and tombstone.target_id = e.id
+          )
 
         union
 
@@ -525,6 +553,11 @@ export async function getEntityGraph(entityId: string, depth: number, maxNodes: 
             when r.source_entity_id = walk.id then r.target_entity_id
             else r.source_entity_id
           end
+          and next_e.visibility <> 'hidden'
+          and not exists (
+            select 1 from deletion_tombstones tombstone
+            where tombstone.target_type = 'entity' and tombstone.target_id = next_e.id
+          )
         where walk.depth < $2
       )
       select distinct on (r.id)
@@ -545,6 +578,10 @@ export async function getEntityGraph(entityId: string, depth: number, maxNodes: 
       from relations r
       join walk ws on ws.id = r.source_entity_id
       join walk wt on wt.id = r.target_entity_id
+      where not exists (
+        select 1 from deletion_tombstones tombstone
+        where tombstone.target_type = 'relation' and tombstone.target_id = r.id
+      )
       order by r.id asc, r.confidence desc, depth asc
       limit $3
     `,

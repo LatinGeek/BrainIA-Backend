@@ -1,0 +1,1228 @@
+{
+  "formatVersion": 1,
+  "generatedAt": "2026-10-15T16:59:08.096Z",
+  "status": "BLOCKED",
+  "offline": true,
+  "datasetVersion": "2.0.0-synthetic.1",
+  "datasetSha256": "9224cee8483242c8b949bf5d7d7592e4d25ebe892f76eda8324b3877e26581fd",
+  "fixtureHashes": [
+    {
+      "id": "E01",
+      "sha256": "7fb422534db2bfcc00f8f298258d407cc59cb2ad3d9178029634d513e91805a9"
+    },
+    {
+      "id": "E02",
+      "sha256": "97f30a7c7c31cd4da5c0947612bf11b808a7d908119dbf0f6eb4ab391e6a0abc"
+    },
+    {
+      "id": "E03",
+      "sha256": "334190b2e7021c6071061cf8fd9c981eeffcb2e2f44fdd85062051bf977ce11f"
+    },
+    {
+      "id": "E04",
+      "sha256": "e731758a8d3bf35fe2a2c1b994bd9903764552ec55f34128f99513f4a96d58e2"
+    },
+    {
+      "id": "E05",
+      "sha256": "a80566d53857a1629358701aa545acd7ee6636706b3fb43587fce3a6fdfbad7e"
+    },
+    {
+      "id": "E06",
+      "sha256": "d983eedbbd1a04c4a4a99e0d08be20f28a45fc6a2f958dd4dd86c08d08eade95"
+    },
+    {
+      "id": "E07",
+      "sha256": "59bed2ced7e1072da8850928bd7d572c7bc2b26716f314039c4e4695831c1a9f"
+    },
+    {
+      "id": "E08",
+      "sha256": "c5985483bdd20e2bcba179edee6a0f42a4e458796ef8d572102a061a52fe96f2"
+    },
+    {
+      "id": "E09",
+      "sha256": "061291a1da464ec5b301dda24c74c76c7e7fb2af2486a682683241932d7b8eb4"
+    },
+    {
+      "id": "E10",
+      "sha256": "ea790a90d8f77605a8822c9cc6db88aefc0cf3d9dc905e0c1c9346637c3434c6"
+    },
+    {
+      "id": "E11",
+      "sha256": "2fb7099ab985e65b7871416e2dfbb1d7231581166263361e190c9c3cff652eb3"
+    },
+    {
+      "id": "E12",
+      "sha256": "c89d4aaf4fad780b259af6623741debb61d334da7e73c6e5f543fd1bc4b390ea"
+    }
+  ],
+  "seed": 2101,
+  "split": "all",
+  "selectedSuites": [
+    "E11"
+  ],
+  "adapter": {
+    "path": "tests\\v2-harness\\current-adapter.mjs",
+    "revision": "current-checkout-heuristic-v3",
+    "sha256": "49b6bb1b234b48459e7a35b02e4918bc211766e22d5b2d8da99be250b8f4e156"
+  },
+  "environment": {
+    "node": "v22.23.3",
+    "platform": "win32",
+    "arch": "x64",
+    "cpu": "AMD Ryzen 7 5800H with Radeon Graphics         ",
+    "logicalCpus": 16,
+    "ramBytes": 17024741376,
+    "flags": [
+      {
+        "name": "BRAINIA_INTELLIGENCE_ENABLED",
+        "value": "<redacted>"
+      },
+      {
+        "name": "BRAINIA_JEV_MODE",
+        "value": "<redacted>"
+      },
+      {
+        "name": "DATABASE_URL",
+        "value": "<redacted>"
+      },
+      {
+        "name": "DEEPSEEK_API_KEY",
+        "value": "<redacted>"
+      },
+      {
+        "name": "TYPESAFE_API_KEY",
+        "value": "<redacted>"
+      }
+    ],
+    "migrationsSha256": "02275494e0f666c9728f4f94c09c108725235690c559910752f319374024cb20",
+    "installedDatabaseSchema": "UNAVAILABLE: offline, no database connected",
+    "deploymentSha256": null,
+    "apkSha256": null,
+    "provider": "offline stub; no external provider",
+    "providerRevision": "v2-stub-1",
+    "modelRevision": null,
+    "jobPollFrequency": "not measured; no worker started"
+  },
+  "corpusSize": 13820,
+  "selectedCases": 90,
+  "tenants": 2,
+  "devicesPerTenant": 2,
+  "sanitizerAudit": {
+    "version": "v2-sanitizer-1",
+    "passed": true,
+    "moneySeparatorsPreserved": true,
+    "relationships": "synthetic IDs preserved verbatim",
+    "personalSources": 0
+  },
+  "network": {
+    "externalCalls": 0,
+    "blockedAttempts": 0,
+    "stubCalls": 0
+  },
+  "costs": {
+    "externalProviderCharges": 0,
+    "currency": "USD",
+    "reason": "offline network denied; no external calls",
+    "productionEstimate": null,
+    "reductionAgainstLiveBaseline": null
+  },
+  "qualityGates": {
+    "Q1": [
+      "E02",
+      "E03",
+      "E05"
+    ],
+    "Q2": [
+      "E06"
+    ],
+    "Q3": [
+      "E06",
+      "E12"
+    ],
+    "Q4": [
+      "E01",
+      "E03"
+    ],
+    "Q5": [
+      "E07"
+    ],
+    "Q6": [
+      "E02",
+      "E10"
+    ],
+    "Q7": [
+      "E03",
+      "E04"
+    ],
+    "Q8": [
+      "E05"
+    ],
+    "Q9": [
+      "E06",
+      "E08",
+      "E12"
+    ],
+    "Q10": [
+      "E11"
+    ]
+  },
+  "limitations": [
+    "Offline fixtures are not PostgreSQL role/RLS/locking/crash evidence.",
+    "E10 is simulated transport only; native reports and receipt hashes remain required.",
+    "Synthetic labels are not two independently adjudicated human labels.",
+    "Q10 additionally requires explicit human approval and backup/restore proof before any destructive operation."
+  ],
+  "suites": [
+    {
+      "suite": "E11",
+      "status": "BLOCKED",
+      "cases": 90,
+      "passed": 0,
+      "failed": 0,
+      "blocked": 90,
+      "blockers": [
+        "Synthetic labels await independent adjudication; no human-label claim",
+        "real-postgresql-required: offline execution cannot certify this suite",
+        "90 cases lack application observations"
+      ],
+      "exactCaseAccuracy": {
+        "numerator": 0,
+        "denominator": 0,
+        "value": null,
+        "confidence95": null,
+        "zeroErrorUpper95": null
+      },
+      "adapterObservationLatencyMs": {
+        "p95": 0.0404999999999518,
+        "productStageLatency": "not instrumented"
+      },
+      "slices": {
+        "language": {
+          "en": {
+            "cases": 30,
+            "passed": 0,
+            "failed": 0,
+            "blocked": 30,
+            "exactCaseAccuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "value": null,
+              "confidence95": null,
+              "zeroErrorUpper95": null
+            }
+          },
+          "es": {
+            "cases": 30,
+            "passed": 0,
+            "failed": 0,
+            "blocked": 30,
+            "exactCaseAccuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "value": null,
+              "confidence95": null,
+              "zeroErrorUpper95": null
+            }
+          },
+          "mixed": {
+            "cases": 30,
+            "passed": 0,
+            "failed": 0,
+            "blocked": 30,
+            "exactCaseAccuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "value": null,
+              "confidence95": null,
+              "zeroErrorUpper95": null
+            }
+          }
+        },
+        "source": {
+          "email": {
+            "cases": 30,
+            "passed": 0,
+            "failed": 0,
+            "blocked": 30,
+            "exactCaseAccuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "value": null,
+              "confidence95": null,
+              "zeroErrorUpper95": null
+            }
+          },
+          "notification": {
+            "cases": 30,
+            "passed": 0,
+            "failed": 0,
+            "blocked": 30,
+            "exactCaseAccuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "value": null,
+              "confidence95": null,
+              "zeroErrorUpper95": null
+            }
+          },
+          "receipt": {
+            "cases": 30,
+            "passed": 0,
+            "failed": 0,
+            "blocked": 30,
+            "exactCaseAccuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "value": null,
+              "confidence95": null,
+              "zeroErrorUpper95": null
+            }
+          }
+        },
+        "split": {
+          "calibration": {
+            "cases": 18,
+            "passed": 0,
+            "failed": 0,
+            "blocked": 18,
+            "exactCaseAccuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "value": null,
+              "confidence95": null,
+              "zeroErrorUpper95": null
+            }
+          },
+          "held-out": {
+            "cases": 18,
+            "passed": 0,
+            "failed": 0,
+            "blocked": 18,
+            "exactCaseAccuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "value": null,
+              "confidence95": null,
+              "zeroErrorUpper95": null
+            }
+          },
+          "train": {
+            "cases": 54,
+            "passed": 0,
+            "failed": 0,
+            "blocked": 54,
+            "exactCaseAccuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "value": null,
+              "confidence95": null,
+              "zeroErrorUpper95": null
+            }
+          }
+        }
+      }
+    }
+  ],
+  "results": [
+    {
+      "id": "E11-00001",
+      "suite": "E11",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00002",
+      "suite": "E11",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00003",
+      "suite": "E11",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00004",
+      "suite": "E11",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00005",
+      "suite": "E11",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00006",
+      "suite": "E11",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00007",
+      "suite": "E11",
+      "split": "calibration",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00008",
+      "suite": "E11",
+      "split": "calibration",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00009",
+      "suite": "E11",
+      "split": "held-out",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00010",
+      "suite": "E11",
+      "split": "held-out",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00011",
+      "suite": "E11",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00012",
+      "suite": "E11",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00013",
+      "suite": "E11",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00014",
+      "suite": "E11",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00015",
+      "suite": "E11",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00016",
+      "suite": "E11",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00017",
+      "suite": "E11",
+      "split": "calibration",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00018",
+      "suite": "E11",
+      "split": "calibration",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00019",
+      "suite": "E11",
+      "split": "held-out",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00020",
+      "suite": "E11",
+      "split": "held-out",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00021",
+      "suite": "E11",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00022",
+      "suite": "E11",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00023",
+      "suite": "E11",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00024",
+      "suite": "E11",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00025",
+      "suite": "E11",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00026",
+      "suite": "E11",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00027",
+      "suite": "E11",
+      "split": "calibration",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00028",
+      "suite": "E11",
+      "split": "calibration",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00029",
+      "suite": "E11",
+      "split": "held-out",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00030",
+      "suite": "E11",
+      "split": "held-out",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00031",
+      "suite": "E11",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00032",
+      "suite": "E11",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00033",
+      "suite": "E11",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00034",
+      "suite": "E11",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00035",
+      "suite": "E11",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00036",
+      "suite": "E11",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00037",
+      "suite": "E11",
+      "split": "calibration",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00038",
+      "suite": "E11",
+      "split": "calibration",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00039",
+      "suite": "E11",
+      "split": "held-out",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00040",
+      "suite": "E11",
+      "split": "held-out",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00041",
+      "suite": "E11",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00042",
+      "suite": "E11",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00043",
+      "suite": "E11",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00044",
+      "suite": "E11",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00045",
+      "suite": "E11",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00046",
+      "suite": "E11",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00047",
+      "suite": "E11",
+      "split": "calibration",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00048",
+      "suite": "E11",
+      "split": "calibration",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00049",
+      "suite": "E11",
+      "split": "held-out",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00050",
+      "suite": "E11",
+      "split": "held-out",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00051",
+      "suite": "E11",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00052",
+      "suite": "E11",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00053",
+      "suite": "E11",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00054",
+      "suite": "E11",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00055",
+      "suite": "E11",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00056",
+      "suite": "E11",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00057",
+      "suite": "E11",
+      "split": "calibration",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00058",
+      "suite": "E11",
+      "split": "calibration",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00059",
+      "suite": "E11",
+      "split": "held-out",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00060",
+      "suite": "E11",
+      "split": "held-out",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00061",
+      "suite": "E11",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00062",
+      "suite": "E11",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00063",
+      "suite": "E11",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00064",
+      "suite": "E11",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00065",
+      "suite": "E11",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00066",
+      "suite": "E11",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00067",
+      "suite": "E11",
+      "split": "calibration",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00068",
+      "suite": "E11",
+      "split": "calibration",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00069",
+      "suite": "E11",
+      "split": "held-out",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00070",
+      "suite": "E11",
+      "split": "held-out",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00071",
+      "suite": "E11",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00072",
+      "suite": "E11",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00073",
+      "suite": "E11",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00074",
+      "suite": "E11",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00075",
+      "suite": "E11",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00076",
+      "suite": "E11",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00077",
+      "suite": "E11",
+      "split": "calibration",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00078",
+      "suite": "E11",
+      "split": "calibration",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00079",
+      "suite": "E11",
+      "split": "held-out",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00080",
+      "suite": "E11",
+      "split": "held-out",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00081",
+      "suite": "E11",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00082",
+      "suite": "E11",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00083",
+      "suite": "E11",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00084",
+      "suite": "E11",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00085",
+      "suite": "E11",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00086",
+      "suite": "E11",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00087",
+      "suite": "E11",
+      "split": "calibration",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00088",
+      "suite": "E11",
+      "split": "calibration",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00089",
+      "suite": "E11",
+      "split": "held-out",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E11-00090",
+      "suite": "E11",
+      "split": "held-out",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E11 application adapter/instrumentation yet",
+      "errors": []
+    }
+  ]
+}

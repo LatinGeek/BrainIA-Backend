@@ -1,4 +1,4 @@
-import type { FastifyPluginAsync } from "fastify";
+﻿import type { FastifyPluginAsync } from "fastify";
 import { z } from "zod";
 import { createKnowledgeInsight } from "../storage/insights.js";
 import { pool } from "../storage/postgres.js";
@@ -6,6 +6,7 @@ import { insertInsightRun, listInsightRuns, loadInsightRunById } from "../storag
 import { listEntities } from "../storage/entity-repository.js";
 import { runDailyKnowledgeEvaluation } from "../storage/proactive-insights.js";
 import { upsertEmbedding } from "../storage/embeddings.js";
+import { ownerScope } from "../auth.js";
 
 const insightSchema = z
   .object({
@@ -26,6 +27,11 @@ const insightHistoryQuerySchema = z.object({
 const insightHistoryParamsSchema = z.object({
   id: z.string().min(1),
 });
+
+function normalizeInsightHistoryLimit(value: string | undefined) {
+  const parsedLimit = Number(value ?? "25");
+  return Number.isFinite(parsedLimit) ? Math.min(100, Math.max(1, Math.trunc(parsedLimit))) : 25;
+}
 
 const dailyInsightSchema = z.object({
   id: z.string().min(1).optional(),
@@ -54,20 +60,22 @@ export const registerInsightsRoutes: FastifyPluginAsync = async (app) => {
       return { ok: true, ...await runDailyKnowledgeEvaluation() };
     }
     const requested = dailyInsightSchema.safeParse(body);
-    const latestEntity = requested.success ? null : (await listEntities()).at(-1);
+    const latestEntity = requested.success ? null : (await listEntities(ownerScope(request))).at(-1);
     if (!requested.success && !latestEntity) {
       return reply.status(400).send({ error: "invalid_daily_insight_request", issues: requested.error.flatten() });
     }
 
     const input = requested.success ? requested.data : { id: latestEntity!.id };
-    const insight = await createKnowledgeInsight({ id: input.id, q: input.q, depth: 2, maxNodes: 100, maxRelations: 100 });
+    const { lineage, ...insight } = await createKnowledgeInsight({ id: input.id, q: input.q, clientId: ownerScope(request), depth: 2, maxNodes: 100, maxRelations: 100 });
     const storedRun = await insertInsightRun(pool, {
       toolName: "generate_daily_insight",
+      ownerId: ownerScope(request),
       query: insight.query,
       request: { ...input, schedule: "daily" },
       response: insight,
       summary: insight.summary,
       model: insight.model,
+      evidence: lineage ? [{ eventIds: lineage.eventIds, sources: lineage.sources }] : [],
     });
     if (storedRun && insight.summary) await upsertEmbedding(pool, {
       objectType: "insight", objectId: storedRun.id, content: insight.summary,
@@ -78,6 +86,24 @@ export const registerInsightsRoutes: FastifyPluginAsync = async (app) => {
   });
 
   app.get("/insights", async (request, reply) => {
+    // Older mobile builds used this path to list saved insights. Keep that
+    // contract working while reserving id/q requests for insight generation.
+    const query = request.query as Record<string, unknown>;
+    if (typeof query.limit === "string" && !query.id && !query.q) {
+      const history = insightHistoryQuerySchema.safeParse(request.query);
+      if (!history.success) {
+        return reply.status(400).send({
+          error: "invalid_insight_history_query",
+          issues: history.error.flatten(),
+        });
+      }
+
+      const limit = normalizeInsightHistoryLimit(history.data.limit);
+      const runs = (await listInsightRuns(limit, ownerScope(request)))
+        .filter((run) => run.summary !== null || run.query !== null);
+      return { limit, count: runs.length, runs };
+    }
+
     const parsed = insightSchema.safeParse(request.query);
     if (!parsed.success) {
       return reply.status(400).send({
@@ -86,9 +112,10 @@ export const registerInsightsRoutes: FastifyPluginAsync = async (app) => {
       });
     }
 
-    const insight = await createKnowledgeInsight({
+    const { lineage, ...insight } = await createKnowledgeInsight({
       id: parsed.data.id,
       q: parsed.data.q,
+      clientId: ownerScope(request),
       depth: parsed.data.depth ? Number(parsed.data.depth) : undefined,
       maxNodes: parsed.data.maxNodes ? Number(parsed.data.maxNodes) : undefined,
       maxRelations: parsed.data.maxRelations ? Number(parsed.data.maxRelations) : undefined,
@@ -96,6 +123,7 @@ export const registerInsightsRoutes: FastifyPluginAsync = async (app) => {
 
     const storedRun = await insertInsightRun(pool, {
       toolName: "generate_insight",
+      ownerId: ownerScope(request),
       query: insight.query,
       request: {
         id: parsed.data.id ?? null,
@@ -107,6 +135,7 @@ export const registerInsightsRoutes: FastifyPluginAsync = async (app) => {
       response: insight,
       summary: insight.summary,
       model: insight.model,
+      evidence: lineage ? [{ eventIds: lineage.eventIds, sources: lineage.sources }] : [],
     });
     if (storedRun && insight.summary) await upsertEmbedding(pool, {
       objectType: "insight", objectId: storedRun.id, content: insight.summary,
@@ -145,9 +174,9 @@ export const registerInsightsRoutes: FastifyPluginAsync = async (app) => {
       });
     }
 
-    const parsedLimit = Number(parsed.data.limit ?? "25");
-    const limit = Number.isFinite(parsedLimit) ? Math.min(100, Math.max(1, Math.trunc(parsedLimit))) : 25;
-    const runs = await listInsightRuns(limit);
+    const limit = normalizeInsightHistoryLimit(parsed.data.limit);
+    const runs = (await listInsightRuns(limit, ownerScope(request)))
+      .filter((run) => run.summary !== null || run.query !== null);
 
     return {
       limit,
@@ -165,8 +194,8 @@ export const registerInsightsRoutes: FastifyPluginAsync = async (app) => {
       });
     }
 
-    const run = await loadInsightRunById(params.data.id);
-    if (!run) {
+    const run = await loadInsightRunById(params.data.id, ownerScope(request));
+    if (!run || (run.summary === null && run.query === null)) {
       return reply.status(404).send({
         error: "insight_run_not_found",
         message: "No stored insight run matches the provided id",

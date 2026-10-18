@@ -104,17 +104,45 @@ export async function setImmediateHierarchyParent(db: Queryable, input: {
   }, input.child.id, input.parent.id);
 }
 
+export type SemanticAnchorWrite = {
+  applied: boolean;
+  // True when an existing primary anchor outside the requested
+  // domain/generation was deliberately preserved instead of being deleted.
+  preservedPrimary: boolean;
+};
+
+// B04: an event's primary anchor may only be replaced inside the same governed
+// domain and the same governance generation. A reprocessed path that would
+// move the event to another domain, or that would overwrite an anchor from an
+// older generation, is preserved as durable evidence and returned to the
+// caller for review. The one-primary index is therefore never satisfied by
+// implicitly deleting unrelated history.
 export async function upsertEventSemanticAnchor(db: Queryable, input: {
   eventId: string; domainEntityId: string; anchorEntityId: string; role: "primary" | "secondary";
   confidence: number; rationale: string; governanceVersion: string;
-}) {
-  if (input.role === "primary") await db.query(`delete from event_semantic_anchors where event_id = $1 and role = 'primary' and domain_entity_id <> $2`, [input.eventId, input.domainEntityId]);
+}): Promise<SemanticAnchorWrite> {
+  // Serialize anchor writes per event so two concurrent resolutions cannot
+  // both observe "no primary" and then collide on the partial unique index.
+  await db.query(`select pg_advisory_xact_lock(hashtext($1))`, [`event-semantic-anchor:${input.eventId}`]);
+  if (input.role === "primary") {
+    const existing = await db.query<{ domainEntityId: string; governanceVersion: string }>(`
+      select domain_entity_id as "domainEntityId", governance_version as "governanceVersion"
+      from event_semantic_anchors
+      where event_id = $1 and role = 'primary'
+      for update
+    `, [input.eventId]);
+    const primary = existing.rows[0];
+    if (primary && (primary.domainEntityId !== input.domainEntityId || primary.governanceVersion !== input.governanceVersion)) {
+      return { applied: false, preservedPrimary: true };
+    }
+  }
   await db.query(`
     insert into event_semantic_anchors (event_id, domain_entity_id, anchor_entity_id, role, confidence, rationale, governance_version)
     values ($1,$2,$3,$4,$5,$6,$7)
     on conflict (event_id, domain_entity_id) do update set anchor_entity_id = excluded.anchor_entity_id, role = excluded.role,
       confidence = excluded.confidence, rationale = excluded.rationale, governance_version = excluded.governance_version, updated_at = now()
   `, [input.eventId, input.domainEntityId, input.anchorEntityId, input.role, input.confidence, input.rationale, input.governanceVersion]);
+  return { applied: true, preservedPrimary: false };
 }
 
 export async function enqueueSemanticCandidate(db: Queryable, input: Omit<SemanticCandidate, "id" | "status" | "createdAt" | "resolvedTargetEntityId">) {

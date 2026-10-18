@@ -55,6 +55,7 @@ export function buildEventSearchQuery(
     kind?: string;
     from?: string;
     to?: string;
+    clientId?: string;
   } = {},
 ) {
   const term = `%${query.trim().toLowerCase()}%`;
@@ -66,6 +67,12 @@ export function buildEventSearchQuery(
       or lower(coalesce(r.body, '')) like $1
       or lower(coalesce(r.source, '')) like $1
       or lower(coalesce(r.kind, '')) like $1
+    )`,
+    `r.privacy_status <> 'hidden'`,
+    `r.processing_allowed`,
+    `not exists (
+      select 1 from deletion_tombstones tombstone
+      where tombstone.target_type = 'event' and tombstone.target_id = r.id
     )`,
   ];
 
@@ -89,9 +96,196 @@ export function buildEventSearchQuery(
     eventWhereParts.push(`coalesce(r.timestamp, r.created_at) <= $${eventParams.length}::timestamptz`);
   }
 
+  if (filters.clientId?.trim()) {
+    eventParams.push(filters.clientId.trim());
+    eventWhereParts.push(`r.client_id = $${eventParams.length}`);
+  }
+
   return {
     eventParams,
     eventWhereClause: eventWhereParts.join("\n        and "),
+  };
+}
+
+export type DerivedRunReadTable = "insight_runs" | "digest_runs";
+
+/**
+ * B11 r3 / R1: read-time eligibility for persisted derived runs.
+ *
+ * Earlier tombstones only quarantined the runs whose payload text happened to
+ * contain the deleted id, so a legacy window digest or an entity-only insight
+ * could survive a tombstone (and a restore) and still be served. Rather than
+ * backfilling rows, every read path applies this predicate:
+ *
+ * - a direct `insight`/`digest` tombstone for the run itself makes it ineligible;
+ * - a run created at/before an owner tombstone is ineligible, even when its
+ *   payload never named the deleted target (conservative r1 upgrade rule);
+ * - a digest whose window overlaps the tombstoned event's timestamp is
+ *   ineligible;
+ * - a run is eligible again only when `revalidated_at` is strictly after the
+ *   covering tombstone (explicit revalidation).
+ *
+ * Runs created after the tombstone must still persist explicit live-event
+ * lineage (event id in `evidence`/`request`/`response`), which makes an
+ * unlinked summary replay ineligible even if it was written before the r3
+ * insert guard existed.
+ *
+ * The alias must be a trusted identifier (table name or a fixed local alias).
+ */
+export function derivedRunReadEligibilitySql(table: DerivedRunReadTable, alias: string): string {
+  const windowOverlap = table === "digest_runs"
+    ? `
+          or (
+            ${alias}.window_from is not null and ${alias}.window_to is not null
+            and exists (
+              select 1 from raw_events window_event
+              where window_event.id = tombstone.target_id
+                and coalesce(window_event.timestamp, window_event.created_at)
+                  between ${alias}.window_from and ${alias}.window_to
+            )
+          )`
+    : "";
+  // digest_runs has no evidence column; request/response are its lineage store.
+  const lineageMatch = table === "digest_runs"
+    ? `strpos(coalesce(${alias}.request::text, ''), lineage_event.id) > 0
+                or strpos(coalesce(${alias}.response::text, ''), lineage_event.id) > 0`
+    : `strpos(coalesce(${alias}.evidence::text, ''), lineage_event.id) > 0
+                or strpos(coalesce(${alias}.request::text, ''), lineage_event.id) > 0
+                or strpos(coalesce(${alias}.response::text, ''), lineage_event.id) > 0`;
+  return `(
+        not exists (
+          select 1 from deletion_tombstones tombstone
+          where tombstone.owner_id = coalesce(${alias}.owner_id, 'anonymous')
+            and (
+              tombstone.target_id = ${alias}.id
+              or ${alias}.created_at <= tombstone.created_at${windowOverlap}
+            )
+            and (${alias}.revalidated_at is null or ${alias}.revalidated_at <= tombstone.created_at)
+        )
+        and (
+          not exists (
+            select 1 from deletion_tombstones owner_tombstone
+            where owner_tombstone.owner_id = coalesce(${alias}.owner_id, 'anonymous')
+          )
+          or exists (
+            select 1 from raw_events lineage_event
+            where (
+              (${alias}.owner_id is not null
+                and coalesce(lineage_event.owner_id, lineage_event.client_id) = ${alias}.owner_id)
+              or (${alias}.owner_id is null
+                and lineage_event.owner_id is null and lineage_event.client_id is null)
+            )
+              and lineage_event.privacy_status = 'standard'
+              and lineage_event.processing_allowed
+              and (
+                ${lineageMatch}
+              )
+          )
+        )
+      )`;
+}
+
+type RetrievalResultLike = {
+  objectType: string;
+  objectId: string;
+  eventId: string | null;
+};
+
+type RetrievalPackageLike = {
+  evidenceId: string;
+  sourceEventId: string | null;
+};
+
+/**
+ * Post-filter for `/retrieval/hybrid`. The hybrid SQL is intentionally broad;
+ * this applies the same deletion/visibility eligibility used by the legacy
+ * read routes to relation/digest/insight candidates before they leave the API.
+ */
+export async function filterEligibleRetrievalResults<
+  T extends {
+    results: RetrievalResultLike[];
+    evidencePackage: RetrievalPackageLike[];
+  },
+>(retrieval: T, clientId?: string | null): Promise<T> {
+  const relationIds = retrieval.results
+    .filter((result) => result.objectType === "relation")
+    .map((result) => result.objectId);
+  const runIds = retrieval.results
+    .filter((result) => result.objectType === "insight" || result.objectType === "digest")
+    .map((result) => result.objectId);
+  const [relationRows, eligibleRunRows] = await Promise.all([
+    relationIds.length
+      ? pool.query<{ id: string; eventId: string | null; hasLinks: boolean }>(`
+          select relation.id,
+            (
+              select event.id
+              from event_relations link
+              join raw_events event on event.id = link.event_id
+              where link.relation_id = relation.id
+                and event.privacy_status <> 'hidden'
+                and event.processing_allowed
+                and not exists (
+                  select 1 from deletion_tombstones tombstone
+                  where tombstone.target_type = 'event' and tombstone.target_id = event.id
+                )
+              order by link.event_id
+              limit 1
+            ) as "eventId",
+            exists (select 1 from event_relations link where link.relation_id = relation.id) as "hasLinks"
+          from relations relation
+          join entities source on source.id = relation.source_entity_id
+          join entities target on target.id = relation.target_entity_id
+          where relation.id = any($1::text[])
+            and source.visibility <> 'hidden'
+            and target.visibility <> 'hidden'
+            and not exists (
+              select 1 from deletion_tombstones tombstone
+              where tombstone.target_type = 'relation' and tombstone.target_id = relation.id
+            )
+            and (
+              $2::text is null
+              or relation.owner_id = $2
+              or (
+                relation.owner_id is null
+                and source.type in ('domain','concept')
+                and target.type in ('domain','concept')
+              )
+            )
+        `, [relationIds, clientId ?? null])
+      : Promise.resolve({ rows: [] as Array<{ id: string; eventId: string | null; hasLinks: boolean }> }),
+    runIds.length
+      ? pool.query<{ id: string }>(`
+          select run.id from insight_runs run
+          where run.id = any($1::text[]) and (run.summary is not null or run.query is not null)
+            and ${derivedRunReadEligibilitySql("insight_runs", "run")}
+          union all
+          select run.id from digest_runs run
+          where run.id = any($1::text[]) and run.summary is not null
+            and ${derivedRunReadEligibilitySql("digest_runs", "run")}
+        `, [runIds])
+      : Promise.resolve({ rows: [] as Array<{ id: string }> }),
+  ]);
+  const relations = new Map(relationRows.rows.map((row) => [row.id, row]));
+  const eligibleRuns = new Set(eligibleRunRows.rows.map((row) => row.id));
+  const results = retrieval.results.flatMap((result) => {
+    if (result.objectType === "relation") {
+      const relation = relations.get(result.objectId);
+      if (!relation || (relation.hasLinks && !relation.eventId)) return [];
+      return [{ ...result, eventId: relation.eventId }];
+    }
+    if (result.objectType === "insight" || result.objectType === "digest") {
+      return eligibleRuns.has(result.objectId) ? [result] : [];
+    }
+    return [result];
+  });
+  const resultById = new Map(results.map((result) => [`${result.objectType}:${result.objectId}`, result]));
+  return {
+    ...retrieval,
+    results,
+    evidencePackage: retrieval.evidencePackage.flatMap((item) => {
+      const result = resultById.get(item.evidenceId);
+      return result ? [{ ...item, sourceEventId: result.eventId }] : [];
+    }),
   };
 }
 
@@ -102,6 +296,7 @@ export async function searchKnowledge(
     kind?: string;
     from?: string;
     to?: string;
+    clientId?: string;
   } = {},
 ) {
   const { eventParams, eventWhereClause } = buildEventSearchQuery(query, filters);
@@ -159,7 +354,7 @@ export async function searchKnowledge(
           em.reason as "mergeReason"
         from entities e
         left join entity_merges em on em.alias_entity_id = e.id
-        where lower(type) like $1
+        where (lower(type) like $1
            or lower(value) like $1
            or lower(normalized_value) like $1
            or exists (
@@ -171,32 +366,65 @@ export async function searchKnowledge(
                  or lower(a.normalized_alias) like $1
                  or lower(coalesce(array_to_string(a.category_path, ' / '), '')) like $1
                )
-           )
+           ))
+          and ($2::text is null or e.owner_id = $2 or (e.owner_id is null and e.type in ('domain', 'concept')))
+          and e.visibility <> 'hidden'
+          and not exists (
+            select 1 from deletion_tombstones tombstone
+            where tombstone.target_type = 'entity' and tombstone.target_id = e.id
+          )
         order by e.created_at desc
         limit 20
       `,
-      [term],
+      [term, filters.clientId?.trim() ?? null],
     ),
     pool.query(
       `
         select
-          id,
-          source_entity_id as "sourceEntityId",
-          target_entity_id as "targetEntityId",
-          relation_type as "relationType",
-          label,
-          description,
-          confidence,
-          metadata,
-          created_at as "createdAt"
-        from relations
-        where lower(relation_type) like $1
-           or lower(label) like $1
-           or lower(description) like $1
-        order by created_at desc
+          r.id,
+          r.source_entity_id as "sourceEntityId",
+          r.target_entity_id as "targetEntityId",
+          r.relation_type as "relationType",
+          r.label,
+          r.description,
+          r.confidence,
+          r.metadata,
+          r.created_at as "createdAt"
+        from relations r
+        join entities source on source.id = r.source_entity_id
+        join entities target on target.id = r.target_entity_id
+        where (lower(r.relation_type) like $1
+           or lower(r.label) like $1
+           or lower(r.description) like $1)
+          and (
+            $2::text is null
+            or r.owner_id = $2
+            or (r.owner_id is null and source.type in ('domain', 'concept') and target.type in ('domain', 'concept'))
+          )
+          and source.visibility <> 'hidden'
+          and target.visibility <> 'hidden'
+          and not exists (
+            select 1 from deletion_tombstones tombstone
+            where tombstone.target_type = 'relation' and tombstone.target_id = r.id
+          )
+          and (
+            not exists (select 1 from event_relations link where link.relation_id = r.id)
+            or exists (
+              select 1 from event_relations link
+              join raw_events event on event.id = link.event_id
+              where link.relation_id = r.id
+                and event.privacy_status <> 'hidden'
+                and event.processing_allowed
+                and not exists (
+                  select 1 from deletion_tombstones tombstone
+                  where tombstone.target_type = 'event' and tombstone.target_id = event.id
+                )
+            )
+          )
+        order by r.created_at desc
         limit 20
       `,
-      [term],
+      [term, filters.clientId?.trim() ?? null],
     ),
   ]);
 

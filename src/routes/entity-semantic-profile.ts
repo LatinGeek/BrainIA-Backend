@@ -1,14 +1,13 @@
-import type { FastifyPluginAsync } from "fastify";
+﻿import type { FastifyPluginAsync } from "fastify";
 import { z } from "zod";
-import { CLIENT_ID_HEADER } from "../auth.js";
+import { ownerScope } from "../auth.js";
 import {
   ENTITY_ROLES, REVIEW_RELATION_TYPES, loadEntitySemanticProfile, saveEntitySemanticProfile,
 } from "../storage/entity-semantic-profile.js";
 import { pool } from "../storage/postgres.js";
 
-function clientId(request: { headers: Record<string, string | string[] | undefined> }) {
-  const value = request.headers[CLIENT_ID_HEADER];
-  return (Array.isArray(value) ? value[0] : value)?.trim() || null;
+function clientId(request: Parameters<typeof ownerScope>[0]) {
+  return ownerScope(request);
 }
 
 const paramsSchema = z.object({ id: z.string().min(1) });
@@ -38,7 +37,7 @@ export const registerEntitySemanticProfileRoutes: FastifyPluginAsync = async (ap
       issues: { params: params.success ? undefined : params.error.flatten(), body: body.success ? undefined : body.error.flatten() },
     });
     try {
-      const profile = await saveEntitySemanticProfile({ ...body.data, entityId: params.data.id, clientId: clientId(request) });
+      const profile = await saveEntitySemanticProfile({ ...body.data, entityId: params.data.id, clientId: clientId(request) ?? null });
       return profile ?? reply.status(404).send({ error: "entity_not_found" });
     } catch (error) {
       return reply.status(409).send({ error: "invalid_entity_profile", message: error instanceof Error ? error.message : String(error) });

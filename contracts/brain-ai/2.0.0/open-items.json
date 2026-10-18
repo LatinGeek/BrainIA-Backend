@@ -1,0 +1,541 @@
+{
+  "status": "PROPOSED_REVISION_PENDING_REVIEW",
+  "approvalReady": false,
+  "revision": "B02-r3",
+  "openDecisionCount": 0,
+  "resolvedDecisionCount": 17,
+  "provisionalOperationCount": 13,
+  "items": [
+    {
+      "name": "activity.marker",
+      "where": "content.type=activity",
+      "why": "Observed/inferred marker has no field name or wire type; confidence/interval constraints incomplete.",
+      "decision": "Approve exact marker name/enum, signal types and interval/confidence semantics; Activity stays false.",
+      "status": "resolved",
+      "resolution": "owner_confirmed_encoded",
+      "resolutionDetail": "activityMarker enum observed|inferred; closed signalTypes allowlist still|walking|running|cycling|driving|transit|unknown; interval {start,end} with end>=start; confidence 0..1. Activity capability stays false.",
+      "resolvedAt": "2026-10-17",
+      "schemas": [
+        "Activity"
+      ],
+      "operations": []
+    },
+    {
+      "name": "email.addresses",
+      "where": "Email.sender and Email.recipients[]",
+      "why": "Address shape (string or structured) and validation are unspecified.",
+      "decision": "Approve sender and recipient DTOs; Email sender remains false.",
+      "status": "resolved",
+      "resolution": "owner_confirmed_encoded",
+      "resolutionDetail": "Structured {address, displayName?} with format email and maxLength 320 for address, maxLength 256 for displayName. Email capability stays false.",
+      "resolvedAt": "2026-10-17",
+      "schemas": [
+        "Email",
+        "EmailAddress"
+      ],
+      "operations": []
+    },
+    {
+      "name": "attachmentRefs.items",
+      "where": "Email.attachmentRefs / ReceiptContent.attachmentRefs",
+      "why": "Attachment reference DTO and authorization/expiry are unspecified.",
+      "decision": "Approve exact attachment reference DTO and lifecycle; only empty lists currently accepted.",
+      "status": "resolved",
+      "resolution": "owner_confirmed_encoded",
+      "resolutionDetail": "Opaque {refId, provider?, mimeType?, sizeBytes?, sha256?, expiresAt?} DTO remains documented, but both attachmentRefs arrays are empty-only (maxItems: 0) until a connector is approved; no credentialed URLs. Non-empty arrays are rejected.",
+      "resolvedAt": "2026-10-17",
+      "schemas": [
+        "AttachmentRef",
+        "Email",
+        "ReceiptContent"
+      ],
+      "operations": []
+    },
+    {
+      "name": "error.details",
+      "where": "ErrorObject.details",
+      "why": "Field paths/limits/versions described without keys or types.",
+      "decision": "Approve strict detail variants; optional details currently forbidden.",
+      "status": "resolved",
+      "resolution": "owner_confirmed_encoded",
+      "resolutionDetail": "Strict discriminated union by kind: field_errors[] (field/code/expected/actual), retry(retryAfterSeconds), conflict(conflictId), blocked_category(blockedCategory). No free-form details object.",
+      "resolvedAt": "2026-10-17",
+      "schemas": [
+        "ErrorDetails",
+        "ErrorObject"
+      ],
+      "operations": []
+    },
+    {
+      "name": "receipt.processing",
+      "where": "Receipt.processing",
+      "why": "Only queued appears in normative receipt; later processing values unspecified.",
+      "decision": "Confirm queued-only durable receipts or enumerate other receipt states.",
+      "status": "resolved",
+      "resolution": "owner_confirmed_encoded",
+      "resolutionDetail": "Durable receipts are queued-only in v2.0.0; later states require a versioned contract revision.",
+      "resolvedAt": "2026-10-17",
+      "schemas": [
+        "Receipt"
+      ],
+      "operations": []
+    },
+    {
+      "name": "capabilities.auth",
+      "where": "GET /api/v2/capabilities",
+      "why": "All routes require owner/scope, while table says No credentials.",
+      "decision": "Confirm bearer-protected response contains no credentials (bundle interpretation) or approve public access.",
+      "status": "resolved",
+      "resolution": "owner_confirmed_encoded",
+      "resolutionDetail": "GET /api/v2/capabilities is bearer-protected; response contains no credentials, only booleans, limits and registry version.",
+      "resolvedAt": "2026-10-17",
+      "schemas": [
+        "Capabilities"
+      ],
+      "operations": []
+    },
+    {
+      "name": "capabilities.featureGates",
+      "where": "Capabilities.features",
+      "why": "No location/activity/connector/episode advertisement fields exist.",
+      "decision": "Approve feature advertisement fields before enabling any of these captures/features.",
+      "status": "resolved",
+      "resolution": "owner_confirmed_encoded",
+      "resolutionDetail": "features {email, activity, location, episodes, connectors} are booleans fixed false in this revision; observationRevisions and decimalFinance remain true. A gate may only be advertised after its evidence exists.",
+      "resolvedAt": "2026-10-17",
+      "schemas": [
+        "Capabilities"
+      ],
+      "operations": []
+    },
+    {
+      "name": "timestamp.presence",
+      "where": "Envelope.sourceOccurredAt / sourceUpdatedAt",
+      "why": "Required-fields paragraph says nullable; data model mentions absent optional canonicalized to null.",
+      "decision": "Confirm both fields required on wire and null represents unknown (bundle interpretation).",
+      "status": "resolved",
+      "resolution": "owner_confirmed_encoded",
+      "resolutionDetail": "sourceOccurredAt and sourceUpdatedAt are required nullable wire fields; null means unknown, never now.",
+      "resolvedAt": "2026-10-17",
+      "schemas": [
+        "Envelope"
+      ],
+      "operations": []
+    },
+    {
+      "name": "raw.security",
+      "where": "Content.raw",
+      "why": "Explicit extension object permits arbitrary names, but credential prohibition has no complete portable key allowlist.",
+      "decision": "Approve source-specific raw allowlists and privacy limits; schema success alone cannot authorize raw payloads.",
+      "status": "resolved",
+      "resolution": "owner_confirmed_encoded",
+      "resolutionDetail": "raw allowlists: notification {packageName,title,body}; receipt/wallet {amount,currency,merchant,transactionType}. note/email/activity/location raw must be empty. Unknown or credential-shaped keys are rejected; raw payloads remain source-policy gated.",
+      "resolvedAt": "2026-10-17",
+      "schemas": [
+        "Notification",
+        "ReceiptContent",
+        "Note",
+        "Email",
+        "Activity",
+        "Location"
+      ],
+      "operations": []
+    },
+    {
+      "name": "batch.minimumAndMalformedIdentity",
+      "where": "BatchRequest.items / BatchResponse.results",
+      "why": "Maximum given but empty batch semantics and per-item deliveryId for malformed/missing UUID unspecified.",
+      "decision": "Confirm nonempty batches (subset restriction) and specify unidentified-item error behavior.",
+      "status": "resolved",
+      "resolution": "owner_confirmed_encoded",
+      "resolutionDetail": "Batches are non-empty 1..100. Each result carries input index 0..99. Malformed items return deliveryId null plus a per-item error; valid items still process.",
+      "resolvedAt": "2026-10-17",
+      "schemas": [
+        "BatchRequest",
+        "BatchItem",
+        "BatchResponse"
+      ],
+      "operations": []
+    },
+    {
+      "name": "decimal.storageAndFX",
+      "where": "Decimal / Conversion.rate",
+      "why": "Wire permits 6 decimals without integer digit limit; storage NUMERIC(24,6), FX NUMERIC(24,12).",
+      "decision": "Approve magnitude/digit bounds and separate FX precision DTO; subset rejects rates beyond 6 fractional digits.",
+      "status": "resolved",
+      "resolution": "owner_confirmed_encoded",
+      "resolutionDetail": "Amounts are decimal strings with at most 18 integer and 6 fractional digits. Conversion.rate uses ConversionRate with at most 12 fractional digits. Storage NUMERIC(24,6)/NUMERIC(24,12).",
+      "resolvedAt": "2026-10-17",
+      "schemas": [
+        "Decimal",
+        "Magnitude",
+        "ConversionRate",
+        "Conversion"
+      ],
+      "operations": []
+    },
+    {
+      "name": "currency.registry",
+      "where": "Currency / FinancialSummary",
+      "why": "ISO registry version, unsupported ISO handling and conversion rounding DTO not pinned.",
+      "decision": "Pin currency registry, exponents and rounding rule; only UYU/USD confirmed summary fixture semantics tested.",
+      "status": "resolved",
+      "resolution": "owner_confirmed_encoded",
+      "resolutionDetail": "Currency is a 3-letter ISO 4217 code; capabilities advertises currencyRegistryVersion ISO4217-CLDR-45; round half-even to the CLDR exponent; unsupported codes return unsupported_currency. Only UYU/USD summary fixtures are confirmed.",
+      "resolvedAt": "2026-10-17",
+      "schemas": [
+        "Currency",
+        "Capabilities",
+        "FinancialSummary"
+      ],
+      "operations": []
+    },
+    {
+      "name": "deletion.creationResponse",
+      "where": "POST /api/v2/deletions 202",
+      "why": "Deletion ID/state names described but full creation response absent.",
+      "decision": "Approve exact 202 response; operation remains excluded.",
+      "status": "resolved",
+      "resolution": "owner_confirmed_encoded",
+      "resolutionDetail": "202 {deletionId, state:\"queued\", createdAt, remainingCategories:[]}; the deletion worker and the POST operation itself remain excluded from this revision.",
+      "resolvedAt": "2026-10-17",
+      "schemas": [
+        "DeletionCreationResponse"
+      ],
+      "operations": [
+        "POST /api/v2/deletions"
+      ]
+    },
+    {
+      "name": "deletion.remainingCategories",
+      "where": "DeletionState.remainingCategories[] / blockedAt",
+      "why": "Category enum and blockedAt meaning/nullability unspecified.",
+      "decision": "Approve category allowlist and timestamp semantics; schema is structural only.",
+      "status": "resolved",
+      "resolution": "owner_confirmed_encoded",
+      "resolutionDetail": "Category allowlist raw_events, derived_knowledge, embeddings, financial_records, connectors, backups. blockedAt is a required nullable UTC timestamp meaning waiting on the named category.",
+      "resolvedAt": "2026-10-17",
+      "schemas": [
+        "DeletionState"
+      ],
+      "operations": []
+    },
+    {
+      "name": "GET /api/v2/observations/{id}",
+      "where": "GET /api/v2/observations/{id}",
+      "why": "Observation detail identity/revision/stage/cursor DTO field names and stage enums are not fully specified in the source draft.",
+      "decision": "Approve full strict request/response schemas and semantics before implementing this operation.",
+      "status": "schema_published_pending_review",
+      "resolution": "provisional_contract_authorization",
+      "resolutionDetail": "Strict schema, enums, pagination, error variants and positive/negative fixtures published in revision B02-r3. Implementation and mobile consumption remain blocked until this revision passes contracts:verify and independent review.",
+      "resolvedAt": "2026-10-17",
+      "schemas": [],
+      "operations": [
+        "GET /api/v2/observations/{id}"
+      ],
+      "fixtures": [
+        "ObservationDetail"
+      ],
+      "implementationBlocked": true
+    },
+    {
+      "name": "GET /api/v2/observations/{id}/revisions",
+      "where": "GET /api/v2/observations/{id}/revisions",
+      "why": "Revision page wrapper, evidence links, history DTO and paging fields are not fully specified in the source draft.",
+      "decision": "Approve full strict request/response schemas and semantics before implementing this operation.",
+      "status": "schema_published_pending_review",
+      "resolution": "provisional_contract_authorization",
+      "resolutionDetail": "Strict schema, enums, pagination, error variants and positive/negative fixtures published in revision B02-r3. Implementation and mobile consumption remain blocked until this revision passes contracts:verify and independent review.",
+      "resolvedAt": "2026-10-17",
+      "schemas": [],
+      "operations": [
+        "GET /api/v2/observations/{id}/revisions"
+      ],
+      "fixtures": [
+        "ObservationRevision",
+        "ObservationRevisionPage"
+      ],
+      "implementationBlocked": true
+    },
+    {
+      "name": "GET /api/v2/events/{id}",
+      "where": "GET /api/v2/events/{id}",
+      "why": "Event type/lifecycle/evidence/uncertainty/interpretation DTOs are not fully specified in the source draft.",
+      "decision": "Approve full strict request/response schemas and semantics before implementing this operation.",
+      "status": "schema_published_pending_review",
+      "resolution": "provisional_contract_authorization",
+      "resolutionDetail": "Strict schema, enums, pagination, error variants and positive/negative fixtures published in revision B02-r3. Implementation and mobile consumption remain blocked until this revision passes contracts:verify and independent review.",
+      "resolvedAt": "2026-10-17",
+      "schemas": [],
+      "operations": [
+        "GET /api/v2/events/{id}"
+      ],
+      "fixtures": [
+        "Event",
+        "EventEvidence",
+        "EventUncertainty",
+        "EventInterpretation"
+      ],
+      "implementationBlocked": true
+    },
+    {
+      "name": "GET /api/v2/episodes",
+      "where": "GET /api/v2/episodes",
+      "why": "Episode membership role enum, summary revision typing, list filters and pagination are not fully specified in the source draft.",
+      "decision": "Approve full strict request/response schemas and semantics before implementing this operation.",
+      "status": "schema_published_pending_review",
+      "resolution": "provisional_contract_authorization",
+      "resolutionDetail": "Strict schema, enums, pagination, error variants and positive/negative fixtures published in revision B02-r3. Implementation and mobile consumption remain blocked until this revision passes contracts:verify and independent review.",
+      "resolvedAt": "2026-10-17",
+      "schemas": [],
+      "operations": [
+        "GET /api/v2/episodes"
+      ],
+      "fixtures": [
+        "Episode",
+        "EpisodePage",
+        "EpisodeMember"
+      ],
+      "implementationBlocked": true
+    },
+    {
+      "name": "GET /api/v2/episodes/{id}",
+      "where": "GET /api/v2/episodes/{id}",
+      "why": "Episode detail and correction payloads; M07 remains blocked are not fully specified in the source draft.",
+      "decision": "Approve full strict request/response schemas and semantics before implementing this operation.",
+      "status": "schema_published_pending_review",
+      "resolution": "provisional_contract_authorization",
+      "resolutionDetail": "Strict schema, enums, pagination, error variants and positive/negative fixtures published in revision B02-r3. Implementation and mobile consumption remain blocked until this revision passes contracts:verify and independent review.",
+      "resolvedAt": "2026-10-17",
+      "schemas": [],
+      "operations": [
+        "GET /api/v2/episodes/{id}"
+      ],
+      "fixtures": [
+        "EpisodeDetail",
+        "EpisodeMember"
+      ],
+      "implementationBlocked": true
+    },
+    {
+      "name": "GET /api/v2/financial/transactions",
+      "where": "GET /api/v2/financial/transactions",
+      "why": "Financial lifecycle/currency nullability, evidence role/strength, signed-adjustment DTO and list wrapper are not fully specified in the source draft.",
+      "decision": "Approve full strict request/response schemas and semantics before implementing this operation.",
+      "status": "schema_published_pending_review",
+      "resolution": "provisional_contract_authorization",
+      "resolutionDetail": "Strict schema, enums, pagination, error variants and positive/negative fixtures published in revision B02-r3. Implementation and mobile consumption remain blocked until this revision passes contracts:verify and independent review.",
+      "resolvedAt": "2026-10-17",
+      "schemas": [],
+      "operations": [
+        "GET /api/v2/financial/transactions"
+      ],
+      "fixtures": [
+        "FinancialTransaction",
+        "FinancialTransactionPage",
+        "FinancialAdjustment",
+        "FinancialEvidence"
+      ],
+      "implementationBlocked": true
+    },
+    {
+      "name": "POST /api/v2/corrections",
+      "where": "POST /api/v2/corrections",
+      "why": "Allowlisted fields/typed values, rule preview, episode split/merge/include/exclude payloads and review response are not fully specified in the source draft.",
+      "decision": "Approve full strict request/response schemas and semantics before implementing this operation.",
+      "status": "schema_published_pending_review",
+      "resolution": "provisional_contract_authorization",
+      "resolutionDetail": "Strict schema, enums, pagination, error variants and positive/negative fixtures published in revision B02-r3. Implementation and mobile consumption remain blocked until this revision passes contracts:verify and independent review.",
+      "resolvedAt": "2026-10-17",
+      "schemas": [],
+      "operations": [
+        "POST /api/v2/corrections"
+      ],
+      "fixtures": [
+        "CorrectionRequest",
+        "CorrectionResponse"
+      ],
+      "implementationBlocked": true
+    },
+    {
+      "name": "GET /api/v2/export",
+      "where": "GET /api/v2/export",
+      "why": "Snapshot query/expiry/audit metadata and approved DTOs for every record discriminator are not fully specified in the source draft.",
+      "decision": "Approve full strict request/response schemas and semantics before implementing this operation.",
+      "status": "schema_published_pending_review",
+      "resolution": "provisional_contract_authorization",
+      "resolutionDetail": "Strict schema, enums, pagination, error variants and positive/negative fixtures published in revision B02-r3. Implementation and mobile consumption remain blocked until this revision passes contracts:verify and independent review.",
+      "resolvedAt": "2026-10-17",
+      "schemas": [],
+      "operations": [
+        "GET /api/v2/export"
+      ],
+      "fixtures": [
+        "ExportResponse",
+        "ExportItem",
+        "CorrectionRecord",
+        "Artifact"
+      ],
+      "implementationBlocked": true
+    },
+    {
+      "name": "POST /api/v2/queries",
+      "where": "POST /api/v2/queries",
+      "why": "Query length/maxEvidence bounds, type filters, timeRange, status/results/async response and structuredTotals are not fully specified in the source draft.",
+      "decision": "Approve full strict request/response schemas and semantics before implementing this operation.",
+      "status": "schema_published_pending_review",
+      "resolution": "provisional_contract_authorization",
+      "resolutionDetail": "Strict schema, enums, pagination, error variants and positive/negative fixtures published in revision B02-r3. Implementation and mobile consumption remain blocked until this revision passes contracts:verify and independent review.",
+      "resolvedAt": "2026-10-17",
+      "schemas": [],
+      "operations": [
+        "POST /api/v2/queries"
+      ],
+      "fixtures": [
+        "QueryRequest",
+        "QueryAccepted",
+        "QueryResult"
+      ],
+      "implementationBlocked": true
+    },
+    {
+      "name": "GET /api/v2/queries/{id}",
+      "where": "GET /api/v2/queries/{id}",
+      "why": "Pending/review/failed result variants, claim/citation verification and coverage DTO are not fully specified in the source draft.",
+      "decision": "Approve full strict request/response schemas and semantics before implementing this operation.",
+      "status": "schema_published_pending_review",
+      "resolution": "provisional_contract_authorization",
+      "resolutionDetail": "Strict schema, enums, pagination, error variants and positive/negative fixtures published in revision B02-r3. Implementation and mobile consumption remain blocked until this revision passes contracts:verify and independent review.",
+      "resolvedAt": "2026-10-17",
+      "schemas": [],
+      "operations": [
+        "GET /api/v2/queries/{id}"
+      ],
+      "fixtures": [
+        "QueryResult",
+        "QueryEvidence",
+        "QueryClaim",
+        "QueryCoverage"
+      ],
+      "implementationBlocked": true
+    },
+    {
+      "name": "POST /api/v2/connectors/email/authorize",
+      "where": "POST /api/v2/connectors/email/authorize",
+      "why": "Allowlisted returnRoute, authorize response keys/expiry and Gmail scope set are not fully specified in the source draft.",
+      "decision": "Approve full strict request/response schemas and semantics before implementing this operation.",
+      "status": "schema_published_pending_review",
+      "resolution": "provisional_contract_authorization",
+      "resolutionDetail": "Strict schema, enums, pagination, error variants and positive/negative fixtures published in revision B02-r3. Implementation and mobile consumption remain blocked until this revision passes contracts:verify and independent review.",
+      "resolvedAt": "2026-10-17",
+      "schemas": [],
+      "operations": [
+        "POST /api/v2/connectors/email/authorize"
+      ],
+      "fixtures": [
+        "EmailAuthorizeRequest",
+        "EmailAuthorizeResponse"
+      ],
+      "implementationBlocked": true
+    },
+    {
+      "name": "GET /api/v2/connectors/email/callback",
+      "where": "GET /api/v2/connectors/email/callback",
+      "why": "Callback query/redirect allowlist, error responses and opaque success ID encoding are not fully specified in the source draft.",
+      "decision": "Approve full strict request/response schemas and semantics before implementing this operation.",
+      "status": "schema_published_pending_review",
+      "resolution": "provisional_contract_authorization",
+      "resolutionDetail": "Strict schema, enums, pagination, error variants and positive/negative fixtures published in revision B02-r3. Implementation and mobile consumption remain blocked until this revision passes contracts:verify and independent review.",
+      "resolvedAt": "2026-10-17",
+      "schemas": [],
+      "operations": [
+        "GET /api/v2/connectors/email/callback"
+      ],
+      "fixtures": [
+        "ErrorObject",
+        "EmailCallbackQuery"
+      ],
+      "implementationBlocked": true
+    },
+    {
+      "name": "POST /api/v2/connectors/{id}/revoke",
+      "where": "POST /api/v2/connectors/{id}/revoke",
+      "why": "Owner-bound revoke response, deletion linkage and replay semantics are not fully specified in the source draft.",
+      "decision": "Approve full strict request/response schemas and semantics before implementing this operation.",
+      "status": "schema_published_pending_review",
+      "resolution": "provisional_contract_authorization",
+      "resolutionDetail": "Strict schema, enums, pagination, error variants and positive/negative fixtures published in revision B02-r3. Implementation and mobile consumption remain blocked until this revision passes contracts:verify and independent review.",
+      "resolvedAt": "2026-10-17",
+      "schemas": [],
+      "operations": [
+        "POST /api/v2/connectors/{id}/revoke"
+      ],
+      "fixtures": [
+        "ConnectorRevokeRequest",
+        "ConnectorRevokeResponse"
+      ],
+      "implementationBlocked": true
+    },
+    {
+      "name": "Fact",
+      "where": "Fact DTO (not an endpoint)",
+      "why": "uncertainty candidates/value variants, field allowlist, pointer/excerpt hashing and entity reference shape incomplete.",
+      "decision": "Approve discriminated Fact schema including UTF-16 span and evidence checks; no generic value placeholder.",
+      "status": "resolved",
+      "resolution": "owner_confirmed_encoded",
+      "resolutionDetail": "Fact is a strict discriminated union on factType (string|decimal|currency|timestamp|boolean|entity_ref) with typed value, UTF-16 start/end spans that must be paired, excerptHash, confidence 0..1, extractorVersion and visibility through validationStatus/userCorrectionStatus. Evidence must reference an existing event; no generic placeholder value.",
+      "resolvedAt": "2026-10-17",
+      "schemas": [
+        "Fact",
+        "FactEvidence",
+        "FactCandidate",
+        "TypedValue"
+      ],
+      "operations": []
+    },
+    {
+      "name": "enrollmentAndRetention",
+      "where": "Out-of-band admin device/source issuance and PRD retention defaults",
+      "why": "No public enrollment/rotation/logout wire flow approved; retention defaults require privacy owner approval.",
+      "decision": "Approve admin issuance/revocation ownership, source/device lifecycle, explicit empty-selection consent and dated retention decisions.",
+      "status": "resolved",
+      "resolution": "owner_confirmed_encoded",
+      "resolutionDetail": "Device-to-owner credential registry for first release; owner-controlled audited admin issuance/revocation; no public enrollment API; explicit selection with empty selection capturing nothing. Retention defaults remain as recorded in the G1 ledger and do not create wire fields in this revision.",
+      "resolvedAt": "2026-10-17",
+      "schemas": [],
+      "operations": []
+    },
+    {
+      "name": "summary.filters",
+      "where": "GET /api/v2/financial/summary query",
+      "why": "conversionTo/fxRateId pairing specified, but time bounds/defaults and allowed conversion currencies incomplete.",
+      "decision": "Approve required time range, bound ordering and currency/rate registry; subset requires from/to.",
+      "status": "resolved",
+      "resolution": "owner_confirmed_encoded",
+      "resolutionDetail": "from and to are required, from<=to, max range 366 days; conversion requires fxRateId; currency must be in the approved registry (confirmed UYU/USD subset); no defaults. Encoded by FinancialSummaryQuery and summary query fixtures.",
+      "resolvedAt": "2026-10-17",
+      "schemas": [
+        "FinancialSummary",
+        "FinancialSummaryQuery",
+        "CurrencyRegistry"
+      ],
+      "operations": []
+    }
+  ],
+  "excludedOperations": [
+    "POST /api/v2/deletions"
+  ],
+  "intentionallyExcludedOperations": [
+    {
+      "operation": "POST /api/v2/deletions",
+      "reason": "Destructive deletion creation remains excluded from OpenAPI and mobile implementation until a deletion worker and separate owner approval exist. Its response DTO is published for future structural review."
+    }
+  ],
+  "blockedMobileTasks": [
+    "M07",
+    "activity capture",
+    "email capture",
+    "connectors"
+  ],
+  "rule": "Resolved decisions are encoded, not approved. Provisional operation schemas authorise no implementation until contracts:verify and independent review complete."
+}

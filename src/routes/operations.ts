@@ -1,12 +1,13 @@
 import type { FastifyPluginAsync } from "fastify";
 import { z } from "zod";
-import { backgroundJobMetrics, listBackgroundJobs, retryBackgroundJob } from "../storage/job-repository.js";
+import { backgroundJobLeaseMetrics, backgroundJobMetrics, listBackgroundJobReplays, listBackgroundJobs, retryBackgroundJob } from "../storage/job-repository.js";
 import { getKnowledgeQualityMetrics } from "../storage/quality-metrics.js";
 import { processBackgroundJobs } from "../storage/job-worker.js";
 import { verifyConfiguredBackup } from "../storage/backup-verification.js";
 import { applyRetentionPolicies } from "../storage/data-controls.js";
 import { listClientDiagnostics } from "../storage/client-diagnostic-repository.js";
 import { config } from "../config.js";
+import { ensureIntelligenceSchema } from "../storage/intelligence-schema.js";
 
 function operationsAuthorized(headers: Record<string, string | string[] | undefined>) {
   const configured = process.env.BRAINIA_OPERATIONS_TOKEN?.trim();
@@ -22,14 +23,21 @@ function cronAuthorized(headers: Record<string, string | string[] | undefined>) 
 }
 
 export const registerOperationsRoutes: FastifyPluginAsync = async (app) => {
+  app.get("/cron/repair-intelligence-schema", async (request, reply) => {
+    if (!cronAuthorized(request.headers)) return reply.status(401).send({ error: "unauthorized_cron" });
+    // Legacy URL retained for deployed cron configurations; verification only.
+    return { ok: true, schema: await ensureIntelligenceSchema() };
+  });
+
   app.get("/cron/process-jobs", async (request, reply) => {
     if (!cronAuthorized(request.headers)) return reply.status(401).send({ error: "unauthorized_cron" });
+    const schema = await ensureIntelligenceSchema();
     // Keep live captures moving ahead of derived work while still draining a
     // bounded batch on every invocation. The batch is capped in config so this
     // endpoint remains safe for the serverless runtime.
     const result = await processBackgroundJobs({ limit: config.workerBatchSize });
     request.log.info({ claimed: result.claimed, results: result.results }, "background jobs processed");
-    return { ok: true, ...result };
+    return { ok: true, schema, ...result };
   });
 
   app.get("/operations/client-diagnostics", async (request, reply) => {
@@ -47,18 +55,45 @@ export const registerOperationsRoutes: FastifyPluginAsync = async (app) => {
       limit: z.coerce.number().int().min(1).max(200).default(50),
     }).safeParse(request.query);
     if (!parsed.success) return reply.status(400).send({ error: "invalid_job_query", issues: parsed.error.flatten() });
-    const [metrics, jobs, quality] = await Promise.all([
+    const [metrics, jobs, quality, leases] = await Promise.all([
       backgroundJobMetrics(), listBackgroundJobs(parsed.data), getKnowledgeQualityMetrics(),
+      backgroundJobLeaseMetrics(),
     ]);
-    return { metrics, quality: quality.gates, count: jobs.length, jobs };
+    return { metrics, leases, quality: quality.gates, count: jobs.length, jobs };
+  });
+
+  app.get("/operations/jobs/:id/replays", async (request, reply) => {
+    if (!operationsAuthorized(request.headers)) return reply.status(401).send({ error: "unauthorized_operations" });
+    const parsed = z.object({ id: z.string().min(1) }).safeParse(request.params);
+    if (!parsed.success) return reply.status(400).send({ error: "invalid_job_id" });
+    const replays = await listBackgroundJobReplays(parsed.data.id);
+    return { count: replays.length, replays };
   });
 
   app.post("/operations/jobs/:id/retry", async (request, reply) => {
     if (!operationsAuthorized(request.headers)) return reply.status(401).send({ error: "unauthorized_operations" });
     const parsed = z.object({ id: z.string().min(1) }).safeParse(request.params);
     if (!parsed.success) return reply.status(400).send({ error: "invalid_job_id" });
-    const job = await retryBackgroundJob(parsed.data.id);
+    const body = z.object({
+      reason: z.string().trim().min(1).max(500).optional(),
+      requestedBy: z.string().trim().min(1).max(200).optional(),
+    }).safeParse(request.body ?? {});
+    if (!body.success) return reply.status(400).send({ error: "invalid_job_replay", issues: body.error.flatten() });
+    const job = await retryBackgroundJob(parsed.data.id, body.data);
     return job ?? reply.status(404).send({ error: "retryable_job_not_found" });
+  });
+
+  app.post("/operations/jobs/:id/replay", async (request, reply) => {
+    if (!operationsAuthorized(request.headers)) return reply.status(401).send({ error: "unauthorized_operations" });
+    const parsed = z.object({ id: z.string().min(1) }).safeParse(request.params);
+    if (!parsed.success) return reply.status(400).send({ error: "invalid_job_id" });
+    const body = z.object({
+      reason: z.string().trim().min(1).max(500).optional(),
+      requestedBy: z.string().trim().min(1).max(200).optional(),
+    }).safeParse(request.body ?? {});
+    if (!body.success) return reply.status(400).send({ error: "invalid_job_replay", issues: body.error.flatten() });
+    const job = await retryBackgroundJob(parsed.data.id, body.data);
+    return job ?? reply.status(404).send({ error: "replayable_job_not_found" });
   });
 
   app.post("/operations/worker/run", async (request, reply) => {

@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
 import Fastify from "fastify";
-import { createApiAuthHook, loadAuthConfig } from "./auth.js";
+import { AuthzError, createApiAuthHook, loadAuthConfig } from "./auth.js";
 import { registerAgentRoutes } from "./routes/agent.js";
 import { registerAgentInspectRoutes } from "./routes/agent-inspect.js";
 import { registerCaptureRoutes } from "./routes/capture.js";
@@ -23,6 +23,7 @@ import { registerPrivacyRoutes } from "./routes/privacy.js";
 import { registerClientDiagnosticRoutes } from "./routes/client-diagnostics.js";
 import { config } from "./config.js";
 import type { AuthConfig } from "./auth.js";
+import { registerIntelligenceRoutes } from './routes/intelligence.js';
 
 export async function buildApp(options: { authConfig?: AuthConfig } = {}) {
   const authConfig = options.authConfig ?? loadAuthConfig();
@@ -42,7 +43,7 @@ export async function buildApp(options: { authConfig?: AuthConfig } = {}) {
     reply
       .header("access-control-allow-origin", "*")
       .header("access-control-allow-methods", "GET,HEAD,POST,PUT,PATCH,DELETE,OPTIONS")
-      .header("access-control-allow-headers", "content-type, authorization, x-api-key, x-client-id, x-request-id");
+      .header("access-control-allow-headers", "content-type, authorization, x-api-key, x-client-id, x-brainia-api-key, x-brainia-client-id, x-request-id");
 
     if (request.method === "OPTIONS") {
       return reply.code(204).send();
@@ -68,6 +69,13 @@ export async function buildApp(options: { authConfig?: AuthConfig } = {}) {
   });
 
   app.get("/health", async () => ({ ok: true }));
+  app.setErrorHandler(async (error, request, reply) => {
+    if (error instanceof AuthzError) {
+      return reply.status(error.statusCode).send({ error: error.code, message: error.message });
+    }
+    request.log.error({ err: error }, "request_failed");
+    return reply.status(500).send({ error: "internal_error" });
+  });
   await app.register(registerDashboardRoutes, {});
   app.addHook("preHandler", createApiAuthHook(authConfig));
   await app.register(registerAgentRoutes, { prefix: config.apiPrefix });
@@ -89,6 +97,7 @@ export async function buildApp(options: { authConfig?: AuthConfig } = {}) {
   await app.register(registerOperationsRoutes, { prefix: config.apiPrefix });
   await app.register(registerPrivacyRoutes, { prefix: config.apiPrefix });
   await app.register(registerClientDiagnosticRoutes, { prefix: config.apiPrefix });
+  await app.register(registerIntelligenceRoutes(authConfig), { prefix: config.apiPrefix });
 
   return app;
 }

@@ -6,7 +6,19 @@ dist/
 *.log
 coverage/
 data/
+supabase/.temp/
+.laya-venv/
+.laya/
+.env.laya.local
 
 
 .vercel
 .env*.local
+
+# Local environment files (never commit secrets); keep the template.
+.env.*
+!.env.example
+
+# Generated graphify caches and dated backups
+graphify-out/cache/ast/
+graphify-out/20*/

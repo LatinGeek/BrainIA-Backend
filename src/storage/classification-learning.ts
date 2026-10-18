@@ -34,6 +34,7 @@ export async function loadClassificationLessons(
     left join entity_aliases alias on alias.id = review.alias_id
     left join entity_semantic_profiles profile on profile.entity_id = entity.id
     where review.status = 'resolved'
+      and event.privacy_status = 'standard' and event.processing_allowed
       and event.client_id is not distinct from $1
       and review.source = $2
     order by review.resolved_at desc nulls last, review.updated_at desc

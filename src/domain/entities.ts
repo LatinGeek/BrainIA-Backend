@@ -29,6 +29,10 @@ const NOISY_ENTITY_VALUES = new Set([
   "message",
   "note",
   "nota",
+  "realizada",
+  "realizado",
+  "enviada",
+  "enviado",
 ]);
 
 const GENERIC_MERCHANT_PREFIXES = new Set([

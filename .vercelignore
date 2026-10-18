@@ -1,4 +1,9 @@
 node_modules/
+.laya-venv/
+graphify-out/
+.git/
+.vercel/
+dist/
 .env
 .env.local
 .env.*.local

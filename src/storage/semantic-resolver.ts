@@ -119,6 +119,25 @@ async function enqueuePathCandidate(db: Queryable, input: { eventId: string; cli
   });
 }
 
+async function applyEventAnchor(
+  db: Queryable,
+  input: { eventId: string; clientId: string | null; path: SemanticPathDecision; decision: SemanticDecision },
+  subject: StoredEntity,
+  anchor: {
+    eventId: string; domainEntityId: string; anchorEntityId: string; role: "primary" | "secondary";
+    confidence: number; rationale: string; governanceVersion: string;
+  },
+  reviewTargetValue: string,
+) {
+  const result = await upsertEventSemanticAnchor(db, anchor);
+  if (!result.applied) {
+    // Preserve the unrelated/cross-generation primary anchor and surface the
+    // attempted transition as a review candidate instead of deleting evidence.
+    await enqueuePathCandidate(db, { ...input, subject, targetValue: reviewTargetValue });
+  }
+  return result;
+}
+
 async function applyPath(db: Queryable, input: { eventId: string; clientId: string | null; path: SemanticPathDecision; decision: SemanticDecision }) {
   const subjectRecord = await upsertEntity(db, input.path.subject);
   const subject: StoredEntity = { id: subjectRecord.id, type: subjectRecord.type, value: subjectRecord.value, normalizedValue: subjectRecord.normalizedValue };
@@ -140,7 +159,8 @@ async function applyPath(db: Queryable, input: { eventId: string; clientId: stri
   if (subject.id === parent.id) {
     // Some model responses include a reused subject itself as the final path
     // segment. It is already the durable leaf; never create a self-edge.
-    if (input.path.eventAnchor !== false) await upsertEventSemanticAnchor(db, {
+    if (input.path.eventAnchor === false) return true;
+    return (await applyEventAnchor(db, input, subject, {
       eventId: input.eventId,
       domainEntityId: domain.id,
       anchorEntityId: subject.id,
@@ -148,8 +168,7 @@ async function applyPath(db: Queryable, input: { eventId: string; clientId: stri
       confidence: input.path.confidence,
       rationale: input.path.rationale,
       governanceVersion: input.decision.governanceVersion,
-    });
-    return true;
+    }, subject.value)).applied;
   }
   const existingRootId = await findHierarchyRoot(db, subject.id);
   if (input.path.role === "primary" && existingRootId && existingRootId !== domain.id) {
@@ -165,19 +184,19 @@ async function applyPath(db: Queryable, input: { eventId: string; clientId: stri
     // (for example Xiaomi Home below Motion detection). Preserve the already
     // governed parent instead of creating a cycle or asking the user to review
     // a structurally impossible proposal.
-    if (input.path.eventAnchor !== false) await upsertEventSemanticAnchor(db, {
+    if (input.path.eventAnchor === false) return true;
+    return (await applyEventAnchor(db, input, subject, {
       eventId: input.eventId, domainEntityId: domain.id, anchorEntityId: subject.id, role: input.path.role,
       confidence: input.path.confidence, rationale: `${input.path.rationale} Invalid descendant refinement ignored.`, governanceVersion: input.decision.governanceVersion,
-    });
-    return true;
+    }, subject.value)).applied;
   }
 
   if (input.path.action === "reuse" && currentParent?.id === parent.id) {
-    if (input.path.eventAnchor !== false) await upsertEventSemanticAnchor(db, {
+    if (input.path.eventAnchor === false) return true;
+    return (await applyEventAnchor(db, input, subject, {
       eventId: input.eventId, domainEntityId: domain.id, anchorEntityId: subject.id, role: input.path.role,
       confidence: input.path.confidence, rationale: input.path.rationale, governanceVersion: input.decision.governanceVersion,
-    });
-    return true;
+    }, subject.value)).applied;
   }
 
   if (input.path.action === "merge") {
@@ -186,8 +205,8 @@ async function applyPath(db: Queryable, input: { eventId: string; clientId: stri
     if (isEventInstance && mergeTarget?.type === "concept" && input.path.confidence >= AUTO_APPLY_CONFIDENCE) {
       const relation = await setImmediateHierarchyParent(db, { child: subject, parent: mergeTarget, confidence: input.path.confidence, metadata: { source: "semantic-event-meaning-reuse", governanceVersion: SEMANTIC_GOVERNANCE_VERSION } });
       await linkEventRelation(db, input.eventId, relation.id, input.path.confidence);
-      if (input.path.eventAnchor !== false) await upsertEventSemanticAnchor(db, { eventId: input.eventId, domainEntityId: domain.id, anchorEntityId: mergeTarget.id, role: input.path.role, confidence: input.path.confidence, rationale: input.path.rationale, governanceVersion: input.decision.governanceVersion });
-      return true;
+      if (input.path.eventAnchor === false) return true;
+      return (await applyEventAnchor(db, input, subject, { eventId: input.eventId, domainEntityId: domain.id, anchorEntityId: mergeTarget.id, role: input.path.role, confidence: input.path.confidence, rationale: input.path.rationale, governanceVersion: input.decision.governanceVersion }, mergeTarget.value)).applied;
     }
     await enqueuePathCandidate(db, { ...input, subject, targetValue: mergeTarget?.value ?? input.path.mergeTargetNormalizedValue ?? leafName, targetType: mergeTarget?.type ?? subject.type, relationType: "same_as" });
     return false;
@@ -211,14 +230,14 @@ async function applyPath(db: Queryable, input: { eventId: string; clientId: stri
         const relation = await setImmediateHierarchyParent(db, { child: subject, parent, confidence: proposal.confidence, metadata: { source: "semantic-deepseek", governanceVersion: SEMANTIC_GOVERNANCE_VERSION, identityLeaf: true } });
         await linkEventRelation(db, input.eventId, relation.id, proposal.confidence);
       }
-      if (input.path.eventAnchor !== false) await upsertEventSemanticAnchor(db, { eventId: input.eventId, domainEntityId: domain.id, anchorEntityId: subject.id, role: input.path.role, confidence: input.path.confidence, rationale: input.path.rationale, governanceVersion: input.decision.governanceVersion });
-      return true;
+      if (input.path.eventAnchor === false) return true;
+      return (await applyEventAnchor(db, input, subject, { eventId: input.eventId, domainEntityId: domain.id, anchorEntityId: subject.id, role: input.path.role, confidence: input.path.confidence, rationale: input.path.rationale, governanceVersion: input.decision.governanceVersion }, subject.value)).applied;
     }
     if (isEventInstance && isSemanticRestatement(proposal.value, parent.value)) {
       const relation = await setImmediateHierarchyParent(db, { child: subject, parent, confidence: input.path.confidence, metadata: { source: "semantic-event-meaning-reuse", governanceVersion: SEMANTIC_GOVERNANCE_VERSION } });
       await linkEventRelation(db, input.eventId, relation.id, input.path.confidence);
-      if (input.path.eventAnchor !== false) await upsertEventSemanticAnchor(db, { eventId: input.eventId, domainEntityId: domain.id, anchorEntityId: parent.id, role: input.path.role, confidence: input.path.confidence, rationale: input.path.rationale, governanceVersion: input.decision.governanceVersion });
-      return true;
+      if (input.path.eventAnchor === false) return true;
+      return (await applyEventAnchor(db, input, subject, { eventId: input.eventId, domainEntityId: domain.id, anchorEntityId: parent.id, role: input.path.role, confidence: input.path.confidence, rationale: input.path.rationale, governanceVersion: input.decision.governanceVersion }, parent.value)).applied;
     }
     if (isEventInstance) {
       // The LLM has already compared this meaning against canonicalContext.
@@ -237,8 +256,8 @@ async function applyPath(db: Queryable, input: { eventId: string; clientId: stri
       const evidenceRelation = await setImmediateHierarchyParent(db, { child: subject, parent: meaning, confidence: input.path.confidence, metadata: { source: "semantic-event-evidence", governanceVersion: SEMANTIC_GOVERNANCE_VERSION } });
       await linkEventRelation(db, input.eventId, meaningRelation.id, proposal.confidence);
       await linkEventRelation(db, input.eventId, evidenceRelation.id, input.path.confidence);
-      if (input.path.eventAnchor !== false) await upsertEventSemanticAnchor(db, { eventId: input.eventId, domainEntityId: domain.id, anchorEntityId: meaning.id, role: input.path.role, confidence: input.path.confidence, rationale: input.path.rationale, governanceVersion: input.decision.governanceVersion });
-      return true;
+      if (input.path.eventAnchor === false) return true;
+      return (await applyEventAnchor(db, input, subject, { eventId: input.eventId, domainEntityId: domain.id, anchorEntityId: meaning.id, role: input.path.role, confidence: input.path.confidence, rationale: input.path.rationale, governanceVersion: input.decision.governanceVersion }, meaning.value)).applied;
     }
     await db.query(`
       insert into semantic_observations (id, client_id, event_id, subject_entity_id, proposed_value, proposed_normalized_value, parent_entity_id, confidence, governance_version)
@@ -284,8 +303,8 @@ async function applyPath(db: Queryable, input: { eventId: string; clientId: stri
     return false;
   }
 
-  if (input.path.eventAnchor !== false) await upsertEventSemanticAnchor(db, { eventId: input.eventId, domainEntityId: domain.id, anchorEntityId, role: input.path.role, confidence: input.path.confidence, rationale: input.path.rationale, governanceVersion: input.decision.governanceVersion });
-  return true;
+  if (input.path.eventAnchor === false) return true;
+  return (await applyEventAnchor(db, input, subject, { eventId: input.eventId, domainEntityId: domain.id, anchorEntityId, role: input.path.role, confidence: input.path.confidence, rationale: input.path.rationale, governanceVersion: input.decision.governanceVersion }, leafName)).applied;
 }
 
 async function applyAssociations(db: Queryable, input: { eventId: string; clientId: string | null; decision: SemanticDecision }) {

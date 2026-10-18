@@ -3,6 +3,7 @@ import { generateNaturalLanguageSummary } from "./deepseek.js";
 import { mergeEntities } from "./entity-repository.js";
 import { invalidateGraphTraversalCache } from "./graph-cache.js";
 import { pool, withSemanticMaterializationLock, withTransaction } from "./postgres.js";
+import { authorizeModelDispatch, listDeniedEgressSources, stillAuthorized, type PrivacyAuthorization } from "./privacy.js";
 import { rootEventEvidenceFromAnchors, settleSatisfiedSemanticCandidates } from "./semantic-repository.js";
 
 const AUTO_RECONCILE_CONFIDENCE = 0.95;
@@ -92,6 +93,7 @@ async function requestStructured<T>(input: {
   schema: { safeParse(value: unknown): z.SafeParseReturnType<unknown, T> };
   systemPrompt: string;
   userPrompt: string;
+  privacy?: PrivacyAuthorization;
 }) {
   for (let attempt = 0; attempt < 2; attempt += 1) {
     const response = await generateNaturalLanguageSummary({
@@ -100,6 +102,7 @@ async function requestStructured<T>(input: {
       jsonMode: true,
       systemPrompt: `${input.systemPrompt}${attempt ? "\nYour previous response failed validation. Return every required array and use the exact JSON shape." : ""}`,
       userPrompt: input.userPrompt,
+      privacy: input.privacy,
     });
     if (!response) continue;
     try {
@@ -112,7 +115,7 @@ async function requestStructured<T>(input: {
   return null;
 }
 
-async function loadReconciliationNodes(): Promise<ReconciliationNode[]> {
+async function loadReconciliationNodes(ownerId?: string | null): Promise<ReconciliationNode[]> {
   const result = await pool.query<ReconciliationNode>(`
     select entity.id, entity.type, entity.value, entity.description,
       entity.identity_source as "identitySource",
@@ -131,23 +134,37 @@ async function loadReconciliationNodes(): Promise<ReconciliationNode[]> {
       and entity.type in ('concept','app','merchant','sender','recipient')
       and entity.identity_source in ('ai','user')
       and length(btrim(entity.description)) > 0
+      and ($1::text is null
+        or entity.owner_id = $1
+        or (entity.owner_id is null and entity.type in ('domain','concept')))
     group by entity.id, parent.id
     order by entity.type, parent.value nulls first, entity.value
     limit 300
-  `);
+  `, [ownerId ?? null]);
   return result.rows;
 }
 
-export async function reconcileSemanticGraph(input: { dryRun?: boolean } = {}) {
+export async function reconcileSemanticGraph(input: { dryRun?: boolean; ownerId?: string | null } = {}) {
   return withSemanticMaterializationLock(() => reconcileSemanticGraphUnlocked(input));
 }
 
-async function reconcileSemanticGraphUnlocked(input: { dryRun?: boolean } = {}) {
+async function reconcileSemanticGraphUnlocked(input: { dryRun?: boolean; ownerId?: string | null }) {
   if (!process.env.DEEPSEEK_API_KEY) return { status: "model_unavailable" as const, merged: 0, demoted: 0, review: 0 };
-  const nodes = await loadReconciliationNodes();
+  const authorization = await authorizeModelDispatch(pool, {
+    ownerId: input.ownerId,
+    purpose: "semantic_reconciliation",
+    // Node descriptions do not persist a source lineage. Be conservative: any
+    // owner source that denies egress blocks external reconciliation.
+    sources: input.ownerId ? await listDeniedEgressSources(pool, input.ownerId) : [],
+  });
+  if (!authorization.allowed) {
+    return { status: "privacy_denied" as const, reason: authorization.reason, merged: 0, demoted: 0, review: 0 };
+  }
+  const nodes = await loadReconciliationNodes(input.ownerId);
   if (!nodes.length) return { status: "empty" as const, merged: 0, demoted: 0, review: 0 };
   const parsed = await requestStructured<z.infer<typeof reconciliationSchema>>({
     schema: reconciliationSchema,
+    privacy: authorization,
     systemPrompt: `Return strict JSON only. Audit canonical durable nodes after a semantic ingestion batch.
 
 Merge only nodes with the same real-world identity or exactly the same reusable meaning. Related concepts are not duplicates. Concepts may auto-merge only when they share the same immediate parent. Apps, merchants, senders, and recipients may merge across parents when they are the same identity. Prefer user-owned identities, then the clearest concise name and description, then the node with more evidence.
@@ -171,6 +188,10 @@ Return {"mergeVerdicts":[{"canonicalId","duplicateId","sameIdentity","rationale"
     userPrompt: JSON.stringify({ nodes, proposals: parsed }),
   });
   if (!verification) return { status: "retryable" as const, stage: "verification" as const, merged: 0, demoted: 0, review: parsed.merges.length + parsed.demotions.length };
+
+  if (!(await stillAuthorized(authorization))) {
+    return { status: "privacy_denied" as const, reason: "policy_version_changed" as const, merged: 0, demoted: 0, review: 0 };
+  }
 
   const { acceptedMerges, acceptedDemotions } = selectVerifiedReconciliationActions(nodes, parsed, verification);
   const review = parsed.merges.length - acceptedMerges.length + parsed.demotions.length - acceptedDemotions.length;

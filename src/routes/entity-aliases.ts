@@ -8,6 +8,7 @@ import {
   resolveEntityReview,
 } from "../storage/entity-alias-repository.js";
 import { pool } from "../storage/postgres.js";
+import { ownerScope } from "../auth.js";
 
 const aliasListQuerySchema = z.object({
   entityId: z.string().min(1).optional(),
@@ -36,6 +37,30 @@ const ignoreReviewSchema = z.object({
   notes: z.string().optional(),
 });
 
+async function entityOwnedBy(entityId: string, ownerId: string | undefined) {
+  if (!ownerId) return true;
+  const result = await pool.query(
+    `select 1 from entities where id = $1 and (owner_id = $2 or (owner_id is null and type in ('domain','concept'))) limit 1`,
+    [entityId, ownerId],
+  );
+  return (result.rowCount ?? 0) > 0;
+}
+
+async function reviewOwnedBy(reviewId: string, ownerId: string | undefined) {
+  if (!ownerId) return true;
+  const result = await pool.query(
+    `select 1 from entity_review_queue q
+     where q.id = $1 and (
+       q.owner_id = $2
+       or (q.owner_id is null and exists (
+         select 1 from raw_events event where event.id = q.event_id and event.client_id = $2
+       ))
+     ) limit 1`,
+    [reviewId, ownerId],
+  );
+  return (result.rowCount ?? 0) > 0;
+}
+
 export const registerEntityAliasRoutes: FastifyPluginAsync = async (app) => {
   app.get("/aliases", async (request, reply) => {
     const parsed = aliasListQuerySchema.safeParse(request.query);
@@ -46,7 +71,7 @@ export const registerEntityAliasRoutes: FastifyPluginAsync = async (app) => {
       });
     }
 
-    const aliases = await listEntityAliases(pool, parsed.data.entityId);
+    const aliases = await listEntityAliases(pool, parsed.data.entityId, ownerScope(request));
     return { aliases };
   });
 
@@ -54,6 +79,9 @@ export const registerEntityAliasRoutes: FastifyPluginAsync = async (app) => {
     const parsed = createAliasSchema.safeParse(request.body);
     if (!parsed.success) {
       return reply.status(400).send({ error: "invalid_entity_alias", issues: parsed.error.flatten() });
+    }
+    if (!(await entityOwnedBy(parsed.data.entityId, ownerScope(request)))) {
+      return reply.status(404).send({ error: "entity_not_found" });
     }
 
     try {
@@ -76,7 +104,7 @@ export const registerEntityAliasRoutes: FastifyPluginAsync = async (app) => {
       });
     }
 
-    const items = await listEntityReviewQueue(pool, parsed.data.status);
+    const items = await listEntityReviewQueue(pool, parsed.data.status, ownerScope(request));
     return { items };
   });
 
@@ -94,6 +122,9 @@ export const registerEntityAliasRoutes: FastifyPluginAsync = async (app) => {
     }
 
     try {
+      if (!(await reviewOwnedBy(params.data.id, ownerScope(request)))) {
+        return reply.status(404).send({ error: "review_not_found", message: "No review queue item matches the provided id" });
+      }
       const result = await resolveEntityReview(pool, params.data.id, {
         alias: body.data.alias,
         categoryPath: body.data.categoryPath,
@@ -131,6 +162,9 @@ export const registerEntityAliasRoutes: FastifyPluginAsync = async (app) => {
       });
     }
 
+    if (!(await reviewOwnedBy(params.data.id, ownerScope(request)))) {
+      return reply.status(404).send({ error: "review_not_found", message: "No review queue item matches the provided id" });
+    }
     const ignored = await ignoreEntityReview(pool, params.data.id, body.data.notes);
     if (!ignored) {
       return reply.status(404).send({

@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { pool } from "./postgres.js";
+import { derivedRunReadEligibilitySql } from "./search-repository.js";
 
 type Queryable = Pick<typeof pool, "query">;
 
@@ -21,6 +22,9 @@ export type InsightRunRecord = {
   expiresAt?: string | null;
   feedbackStatus?: string | null;
   promptVersion?: string | null;
+  policyVersion?: number | null;
+  /** True when an owner source policy changed after this run was derived. */
+  stale?: boolean;
 };
 
 export type InsightRunInput = {
@@ -39,10 +43,22 @@ export type InsightRunInput = {
   expiresAt?: string | null;
   feedbackStatus?: string | null;
   promptVersion?: string | null;
+  policyVersion?: number | null;
 };
 
-export async function insertInsightRun(db: Queryable, input: InsightRunInput) {
+async function currentOwnerPolicyVersion(db: Queryable, ownerId: string | null) {
+  if (!ownerId) return null;
+  const result = await db.query<{ version: number }>(`
+    select coalesce(max(policy_version), 0)::int as version
+    from source_processing_policies
+    where owner_id = $1 or (owner_id is null and client_scope = $1)
+  `, [ownerId]);
+  return result.rows[0]?.version ?? 0;
+}
+
+export async function insertInsightRun(db: Queryable, input: InsightRunInput & { ownerId?: string }) {
   const id = `insight_${randomUUID()}`;
+  const policyVersion = input.policyVersion ?? await currentOwnerPolicyVersion(db, input.ownerId ?? null);
   const result = await db.query<InsightRunRecord>(
     `
       insert into insight_runs (
@@ -61,10 +77,12 @@ export async function insertInsightRun(db: Queryable, input: InsightRunInput) {
         delivered_at,
         expires_at,
         feedback_status,
-        prompt_version
+        prompt_version,
+        owner_id,
+        policy_version
       ) values (
         $1, $2, $3, $4::jsonb, $5::jsonb, $6, $7,
-        $8::text[], $9::jsonb, $10, $11, $12, $13, $14, $15, $16
+        $8::text[], $9::jsonb, $10, $11, $12, $13, $14, $15, $16, $17, $18
       )
       returning
         id,
@@ -83,6 +101,7 @@ export async function insertInsightRun(db: Queryable, input: InsightRunInput) {
         expires_at as "expiresAt",
         feedback_status as "feedbackStatus",
         prompt_version as "promptVersion",
+        policy_version as "policyVersion",
         created_at as "createdAt"
     `,
     [
@@ -102,13 +121,15 @@ export async function insertInsightRun(db: Queryable, input: InsightRunInput) {
       input.expiresAt ?? null,
       input.feedbackStatus ?? null,
       input.promptVersion ?? null,
+      input.ownerId ?? null,
+      policyVersion,
     ],
   );
 
   return result.rows[0] ?? null;
 }
 
-export async function listInsightRuns(limit: number) {
+export async function listInsightRuns(limit: number, ownerId?: string) {
   const result = await pool.query<InsightRunRecord>(
     `
       select
@@ -128,18 +149,27 @@ export async function listInsightRuns(limit: number) {
         expires_at as "expiresAt",
         feedback_status as "feedbackStatus",
         prompt_version as "promptVersion",
+        policy_version as "policyVersion",
+        case when insight_runs.policy_version is null then false else exists (
+          select 1 from source_processing_policies policy
+          where (policy.owner_id = insight_runs.owner_id
+              or (policy.owner_id is null and policy.client_scope = insight_runs.owner_id))
+            and coalesce(policy.policy_version, 0) > insight_runs.policy_version
+        ) end as stale,
         created_at as "createdAt"
       from insight_runs
+      where ($2::text is null or owner_id is not distinct from $2)
+        and ${derivedRunReadEligibilitySql("insight_runs", "insight_runs")}
       order by created_at desc
       limit $1
     `,
-    [limit],
+    [limit, ownerId ?? null],
   );
 
   return result.rows;
 }
 
-export async function loadInsightRunById(id: string) {
+export async function loadInsightRunById(id: string, ownerId?: string) {
   const result = await pool.query<InsightRunRecord>(
     `
       select
@@ -159,12 +189,20 @@ export async function loadInsightRunById(id: string) {
         expires_at as "expiresAt",
         feedback_status as "feedbackStatus",
         prompt_version as "promptVersion",
+        policy_version as "policyVersion",
+        case when insight_runs.policy_version is null then false else exists (
+          select 1 from source_processing_policies policy
+          where (policy.owner_id = insight_runs.owner_id
+              or (policy.owner_id is null and policy.client_scope = insight_runs.owner_id))
+            and coalesce(policy.policy_version, 0) > insight_runs.policy_version
+        ) end as stale,
         created_at as "createdAt"
       from insight_runs
-      where id = $1
+      where id = $1 and ($2::text is null or owner_id is not distinct from $2)
+        and ${derivedRunReadEligibilitySql("insight_runs", "insight_runs")}
       limit 1
     `,
-    [id],
+    [id, ownerId ?? null],
   );
 
   return result.rows[0] ?? null;

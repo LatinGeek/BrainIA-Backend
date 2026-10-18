@@ -228,6 +228,11 @@ export async function findCanonicalMerchantByValue(db: Queryable, value: string)
     select e.id
     from entities e
     where e.type = 'merchant'
+      and e.visibility <> 'hidden'
+      and not exists (
+        select 1 from deletion_tombstones tombstone
+        where tombstone.target_type = 'entity' and tombstone.target_id = e.id
+      )
       and (
         lower(e.normalized_value) = $1
         or exists (
@@ -285,12 +290,19 @@ export async function upsertEntity(db: Queryable, draft: EntityDraft): Promise<E
   return storedEntity;
 }
 
-export async function listEntities() {
+export async function listEntities(ownerId?: string) {
   const result = await pool.query<EntityRecord>(
     `
       ${selectEntityProjectionSql()}
+      where e.visibility <> 'hidden'
+        and not exists (
+          select 1 from deletion_tombstones tombstone
+          where tombstone.target_type = 'entity' and tombstone.target_id = e.id
+        )
+        ${ownerId ? "and (e.owner_id = $1 or (e.owner_id is null and e.type in ('domain','concept')))" : ""}
       order by e.created_at asc
     `,
+    ownerId ? [ownerId] : [],
   );
 
   return result.rows;
@@ -298,7 +310,7 @@ export async function listEntities() {
 
 export async function resolveEntityMatches(
   db: Queryable,
-  input: { id?: string; q?: string },
+  input: { id?: string; q?: string; ownerId?: string | null },
 ): Promise<ResolvedEntityRecord[]> {
   const resolved: ResolvedEntityRecord[] = [];
   const seenCanonicalIds = new Set<string>();
@@ -331,21 +343,43 @@ export async function resolveEntityMatches(
   const query = input.q!.trim();
   const normalizedQuery = normalizeMatchText(query);
   const term = `%${normalizedQuery}%`;
+  const ownerId = input.ownerId ?? null;
+  // Query-based resolution must never rank another owner's entity. Public
+  // taxonomy stays matchable for every caller; personal rows require an exact
+  // owner match. An unscoped caller (admin/global or disabled local mode)
+  // keeps the previous global behavior.
+  const entityOwnerClause = ownerId
+    ? `and (e.owner_id = $3 or (e.owner_id is null and e.type in ('domain','concept')))`
+    : "";
+  const aliasOwnerClause = ownerId
+    ? `and (e.owner_id = $2 or (e.owner_id is null and e.type in ('domain','concept')))`
+    : "";
+  const approximateOwnerClause = ownerId
+    ? `where e.owner_id = $1 or (e.owner_id is null and e.type in ('domain','concept'))`
+    : `where true`;
   const [entityRows, aliasRows, approximateRows] = await Promise.all([
     db.query<EntityMatchRow>(
       `
         ${selectEntityProjectionSql()}
-        where lower(e.id) like $1
+        where (
+          lower(e.id) like $1
            or lower(e.type) like $1
            or lower(e.value) like $1
            or lower(e.normalized_value) like $1
+        )
+        ${entityOwnerClause}
+        and e.visibility <> 'hidden'
+        and not exists (
+          select 1 from deletion_tombstones tombstone
+          where tombstone.target_type = 'entity' and tombstone.target_id = e.id
+        )
         order by
           case when lower(e.id) = $2 then 0 else 1 end,
           case when lower(e.value) = $2 or lower(e.normalized_value) = $2 then 0 else 1 end,
           e.created_at desc
         limit 10
       `,
-      [term, normalizedQuery],
+      ownerId ? [term, normalizedQuery, ownerId] : [term, normalizedQuery],
     ),
     db.query<EntityMatchRow>(
       `
@@ -369,13 +403,21 @@ export async function resolveEntityMatches(
         from entity_aliases a
         join entities e on e.id = a.entity_id
         left join entity_merges em on em.alias_entity_id = e.id
-        where lower(a.alias) like $1
+        where (
+          lower(a.alias) like $1
            or lower(a.normalized_alias) like $1
            or lower(coalesce(array_to_string(a.category_path, ' / '), '')) like $1
+        )
+        ${aliasOwnerClause}
+        and e.visibility <> 'hidden'
+        and not exists (
+          select 1 from deletion_tombstones tombstone
+          where tombstone.target_type = 'entity' and tombstone.target_id = e.id
+        )
         order by a.created_at desc
         limit 10
       `,
-      [term],
+      ownerId ? [term, ownerId] : [term],
     ),
     db.query<ApproximateEntityMatchRow>(
       `
@@ -402,9 +444,16 @@ export async function resolveEntityMatches(
         from entities e
         left join entity_merges em on em.alias_entity_id = e.id
         left join entity_aliases a on a.entity_id = e.id
+        ${approximateOwnerClause}
+        and e.visibility <> 'hidden'
+        and not exists (
+          select 1 from deletion_tombstones tombstone
+          where tombstone.target_type = 'entity' and tombstone.target_id = e.id
+        )
         order by e.created_at desc
         limit 1000
       `,
+      ownerId ? [ownerId] : [],
     ),
   ]);
 

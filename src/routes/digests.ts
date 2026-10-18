@@ -1,10 +1,11 @@
-import type { FastifyPluginAsync } from "fastify";
+﻿import type { FastifyPluginAsync } from "fastify";
 import { z } from "zod";
 import { insertDigestRun, listDigestRuns, loadDigestRunById } from "../storage/digest-repository.js";
 import { createKnowledgeDigest } from "../storage/digests.js";
 import { config } from "../config.js";
 import { pool } from "../storage/postgres.js";
 import { upsertEmbedding } from "../storage/embeddings.js";
+import { ownerScope } from "../auth.js";
 
 const digestQuerySchema = z.object({
   from: z.string().datetime().optional(),
@@ -51,7 +52,8 @@ export const registerDigestRoutes: FastifyPluginAsync = async (app) => {
       });
     }
 
-    const digest = await createKnowledgeDigest({
+    const ownerId = ownerScope(request);
+    const { lineage, ...digest } = await createKnowledgeDigest({
       from,
       to,
       days,
@@ -60,10 +62,12 @@ export const registerDigestRoutes: FastifyPluginAsync = async (app) => {
       eventLimit,
       apiKey: config.deepseekApiKey,
       model: config.deepseekModel,
+      ownerId,
     });
 
     const storedRun = await insertDigestRun(pool, {
       toolName: "generate_digest",
+      ownerId,
       scope: digest.scope,
       windowFrom: digest.window.from,
       windowTo: digest.window.to,
@@ -74,6 +78,10 @@ export const registerDigestRoutes: FastifyPluginAsync = async (app) => {
         source: parsed.data.source ?? null,
         kind: parsed.data.kind ?? null,
         eventLimit,
+        // Exact evidence lineage: deletion can match these ids without relying
+        // on summary text or a missing window reference.
+        eventIds: lineage?.eventIds ?? [],
+        sources: lineage?.sources ?? [],
       },
       response: digest,
       summary: digest.summary,
@@ -117,7 +125,8 @@ export const registerDigestRoutes: FastifyPluginAsync = async (app) => {
     }
 
     const limit = parsePositiveInteger(parsed.data.limit, 25, 1, 100);
-    const runs = await listDigestRuns(limit);
+    const runs = (await listDigestRuns(limit, ownerScope(request)))
+      .filter((run) => run.summary !== null);
 
     return {
       limit,
@@ -135,8 +144,8 @@ export const registerDigestRoutes: FastifyPluginAsync = async (app) => {
       });
     }
 
-    const run = await loadDigestRunById(params.data.id);
-    if (!run) {
+    const run = await loadDigestRunById(params.data.id, ownerScope(request));
+    if (!run || run.summary === null) {
       return reply.status(404).send({
         error: "digest_run_not_found",
         message: "No stored digest run matches the provided id",

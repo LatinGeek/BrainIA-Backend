@@ -94,23 +94,25 @@ export function shouldQueueMerchantReview(originalValue: string) {
   return words.some((word) => LEGAL_NAME_SUFFIXES.has(normalizeAlias(word)));
 }
 
-export async function listEntityAliases(db: Queryable, entityId?: string) {
+export async function listEntityAliases(db: Queryable, entityId?: string, ownerId?: string) {
   const result = await db.query<EntityAliasRecord>(
     `
       select
-        id,
-        entity_id as "entityId",
-        alias,
-        normalized_alias as "normalizedAlias",
-        category_path as "categoryPath",
-        notes,
-        created_at as "createdAt",
-        updated_at as "updatedAt"
-      from entity_aliases
-      where $1::text is null or entity_id = $1
-      order by created_at asc
+        alias.id,
+        alias.entity_id as "entityId",
+        alias.alias,
+        alias.normalized_alias as "normalizedAlias",
+        alias.category_path as "categoryPath",
+        alias.notes,
+        alias.created_at as "createdAt",
+        alias.updated_at as "updatedAt"
+      from entity_aliases alias
+      join entities entity on entity.id = alias.entity_id
+      where ($1::text is null or alias.entity_id = $1)
+        and ($2::text is null or alias.owner_id = $2 or (alias.owner_id is null and entity.owner_id = $2))
+      order by alias.created_at asc
     `,
-    [entityId ?? null],
+    [entityId ?? null, ownerId ?? null],
   );
 
   return result.rows;
@@ -213,7 +215,7 @@ export async function createEntityAlias(
   return result.rows[0];
 }
 
-export async function listEntityReviewQueue(db: Queryable, status?: EntityReviewQueueRecord["status"]) {
+export async function listEntityReviewQueue(db: Queryable, status?: EntityReviewQueueRecord["status"], ownerId?: string) {
   const result = await db.query<EntityReviewQueueRecord>(
     `
       select
@@ -245,10 +247,11 @@ export async function listEntityReviewQueue(db: Queryable, status?: EntityReview
         order by transaction.observed_at desc
         limit 1
       ) financial on true
-      where $1::text is null or q.status = $1
+      where ($1::text is null or q.status = $1)
+        and ($2::text is null or q.owner_id = $2 or (q.owner_id is null and e.owner_id = $2))
       order by q.created_at desc
     `,
-    [status ?? null],
+    [status ?? null, ownerId ?? null],
   );
 
   return result.rows;

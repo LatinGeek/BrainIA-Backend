@@ -34,9 +34,10 @@ export function modelRequestFingerprint(input: { model: string; systemPrompt: st
     .digest("hex");
 }
 
-export function estimateModelCost(inputTokens: number, outputTokens: number) {
-  const inputRate = Number(process.env.DEEPSEEK_INPUT_USD_PER_MILLION_TOKENS ?? 0);
-  const outputRate = Number(process.env.DEEPSEEK_OUTPUT_USD_PER_MILLION_TOKENS ?? 0);
+export function estimateModelCost(inputTokens: number, outputTokens: number, provider = 'deepseek') {
+  const prefix = provider === 'typesafe' ? 'JEV' : 'DEEPSEEK';
+  const inputRate = Number(process.env[`${prefix}_INPUT_USD_PER_MILLION_TOKENS`] ?? 0);
+  const outputRate = Number(process.env[`${prefix}_OUTPUT_USD_PER_MILLION_TOKENS`] ?? 0);
   return (inputTokens * (Number.isFinite(inputRate) ? inputRate : 0)
     + outputTokens * (Number.isFinite(outputRate) ? outputRate : 0)) / 1_000_000;
 }
@@ -54,7 +55,7 @@ export async function recordModelCallAudit(input: ModelCallAuditInput) {
       `model_call_${randomUUID()}`, input.clientId ?? null, input.eventId ?? null,
       input.provider, input.operation, input.model, input.promptVersion,
       input.status, input.attempt ?? 1, input.inputTokens, input.outputTokens,
-      estimateModelCost(input.inputTokens, input.outputTokens), input.latencyMs,
+      estimateModelCost(input.inputTokens, input.outputTokens, input.provider), input.latencyMs,
       input.requestFingerprint, JSON.stringify(input.resultMetadata ?? {}),
       input.errorCode ?? null, input.errorMessage?.slice(0, 2000) ?? null,
     ]);
@@ -64,4 +65,3 @@ export async function recordModelCallAudit(input: ModelCallAuditInput) {
     console.error("model_call_audit_failed", error instanceof Error ? error.message : String(error));
   }
 }
-

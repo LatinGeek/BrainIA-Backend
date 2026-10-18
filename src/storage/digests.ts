@@ -1,6 +1,8 @@
 import { pool } from "./postgres.js";
 import { generateNaturalLanguageSummary } from "./deepseek.js";
+import { authorizeModelDispatch, listDeniedEgressSources, stillAuthorized } from "./privacy.js";
 import { buildDigestContent, DIGEST_JSON_PROMPT, parseDigestContent, type StructuredDigestContent } from "./generated-content.js";
+import { derivedRunReadEligibilitySql } from "./search-repository.js";
 
 type Queryable = Pick<typeof pool, "query">;
 
@@ -69,6 +71,11 @@ export type KnowledgeDigest = {
   summary: string | null;
   model: string | null;
   summaryAvailable: boolean;
+  /** Exact persisted lineage used for deletion invalidation; stripped from routes. */
+  lineage?: {
+    eventIds: string[];
+    sources: string[];
+  };
 };
 
 export type DigestBuildContext = {
@@ -202,6 +209,9 @@ function buildTimeClause(filters: DigestFilters, window: DigestWindow) {
   const clauses = [
     "coalesce(r.timestamp, r.created_at) >= $1::timestamptz",
     "coalesce(r.timestamp, r.created_at) <= $2::timestamptz",
+    "r.privacy_status <> 'hidden'",
+    "r.processing_allowed",
+    "not exists (select 1 from deletion_tombstones tombstone where tombstone.target_type = 'event' and tombstone.target_id = r.id)",
   ];
   const params: Array<string | null> = [window.from, window.to];
 
@@ -223,9 +233,24 @@ function buildTimeClause(filters: DigestFilters, window: DigestWindow) {
 
 export async function loadDigestData(
   db: Queryable,
-  context: { window: DigestWindow; filters: DigestFilters; eventLimit: number; insightLimit: number },
+  context: {
+    window: DigestWindow;
+    filters: DigestFilters;
+    eventLimit: number;
+    insightLimit: number;
+    ownerId?: string | null;
+  },
 ) {
-  const { whereClause, params } = buildTimeClause(context.filters, context.window);
+  const { whereClause: timeClause, params } = buildTimeClause(context.filters, context.window);
+  let whereClause = timeClause;
+  const ownerId = context.ownerId ?? null;
+  // A scoped owner must only summarize its own evidence. Legacy rows that have
+  // neither owner_id nor client_id never match; an unscoped (admin/disabled)
+  // caller keeps the previous global behavior.
+  if (ownerId) {
+    params.push(ownerId);
+    whereClause = `${whereClause} and coalesce(r.owner_id, r.client_id) = $${params.length}`;
+  }
 
   const eventsResult = await db.query<DigestEventRow>(
     `
@@ -264,6 +289,12 @@ export async function loadDigestData(
     params,
   );
 
+  const insightParams: Array<string | number> = [context.window.from, context.window.to, context.insightLimit];
+  let insightOwnerClause = "";
+  if (ownerId) {
+    insightParams.push(ownerId);
+    insightOwnerClause = `and owner_id = $${insightParams.length}`;
+  }
   const relatedInsightsResult = await db.query<DigestInsightRow>(
     `
       select
@@ -274,10 +305,13 @@ export async function loadDigestData(
         created_at as "createdAt"
       from insight_runs
       where created_at >= $1::timestamptz and created_at <= $2::timestamptz
+        and (summary is not null or query is not null)
+        and ${derivedRunReadEligibilitySql("insight_runs", "insight_runs")}
+        ${insightOwnerClause}
       order by created_at desc
       limit $3
     `,
-    [context.window.from, context.window.to, context.insightLimit],
+    insightParams,
   );
 
   return {
@@ -298,6 +332,7 @@ export async function createKnowledgeDigest(input: {
   insightLimit?: number;
   apiKey?: string;
   model?: string;
+  ownerId?: string | null;
 }) {
   const to = input.to ?? new Date().toISOString();
   const from = input.from ?? new Date(Date.parse(to) - (input.days ?? 7) * 24 * 60 * 60 * 1000).toISOString();
@@ -313,6 +348,7 @@ export async function createKnowledgeDigest(input: {
     },
     eventLimit: input.eventLimit ?? 100,
     insightLimit: input.insightLimit ?? 10,
+    ownerId: input.ownerId ?? null,
   });
 
   const baseDigest = buildKnowledgeDigest({
@@ -330,9 +366,24 @@ export async function createKnowledgeDigest(input: {
     model: null,
   });
 
+  const digestAuthorization = await authorizeModelDispatch(pool, {
+    ownerId: input.ownerId,
+    purpose: "knowledge_digest_synthesis",
+    sources: [
+      ...context.events.map((event: { source?: string | null }) => event.source),
+      // Insight runs do not persist a source lineage. A summary that includes
+      // them can only be dispatched if every owner source still permits egress.
+      ...(context.relatedInsights.length && input.ownerId
+        ? await listDeniedEgressSources(pool, input.ownerId)
+        : []),
+    ],
+    evidence: context.events.map((event: { id: string; source?: string | null }) => ({ eventId: event.id, source: event.source })),
+  });
+
   const generated = await generateNaturalLanguageSummary({
     apiKey: input.apiKey,
     model: input.model,
+    privacy: digestAuthorization.allowed ? digestAuthorization : null,
     systemPrompt: `You summarize personal activity for a calm mobile interface. ${DIGEST_JSON_PROMPT}`,
     userPrompt: JSON.stringify(
       {
@@ -348,17 +399,23 @@ export async function createKnowledgeDigest(input: {
       2,
     ),
     jsonMode: true,
-    audit: { operation: "knowledge_digest_synthesis", promptVersion: "knowledge-digest-v3" },
+    audit: { clientId: input.ownerId ?? null, operation: "knowledge_digest_synthesis", promptVersion: "knowledge-digest-v3" },
   });
 
-  const content = parseDigestContent(generated) ?? baseDigest.content;
+  const publishable = digestAuthorization.allowed ? await stillAuthorized(digestAuthorization) : false;
+  const generatedContent = publishable ? parseDigestContent(generated) : null;
+  const content = generatedContent ?? baseDigest.content;
 
   return {
     ...baseDigest,
     content,
     highlights: content.highlights,
     summary: content.summary,
-    model: generated && parseDigestContent(generated) ? input.model ?? "deepseek-v4-flash" : null,
+    model: generatedContent ? input.model ?? "deepseek-v4-flash" : null,
     summaryAvailable: true,
+    lineage: {
+      eventIds: [...new Set(context.events.map((event) => event.id))],
+      sources: [...new Set(context.events.map((event) => event.source).filter((source): source is string => Boolean(source)))],
+    },
   };
 }

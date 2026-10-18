@@ -1,5 +1,6 @@
 import { cosineSimilarity, EMBEDDING_VERSION, generateEmbedding } from "./embeddings.js";
 import { pool } from "./postgres.js";
+import { derivedRunReadEligibilitySql } from "./search-repository.js";
 
 type Queryable = Pick<typeof pool, "query">;
 
@@ -110,6 +111,7 @@ export async function hybridRetrieve(
       where entity.visibility <> 'hidden' and (entity.search_vector @@ search.query or exists (
         select 1 from entity_aliases alias where alias.entity_id = entity.id and alias.search_vector @@ search.query
       ))
+        and ($2::text is null or entity.owner_id = $2 or (entity.owner_id is null and entity.type in ('domain','concept')))
       union all
       select 'relation', relation.id, relation.label, left(relation.description, 600),
         evidence.event_id, relation.source_entity_id, relation.created_at::text,
@@ -120,6 +122,7 @@ export async function hybridRetrieve(
       from relations relation cross join search
       left join lateral (select link.event_id from event_relations link where link.relation_id = relation.id order by link.event_id limit 1) evidence on true
       where relation.search_vector @@ search.query
+        and ($2::text is null or relation.owner_id = $2)
       union all
       select 'fact', fact.id, fact.fact_type, left(fact.value::text, 600), fact.event_id,
         null, fact.created_at::text, fact.confidence::float8, 1,
@@ -134,12 +137,28 @@ export async function hybridRetrieve(
         ts_rank_cd(insight.search_vector, search.query)::float8,
         insight.evidence
       from insight_runs insight cross join search where insight.search_vector @@ search.query
+        and ($2::text is null or insight.owner_id is not distinct from $2)
+        and (insight.policy_version is null or not exists (
+          select 1 from source_processing_policies policy
+          where (policy.owner_id = insight.owner_id
+              or (policy.owner_id is null and policy.client_scope = insight.owner_id))
+            and coalesce(policy.policy_version, 0) > insight.policy_version
+        ))
+        and ${derivedRunReadEligibilitySql("insight_runs", "insight")}
       union all
       select 'digest', digest.id, coalesce(digest.scope, 'Digest'), left(coalesce(digest.summary, ''), 600),
         null, null, digest.created_at::text, 0.7, 1,
         ts_rank_cd(digest.search_vector, search.query)::float8,
         jsonb_build_object('windowFrom', digest.window_from, 'windowTo', digest.window_to)
       from digest_runs digest cross join search where digest.search_vector @@ search.query
+        and ($2::text is null or digest.owner_id is not distinct from $2)
+        and (digest.policy_version is null or not exists (
+          select 1 from source_processing_policies policy
+          where (policy.owner_id = digest.owner_id
+              or (policy.owner_id is null and policy.client_scope = digest.owner_id))
+            and coalesce(policy.policy_version, 0) > digest.policy_version
+        ))
+        and ${derivedRunReadEligibilitySql("digest_runs", "digest")}
     ) select * from candidates order by "textScore" desc limit $10
   `, params);
 
@@ -155,14 +174,62 @@ export async function hybridRetrieve(
     objectId: string; embedding: number[]; content: string; metadata: Record<string, unknown>;
     updatedAt: string;
   }>(`
-    select object_type as "objectType", object_id as "objectId", embedding,
-      content, metadata, updated_at::text as "updatedAt"
-    from knowledge_embeddings
-    where embedding_version = $1 and ($2::text is null or client_id is null or client_id is not distinct from $2)
-      and (object_type <> 'event' or exists (select 1 from raw_events event where event.id = object_id and event.privacy_status <> 'hidden'))
-      and (object_type <> 'entity' or exists (select 1 from entities entity where entity.id = object_id and entity.visibility <> 'hidden'))
-      and (object_type <> 'fact' or exists (select 1 from knowledge_facts fact where fact.id = object_id and fact.visibility <> 'hidden'))
-    order by updated_at desc limit 1000
+    select embedding.object_type as "objectType", embedding.object_id as "objectId", embedding.embedding,
+      embedding.content, embedding.metadata, embedding.updated_at::text as "updatedAt"
+    from knowledge_embeddings embedding
+    where embedding.embedding_version = $1
+      and ($2::text is null or embedding.client_id is not distinct from $2)
+      -- An embedding marked stale by a policy change must never surface, even
+      -- when its original source metadata is unavailable.
+      and coalesce(embedding.metadata->>'policyStale', 'false') <> 'true'
+      -- Any embedding older than the owner's current policy version is
+      -- outdated for external/derived use.
+      and (
+        coalesce(embedding.owner_id, embedding.client_id) is null
+        or not exists (
+          select 1 from source_processing_policies policy
+          where (policy.owner_id = coalesce(embedding.owner_id, embedding.client_id)
+              or (policy.owner_id is null and policy.client_scope = coalesce(embedding.owner_id, embedding.client_id)))
+            and coalesce(policy.policy_version, 0) > coalesce(embedding.policy_version, 0)
+        )
+      )
+      and (embedding.object_type <> 'event' or exists (select 1 from raw_events event where event.id = embedding.object_id and event.privacy_status <> 'hidden'))
+      and (embedding.object_type <> 'entity' or exists (select 1 from entities entity where entity.id = embedding.object_id and entity.visibility <> 'hidden'))
+      and (embedding.object_type <> 'fact' or exists (select 1 from knowledge_facts fact where fact.id = embedding.object_id and fact.visibility <> 'hidden'))
+      -- Insight/digest embeddings must be joinable to a still-fresh run. A
+      -- missing run or a run older than an owner policy bump is stale.
+      and (
+        embedding.object_type not in ('insight', 'digest')
+        or (
+          embedding.object_type = 'insight'
+          and exists (
+            select 1 from insight_runs run
+            where run.id = embedding.object_id
+              and (run.policy_version is null or not exists (
+                select 1 from source_processing_policies policy
+                where (policy.owner_id = run.owner_id
+                    or (policy.owner_id is null and policy.client_scope = run.owner_id))
+                  and coalesce(policy.policy_version, 0) > run.policy_version
+              ))
+              and ${derivedRunReadEligibilitySql("insight_runs", "run")}
+          )
+        )
+        or (
+          embedding.object_type = 'digest'
+          and exists (
+            select 1 from digest_runs run
+            where run.id = embedding.object_id
+              and (run.policy_version is null or not exists (
+                select 1 from source_processing_policies policy
+                where (policy.owner_id = run.owner_id
+                    or (policy.owner_id is null and policy.client_scope = run.owner_id))
+                  and coalesce(policy.policy_version, 0) > run.policy_version
+              ))
+              and ${derivedRunReadEligibilitySql("digest_runs", "run")}
+          )
+        )
+      )
+    order by embedding.updated_at desc limit 1000
   `, [EMBEDDING_VERSION, filters.clientId ?? null]);
   const queryEmbedding = (await generateEmbedding({ text: query, clientId: filters.clientId })).embedding;
   for (const row of vectorRows.rows) {
@@ -194,8 +261,11 @@ export async function hybridRetrieve(
         on relation.source_entity_id = seed.id or relation.target_entity_id = seed.id
       join entities neighbor on neighbor.id = case when relation.source_entity_id = seed.id then relation.target_entity_id else relation.source_entity_id end
       where seed.id = any($1::text[]) and neighbor.visibility <> 'hidden'
+        and ($2::text is null or neighbor.owner_id is not distinct from $2
+          or (neighbor.owner_id is null and neighbor.type in ('domain','concept')))
+        and ($2::text is null or relation.owner_id is not distinct from $2)
       order by relation.confidence desc limit 100
-    `, [seedEntityIds]);
+    `, [seedEntityIds, filters.clientId ?? null]);
     for (const row of graph.rows) {
       const key = `entity:${row.id}`;
       const existing = candidates.get(key);

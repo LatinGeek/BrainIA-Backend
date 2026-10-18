@@ -1,0 +1,7 @@
+{
+  "version": "v2-sanitizer-1",
+  "passed": true,
+  "moneySeparatorsPreserved": true,
+  "relationships": "synthetic IDs preserved verbatim",
+  "personalSources": 0
+}

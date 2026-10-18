@@ -8,7 +8,16 @@ import {
   modelRequestFingerprint,
   recordModelCallAudit,
 } from "./model-audit.js";
-import { DEFAULT_SOURCE_POLICY, redactForModel, type SourceProcessingPolicy } from "./privacy.js";
+import {
+  acquireProviderSlot,
+  DEFAULT_SOURCE_POLICY,
+  logPrivacyDenial,
+  redactForModel,
+  stillAuthorized,
+  type PrivacyAuthorization,
+  type PrivacyDenial,
+  type SourceProcessingPolicy,
+} from "./privacy.js";
 
 export async function generateNaturalLanguageSummary(input: {
   apiKey?: string;
@@ -16,6 +25,9 @@ export async function generateNaturalLanguageSummary(input: {
   systemPrompt: string;
   userPrompt: string;
   jsonMode?: boolean;
+  thinking?: boolean;
+  maxTokens?: number;
+  timeoutMs?: number;
   audit?: {
     clientId?: string | null;
     eventId?: string | null;
@@ -24,35 +36,56 @@ export async function generateNaturalLanguageSummary(input: {
     attempt?: number;
   };
   redaction?: Pick<SourceProcessingPolicy, "redactEmails" | "redactFinancialIdentifiers">;
+  /**
+   * Server-resolved owner/purpose/evidence authorization. Required for every
+   * external dispatch; absent or denied authorization never reaches fetch().
+   */
+  privacy?: PrivacyAuthorization | PrivacyDenial | null;
 }) {
   if (!input.apiKey) {
+    return null;
+  }
+  const authorization = input.privacy;
+  if (!authorization?.allowed) {
+    logPrivacyDenial(authorization ? authorization.reason : "missing_owner", {
+      purpose: input.audit?.operation ?? "natural_language_summary",
+    });
     return null;
   }
 
   const model = input.model ?? "deepseek-v4-flash";
   const systemPrompt = input.systemPrompt;
-  const userPrompt = redactForModel(input.userPrompt, input.redaction ?? DEFAULT_SOURCE_POLICY);
+  const userPrompt = redactForModel(input.userPrompt, input.redaction ?? authorization.redaction ?? DEFAULT_SOURCE_POLICY);
   const fingerprint = modelRequestFingerprint({ model, systemPrompt, userPrompt });
   const startedAt = Date.now();
   const inputTokensEstimate = estimateTokens(systemPrompt) + estimateTokens(userPrompt);
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 15_000);
+  const timeout = setTimeout(() => controller.abort(), input.timeoutMs ?? 15_000);
+  const release = await acquireProviderSlot(authorization.ownerId);
   let response: Response;
   try {
+    // Re-check after the semaphore wait: a revocation while queued must not
+    // dispatch, and a changed policy version invalidates this work.
+    if (!(await stillAuthorized(authorization))) {
+      logPrivacyDenial("policy_version_changed", { purpose: authorization.purpose });
+      return null;
+    }
     response = await fetch(process.env.DEEPSEEK_API_URL ?? "https://api.deepseek.com/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${input.apiKey}`,
-    },
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${input.apiKey}`,
+      },
       body: JSON.stringify({
-      model,
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userPrompt },
-      ] satisfies DeepSeekChatMessage[],
-      thinking: { type: "disabled" },
-      ...(input.jsonMode ? { response_format: { type: "json_object" } } : {}),
+        model,
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt },
+        ] satisfies DeepSeekChatMessage[],
+        thinking: { type: input.thinking ? "enabled" : "disabled" },
+        ...(input.thinking ? { reasoning_effort: "high" } : {}),
+        ...(input.maxTokens ? { max_tokens: input.maxTokens } : {}),
+        ...(input.jsonMode ? { response_format: { type: "json_object" } } : {}),
       }),
       signal: controller.signal,
     });
@@ -71,15 +104,17 @@ export async function generateNaturalLanguageSummary(input: {
       latencyMs: Date.now() - startedAt,
       requestFingerprint: fingerprint,
       errorCode: error instanceof DOMException && error.name === "AbortError" ? "timeout" : "request_error",
-      errorMessage: error instanceof Error ? error.message : String(error),
+      // Metadata only: transport error names never contain prompt contents.
+      resultMetadata: { errorName: error instanceof Error ? error.name : "Error" },
     });
     throw error;
   } finally {
     clearTimeout(timeout);
+    release();
   }
 
   if (!response.ok) {
-    const text = await response.text();
+    // Never persist or log a provider error body: it can echo the prompt.
     await recordModelCallAudit({
       clientId: input.audit?.clientId,
       eventId: input.audit?.eventId,
@@ -90,14 +125,13 @@ export async function generateNaturalLanguageSummary(input: {
       status: "failed",
       attempt: input.audit?.attempt,
       inputTokens: inputTokensEstimate,
-      outputTokens: estimateTokens(text),
+      outputTokens: 0,
       latencyMs: Date.now() - startedAt,
       requestFingerprint: fingerprint,
       resultMetadata: { httpStatus: response.status },
       errorCode: `http_${response.status}`,
-      errorMessage: text,
     });
-    throw new Error(`DeepSeek request failed: ${response.status} ${text.slice(0, 500)}`);
+    throw new Error(`DeepSeek request failed with HTTP ${response.status}`);
   }
 
   const json = (await response.json()) as {
@@ -113,6 +147,7 @@ export async function generateNaturalLanguageSummary(input: {
     };
   };
   const content = json.choices?.[0]?.message?.content ?? null;
+  const publishable = await stillAuthorized(authorization);
   await recordModelCallAudit({
     clientId: input.audit?.clientId,
     eventId: input.audit?.eventId,
@@ -120,7 +155,7 @@ export async function generateNaturalLanguageSummary(input: {
     operation: input.audit?.operation ?? "natural_language_summary",
     model,
     promptVersion: input.audit?.promptVersion ?? "unversioned",
-    status: "succeeded",
+    status: publishable ? "succeeded" : "cancelled",
     attempt: input.audit?.attempt,
     inputTokens: json.usage?.prompt_tokens ?? inputTokensEstimate,
     outputTokens: json.usage?.completion_tokens ?? estimateTokens(content ?? ""),
@@ -128,5 +163,9 @@ export async function generateNaturalLanguageSummary(input: {
     requestFingerprint: fingerprint,
     resultMetadata: { totalTokens: json.usage?.total_tokens ?? null, emptyResponse: !content },
   });
+  if (!publishable) {
+    logPrivacyDenial("policy_version_changed", { purpose: authorization.purpose });
+    return null;
+  }
   return content;
 }

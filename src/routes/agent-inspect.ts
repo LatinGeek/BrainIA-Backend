@@ -1,7 +1,8 @@
-import type { FastifyPluginAsync } from "fastify";
+﻿import type { FastifyPluginAsync } from "fastify";
 import { z } from "zod";
 import { inspectKnowledge } from "../storage/agent-inspect.js";
 import { parseGraphOptions } from "../storage/graph-repository.js";
+import { ownerScope } from "../auth.js";
 
 const inspectSchema = z.object({
   id: z.string().optional(),
@@ -33,6 +34,7 @@ export const registerAgentInspectRoutes: FastifyPluginAsync = async (app) => {
     const result = await inspectKnowledge({
       id: parsed.data.id,
       q: parsed.data.q,
+      clientId: ownerScope(request),
       depth: options.depth,
       maxNodes: options.maxNodes,
       maxRelations: options.maxRelations,

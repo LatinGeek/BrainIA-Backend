@@ -189,7 +189,10 @@ export async function insertClassifiedEvent(
       ) values (
         $1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9::jsonb
       )
-      on conflict do nothing
+      on conflict (id) do update set
+        classification_version=excluded.classification_version,
+        inferred_kind=excluded.inferred_kind, confidence=excluded.confidence,
+        entities=excluded.entities, model_metadata=excluded.model_metadata
       returning id
     `,
     [
@@ -260,127 +263,84 @@ export async function findStoredRawEventId(
   return result.rows[0]?.id ?? null;
 }
 
+// Explicit user-requested knowledge deletion only (data-controls). Projection
+// rebuilds use replaceSemanticProjection and never call this destructive path.
 export async function deleteDerivedDataForEvent(db: Queryable, eventId: string) {
-  // Semantic v2 records are derived from the immutable raw event and must be
-  // rebuilt together with the rest of the event projection.
-  await db.query(`delete from event_semantic_anchors where event_id = $1`, [eventId]);
-  await db.query(`delete from semantic_observations where event_id = $1`, [eventId]);
-  await db.query(`delete from semantic_candidates where event_id = $1`, [eventId]);
-  await db.query(`delete from semantic_event_decisions where event_id = $1`, [eventId]);
-  await db.query(`delete from knowledge_facts where event_id = $1`, [eventId]);
-  await db.query(
-    `
-      with
-      candidate_entities as (
-        select distinct entity_id
-        from event_entities
-        where event_id = $1
-      ),
-      candidate_relations as (
-        select distinct relation_id
-        from event_relations
-        where event_id = $1
-      ),
-      deleted_event_relations as (
-        delete from event_relations
-        where event_id = $1
-        returning relation_id
-      ),
-      deleted_event_entities as (
-        delete from event_entities
-        where event_id = $1
-        returning entity_id
-      ),
-      deleted_review_queue as (
-        delete from entity_review_queue
-        where event_id = $1
-        returning id
-      ),
-      deleted_financial_transaction_events as (
-        delete from financial_transaction_events fte
-        using financial_transactions ft
-        where fte.raw_event_id = $1
-          and fte.transaction_id = ft.id
-          and ft.hidden_at is null
-        returning transaction_id
-      ),
-      deleted_financial_transactions as (
-        delete from financial_transactions t
-        where not t.excluded_from_reports
-          and t.hidden_at is null
-          and not exists (
-          select 1
-          from financial_transaction_events e
-          where e.transaction_id = t.id
-        )
-        returning id
-      ),
-      deleted_relations as (
-        delete from relations rel
-        where rel.id in (select relation_id from candidate_relations)
-          and not exists (
-            select 1
-            from event_relations er
-            where er.relation_id = rel.id
-          )
-        returning id
-      ),
-      deleted_entities as (
-        delete from entities e
-        where e.id in (select entity_id from candidate_entities)
-          and not exists (
-            select 1
-            from event_entities ee
-            where ee.entity_id = e.id
-          )
-          and not exists (
-            select 1
-            from relations r
-            where r.source_entity_id = e.id
-               or r.target_entity_id = e.id
-          )
-          and not exists (
-            select 1
-            from entity_merges m
-            where m.alias_entity_id = e.id
-               or m.canonical_entity_id = e.id
-          )
-          and not exists (
-            select 1
-            from entity_aliases a
-            where a.entity_id = e.id
-          )
-          and not exists (
-            select 1
-            from entity_review_queue q
-            where q.entity_id = e.id
-          )
-          and not exists (
-            select 1
-            from financial_transactions ft
-            where ft.merchant_entity_id = e.id
-          )
-        returning id
-      )
-      select 1
-    `,
-    [eventId],
-  );
+  for (const table of ['event_semantic_anchors','semantic_observations','semantic_candidates',
+    'semantic_event_decisions','knowledge_facts','event_relations','event_entities','entity_review_queue']) {
+    await db.query(`delete from ${table} where event_id=$1`, [eventId]);
+  }
+  await db.query('delete from classified_events where raw_event_id=$1', [eventId]);
+}
 
-  // Data-modifying CTEs share one statement snapshot in Postgres, so the
-  // orphan check inside the CTE cannot observe the just-deleted evidence row.
-  // Run this cleanup as a separate statement to prevent stale expense rows
-  // from surviving a reprocess that changes an event into a transfer.
+// Only replace machine-owned rows in the requested semantic generation/domains.
+// Canonical entities, classifications, finance and resolved user reviews have
+// independent lifecycles and must never be garbage-collected by this stage.
+export async function replaceSemanticProjection(
+  db: Queryable,
+  scope: { eventId: string; clientId: string | null; generation: string; domains: string[] },
+) {
+  const values = [scope.eventId, scope.clientId, scope.generation, scope.domains];
   await db.query(`
-    delete from financial_transactions t
-    where not t.excluded_from_reports
-      and t.hidden_at is null
-      and not exists (
-      select 1 from financial_transaction_events e where e.transaction_id = t.id
+    delete from semantic_candidates c where c.event_id=$1
+      and c.client_id is not distinct from $2 and c.governance_version=$3
+      and c.domain_value=any($4::text[]) and c.status='pending'
+      and exists(select 1 from raw_events e where e.id=$1 and e.client_id is not distinct from $2)
+  `, values);
+  // Parent ancestry identifies the observation domain without relying on a
+  // shared subject (one subject can occur in several domains).
+  await db.query(`
+    with recursive domain_nodes(id) as (
+      select id from entities where type='domain' and value=any($4::text[])
+      union
+      select r.source_entity_id from relations r join domain_nodes d on d.id=r.target_entity_id
+      where r.relation_type in ('part_of','belongs_to_domain')
     )
-  `);
+    delete from semantic_observations o where o.event_id=$1
+      and o.client_id is not distinct from $2 and o.governance_version=$3
+      and o.parent_entity_id in(select id from domain_nodes)
+      and exists(select 1 from raw_events e where e.id=$1 and e.client_id is not distinct from $2)
+  `, values);
+  await db.query(`
+    delete from event_semantic_anchors a using raw_events e, entities d
+    where a.event_id=$1 and e.id=a.event_id and e.client_id is not distinct from $2
+      and a.governance_version=$3 and d.id=a.domain_entity_id and d.value=any($4::text[])
+  `, values);
+}
 
-  await db.query("delete from classified_events where raw_event_id = $1", [eventId]);
+// Fact types and extractor generation form the classification projection's
+// namespace. Other extractors and user-authored facts survive a rebuild.
+export async function replaceClassificationFacts(
+  db: Queryable,
+  input: { eventId: string; clientId: string | null; facts: import('../domain/knowledge-fact.js').KnowledgeFact[] },
+) {
+  for (const generation of new Set(input.facts.map(f => f.extractorVersion))) {
+    const types = ['event_classification', ...['amount','merchant','sender','recipient','app','card_last_four'].map(type => `entity_${type}`)];
+    await db.query(`delete from knowledge_facts where event_id=$1 and client_id is not distinct from $2
+      and extractor_version=$3 and fact_type=any($4::text[])`,
+    [input.eventId, input.clientId, generation, types]);
+  }
+  for (const f of input.facts) await db.query(`
+    insert into knowledge_facts(id,client_id,event_id,fact_type,value,normalized_value,confidence,evidence,
+      model,model_version,prompt_version,extractor_version,visibility)
+    values($1,$2,$3,$4,$5::jsonb,$6,$7,$8::jsonb,$9,$10,$11,$12,$13)
+    on conflict(event_id,fact_type,normalized_value,extractor_version) do nothing
+  `, [randomUUID(),input.clientId,input.eventId,f.factType,JSON.stringify(f.value),f.normalizedValue,
+    f.confidence,JSON.stringify(f.evidence),f.model,f.modelVersion,f.promptVersion,f.extractorVersion,f.visibility]);
+}
+
+// Evidence is an observation, not a processing attempt or model revision.
+export async function countEventEvidence(db: Queryable, eventId: string) {
+  const { rows } = await db.query<{ evidenceCount: number; revisionCount: number }>(`
+    select (select count(distinct e.raw_event_id)::int from financial_transaction_events e
+      join financial_transactions t on t.id=e.transaction_id
+      where coalesce(t.merged_into_transaction_id,t.id) in (
+        select coalesce(t2.merged_into_transaction_id,t2.id) from financial_transaction_events e2
+        join financial_transactions t2 on t2.id=e2.transaction_id where e2.raw_event_id=$1
+      )) as "evidenceCount",
+      (select count(distinct id)::int from classification_decisions where event_id=$1) as "revisionCount"
+  `, [eventId]);
+  return rows[0];
 }
 
 export async function linkEventEntity(
@@ -410,6 +370,7 @@ export async function linkEventEntity(
 export async function loadStoredEventById(
   db: Queryable,
   eventId: string,
+  clientId?: string,
 ): Promise<StoredEventRecord | null> {
   const result = await db.query<StoredEventRecord>(
     `
@@ -491,10 +452,10 @@ export async function loadStoredEventById(
       from raw_events r
       left join classified_events c on c.raw_event_id = r.id
       left join semantic_event_decisions semantic on semantic.event_id = r.id
-      where r.id = $1
+      where r.id = $1 and ($2::text is null or r.client_id = $2)
       limit 1
     `,
-    [eventId],
+    [eventId, clientId ?? null],
   );
 
   return result.rows[0] ?? null;
@@ -524,7 +485,7 @@ export async function loadStoredEventByLookup(
   return loadStoredEventById(db, rawEventId);
 }
 
-export async function listStoredEvents() {
+export async function listStoredEvents(clientId?: string) {
   const result = await pool.query<StoredEventRecord>(
     `
       select
@@ -605,8 +566,10 @@ export async function listStoredEvents() {
       from raw_events r
       left join classified_events c on c.raw_event_id = r.id
       left join semantic_event_decisions semantic on semantic.event_id = r.id
+      where ($1::text is null or r.client_id = $1)
       order by r.created_at asc
     `,
+    [clientId ?? null],
   );
 
   return result.rows as StoredEventRecord[];

@@ -2,15 +2,18 @@ import { z } from "zod";
 import type { ClassifiedEvent, EventInput } from "../domain/event.js";
 import { eventKindSchema } from "../domain/event.js";
 import { generateNaturalLanguageSummary } from "./deepseek.js";
-import { loadSourceProcessingPolicy, type SourceProcessingPolicy } from "./privacy.js";
+import { authorizeModelDispatch, loadSourceProcessingPolicy, type PrivacyAuthorization, type SourceProcessingPolicy } from "./privacy.js";
 import { pool } from "./postgres.js";
 import { loadClassificationLessons, type ClassificationLesson } from "./classification-learning.js";
+import { classifyWithJev } from './jev.js';
+import { applyConfirmedCorrections } from './correction-memory.js';
 
 type ClassificationAssistantDeps = {
   apiKey?: string;
   model: string;
   generateCompletion?: typeof generateNaturalLanguageSummary;
   resolvePolicy?: (input: { clientId: string | null; source: string }) => Promise<SourceProcessingPolicy>;
+  authorizeDispatch?: (input: { ownerId: string | null; source: string }) => Promise<PrivacyAuthorization | null>;
   loadLessons?: (input: { clientId: string | null; source: string }) => Promise<ClassificationLesson[]>;
 };
 
@@ -124,6 +127,20 @@ export function createClassificationAssistant(deps: ClassificationAssistantDeps)
         },
       };
     }
+    const authorization = deps.authorizeDispatch
+      ? await deps.authorizeDispatch({ ownerId: input.clientId ?? null, source: input.event.source })
+      : undefined;
+    if (deps.authorizeDispatch && !authorization) {
+      return {
+        ...input.base,
+        modelMetadata: {
+          provider: "deepseek",
+          model: deps.model,
+          applied: false,
+          reason: "privacy_policy",
+        },
+      };
+    }
 
     const completion = deps.generateCompletion ?? generateNaturalLanguageSummary;
     // A correction is not a one-off display preference. It is supervised
@@ -147,8 +164,9 @@ export function createClassificationAssistant(deps: ClassificationAssistantDeps)
         promptVersion: "classification-v3",
       },
       redaction: policy ?? undefined,
+      privacy: authorization,
       systemPrompt:
-        "Return only strict JSON. Classify the real-world event semantics, not its transport type. A posted or completed card transaction is an expense even when captured as a notification and even when the title says Aviso; a rejected or declined attempt is only a notification. Preserve the exact currency and full amount, including thousands separators such as UYU 1.733,00. Extract concise evidence and generate a user-facing event identity for every event. displayTitle must state what actually happened in concise English; never copy a generic heading such as Aviso, Notification, Message, or a raw sentence. displayDescription must explain the event using only supplied facts. Always inspect financial alerts and email bodies even when deterministic classification is already confident. For card alerts, identify the real merchant from processor descriptors such as +phone/OPENAI *CHATGPT, not the generic heading. confirmedExamples are explicit user corrections from this same source. Treat an exact or clearly equivalent descriptor as strong evidence for the canonical entity. taxonomyKeys and roles inside an exact confirmed example are user-confirmed facts about that entity; preserve them as evidence for the semantic governor, but never apply them to a merely similar-looking descriptor or invent an event category/relationship from them. Allowed entity types are only app, merchant, sender, recipient, message, amount, and card_last_four. Do not output domains, categories, concepts, notification titles, timestamps, other IDs, raw fragments, or invented entities; a separate semantic governor decides durable graph placement.",
+        "Return only strict JSON. Classify the real-world event semantics, not its transport type. A posted or completed card transaction is an expense even when captured as a notification and even when the title says Aviso; a rejected or declined attempt is only a notification. Preserve the exact currency and full amount, including thousands separators such as UYU 1.733,00. Extract concise evidence and generate a user-facing event identity for every event. displayTitle must state what actually happened in concise Spanish; never copy a generic heading such as Aviso, Notification, Message, or a raw sentence. displayDescription must explain the event using only supplied facts. Always inspect financial alerts and email bodies even when deterministic classification is already confident. For card alerts, identify the real merchant from processor descriptors such as +phone/OPENAI *CHATGPT, not the generic heading. confirmedExamples are explicit user corrections from this same source. Treat an exact or clearly equivalent descriptor as strong evidence for the canonical entity. taxonomyKeys and roles inside an exact confirmed example are user-confirmed facts about that entity; preserve them as evidence for the semantic governor, but never apply them to a merely similar-looking descriptor or invent an event category/relationship from them. Allowed entity types are only app, merchant, sender, recipient, message, amount, and card_last_four. Do not output domains, categories, concepts, notification titles, timestamps, other IDs, raw fragments, or invented entities; a separate semantic governor decides durable graph placement.",
       userPrompt: JSON.stringify(
         {
           event: {
@@ -168,11 +186,11 @@ export function createClassificationAssistant(deps: ClassificationAssistantDeps)
           },
           confirmedExamples,
           responseShape: {
-            inferredKind: "email | expense | transfer | note | notification | task | other",
+            inferredKind: "email | expense | income | transfer | note | notification | task | other",
             confidence: "number between 0 and 1",
             entities: [{ type: "string", value: "string" }],
             rationale: "short explanation",
-            displayTitle: "concise meaningful English event name",
+            displayTitle: "concise meaningful Spanish event name",
             displayDescription: "20-500 character factual event description",
           },
         },
@@ -203,7 +221,6 @@ export function createClassificationAssistant(deps: ClassificationAssistantDeps)
             model: deps.model,
             applied: false,
             reason: "invalid_response",
-            rawResponse: content,
           },
         };
       }
@@ -243,7 +260,6 @@ export function createClassificationAssistant(deps: ClassificationAssistantDeps)
           },
           response: suggestion,
           learning: { confirmedExamples: confirmedExamples.length },
-          rawResponse: content,
         },
       };
     } catch {
@@ -260,9 +276,40 @@ export function createClassificationAssistant(deps: ClassificationAssistantDeps)
   };
 }
 
-export const maybeEnhanceClassification = createClassificationAssistant({
+const enhanceWithDeepSeek = createClassificationAssistant({
   apiKey: process.env.DEEPSEEK_API_KEY,
   model: process.env.DEEPSEEK_MODEL ?? "deepseek-v4-flash",
   resolvePolicy: (input) => loadSourceProcessingPolicy(pool, input),
+  authorizeDispatch: async (input) => {
+    const decision = await authorizeModelDispatch(pool, {
+      ownerId: input.ownerId, purpose: "event_classification", sources: [input.source],
+    });
+    return decision.allowed ? decision : null;
+  },
   loadLessons: (input) => loadClassificationLessons(pool, input),
 });
+
+export async function maybeEnhanceClassification(input: Parameters<typeof enhanceWithDeepSeek>[0]) {
+  const jevAuthorization = input.allowModel === false
+    ? null
+    : await authorizeModelDispatch(pool, {
+        ownerId: input.clientId ?? null,
+        purpose: "event_classification",
+        sources: [input.event.source],
+        // Bind JEV to the event itself. Source-level authorization is not
+        // enough for the direct classifier boundary.
+        eventIds: [input.event.id],
+      });
+  const jev = await classifyWithJev({
+    ...input,
+    allowModel: input.allowModel === false ? false : jevAuthorization?.allowed === true,
+    authorization: jevAuthorization?.allowed ? jevAuthorization : null,
+  });
+  const base = jev?.applied ? { ...input.base, inferredKind: jev.decision.answers.kind.choice,
+    confidence: jev.decision.answers.kind.probabilities[jev.decision.answers.kind.choice]!, classificationVersion: 'jev-v1' } : input.base;
+  const enhanced = await enhanceWithDeepSeek({ ...input, base });
+  const result = jev ? { ...enhanced, inferredKind: jev.applied ? base.inferredKind : enhanced.inferredKind,
+    modelMetadata: { ...enhanced.modelMetadata, jev } } : enhanced;
+  if (process.env.BRAINIA_LEARNING_ENABLED !== 'true') return result;
+  return applyConfirmedCorrections(input.event, result, input.clientId ?? null);
+}

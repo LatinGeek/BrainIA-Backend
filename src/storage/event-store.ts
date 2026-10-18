@@ -1,5 +1,5 @@
 import { classifyEvent } from "../domain/classification.js";
-import type { EventInput } from "../domain/event.js";
+import type { ClassifiedEvent, EventInput } from "../domain/event.js";
 import { buildEntityDrafts, type EntityDraft } from "../domain/entities.js";
 import { buildRelationDrafts } from "../domain/relations.js";
 import { pool, withSemanticMaterializationLock, withTransaction } from "./postgres.js";
@@ -9,7 +9,8 @@ import { enqueueEntityReview } from "./entity-alias-repository.js";
 import { buildFinancialTransactionCandidate } from "../domain/financial-transactions.js";
 import {
   countKnowledgeMetrics,
-  deleteDerivedDataForEvent,
+  replaceSemanticProjection,
+  replaceClassificationFacts,
   insertClassifiedEvent,
   insertRawEvent,
   findStoredRawEventId,
@@ -22,7 +23,7 @@ import {
   transitionEventProcessingStatus,
 } from "./event-repository.js";
 import { findCanonicalMerchantByValue, upsertEntity } from "./entity-repository.js";
-import { linkFinancialTransactionForEvent } from "./financial-transaction-repository.js";
+import { linkFinancialTransactionForEvent, loadFinancialTransactionById } from "./financial-transaction-repository.js";
 import { linkEventRelation, upsertRelation } from "./relation-repository.js";
 import { semanticInstanceDraft } from "../domain/ontology.js";
 import { consolidateProviderIdentity, ensureOntology } from "./semantic-repository.js";
@@ -30,10 +31,12 @@ import { resolveEventSemantics } from "./semantic-resolver.js";
 import { buildModelSemanticDecision } from "./semantic-enrichment.js";
 import type { SemanticDecision } from "./semantic-enrichment.js";
 import { buildEventInterpretation } from "../domain/event-interpretation.js";
-import { deriveKnowledgeFacts, replaceEventKnowledgeFacts } from "./knowledge-fact-repository.js";
-import { enqueueBackgroundJob, settleInlineBackgroundJob } from "./job-repository.js";
+import { deriveKnowledgeFacts } from "./knowledge-fact-repository.js";
+import { enqueueBackgroundJob, claimBackgroundJob, completeBackgroundJob, failBackgroundJob, StaleJobClaimError } from "./job-repository.js";
 import { loadSourceProcessingPolicy } from "./privacy.js";
 import { config } from "../config.js";
+import { SEMANTIC_GOVERNANCE_VERSION } from "../domain/ontology.js";
+import { preserveCorrectionOverlay, reapplyCorrectionOverlay } from "./correction-projection.js";
 
 export type EventIngestionContext = {
   clientId?: string | null;
@@ -98,6 +101,14 @@ function classifiedEventIdentity(classified: { modelMetadata?: Record<string, un
   };
 }
 
+function humanLearningContext(classified: { modelMetadata?: Record<string, unknown> | null }) {
+  const metadata = classified.modelMetadata;
+  if (!metadata) return undefined;
+  const eventCategory = typeof metadata.eventCategory === "string" ? metadata.eventCategory : undefined;
+  const explanation = typeof metadata.humanExplanation === "string" ? metadata.humanExplanation : undefined;
+  return eventCategory || explanation ? { eventCategory, explanation } : undefined;
+}
+
 async function persistClassifiedEvent(
   event: EventInput,
   clientId: string | null,
@@ -113,7 +124,7 @@ async function persistClassifiedEvent(
   entityDrafts.push(instanceDraft);
   // Model inference must happen before opening a database transaction. Holding
   // ontology row locks while waiting on the network serializes batch workers.
-  const semanticDecision = await buildModelSemanticDecision({ entities: entityDrafts, source: event.source, inferredKind: classified.inferredKind, title: event.title, body: event.body, clientId });
+  const semanticDecision = await buildModelSemanticDecision({ entities: entityDrafts, source: event.source, inferredKind: classified.inferredKind, title: event.title, body: event.body, clientId, humanContext: humanLearningContext(classified) });
   const graphDrafts = governedGraphDrafts(semanticDecision, entityDrafts);
 
   return withTransaction(async (db) => {
@@ -128,7 +139,7 @@ async function persistClassifiedEvent(
     }
 
     await insertClassifiedEvent(db, classified, event.id, clientId);
-    await replaceEventKnowledgeFacts(db, {
+    await replaceClassificationFacts(db, {
       eventId: event.id,
       clientId,
       facts: deriveKnowledgeFacts({ event, classified, entities: entityDrafts }),
@@ -235,7 +246,7 @@ async function persistClassifiedEvent(
           await linkEventEntity(db, event.id, merchant.id, 0.9);
         }
       }
-      await linkFinancialTransactionForEvent(db, financialCandidate);
+      await retainFinancialProjection(db, financialCandidate);
     }
 
     await updateClassifiedEventInterpretation(db, event.id, buildEventInterpretation({
@@ -317,10 +328,25 @@ export async function appendEvent(event: EventInput, context: EventIngestionCont
   // without depending on the optional worker/semantic pipeline.
   if (capture.inserted && config.processingMode === "queued" && isFinancialInferredKind(event.kind)) {
     logCaptureStage({ requestId: context.requestId, eventId: event.id, source: event.source, stage: "financial_projection_start" });
+    const inlineWorker = `inline_projection_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    const claim = await claimBackgroundJob({
+      jobType: "classification", idempotencyKey: `classification:${capture.storedId}:v1`,
+      workerId: inlineWorker,
+    });
     try {
+      if (!claim) throw new StaleJobClaimError(capture.storedId, 0, "inline_financial_claim");
       const classified = await classifyCapturedEvent(capture.storedId);
       if (!classified) throw new Error("Captured financial event is unavailable for classification");
       const correlation = await correlateFinancialEvent(capture.storedId);
+      await completeBackgroundJob(claim, async (db) => {
+        // The queued semantic stage is published atomically with the successful
+        // classification completion; a stale attempt never reaches this code.
+        await enqueueBackgroundJob(db, {
+          clientId, eventId: capture.storedId, jobType: "semantic_enrichment",
+          idempotencyKey: `semantic:${capture.storedId}:${SEMANTIC_GOVERNANCE_VERSION}`,
+          payload: { eventId: capture.storedId }, provider: "deepseek", priority: 20,
+        });
+      });
       logCaptureStage({
         requestId: context.requestId,
         eventId: event.id,
@@ -329,7 +355,10 @@ export async function appendEvent(event: EventInput, context: EventIngestionCont
         correlated: correlation?.correlated ?? false,
       });
     } catch (error) {
-      // The immutable capture and its queued classification job remain intact.
+      if (!(error instanceof StaleJobClaimError) && claim) {
+        await failBackgroundJob(claim, error).catch(() => undefined);
+      }
+      // The immutable capture and its classification job remain recoverable.
       // Do not turn a delayed projection into another failed user capture.
       logCaptureStage({
         requestId: context.requestId,
@@ -349,22 +378,41 @@ export async function appendEvent(event: EventInput, context: EventIngestionCont
     return stored;
   }
 
+  const inlineWorker = `inline_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+  const inlineJob = await claimBackgroundJob({
+    jobType: "classification", idempotencyKey: `classification:${capture.storedId}:v1`,
+    workerId: inlineWorker,
+  });
+  if (!inlineJob) {
+    // A cron/operations worker already owns the live attempt. Inline capture
+    // must not settle or duplicate it.
+    const stored = await loadStoredEventByLookup(pool, capture.storedId, dedupeKey);
+    if (!stored) throw new Error("Captured event could not be loaded");
+    return stored;
+  }
+
   try {
     const stored = await reprocessEvent(capture.storedId);
-    await settleInlineBackgroundJob({ jobType: "classification", idempotencyKey: `classification:${capture.storedId}:v1` });
     if (!stored) throw new Error("Captured event disappeared before processing");
-    await enqueueBackgroundJob(pool, {
-      clientId, eventId: capture.storedId, jobType: "embedding",
-      idempotencyKey: `embedding:${capture.storedId}:${process.env.EMBEDDING_VERSION ?? "embedding-v1"}`,
-      payload: { eventId: capture.storedId },
+    await completeBackgroundJob(inlineJob, async (db) => {
+      await enqueueBackgroundJob(db, {
+        clientId, eventId: capture.storedId, jobType: "embedding",
+        idempotencyKey: `embedding:${capture.storedId}:${process.env.EMBEDDING_VERSION ?? "embedding-v1"}`,
+        payload: { eventId: capture.storedId },
+      });
     });
     return stored;
   } catch (error) {
+    if (error instanceof StaleJobClaimError) {
+      const stored = await loadStoredEventByLookup(pool, capture.storedId, dedupeKey);
+      if (!stored) throw error;
+      return stored;
+    }
     await withTransaction((db) => transitionEventProcessingStatus(db, {
       eventId: capture.storedId, toStatus: "retryable",
       reason: error instanceof Error ? error.message.slice(0, 500) : "processing_failed",
     }));
-    await settleInlineBackgroundJob({ jobType: "classification", idempotencyKey: `classification:${capture.storedId}:v1`, error });
+    await failBackgroundJob(inlineJob, error).catch(() => undefined);
     const stored = await loadStoredEventByLookup(pool, capture.storedId, dedupeKey);
     if (!stored) throw error;
     return stored;
@@ -374,7 +422,7 @@ export async function appendEvent(event: EventInput, context: EventIngestionCont
 export async function classifyCapturedEvent(eventId: string) {
   const rawEvent = await loadRawEventById(pool, eventId);
   if (!rawEvent || !rawEvent.processingAllowed || rawEvent.privacyStatus === "hidden") return null;
-  const classified = await maybeEnhanceClassification({
+  let classified: ClassifiedEvent = await maybeEnhanceClassification({
     event: rawEvent,
     base: classifyEvent(rawEvent),
     clientId: rawEvent.clientId,
@@ -383,15 +431,23 @@ export async function classifyCapturedEvent(eventId: string) {
     // optional external model call.
     allowModel: rawEvent.privacyStatus === "standard" && rawEvent.source !== "capture.wallet",
   });
-  const entityDrafts = buildEntityDrafts({ ...classified, raw: classified.raw });
   return withTransaction(async (db) => {
-    await deleteDerivedDataForEvent(db, eventId);
+    await db.query('select id from raw_events where id=$1 for update', [eventId]);
+    classified = await preserveCorrectionOverlay(db, eventId, classified);
+    const entityDrafts = buildEntityDrafts({ ...classified, raw: classified.raw });
     await insertClassifiedEvent(db, classified, rawEvent.id, rawEvent.clientId);
-    await replaceEventKnowledgeFacts(db, {
+    await replaceClassificationFacts(db, {
       eventId: rawEvent.id, clientId: rawEvent.clientId,
       facts: deriveKnowledgeFacts({ event: rawEvent, classified, entities: entityDrafts }),
     });
     await transitionEventProcessingStatus(db, { eventId, toStatus: "classified", reason: "classification_job_completed" });
+    // A notification arrives as a generic event and only becomes financial at
+    // classification time. Keep the financial projection in this same
+    // transaction so every classification path (worker, retry, or direct
+    // invocation) materializes a detected purchase instead of relying on a
+    // caller to remember a separate correlation step.
+    await correlateFinancialEventWithDb(db, eventId);
+    await reapplyCorrectionOverlay(db, eventId);
     return loadStoredEventById(db, eventId);
   });
 }
@@ -406,7 +462,7 @@ async function reprocessEventUnlocked(eventId: string, options: { ensureOntology
     return null;
   }
   const existing = options.reuseClassification ? await loadStoredEventById(pool, eventId) : null;
-  const classified = existing?.classificationVersion ? {
+  const inferred = existing?.classificationVersion ? {
     ...rawEvent,
     classificationVersion: existing.classificationVersion,
     inferredKind: existing.inferredKind,
@@ -419,19 +475,26 @@ async function reprocessEventUnlocked(eventId: string, options: { ensureOntology
       clientId: rawEvent.clientId,
       allowModel: rawEvent.privacyStatus === "standard",
     });
+  const classified = await preserveCorrectionOverlay(pool, eventId, inferred);
   const entityDrafts = buildEntityDrafts({ ...classified, raw: classified.raw });
   const instanceDraft = semanticInstanceDraft({ eventId: rawEvent.id, inferredKind: classified.inferredKind, source: rawEvent.source, title: rawEvent.title, body: rawEvent.body, identity: classifiedEventIdentity(classified) });
   entityDrafts.push(instanceDraft);
-  const semanticDecision = await buildModelSemanticDecision({ entities: entityDrafts, source: rawEvent.source, inferredKind: classified.inferredKind, title: rawEvent.title, body: rawEvent.body, clientId: rawEvent.clientId, allowModel: rawEvent.privacyStatus === "standard" });
+  const semanticDecision = await buildModelSemanticDecision({ entities: entityDrafts, source: rawEvent.source, inferredKind: classified.inferredKind, title: rawEvent.title, body: rawEvent.body, clientId: rawEvent.clientId, allowModel: rawEvent.privacyStatus === "standard", humanContext: humanLearningContext(classified) });
   const graphDrafts = governedGraphDrafts(semanticDecision, entityDrafts);
   return withTransaction(async (db) => {
-    await deleteDerivedDataForEvent(db, eventId);
-    await insertClassifiedEvent(db, classified, rawEvent.id, rawEvent.clientId);
-    await replaceEventKnowledgeFacts(db, {
-      eventId: rawEvent.id,
-      clientId: rawEvent.clientId,
-      facts: deriveKnowledgeFacts({ event: rawEvent, classified, entities: entityDrafts }),
+    await db.query('select id from raw_events where id=$1 for update', [eventId]);
+    await replaceSemanticProjection(db, {
+      eventId, clientId: rawEvent.clientId, generation: semanticDecision.governanceVersion,
+      domains: [...new Set(semanticDecision.paths.map(path => path.domain))],
     });
+    if (!options.reuseClassification) {
+      await insertClassifiedEvent(db, await preserveCorrectionOverlay(db, eventId, classified), rawEvent.id, rawEvent.clientId);
+      await replaceClassificationFacts(db, {
+        eventId: rawEvent.id,
+        clientId: rawEvent.clientId,
+        facts: deriveKnowledgeFacts({ event: rawEvent, classified, entities: entityDrafts }),
+      });
+    }
     await transitionEventProcessingStatus(db, { eventId: rawEvent.id, toStatus: "classified", reason: "classification_projection_persisted" });
     if (options.ensureOntology !== false) await ensureOntology(db, rawEvent.clientId);
     const upsertedByType = new Map<string, Awaited<ReturnType<typeof upsertEntity>>>();
@@ -526,7 +589,7 @@ async function reprocessEventUnlocked(eventId: string, options: { ensureOntology
     });
 
     if (financialCandidate && !options.skipFinancial) {
-      await linkFinancialTransactionForEvent(db, financialCandidate);
+      await retainFinancialProjection(db, financialCandidate);
     }
 
     await updateClassifiedEventInterpretation(db, rawEvent.id, buildEventInterpretation({
@@ -546,6 +609,7 @@ async function reprocessEventUnlocked(eventId: string, options: { ensureOntology
       reason: `semantic_decision:${semanticDecision.status}`,
     });
 
+    await reapplyCorrectionOverlay(db, eventId);
     const stored = await loadStoredEventByLookup(db, rawEvent.id, rawEvent.dedupeKey);
 
     invalidateGraphTraversalCache();
@@ -553,8 +617,51 @@ async function reprocessEventUnlocked(eventId: string, options: { ensureOntology
   });
 }
 
-export async function correlateFinancialEvent(eventId: string) {
-  const stored = await loadStoredEventById(pool, eventId);
+async function retainFinancialProjection(
+  db: Pick<typeof pool, 'query'>,
+  candidate: Parameters<typeof linkFinancialTransactionForEvent>[1],
+) {
+  await db.query('select id from raw_events where id=$1 for update', [candidate.eventId]);
+  const retained = await db.query<{ id: string }>(`
+    select coalesce(t.merged_into_transaction_id,t.id) as id
+    from financial_transaction_events e join financial_transactions t on t.id=e.transaction_id
+    where e.raw_event_id=$1
+  `, [candidate.eventId]);
+  if (retained.rows[0]) return {
+    transaction: await loadFinancialTransactionById(db,retained.rows[0].id),
+    matchedExisting: true, matchScore: 1, matchReason: 'retained_observation',
+  };
+  await db.query(`select pg_advisory_xact_lock(hashtextextended(
+    'finance-owner:' || coalesce((select client_id from raw_events where id=$1),'anonymous'),0))`, [candidate.eventId]);
+  // Consolidation may update machine fields on an existing canonical row.
+  // Restore its human-owned values after linking this new observation.
+  const overlays = await db.query(`
+    select t.* from financial_transactions t
+    join financial_transaction_events e on e.transaction_id=t.id
+    join raw_events r on r.id=e.raw_event_id
+    where r.client_id is not distinct from (select client_id from raw_events where id=$1)
+      and exists(select 1 from classification_corrections c
+        where c.event_id=e.raw_event_id and c.revoked_at is null)
+    for update of t
+  `, [candidate.eventId]);
+  const result = await linkFinancialTransactionForEvent(db, candidate);
+  if (result.transaction) {
+    const before = overlays.rows.find(row => row.id === result.transaction!.id);
+    if (before) await db.query(`update financial_transactions set
+      kind=$2,amount=$3,currency=$4,merchant_label=$5,normalized_merchant=$6,merchant_entity_id=$7,
+      category=$8,account_id=$9,destination_account_id=$10,destination_amount=$11,destination_currency=$12,
+      excluded_from_reports=$13 where id=$1`,
+    [before.id,before.kind,before.amount,before.currency,before.merchant_label,before.normalized_merchant,
+      before.merchant_entity_id,before.category,before.account_id,before.destination_account_id,
+      before.destination_amount,before.destination_currency,before.excluded_from_reports]);
+    if (before) result.transaction = await loadFinancialTransactionById(db,before.id) ?? result.transaction;
+  }
+  return result;
+}
+
+type Queryable = Pick<typeof pool,"query">;
+export async function correlateFinancialEventWithDb(db:Queryable,eventId: string) {
+  const stored = await loadStoredEventById(db, eventId);
   if (!stored?.classificationVersion || !stored.inferredKind) return null;
   const classified = {
     ...stored,
@@ -574,19 +681,21 @@ export async function correlateFinancialEvent(eventId: string) {
     observedAt: stored.timestamp ?? stored.rawEventCreatedAt,
   });
   if (!candidate) return { eventId, correlated: false };
-  return withTransaction(async (db) => {
-    if (!candidate.merchantEntityId && candidate.kind !== "transfer") {
-      const merchantDraft = entityDrafts.find((draft) => draft.type === "merchant");
-      const merchant = merchantDraft ? await findCanonicalMerchantByValue(db, merchantDraft.value) : null;
-      if (merchant) {
-        candidate.merchantEntityId = merchant.id;
-        candidate.matchStrategy = "merchant_identity_lookup";
-        await linkEventEntity(db, eventId, merchant.id, 0.9);
-      }
+  if (!candidate.merchantEntityId && candidate.kind !== "transfer") {
+    const merchantDraft = entityDrafts.find((draft) => draft.type === "merchant");
+    const merchant = merchantDraft ? await findCanonicalMerchantByValue(db, merchantDraft.value) : null;
+    if (merchant) {
+      candidate.merchantEntityId = merchant.id;
+      candidate.matchStrategy = "merchant_identity_lookup";
+      await linkEventEntity(db, eventId, merchant.id, 0.9);
     }
-    const transaction = await linkFinancialTransactionForEvent(db, candidate);
-    return { eventId, correlated: true, transaction };
-  });
+  }
+  const transaction = await retainFinancialProjection(db, candidate);
+  return { eventId, correlated: true, transaction };
+}
+
+export async function correlateFinancialEvent(eventId: string) {
+  return withTransaction(db=>correlateFinancialEventWithDb(db,eventId));
 }
 
 export async function previewEventSemantics(eventId: string) {
@@ -598,12 +707,12 @@ export async function previewEventSemantics(eventId: string) {
   return buildModelSemanticDecision({ entities: entityDrafts, source: rawEvent.source, inferredKind: classified.inferredKind, title: rawEvent.title, body: rawEvent.body, clientId: rawEvent.clientId, allowModel: rawEvent.privacyStatus === "standard" });
 }
 
-export async function listEvents() {
-  return listStoredEvents();
+export async function listEvents(clientId?: string) {
+  return listStoredEvents(clientId);
 }
 
-export async function getEvent(eventId: string) {
-  return loadStoredEventById(pool, eventId);
+export async function getEvent(eventId: string, clientId?: string) {
+  return loadStoredEventById(pool, eventId, clientId);
 }
 
 export async function getMetrics() {

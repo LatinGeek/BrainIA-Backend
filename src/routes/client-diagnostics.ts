@@ -1,6 +1,7 @@
-import type { FastifyPluginAsync } from 'fastify';
+﻿import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
 import { storeClientDiagnostics } from '../storage/client-diagnostic-repository.js';
+import { ownerScope } from '../auth.js';
 
 const diagnosticSchema = z.object({
   id: z.string().trim().min(1).max(200),
@@ -21,8 +22,7 @@ export const registerClientDiagnosticRoutes: FastifyPluginAsync = async (app) =>
   app.post('/client-diagnostics', async (request, reply) => {
     const parsed = batchSchema.safeParse(request.body);
     if (!parsed.success) return reply.status(400).send({ error: 'invalid_client_diagnostics', issues: parsed.error.flatten() });
-    const rawClientId = request.headers['x-brainia-client-id'];
-    const clientId = (Array.isArray(rawClientId) ? rawClientId[0] : rawClientId)?.trim() || null;
+    const clientId = ownerScope(request) ?? null;
     const accepted = await storeClientDiagnostics(parsed.data.logs.map((item) => ({ ...item, clientId })));
     return reply.status(202).send({ accepted, received: parsed.data.logs.length });
   });

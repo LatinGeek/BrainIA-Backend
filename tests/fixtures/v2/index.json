@@ -1,0 +1,291 @@
+{
+  "datasetVersion": "2.0.0-synthetic.1",
+  "seed": 2101,
+  "sanitizerVersion": "v2-sanitizer-1",
+  "provenance": "Synthetic deterministic fixtures generated locally by tests/v2-harness/generate.mjs; no personal samples",
+  "licence": "Project-internal synthetic evaluation data",
+  "consent": "Not applicable: no human data",
+  "labelers": [],
+  "adjudicator": null,
+  "labelStatus": "pending-independent-adjudication",
+  "splitPolicy": "60/20/20 by disjoint source-template AND merchant/reference families; purchase variants stay together",
+  "generatorSha256": "d8ab32ceb944679581c14a497cb8cb63a5ff3414aed378b7cb7b5f5a64c135bc",
+  "suites": [
+    {
+      "id": "E01",
+      "file": "E01.jsonl",
+      "sha256": "7fb422534db2bfcc00f8f298258d407cc59cb2ad3d9178029634d513e91805a9",
+      "count": 500,
+      "splits": {
+        "train": 300,
+        "calibration": 100,
+        "held-out": 100
+      },
+      "scenarios": [
+        "multi-amount",
+        "currency-ambiguous",
+        "generic-title",
+        "multilingual",
+        "other"
+      ],
+      "instrumentation": "offline-adapter",
+      "labels": "pending-independent-adjudication"
+    },
+    {
+      "id": "E02",
+      "file": "E02.jsonl",
+      "sha256": "97f30a7c7c31cd4da5c0947612bf11b808a7d908119dbf0f6eb4ab391e6a0abc",
+      "count": 250,
+      "splits": {
+        "train": 150,
+        "calibration": 50,
+        "held-out": 50
+      },
+      "scenarios": [
+        "duplicate",
+        "update",
+        "out-of-order",
+        "A-B-A",
+        "key-reuse",
+        "same-amount-repeated"
+      ],
+      "instrumentation": "offline-adapter",
+      "labels": "pending-independent-adjudication"
+    },
+    {
+      "id": "E03",
+      "file": "E03.jsonl",
+      "sha256": "334190b2e7021c6071061cf8fd9c981eeffcb2e2f44fdd85062051bf977ce11f",
+      "count": 200,
+      "splits": {
+        "train": 120,
+        "calibration": 40,
+        "held-out": 40
+      },
+      "scenarios": [
+        "authorization-settlement",
+        "declined-posted",
+        "partial-refund",
+        "full-refund",
+        "reversal",
+        "transfer",
+        "installments",
+        "concurrent-references"
+      ],
+      "instrumentation": "offline-adapter",
+      "labels": "pending-independent-adjudication"
+    },
+    {
+      "id": "E04",
+      "file": "E04.jsonl",
+      "sha256": "e731758a8d3bf35fe2a2c1b994bd9903764552ec55f34128f99513f4a96d58e2",
+      "count": 100,
+      "splits": {
+        "train": 60,
+        "calibration": 20,
+        "held-out": 20
+      },
+      "scenarios": [
+        "strong-reference",
+        "ambiguous",
+        "shared-order-several-charges",
+        "same-amount-distinct"
+      ],
+      "instrumentation": "offline-adapter",
+      "labels": "pending-independent-adjudication"
+    },
+    {
+      "id": "E05",
+      "file": "E05.jsonl",
+      "sha256": "a80566d53857a1629358701aa545acd7ee6636706b3fb43587fce3a6fdfbad7e",
+      "count": 100,
+      "splits": {
+        "train": 60,
+        "calibration": 20,
+        "held-out": 20
+      },
+      "scenarios": [
+        "merchant",
+        "title",
+        "category",
+        "account",
+        "kind",
+        "description",
+        "rule-revoke"
+      ],
+      "instrumentation": "offline-adapter",
+      "labels": "pending-independent-adjudication"
+    },
+    {
+      "id": "E06",
+      "file": "E06.jsonl",
+      "sha256": "d983eedbbd1a04c4a4a99e0d08be20f28a45fc6a2f958dd4dd86c08d08eade95",
+      "count": 180,
+      "splits": {
+        "train": 108,
+        "calibration": 36,
+        "held-out": 36
+      },
+      "scenarios": [
+        "route",
+        "query",
+        "object",
+        "worker",
+        "provider",
+        "embedding",
+        "null-legacy",
+        "shared-taxonomy",
+        "conflicting-policy"
+      ],
+      "instrumentation": "real-postgresql-required",
+      "labels": "pending-independent-adjudication"
+    },
+    {
+      "id": "E07",
+      "file": "E07.jsonl",
+      "sha256": "59bed2ced7e1072da8850928bd7d572c7bc2b26716f314039c4e4695831c1a9f",
+      "count": 2000,
+      "splits": {
+        "train": 1200,
+        "calibration": 400,
+        "held-out": 400
+      },
+      "scenarios": [
+        "boundary-1",
+        "boundary-2",
+        "boundary-3",
+        "boundary-4",
+        "boundary-5",
+        "boundary-6",
+        "boundary-7",
+        "boundary-8",
+        "boundary-9",
+        "boundary-10",
+        "boundary-11",
+        "boundary-12",
+        "boundary-13",
+        "boundary-14",
+        "boundary-15",
+        "boundary-16",
+        "boundary-17",
+        "boundary-18",
+        "boundary-19",
+        "boundary-20"
+      ],
+      "instrumentation": "real-postgresql-required",
+      "labels": "pending-independent-adjudication"
+    },
+    {
+      "id": "E08",
+      "file": "E08.jsonl",
+      "sha256": "c5985483bdd20e2bcba179edee6a0f42a4e458796ef8d572102a061a52fe96f2",
+      "count": 200,
+      "splits": {
+        "train": 120,
+        "calibration": 40,
+        "held-out": 40
+      },
+      "scenarios": [
+        "exact",
+        "fts",
+        "vector",
+        "graph",
+        "sql",
+        "cache"
+      ],
+      "instrumentation": "offline-adapter",
+      "labels": "pending-independent-adjudication"
+    },
+    {
+      "id": "E09",
+      "file": "E09.jsonl",
+      "sha256": "061291a1da464ec5b301dda24c74c76c7e7fb2af2486a682683241932d7b8eb4",
+      "count": 100,
+      "splits": {
+        "train": 60,
+        "calibration": 20,
+        "held-out": 20
+      },
+      "scenarios": [
+        "overlap",
+        "timezone",
+        "DST",
+        "late-arrival",
+        "split",
+        "merge",
+        "exclude"
+      ],
+      "instrumentation": "offline-adapter",
+      "labels": "pending-independent-adjudication"
+    },
+    {
+      "id": "E10",
+      "file": "E10.jsonl",
+      "sha256": "ea790a90d8f77605a8822c9cc6db88aefc0cf3d9dc905e0c1c9346637c3434c6",
+      "count": 10000,
+      "splits": {
+        "train": 6000,
+        "calibration": 2000,
+        "held-out": 2000
+      },
+      "scenarios": [
+        "offline",
+        "process-kill",
+        "reboot",
+        "ack-loss",
+        "update-dismiss",
+        "malformed-ack",
+        "credential-revoke",
+        "queue-bound"
+      ],
+      "instrumentation": "native-device-required",
+      "labels": "pending-independent-adjudication"
+    },
+    {
+      "id": "E11",
+      "file": "E11.jsonl",
+      "sha256": "2fb7099ab985e65b7871416e2dfbb1d7231581166263361e190c9c3cff652eb3",
+      "count": 90,
+      "splits": {
+        "train": 54,
+        "calibration": 18,
+        "held-out": 18
+      },
+      "scenarios": [
+        "clean",
+        "upgrade",
+        "partial-constraint",
+        "missing-policy",
+        "missing-grant",
+        "missing-function",
+        "invalid-index",
+        "restore-tombstone",
+        "old-ledger"
+      ],
+      "instrumentation": "real-postgresql-required",
+      "labels": "pending-independent-adjudication"
+    },
+    {
+      "id": "E12",
+      "file": "E12.jsonl",
+      "sha256": "c89d4aaf4fad780b259af6623741debb61d334da7e73c6e5f543fd1bc4b390ea",
+      "count": 100,
+      "splits": {
+        "train": 60,
+        "calibration": 20,
+        "held-out": 20
+      },
+      "scenarios": [
+        "injection",
+        "wrong-citation",
+        "conflicting-facts",
+        "forbidden-source",
+        "budget-exhaustion",
+        "unsupported-amount",
+        "valid-citation"
+      ],
+      "instrumentation": "offline-adapter",
+      "labels": "pending-independent-adjudication"
+    }
+  ]
+}

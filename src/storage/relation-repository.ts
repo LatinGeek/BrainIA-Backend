@@ -90,21 +90,63 @@ export async function linkEventRelation(
   );
 }
 
-export async function listRelations() {
+export async function listRelations(ownerId?: string) {
+  const params: string[] = [];
+  const conditions = [
+    `source.visibility <> 'hidden'`,
+    `target.visibility <> 'hidden'`,
+    `not exists (
+      select 1 from deletion_tombstones tombstone
+      where tombstone.target_type = 'relation' and tombstone.target_id = relation.id
+    )`,
+    `not exists (
+      select 1 from deletion_tombstones tombstone
+      where tombstone.target_type = 'entity'
+        and tombstone.target_id in (relation.source_entity_id, relation.target_entity_id)
+    )`,
+    `(
+      not exists (select 1 from event_relations link where link.relation_id = relation.id)
+      or exists (
+        select 1 from event_relations link
+        join raw_events event on event.id = link.event_id
+        where link.relation_id = relation.id
+          and event.privacy_status <> 'hidden'
+          and event.processing_allowed
+          and not exists (
+            select 1 from deletion_tombstones tombstone
+            where tombstone.target_type = 'event' and tombstone.target_id = event.id
+          )
+      )
+    )`,
+  ];
+  if (ownerId) {
+    params.push(ownerId);
+    conditions.push(`(
+      relation.owner_id = $1
+      or (
+        relation.owner_id is null
+        and source.type in ('domain','concept')
+        and target.type in ('domain','concept')
+      )
+    )`);
+  }
   const result = await pool.query(`
     select
-      id,
-      source_entity_id as "sourceEntityId",
-      target_entity_id as "targetEntityId",
-      relation_type as "relationType",
-      label,
-      description,
-      confidence,
-      metadata,
-      created_at as "createdAt"
-    from relations
-    order by created_at asc
-  `);
+      relation.id,
+      relation.source_entity_id as "sourceEntityId",
+      relation.target_entity_id as "targetEntityId",
+      relation.relation_type as "relationType",
+      relation.label,
+      relation.description,
+      relation.confidence,
+      relation.metadata,
+      relation.created_at as "createdAt"
+    from relations relation
+    join entities source on source.id = relation.source_entity_id
+    join entities target on target.id = relation.target_entity_id
+    where ${conditions.join("\n      and ")}
+    order by relation.created_at asc
+  `, params);
 
   return result.rows;
 }

@@ -9,12 +9,11 @@ if (!connectionString) {
 
 export const pool = new Pool({
   connectionString,
-  // Serverless instances can scale during notification bursts. Keeping one
-  // reusable connection per instance prevents a burst from exhausting the
-  // database connection limit, while bounded waits turn saturation into an
-  // observable error rather than an invocation timeout.
-  max: 1,
-  connectionTimeoutMillis: 5_000,
+  // Detail editors load accounts and categories alongside telemetry and
+  // background work. Keep enough connections for that normal overlap while
+  // still bounding serverless connection use.
+  max: 4,
+  connectionTimeoutMillis: 10_000,
   idleTimeoutMillis: 10_000,
   query_timeout: 10_000,
   statement_timeout: 10_000,
@@ -41,6 +40,24 @@ export async function withTransactionOnPool<T>(
 
 export async function withTransaction<T>(fn: (client: PoolClient) => Promise<T>) {
   return withTransactionOnPool(pool, fn);
+}
+
+// Owner-scoped transaction. Sets the owner for RLS policies and, when the
+// caller opts in (or BRAINIA_DB_ENFORCE_RLS=true), switches to the restricted
+// runtime role. The owner setting is transaction-local so pooled connections
+// cannot leak one owner's context into the next request.
+export async function withOwnerTransaction<T>(
+  ownerId: string,
+  fn: (client: PoolClient) => Promise<T>,
+  options: { enforceRls?: boolean } = {},
+) {
+  if (!ownerId.trim()) throw new Error("owner_scope_required");
+  const enforceRls = options.enforceRls ?? process.env.BRAINIA_DB_ENFORCE_RLS === "true";
+  return withTransaction(async (client) => {
+    await client.query("select set_config('brainia.owner_id', $1, true)", [ownerId]);
+    if (enforceRls) await client.query("set local role brainia_runtime");
+    return fn(client);
+  });
 }
 
 /**

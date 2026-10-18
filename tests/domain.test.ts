@@ -29,6 +29,48 @@ test("classification extracts expense signals", () => {
   assert.ok(classified.entities.some((entity) => entity.type === "amount"));
 });
 
+test("settled Prex payments extract their merchant for ledger projection", () => {
+  const event = {
+    id: "prex_settled_payment",
+    source: "Prex",
+    kind: "notification" as const,
+    title: "Pago realizado ✅",
+    body: "Gastaste $ 152,46 en LA BODEGUITA CUBANA.",
+    raw: {},
+    tags: [],
+  };
+  const classified = classifyEvent(event);
+  const candidate = buildFinancialTransactionCandidate({
+    event,
+    classified,
+    entityDrafts: buildEntityDrafts(classified),
+  });
+
+  assert.equal(classified.inferredKind, "expense");
+  assert.equal(classified.entities.find((entity) => entity.type === "merchant")?.value, "LA BODEGUITA CUBANA");
+  assert.equal(candidate?.merchantLabel, "LA BODEGUITA CUBANA");
+  assert.equal(candidate?.amount, 152.46);
+});
+
+test("settled Prex dollar payments normalize U$S for ledger projection", () => {
+  const event = {
+    id: "prex_settled_dollar_payment",
+    source: "Prex",
+    kind: "notification" as const,
+    title: "Pago realizado ✅",
+    body: "Gastaste U$S 4,00 en Patreon* Membership.",
+    raw: {},
+    tags: [],
+  };
+  const classified = classifyEvent(event);
+  const candidate = buildFinancialTransactionCandidate({ event, classified, entityDrafts: buildEntityDrafts(classified) });
+
+  assert.equal(classified.inferredKind, "expense");
+  assert.equal(candidate?.currency, "USD");
+  assert.equal(candidate?.amount, 4);
+  assert.equal(candidate?.merchantLabel, "Patreon* Membership");
+});
+
 test("an explicit wallet income remains income despite expense-like wording", () => {
   const classified = classifyEvent({
     id: "wallet_income_direction",
@@ -130,7 +172,7 @@ test("notification payment titles keep the merchant separate from the debit mess
   assert.equal(merchant?.value, "La pequena mar azul");
   assert.equal(candidate?.merchantLabel, "La pequena mar azul");
   assert.equal(candidate?.amount, 195);
-  assert.equal(candidate?.currency, "UYU");
+  assert.equal(candidate?.currency, "UNKNOWN");
 });
 
 test("completed account-to-account transfers create transfer records instead of expenses", () => {
@@ -151,6 +193,24 @@ test("completed account-to-account transfers create transfer records instead of 
   assert.equal(candidate?.amount, 5000);
   assert.equal(candidate?.currency, "UYU");
   assert.equal(candidate?.merchantLabel, "Transfer between accounts");
+});
+
+test("a completed transfer to a named person is recorded as a payment", () => {
+  const event = {
+    id: "itau_third_party_payment",
+    source: "Itaú Uruguay",
+    kind: "notification" as const,
+    title: "Transferencia realizada",
+    body: "Transferencia realizada por UYU 650,00 a Luichi Trujillo.",
+    raw: {}, tags: [],
+  };
+  const classified = classifyEvent(event);
+  const candidate = buildFinancialTransactionCandidate({ event, classified, entityDrafts: buildEntityDrafts(classified) });
+
+  assert.equal(classified.inferredKind, "expense");
+  assert.equal(candidate?.kind, "expense");
+  assert.equal(candidate?.merchantLabel, "Pago a Luichi Trujillo");
+  assert.equal(candidate?.amount, 650);
 });
 
 test("an explicit currency hint takes priority over an ambiguous dollar symbol", () => {

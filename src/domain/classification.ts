@@ -46,6 +46,16 @@ export function isAccountTransferAlert(event: Pick<EventInput, "kind" | "title" 
     && /\b(?:desde\s+la\s+cuenta|a\s+la\s+cuenta|entre\s+cuentas)\b/u.test(text);
 }
 
+/** A transfer addressed to a person is a payment, not money moved internally. */
+export function isThirdPartyTransferAlert(event: Pick<EventInput, "kind" | "title" | "body">) {
+  if (event.kind !== "notification" && event.kind !== "email") return false;
+  const text = normalizeForMatching(`${event.title ?? ""} ${event.body ?? ""}`);
+  return /\b(?:transferencia|transfer|pago)\b/u.test(text)
+    && /\b(?:realizada|enviada|efectuada|confirmada|completada)\b/u.test(text)
+    && /\b(?:a|para)\s+(?!la\s+cuenta\b|cuenta\b)[a-z]/u.test(text)
+    && !/\b(?:a\s+la\s+cuenta|entre\s+cuentas)\b/u.test(text);
+}
+
 function extractCardAlertMerchant(value: string) {
   const directMatch = value.match(
     /\bestablecimiento\s+([\p{L}\p{N}][\p{L}\p{N}&*\/-]*(?:\s+[\p{L}\p{N}&*\/-]+){0,8})(?=\.?\s+(?:si|fecha|a\s+las|el)\b|[.!]|$)/iu,
@@ -62,6 +72,15 @@ function extractCardAlertMerchant(value: string) {
   return descriptorMatch?.[1]?.trim().replace(/[.!?,;:]+$/u, "") ?? null;
 }
 
+/** Prex confirms settled purchases as `Gastaste $ … en <comercio>`. */
+function extractCompletedPaymentMerchant(value: string) {
+  const match = value.match(new RegExp(
+    String.raw`\b(?:gastaste|pagaste)\s+(?:(?:u\$s|usd|uyu)\s*)?[$€£]?\s*${MONEY_NUMBER_SOURCE}\s+en\s+(.+?)\s*$`,
+    "iu",
+  ));
+  return match?.[1]?.trim().replace(/[.!?,;:]+$/u, "") || null;
+}
+
 export function classifyEvent(event: EventInput): ClassifiedEvent {
   const content = `${event.title ?? ""} ${event.body ?? ""}`;
   const text = normalizeForMatching(content);
@@ -69,6 +88,7 @@ export function classifyEvent(event: EventInput): ClassifiedEvent {
   const completedCardTransaction = isCompletedCardTransactionAlert(event);
   const rejectedCardTransaction = isRejectedCardTransactionAlert(event);
   const accountTransfer = isAccountTransferAlert(event);
+  const thirdPartyTransfer = isThirdPartyTransferAlert(event);
   const selectedTransactionType = typeof event.raw?.transactionType === "string"
     && ["income", "expense", "transfer"].includes(event.raw.transactionType)
     ? event.raw.transactionType as "income" | "expense" | "transfer"
@@ -90,6 +110,9 @@ export function classifyEvent(event: EventInput): ClassifiedEvent {
   } else if (accountTransfer) {
     inferredKind = "transfer";
     confidence = 0.97;
+  } else if (thirdPartyTransfer) {
+    inferredKind = "expense";
+    confidence = 0.96;
   } else if (completedCardTransaction) {
     inferredKind = "expense";
     confidence = 0.99;
@@ -130,6 +153,14 @@ export function classifyEvent(event: EventInput): ClassifiedEvent {
     if (merchant) {
       entities.push({ type: "merchant", value: merchant });
     }
+  }
+
+  // Some wallet providers do not mention a card, so they do not enter the
+  // Santander-style card-alert branch above. Their settled-payment wording is
+  // still explicit enough to expose a merchant for the ledger projection.
+  if (inferredKind === "expense" && !entities.some((entity) => entity.type === "merchant")) {
+    const merchant = extractCompletedPaymentMerchant(content);
+    if (merchant) entities.push({ type: "merchant", value: merchant });
   }
 
   return {

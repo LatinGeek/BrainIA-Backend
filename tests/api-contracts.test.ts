@@ -8,6 +8,19 @@ async function createApp() {
   return buildApp();
 }
 
+test("browser preflight allows canonical Brain IA auth headers", async () => {
+  const app = await createApp();
+  try {
+    const response = await app.inject({ method: "OPTIONS", url: "/api/v1/intelligence/artifacts" });
+    assert.equal(response.statusCode, 204);
+    const allowed = response.headers["access-control-allow-headers"];
+    assert.match(String(allowed), /x-brainia-api-key/);
+    assert.match(String(allowed), /x-brainia-client-id/);
+  } finally {
+    await app.close();
+  }
+});
+
 test("financial consolidation route is registered and validates its payload", async () => {
   const app = await createApp();
   try {
@@ -311,6 +324,23 @@ test("insight history is available for agent audit and replay", async () => {
     assert.equal(response.statusCode, 200);
     const body = response.json() as { limit: number; count: number; runs: unknown[] };
     assert.equal(body.limit, 25);
+    assert.ok(Array.isArray(body.runs));
+  } finally {
+    await app.close();
+  }
+});
+
+test("legacy mobile insight list requests remain compatible", async () => {
+  const app = await createApp();
+  try {
+    const response = await app.inject({
+      method: "GET",
+      url: "/api/v1/insights?limit=3",
+    });
+
+    assert.equal(response.statusCode, 200);
+    const body = response.json() as { limit: number; count: number; runs: unknown[] };
+    assert.equal(body.limit, 3);
     assert.ok(Array.isArray(body.runs));
   } finally {
     await app.close();

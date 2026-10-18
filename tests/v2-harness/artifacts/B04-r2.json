@@ -1,0 +1,6127 @@
+{
+  "formatVersion": 1,
+  "generatedAt": "2026-10-17T18:25:12.918Z",
+  "status": "BLOCKED",
+  "offline": true,
+  "datasetVersion": "2.0.0-synthetic.1",
+  "datasetSha256": "9224cee8483242c8b949bf5d7d7592e4d25ebe892f76eda8324b3877e26581fd",
+  "fixtureHashes": [
+    {
+      "id": "E01",
+      "sha256": "7fb422534db2bfcc00f8f298258d407cc59cb2ad3d9178029634d513e91805a9"
+    },
+    {
+      "id": "E02",
+      "sha256": "97f30a7c7c31cd4da5c0947612bf11b808a7d908119dbf0f6eb4ab391e6a0abc"
+    },
+    {
+      "id": "E03",
+      "sha256": "334190b2e7021c6071061cf8fd9c981eeffcb2e2f44fdd85062051bf977ce11f"
+    },
+    {
+      "id": "E04",
+      "sha256": "e731758a8d3bf35fe2a2c1b994bd9903764552ec55f34128f99513f4a96d58e2"
+    },
+    {
+      "id": "E05",
+      "sha256": "a80566d53857a1629358701aa545acd7ee6636706b3fb43587fce3a6fdfbad7e"
+    },
+    {
+      "id": "E06",
+      "sha256": "d983eedbbd1a04c4a4a99e0d08be20f28a45fc6a2f958dd4dd86c08d08eade95"
+    },
+    {
+      "id": "E07",
+      "sha256": "59bed2ced7e1072da8850928bd7d572c7bc2b26716f314039c4e4695831c1a9f"
+    },
+    {
+      "id": "E08",
+      "sha256": "c5985483bdd20e2bcba179edee6a0f42a4e458796ef8d572102a061a52fe96f2"
+    },
+    {
+      "id": "E09",
+      "sha256": "061291a1da464ec5b301dda24c74c76c7e7fb2af2486a682683241932d7b8eb4"
+    },
+    {
+      "id": "E10",
+      "sha256": "ea790a90d8f77605a8822c9cc6db88aefc0cf3d9dc905e0c1c9346637c3434c6"
+    },
+    {
+      "id": "E11",
+      "sha256": "2fb7099ab985e65b7871416e2dfbb1d7231581166263361e190c9c3cff652eb3"
+    },
+    {
+      "id": "E12",
+      "sha256": "c89d4aaf4fad780b259af6623741debb61d334da7e73c6e5f543fd1bc4b390ea"
+    }
+  ],
+  "seed": 2101,
+  "split": "all",
+  "selectedSuites": [
+    "E02",
+    "E03",
+    "E05"
+  ],
+  "adapter": {
+    "path": "tests\\v2-harness\\current-adapter.mjs",
+    "revision": "current-checkout-heuristic-v3",
+    "sha256": "49b6bb1b234b48459e7a35b02e4918bc211766e22d5b2d8da99be250b8f4e156"
+  },
+  "environment": {
+    "node": "v22.23.3",
+    "platform": "win32",
+    "arch": "x64",
+    "cpu": "AMD Ryzen 7 5800H with Radeon Graphics         ",
+    "logicalCpus": 16,
+    "ramBytes": 17024741376,
+    "flags": [
+      {
+        "name": "BRAINIA_INTELLIGENCE_ENABLED",
+        "value": "<redacted>"
+      },
+      {
+        "name": "BRAINIA_JEV_MODE",
+        "value": "<redacted>"
+      },
+      {
+        "name": "DATABASE_URL",
+        "value": "<redacted>"
+      },
+      {
+        "name": "DEEPSEEK_API_KEY",
+        "value": "<redacted>"
+      },
+      {
+        "name": "TYPESAFE_API_KEY",
+        "value": "<redacted>"
+      }
+    ],
+    "migrationsSha256": "02275494e0f666c9728f4f94c09c108725235690c559910752f319374024cb20",
+    "installedDatabaseSchema": "UNAVAILABLE: offline, no database connected",
+    "deploymentSha256": null,
+    "apkSha256": null,
+    "provider": "offline stub; no external provider",
+    "providerRevision": "v2-stub-1",
+    "modelRevision": null,
+    "jobPollFrequency": "not measured; no worker started"
+  },
+  "corpusSize": 13820,
+  "selectedCases": 550,
+  "tenants": 2,
+  "devicesPerTenant": 2,
+  "sanitizerAudit": {
+    "version": "v2-sanitizer-1",
+    "passed": true,
+    "moneySeparatorsPreserved": true,
+    "relationships": "synthetic IDs preserved verbatim",
+    "personalSources": 0
+  },
+  "network": {
+    "externalCalls": 0,
+    "blockedAttempts": 0,
+    "stubCalls": 0
+  },
+  "costs": {
+    "externalProviderCharges": 0,
+    "currency": "USD",
+    "reason": "offline network denied; no external calls",
+    "productionEstimate": null,
+    "reductionAgainstLiveBaseline": null
+  },
+  "qualityGates": {
+    "Q1": [
+      "E02",
+      "E03",
+      "E05"
+    ],
+    "Q2": [
+      "E06"
+    ],
+    "Q3": [
+      "E06",
+      "E12"
+    ],
+    "Q4": [
+      "E01",
+      "E03"
+    ],
+    "Q5": [
+      "E07"
+    ],
+    "Q6": [
+      "E02",
+      "E10"
+    ],
+    "Q7": [
+      "E03",
+      "E04"
+    ],
+    "Q8": [
+      "E05"
+    ],
+    "Q9": [
+      "E06",
+      "E08",
+      "E12"
+    ],
+    "Q10": [
+      "E11"
+    ]
+  },
+  "limitations": [
+    "Offline fixtures are not PostgreSQL role/RLS/locking/crash evidence.",
+    "E10 is simulated transport only; native reports and receipt hashes remain required.",
+    "Synthetic labels are not two independently adjudicated human labels.",
+    "Q10 additionally requires explicit human approval and backup/restore proof before any destructive operation."
+  ],
+  "suites": [
+    {
+      "suite": "E02",
+      "status": "BLOCKED",
+      "cases": 250,
+      "passed": 0,
+      "failed": 0,
+      "blocked": 250,
+      "blockers": [
+        "Synthetic labels await independent adjudication; no human-label claim",
+        "Two independent labelers and separate adjudicator required",
+        "250 cases lack application observations"
+      ],
+      "exactCaseAccuracy": {
+        "numerator": 0,
+        "denominator": 0,
+        "value": null,
+        "confidence95": null,
+        "zeroErrorUpper95": null
+      },
+      "adapterObservationLatencyMs": {
+        "p95": 0.018100000000004002,
+        "productStageLatency": "not instrumented"
+      },
+      "slices": {
+        "language": {
+          "en": {
+            "cases": 83,
+            "passed": 0,
+            "failed": 0,
+            "blocked": 83,
+            "exactCaseAccuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "value": null,
+              "confidence95": null,
+              "zeroErrorUpper95": null
+            }
+          },
+          "es": {
+            "cases": 84,
+            "passed": 0,
+            "failed": 0,
+            "blocked": 84,
+            "exactCaseAccuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "value": null,
+              "confidence95": null,
+              "zeroErrorUpper95": null
+            }
+          },
+          "mixed": {
+            "cases": 83,
+            "passed": 0,
+            "failed": 0,
+            "blocked": 83,
+            "exactCaseAccuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "value": null,
+              "confidence95": null,
+              "zeroErrorUpper95": null
+            }
+          }
+        },
+        "source": {
+          "email": {
+            "cases": 83,
+            "passed": 0,
+            "failed": 0,
+            "blocked": 83,
+            "exactCaseAccuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "value": null,
+              "confidence95": null,
+              "zeroErrorUpper95": null
+            }
+          },
+          "notification": {
+            "cases": 84,
+            "passed": 0,
+            "failed": 0,
+            "blocked": 84,
+            "exactCaseAccuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "value": null,
+              "confidence95": null,
+              "zeroErrorUpper95": null
+            }
+          },
+          "receipt": {
+            "cases": 83,
+            "passed": 0,
+            "failed": 0,
+            "blocked": 83,
+            "exactCaseAccuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "value": null,
+              "confidence95": null,
+              "zeroErrorUpper95": null
+            }
+          }
+        },
+        "split": {
+          "calibration": {
+            "cases": 50,
+            "passed": 0,
+            "failed": 0,
+            "blocked": 50,
+            "exactCaseAccuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "value": null,
+              "confidence95": null,
+              "zeroErrorUpper95": null
+            }
+          },
+          "held-out": {
+            "cases": 50,
+            "passed": 0,
+            "failed": 0,
+            "blocked": 50,
+            "exactCaseAccuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "value": null,
+              "confidence95": null,
+              "zeroErrorUpper95": null
+            }
+          },
+          "train": {
+            "cases": 150,
+            "passed": 0,
+            "failed": 0,
+            "blocked": 150,
+            "exactCaseAccuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "value": null,
+              "confidence95": null,
+              "zeroErrorUpper95": null
+            }
+          }
+        }
+      }
+    },
+    {
+      "suite": "E03",
+      "status": "BLOCKED",
+      "cases": 200,
+      "passed": 0,
+      "failed": 0,
+      "blocked": 200,
+      "blockers": [
+        "Synthetic labels await independent adjudication; no human-label claim",
+        "Two independent labelers and separate adjudicator required",
+        "200 cases lack application observations"
+      ],
+      "exactCaseAccuracy": {
+        "numerator": 0,
+        "denominator": 0,
+        "value": null,
+        "confidence95": null,
+        "zeroErrorUpper95": null
+      },
+      "adapterObservationLatencyMs": {
+        "p95": 0.01630000000000109,
+        "productStageLatency": "not instrumented"
+      },
+      "slices": {
+        "language": {
+          "en": {
+            "cases": 67,
+            "passed": 0,
+            "failed": 0,
+            "blocked": 67,
+            "exactCaseAccuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "value": null,
+              "confidence95": null,
+              "zeroErrorUpper95": null
+            }
+          },
+          "es": {
+            "cases": 67,
+            "passed": 0,
+            "failed": 0,
+            "blocked": 67,
+            "exactCaseAccuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "value": null,
+              "confidence95": null,
+              "zeroErrorUpper95": null
+            }
+          },
+          "mixed": {
+            "cases": 66,
+            "passed": 0,
+            "failed": 0,
+            "blocked": 66,
+            "exactCaseAccuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "value": null,
+              "confidence95": null,
+              "zeroErrorUpper95": null
+            }
+          }
+        },
+        "source": {
+          "email": {
+            "cases": 67,
+            "passed": 0,
+            "failed": 0,
+            "blocked": 67,
+            "exactCaseAccuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "value": null,
+              "confidence95": null,
+              "zeroErrorUpper95": null
+            }
+          },
+          "notification": {
+            "cases": 67,
+            "passed": 0,
+            "failed": 0,
+            "blocked": 67,
+            "exactCaseAccuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "value": null,
+              "confidence95": null,
+              "zeroErrorUpper95": null
+            }
+          },
+          "receipt": {
+            "cases": 66,
+            "passed": 0,
+            "failed": 0,
+            "blocked": 66,
+            "exactCaseAccuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "value": null,
+              "confidence95": null,
+              "zeroErrorUpper95": null
+            }
+          }
+        },
+        "split": {
+          "calibration": {
+            "cases": 40,
+            "passed": 0,
+            "failed": 0,
+            "blocked": 40,
+            "exactCaseAccuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "value": null,
+              "confidence95": null,
+              "zeroErrorUpper95": null
+            }
+          },
+          "held-out": {
+            "cases": 40,
+            "passed": 0,
+            "failed": 0,
+            "blocked": 40,
+            "exactCaseAccuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "value": null,
+              "confidence95": null,
+              "zeroErrorUpper95": null
+            }
+          },
+          "train": {
+            "cases": 120,
+            "passed": 0,
+            "failed": 0,
+            "blocked": 120,
+            "exactCaseAccuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "value": null,
+              "confidence95": null,
+              "zeroErrorUpper95": null
+            }
+          }
+        }
+      }
+    },
+    {
+      "suite": "E05",
+      "status": "BLOCKED",
+      "cases": 100,
+      "passed": 0,
+      "failed": 0,
+      "blocked": 100,
+      "blockers": [
+        "Synthetic labels await independent adjudication; no human-label claim",
+        "100 cases lack application observations"
+      ],
+      "exactCaseAccuracy": {
+        "numerator": 0,
+        "denominator": 0,
+        "value": null,
+        "confidence95": null,
+        "zeroErrorUpper95": null
+      },
+      "adapterObservationLatencyMs": {
+        "p95": 0.02039999999999509,
+        "productStageLatency": "not instrumented"
+      },
+      "slices": {
+        "language": {
+          "en": {
+            "cases": 33,
+            "passed": 0,
+            "failed": 0,
+            "blocked": 33,
+            "exactCaseAccuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "value": null,
+              "confidence95": null,
+              "zeroErrorUpper95": null
+            }
+          },
+          "es": {
+            "cases": 34,
+            "passed": 0,
+            "failed": 0,
+            "blocked": 34,
+            "exactCaseAccuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "value": null,
+              "confidence95": null,
+              "zeroErrorUpper95": null
+            }
+          },
+          "mixed": {
+            "cases": 33,
+            "passed": 0,
+            "failed": 0,
+            "blocked": 33,
+            "exactCaseAccuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "value": null,
+              "confidence95": null,
+              "zeroErrorUpper95": null
+            }
+          }
+        },
+        "source": {
+          "email": {
+            "cases": 33,
+            "passed": 0,
+            "failed": 0,
+            "blocked": 33,
+            "exactCaseAccuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "value": null,
+              "confidence95": null,
+              "zeroErrorUpper95": null
+            }
+          },
+          "notification": {
+            "cases": 34,
+            "passed": 0,
+            "failed": 0,
+            "blocked": 34,
+            "exactCaseAccuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "value": null,
+              "confidence95": null,
+              "zeroErrorUpper95": null
+            }
+          },
+          "receipt": {
+            "cases": 33,
+            "passed": 0,
+            "failed": 0,
+            "blocked": 33,
+            "exactCaseAccuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "value": null,
+              "confidence95": null,
+              "zeroErrorUpper95": null
+            }
+          }
+        },
+        "split": {
+          "calibration": {
+            "cases": 20,
+            "passed": 0,
+            "failed": 0,
+            "blocked": 20,
+            "exactCaseAccuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "value": null,
+              "confidence95": null,
+              "zeroErrorUpper95": null
+            }
+          },
+          "held-out": {
+            "cases": 20,
+            "passed": 0,
+            "failed": 0,
+            "blocked": 20,
+            "exactCaseAccuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "value": null,
+              "confidence95": null,
+              "zeroErrorUpper95": null
+            }
+          },
+          "train": {
+            "cases": 60,
+            "passed": 0,
+            "failed": 0,
+            "blocked": 60,
+            "exactCaseAccuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "value": null,
+              "confidence95": null,
+              "zeroErrorUpper95": null
+            }
+          }
+        }
+      }
+    }
+  ],
+  "results": [
+    {
+      "id": "E02-00001",
+      "suite": "E02",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00002",
+      "suite": "E02",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00003",
+      "suite": "E02",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00004",
+      "suite": "E02",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00005",
+      "suite": "E02",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00006",
+      "suite": "E02",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00007",
+      "suite": "E02",
+      "split": "calibration",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00008",
+      "suite": "E02",
+      "split": "calibration",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00009",
+      "suite": "E02",
+      "split": "held-out",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00010",
+      "suite": "E02",
+      "split": "held-out",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00011",
+      "suite": "E02",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00012",
+      "suite": "E02",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00013",
+      "suite": "E02",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00014",
+      "suite": "E02",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00015",
+      "suite": "E02",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00016",
+      "suite": "E02",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00017",
+      "suite": "E02",
+      "split": "calibration",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00018",
+      "suite": "E02",
+      "split": "calibration",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00019",
+      "suite": "E02",
+      "split": "held-out",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00020",
+      "suite": "E02",
+      "split": "held-out",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00021",
+      "suite": "E02",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00022",
+      "suite": "E02",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00023",
+      "suite": "E02",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00024",
+      "suite": "E02",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00025",
+      "suite": "E02",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00026",
+      "suite": "E02",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00027",
+      "suite": "E02",
+      "split": "calibration",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00028",
+      "suite": "E02",
+      "split": "calibration",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00029",
+      "suite": "E02",
+      "split": "held-out",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00030",
+      "suite": "E02",
+      "split": "held-out",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00031",
+      "suite": "E02",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00032",
+      "suite": "E02",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00033",
+      "suite": "E02",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00034",
+      "suite": "E02",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00035",
+      "suite": "E02",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00036",
+      "suite": "E02",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00037",
+      "suite": "E02",
+      "split": "calibration",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00038",
+      "suite": "E02",
+      "split": "calibration",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00039",
+      "suite": "E02",
+      "split": "held-out",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00040",
+      "suite": "E02",
+      "split": "held-out",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00041",
+      "suite": "E02",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00042",
+      "suite": "E02",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00043",
+      "suite": "E02",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00044",
+      "suite": "E02",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00045",
+      "suite": "E02",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00046",
+      "suite": "E02",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00047",
+      "suite": "E02",
+      "split": "calibration",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00048",
+      "suite": "E02",
+      "split": "calibration",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00049",
+      "suite": "E02",
+      "split": "held-out",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00050",
+      "suite": "E02",
+      "split": "held-out",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00051",
+      "suite": "E02",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00052",
+      "suite": "E02",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00053",
+      "suite": "E02",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00054",
+      "suite": "E02",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00055",
+      "suite": "E02",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00056",
+      "suite": "E02",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00057",
+      "suite": "E02",
+      "split": "calibration",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00058",
+      "suite": "E02",
+      "split": "calibration",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00059",
+      "suite": "E02",
+      "split": "held-out",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00060",
+      "suite": "E02",
+      "split": "held-out",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00061",
+      "suite": "E02",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00062",
+      "suite": "E02",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00063",
+      "suite": "E02",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00064",
+      "suite": "E02",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00065",
+      "suite": "E02",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00066",
+      "suite": "E02",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00067",
+      "suite": "E02",
+      "split": "calibration",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00068",
+      "suite": "E02",
+      "split": "calibration",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00069",
+      "suite": "E02",
+      "split": "held-out",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00070",
+      "suite": "E02",
+      "split": "held-out",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00071",
+      "suite": "E02",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00072",
+      "suite": "E02",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00073",
+      "suite": "E02",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00074",
+      "suite": "E02",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00075",
+      "suite": "E02",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00076",
+      "suite": "E02",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00077",
+      "suite": "E02",
+      "split": "calibration",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00078",
+      "suite": "E02",
+      "split": "calibration",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00079",
+      "suite": "E02",
+      "split": "held-out",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00080",
+      "suite": "E02",
+      "split": "held-out",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00081",
+      "suite": "E02",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00082",
+      "suite": "E02",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00083",
+      "suite": "E02",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00084",
+      "suite": "E02",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00085",
+      "suite": "E02",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00086",
+      "suite": "E02",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00087",
+      "suite": "E02",
+      "split": "calibration",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00088",
+      "suite": "E02",
+      "split": "calibration",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00089",
+      "suite": "E02",
+      "split": "held-out",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00090",
+      "suite": "E02",
+      "split": "held-out",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00091",
+      "suite": "E02",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00092",
+      "suite": "E02",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00093",
+      "suite": "E02",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00094",
+      "suite": "E02",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00095",
+      "suite": "E02",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00096",
+      "suite": "E02",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00097",
+      "suite": "E02",
+      "split": "calibration",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00098",
+      "suite": "E02",
+      "split": "calibration",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00099",
+      "suite": "E02",
+      "split": "held-out",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00100",
+      "suite": "E02",
+      "split": "held-out",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00101",
+      "suite": "E02",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00102",
+      "suite": "E02",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00103",
+      "suite": "E02",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00104",
+      "suite": "E02",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00105",
+      "suite": "E02",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00106",
+      "suite": "E02",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00107",
+      "suite": "E02",
+      "split": "calibration",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00108",
+      "suite": "E02",
+      "split": "calibration",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00109",
+      "suite": "E02",
+      "split": "held-out",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00110",
+      "suite": "E02",
+      "split": "held-out",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00111",
+      "suite": "E02",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00112",
+      "suite": "E02",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00113",
+      "suite": "E02",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00114",
+      "suite": "E02",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00115",
+      "suite": "E02",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00116",
+      "suite": "E02",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00117",
+      "suite": "E02",
+      "split": "calibration",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00118",
+      "suite": "E02",
+      "split": "calibration",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00119",
+      "suite": "E02",
+      "split": "held-out",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00120",
+      "suite": "E02",
+      "split": "held-out",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00121",
+      "suite": "E02",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00122",
+      "suite": "E02",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00123",
+      "suite": "E02",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00124",
+      "suite": "E02",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00125",
+      "suite": "E02",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00126",
+      "suite": "E02",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00127",
+      "suite": "E02",
+      "split": "calibration",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00128",
+      "suite": "E02",
+      "split": "calibration",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00129",
+      "suite": "E02",
+      "split": "held-out",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00130",
+      "suite": "E02",
+      "split": "held-out",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00131",
+      "suite": "E02",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00132",
+      "suite": "E02",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00133",
+      "suite": "E02",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00134",
+      "suite": "E02",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00135",
+      "suite": "E02",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00136",
+      "suite": "E02",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00137",
+      "suite": "E02",
+      "split": "calibration",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00138",
+      "suite": "E02",
+      "split": "calibration",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00139",
+      "suite": "E02",
+      "split": "held-out",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00140",
+      "suite": "E02",
+      "split": "held-out",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00141",
+      "suite": "E02",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00142",
+      "suite": "E02",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00143",
+      "suite": "E02",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00144",
+      "suite": "E02",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00145",
+      "suite": "E02",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00146",
+      "suite": "E02",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00147",
+      "suite": "E02",
+      "split": "calibration",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00148",
+      "suite": "E02",
+      "split": "calibration",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00149",
+      "suite": "E02",
+      "split": "held-out",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00150",
+      "suite": "E02",
+      "split": "held-out",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00151",
+      "suite": "E02",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00152",
+      "suite": "E02",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00153",
+      "suite": "E02",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00154",
+      "suite": "E02",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00155",
+      "suite": "E02",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00156",
+      "suite": "E02",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00157",
+      "suite": "E02",
+      "split": "calibration",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00158",
+      "suite": "E02",
+      "split": "calibration",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00159",
+      "suite": "E02",
+      "split": "held-out",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00160",
+      "suite": "E02",
+      "split": "held-out",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00161",
+      "suite": "E02",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00162",
+      "suite": "E02",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00163",
+      "suite": "E02",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00164",
+      "suite": "E02",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00165",
+      "suite": "E02",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00166",
+      "suite": "E02",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00167",
+      "suite": "E02",
+      "split": "calibration",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00168",
+      "suite": "E02",
+      "split": "calibration",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00169",
+      "suite": "E02",
+      "split": "held-out",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00170",
+      "suite": "E02",
+      "split": "held-out",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00171",
+      "suite": "E02",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00172",
+      "suite": "E02",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00173",
+      "suite": "E02",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00174",
+      "suite": "E02",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00175",
+      "suite": "E02",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00176",
+      "suite": "E02",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00177",
+      "suite": "E02",
+      "split": "calibration",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00178",
+      "suite": "E02",
+      "split": "calibration",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00179",
+      "suite": "E02",
+      "split": "held-out",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00180",
+      "suite": "E02",
+      "split": "held-out",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00181",
+      "suite": "E02",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00182",
+      "suite": "E02",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00183",
+      "suite": "E02",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00184",
+      "suite": "E02",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00185",
+      "suite": "E02",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00186",
+      "suite": "E02",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00187",
+      "suite": "E02",
+      "split": "calibration",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00188",
+      "suite": "E02",
+      "split": "calibration",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00189",
+      "suite": "E02",
+      "split": "held-out",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00190",
+      "suite": "E02",
+      "split": "held-out",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00191",
+      "suite": "E02",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00192",
+      "suite": "E02",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00193",
+      "suite": "E02",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00194",
+      "suite": "E02",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00195",
+      "suite": "E02",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00196",
+      "suite": "E02",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00197",
+      "suite": "E02",
+      "split": "calibration",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00198",
+      "suite": "E02",
+      "split": "calibration",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00199",
+      "suite": "E02",
+      "split": "held-out",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00200",
+      "suite": "E02",
+      "split": "held-out",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00201",
+      "suite": "E02",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00202",
+      "suite": "E02",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00203",
+      "suite": "E02",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00204",
+      "suite": "E02",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00205",
+      "suite": "E02",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00206",
+      "suite": "E02",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00207",
+      "suite": "E02",
+      "split": "calibration",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00208",
+      "suite": "E02",
+      "split": "calibration",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00209",
+      "suite": "E02",
+      "split": "held-out",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00210",
+      "suite": "E02",
+      "split": "held-out",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00211",
+      "suite": "E02",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00212",
+      "suite": "E02",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00213",
+      "suite": "E02",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00214",
+      "suite": "E02",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00215",
+      "suite": "E02",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00216",
+      "suite": "E02",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00217",
+      "suite": "E02",
+      "split": "calibration",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00218",
+      "suite": "E02",
+      "split": "calibration",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00219",
+      "suite": "E02",
+      "split": "held-out",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00220",
+      "suite": "E02",
+      "split": "held-out",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00221",
+      "suite": "E02",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00222",
+      "suite": "E02",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00223",
+      "suite": "E02",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00224",
+      "suite": "E02",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00225",
+      "suite": "E02",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00226",
+      "suite": "E02",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00227",
+      "suite": "E02",
+      "split": "calibration",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00228",
+      "suite": "E02",
+      "split": "calibration",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00229",
+      "suite": "E02",
+      "split": "held-out",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00230",
+      "suite": "E02",
+      "split": "held-out",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00231",
+      "suite": "E02",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00232",
+      "suite": "E02",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00233",
+      "suite": "E02",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00234",
+      "suite": "E02",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00235",
+      "suite": "E02",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00236",
+      "suite": "E02",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00237",
+      "suite": "E02",
+      "split": "calibration",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00238",
+      "suite": "E02",
+      "split": "calibration",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00239",
+      "suite": "E02",
+      "split": "held-out",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00240",
+      "suite": "E02",
+      "split": "held-out",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00241",
+      "suite": "E02",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00242",
+      "suite": "E02",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00243",
+      "suite": "E02",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00244",
+      "suite": "E02",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00245",
+      "suite": "E02",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00246",
+      "suite": "E02",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00247",
+      "suite": "E02",
+      "split": "calibration",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00248",
+      "suite": "E02",
+      "split": "calibration",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00249",
+      "suite": "E02",
+      "split": "held-out",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E02-00250",
+      "suite": "E02",
+      "split": "held-out",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E02 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00001",
+      "suite": "E03",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00002",
+      "suite": "E03",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00003",
+      "suite": "E03",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00004",
+      "suite": "E03",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00005",
+      "suite": "E03",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00006",
+      "suite": "E03",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00007",
+      "suite": "E03",
+      "split": "calibration",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00008",
+      "suite": "E03",
+      "split": "calibration",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00009",
+      "suite": "E03",
+      "split": "held-out",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00010",
+      "suite": "E03",
+      "split": "held-out",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00011",
+      "suite": "E03",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00012",
+      "suite": "E03",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00013",
+      "suite": "E03",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00014",
+      "suite": "E03",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00015",
+      "suite": "E03",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00016",
+      "suite": "E03",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00017",
+      "suite": "E03",
+      "split": "calibration",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00018",
+      "suite": "E03",
+      "split": "calibration",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00019",
+      "suite": "E03",
+      "split": "held-out",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00020",
+      "suite": "E03",
+      "split": "held-out",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00021",
+      "suite": "E03",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00022",
+      "suite": "E03",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00023",
+      "suite": "E03",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00024",
+      "suite": "E03",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00025",
+      "suite": "E03",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00026",
+      "suite": "E03",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00027",
+      "suite": "E03",
+      "split": "calibration",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00028",
+      "suite": "E03",
+      "split": "calibration",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00029",
+      "suite": "E03",
+      "split": "held-out",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00030",
+      "suite": "E03",
+      "split": "held-out",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00031",
+      "suite": "E03",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00032",
+      "suite": "E03",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00033",
+      "suite": "E03",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00034",
+      "suite": "E03",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00035",
+      "suite": "E03",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00036",
+      "suite": "E03",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00037",
+      "suite": "E03",
+      "split": "calibration",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00038",
+      "suite": "E03",
+      "split": "calibration",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00039",
+      "suite": "E03",
+      "split": "held-out",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00040",
+      "suite": "E03",
+      "split": "held-out",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00041",
+      "suite": "E03",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00042",
+      "suite": "E03",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00043",
+      "suite": "E03",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00044",
+      "suite": "E03",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00045",
+      "suite": "E03",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00046",
+      "suite": "E03",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00047",
+      "suite": "E03",
+      "split": "calibration",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00048",
+      "suite": "E03",
+      "split": "calibration",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00049",
+      "suite": "E03",
+      "split": "held-out",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00050",
+      "suite": "E03",
+      "split": "held-out",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00051",
+      "suite": "E03",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00052",
+      "suite": "E03",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00053",
+      "suite": "E03",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00054",
+      "suite": "E03",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00055",
+      "suite": "E03",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00056",
+      "suite": "E03",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00057",
+      "suite": "E03",
+      "split": "calibration",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00058",
+      "suite": "E03",
+      "split": "calibration",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00059",
+      "suite": "E03",
+      "split": "held-out",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00060",
+      "suite": "E03",
+      "split": "held-out",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00061",
+      "suite": "E03",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00062",
+      "suite": "E03",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00063",
+      "suite": "E03",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00064",
+      "suite": "E03",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00065",
+      "suite": "E03",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00066",
+      "suite": "E03",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00067",
+      "suite": "E03",
+      "split": "calibration",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00068",
+      "suite": "E03",
+      "split": "calibration",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00069",
+      "suite": "E03",
+      "split": "held-out",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00070",
+      "suite": "E03",
+      "split": "held-out",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00071",
+      "suite": "E03",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00072",
+      "suite": "E03",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00073",
+      "suite": "E03",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00074",
+      "suite": "E03",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00075",
+      "suite": "E03",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00076",
+      "suite": "E03",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00077",
+      "suite": "E03",
+      "split": "calibration",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00078",
+      "suite": "E03",
+      "split": "calibration",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00079",
+      "suite": "E03",
+      "split": "held-out",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00080",
+      "suite": "E03",
+      "split": "held-out",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00081",
+      "suite": "E03",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00082",
+      "suite": "E03",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00083",
+      "suite": "E03",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00084",
+      "suite": "E03",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00085",
+      "suite": "E03",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00086",
+      "suite": "E03",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00087",
+      "suite": "E03",
+      "split": "calibration",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00088",
+      "suite": "E03",
+      "split": "calibration",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00089",
+      "suite": "E03",
+      "split": "held-out",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00090",
+      "suite": "E03",
+      "split": "held-out",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00091",
+      "suite": "E03",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00092",
+      "suite": "E03",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00093",
+      "suite": "E03",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00094",
+      "suite": "E03",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00095",
+      "suite": "E03",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00096",
+      "suite": "E03",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00097",
+      "suite": "E03",
+      "split": "calibration",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00098",
+      "suite": "E03",
+      "split": "calibration",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00099",
+      "suite": "E03",
+      "split": "held-out",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00100",
+      "suite": "E03",
+      "split": "held-out",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00101",
+      "suite": "E03",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00102",
+      "suite": "E03",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00103",
+      "suite": "E03",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00104",
+      "suite": "E03",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00105",
+      "suite": "E03",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00106",
+      "suite": "E03",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00107",
+      "suite": "E03",
+      "split": "calibration",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00108",
+      "suite": "E03",
+      "split": "calibration",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00109",
+      "suite": "E03",
+      "split": "held-out",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00110",
+      "suite": "E03",
+      "split": "held-out",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00111",
+      "suite": "E03",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00112",
+      "suite": "E03",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00113",
+      "suite": "E03",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00114",
+      "suite": "E03",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00115",
+      "suite": "E03",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00116",
+      "suite": "E03",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00117",
+      "suite": "E03",
+      "split": "calibration",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00118",
+      "suite": "E03",
+      "split": "calibration",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00119",
+      "suite": "E03",
+      "split": "held-out",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00120",
+      "suite": "E03",
+      "split": "held-out",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00121",
+      "suite": "E03",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00122",
+      "suite": "E03",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00123",
+      "suite": "E03",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00124",
+      "suite": "E03",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00125",
+      "suite": "E03",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00126",
+      "suite": "E03",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00127",
+      "suite": "E03",
+      "split": "calibration",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00128",
+      "suite": "E03",
+      "split": "calibration",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00129",
+      "suite": "E03",
+      "split": "held-out",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00130",
+      "suite": "E03",
+      "split": "held-out",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00131",
+      "suite": "E03",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00132",
+      "suite": "E03",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00133",
+      "suite": "E03",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00134",
+      "suite": "E03",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00135",
+      "suite": "E03",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00136",
+      "suite": "E03",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00137",
+      "suite": "E03",
+      "split": "calibration",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00138",
+      "suite": "E03",
+      "split": "calibration",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00139",
+      "suite": "E03",
+      "split": "held-out",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00140",
+      "suite": "E03",
+      "split": "held-out",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00141",
+      "suite": "E03",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00142",
+      "suite": "E03",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00143",
+      "suite": "E03",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00144",
+      "suite": "E03",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00145",
+      "suite": "E03",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00146",
+      "suite": "E03",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00147",
+      "suite": "E03",
+      "split": "calibration",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00148",
+      "suite": "E03",
+      "split": "calibration",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00149",
+      "suite": "E03",
+      "split": "held-out",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00150",
+      "suite": "E03",
+      "split": "held-out",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00151",
+      "suite": "E03",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00152",
+      "suite": "E03",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00153",
+      "suite": "E03",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00154",
+      "suite": "E03",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00155",
+      "suite": "E03",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00156",
+      "suite": "E03",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00157",
+      "suite": "E03",
+      "split": "calibration",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00158",
+      "suite": "E03",
+      "split": "calibration",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00159",
+      "suite": "E03",
+      "split": "held-out",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00160",
+      "suite": "E03",
+      "split": "held-out",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00161",
+      "suite": "E03",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00162",
+      "suite": "E03",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00163",
+      "suite": "E03",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00164",
+      "suite": "E03",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00165",
+      "suite": "E03",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00166",
+      "suite": "E03",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00167",
+      "suite": "E03",
+      "split": "calibration",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00168",
+      "suite": "E03",
+      "split": "calibration",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00169",
+      "suite": "E03",
+      "split": "held-out",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00170",
+      "suite": "E03",
+      "split": "held-out",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00171",
+      "suite": "E03",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00172",
+      "suite": "E03",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00173",
+      "suite": "E03",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00174",
+      "suite": "E03",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00175",
+      "suite": "E03",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00176",
+      "suite": "E03",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00177",
+      "suite": "E03",
+      "split": "calibration",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00178",
+      "suite": "E03",
+      "split": "calibration",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00179",
+      "suite": "E03",
+      "split": "held-out",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00180",
+      "suite": "E03",
+      "split": "held-out",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00181",
+      "suite": "E03",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00182",
+      "suite": "E03",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00183",
+      "suite": "E03",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00184",
+      "suite": "E03",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00185",
+      "suite": "E03",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00186",
+      "suite": "E03",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00187",
+      "suite": "E03",
+      "split": "calibration",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00188",
+      "suite": "E03",
+      "split": "calibration",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00189",
+      "suite": "E03",
+      "split": "held-out",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00190",
+      "suite": "E03",
+      "split": "held-out",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00191",
+      "suite": "E03",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00192",
+      "suite": "E03",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00193",
+      "suite": "E03",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00194",
+      "suite": "E03",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00195",
+      "suite": "E03",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00196",
+      "suite": "E03",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00197",
+      "suite": "E03",
+      "split": "calibration",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00198",
+      "suite": "E03",
+      "split": "calibration",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00199",
+      "suite": "E03",
+      "split": "held-out",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E03-00200",
+      "suite": "E03",
+      "split": "held-out",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E03 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00001",
+      "suite": "E05",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00002",
+      "suite": "E05",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00003",
+      "suite": "E05",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00004",
+      "suite": "E05",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00005",
+      "suite": "E05",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00006",
+      "suite": "E05",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00007",
+      "suite": "E05",
+      "split": "calibration",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00008",
+      "suite": "E05",
+      "split": "calibration",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00009",
+      "suite": "E05",
+      "split": "held-out",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00010",
+      "suite": "E05",
+      "split": "held-out",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00011",
+      "suite": "E05",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00012",
+      "suite": "E05",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00013",
+      "suite": "E05",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00014",
+      "suite": "E05",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00015",
+      "suite": "E05",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00016",
+      "suite": "E05",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00017",
+      "suite": "E05",
+      "split": "calibration",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00018",
+      "suite": "E05",
+      "split": "calibration",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00019",
+      "suite": "E05",
+      "split": "held-out",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00020",
+      "suite": "E05",
+      "split": "held-out",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00021",
+      "suite": "E05",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00022",
+      "suite": "E05",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00023",
+      "suite": "E05",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00024",
+      "suite": "E05",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00025",
+      "suite": "E05",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00026",
+      "suite": "E05",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00027",
+      "suite": "E05",
+      "split": "calibration",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00028",
+      "suite": "E05",
+      "split": "calibration",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00029",
+      "suite": "E05",
+      "split": "held-out",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00030",
+      "suite": "E05",
+      "split": "held-out",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00031",
+      "suite": "E05",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00032",
+      "suite": "E05",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00033",
+      "suite": "E05",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00034",
+      "suite": "E05",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00035",
+      "suite": "E05",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00036",
+      "suite": "E05",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00037",
+      "suite": "E05",
+      "split": "calibration",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00038",
+      "suite": "E05",
+      "split": "calibration",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00039",
+      "suite": "E05",
+      "split": "held-out",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00040",
+      "suite": "E05",
+      "split": "held-out",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00041",
+      "suite": "E05",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00042",
+      "suite": "E05",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00043",
+      "suite": "E05",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00044",
+      "suite": "E05",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00045",
+      "suite": "E05",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00046",
+      "suite": "E05",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00047",
+      "suite": "E05",
+      "split": "calibration",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00048",
+      "suite": "E05",
+      "split": "calibration",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00049",
+      "suite": "E05",
+      "split": "held-out",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00050",
+      "suite": "E05",
+      "split": "held-out",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00051",
+      "suite": "E05",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00052",
+      "suite": "E05",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00053",
+      "suite": "E05",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00054",
+      "suite": "E05",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00055",
+      "suite": "E05",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00056",
+      "suite": "E05",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00057",
+      "suite": "E05",
+      "split": "calibration",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00058",
+      "suite": "E05",
+      "split": "calibration",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00059",
+      "suite": "E05",
+      "split": "held-out",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00060",
+      "suite": "E05",
+      "split": "held-out",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00061",
+      "suite": "E05",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00062",
+      "suite": "E05",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00063",
+      "suite": "E05",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00064",
+      "suite": "E05",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00065",
+      "suite": "E05",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00066",
+      "suite": "E05",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00067",
+      "suite": "E05",
+      "split": "calibration",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00068",
+      "suite": "E05",
+      "split": "calibration",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00069",
+      "suite": "E05",
+      "split": "held-out",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00070",
+      "suite": "E05",
+      "split": "held-out",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00071",
+      "suite": "E05",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00072",
+      "suite": "E05",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00073",
+      "suite": "E05",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00074",
+      "suite": "E05",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00075",
+      "suite": "E05",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00076",
+      "suite": "E05",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00077",
+      "suite": "E05",
+      "split": "calibration",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00078",
+      "suite": "E05",
+      "split": "calibration",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00079",
+      "suite": "E05",
+      "split": "held-out",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00080",
+      "suite": "E05",
+      "split": "held-out",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00081",
+      "suite": "E05",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00082",
+      "suite": "E05",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00083",
+      "suite": "E05",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00084",
+      "suite": "E05",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00085",
+      "suite": "E05",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00086",
+      "suite": "E05",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00087",
+      "suite": "E05",
+      "split": "calibration",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00088",
+      "suite": "E05",
+      "split": "calibration",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00089",
+      "suite": "E05",
+      "split": "held-out",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00090",
+      "suite": "E05",
+      "split": "held-out",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00091",
+      "suite": "E05",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00092",
+      "suite": "E05",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00093",
+      "suite": "E05",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00094",
+      "suite": "E05",
+      "split": "train",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00095",
+      "suite": "E05",
+      "split": "train",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00096",
+      "suite": "E05",
+      "split": "train",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00097",
+      "suite": "E05",
+      "split": "calibration",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00098",
+      "suite": "E05",
+      "split": "calibration",
+      "source": "email",
+      "language": "en",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00099",
+      "suite": "E05",
+      "split": "held-out",
+      "source": "receipt",
+      "language": "mixed",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    },
+    {
+      "id": "E05-00100",
+      "suite": "E05",
+      "split": "held-out",
+      "source": "notification",
+      "language": "es",
+      "status": "BLOCKED",
+      "reason": "No integrated E05 application adapter/instrumentation yet",
+      "errors": []
+    }
+  ]
+}

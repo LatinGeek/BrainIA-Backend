@@ -1,18 +1,26 @@
-import type { FastifyPluginAsync } from "fastify";
+﻿import type { FastifyPluginAsync } from "fastify";
 import { z } from "zod";
-import { CLIENT_ID_HEADER } from "../auth.js";
+import { ownerScope } from "../auth.js";
 import { pool } from "../storage/postgres.js";
 import { FINANCIAL_CATEGORIES } from "../domain/financial-categories.js";
 import {
   createFinancialAccount,
   createBalanceAdjustment,
+  createManualFinancialTransaction,
+  createPendingFinancialTransaction,
+  cancelPendingFinancialTransaction,
   deleteFinancialAccount,
+  executePendingFinancialTransaction,
+  getFinancialSummary,
   hideFinancialTransaction,
   listFinancialAccounts,
   listFinancialTransactions,
+  listPendingFinancialTransactions,
   loadFinancialTransactionById,
+  markFinancialTransactionFalsePositive,
   mergeFinancialTransactions,
   updateFinancialAccount,
+  updatePendingFinancialTransaction,
   updateFinancialTransactionContext,
 } from "../storage/financial-transaction-repository.js";
 
@@ -24,12 +32,40 @@ const listQuerySchema = z.object({
   to: z.string().datetime({ offset: true }).optional(),
 });
 
+// Amounts may be sent as exact decimal text (preferred) or as the legacy
+// JSON number. Neither form is turned into floating-point money server-side.
+const decimalAmountSchema = z.union([
+  z.number().positive(),
+  z.string().trim()
+    .regex(/^\d+(?:\.\d{1,6})?$/, "Expected a positive decimal amount")
+    .refine((value) => /[1-9]/.test(value), "Expected a positive decimal amount"),
+]);
+
+const summaryQuerySchema = z.object({
+  // The v2 FinancialSummary contract requires a bounded range; omitting either
+  // side is a validation error instead of returning null timestamps.
+  from: z.string().datetime({ offset: true }),
+  to: z.string().datetime({ offset: true }),
+  accountId: z.string().trim().max(200).optional(),
+  conversionTo: z.string().trim().length(3).optional(),
+  fxRateId: z.string().trim().max(200).optional(),
+}).superRefine((value, context) => {
+  if (value.conversionTo && !value.fxRateId) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["fxRateId"],
+      message: "An approved fxRateId is required for any conversion",
+    });
+  }
+});
+
 const contextSchema = z.object({
   title: z.string().trim().min(1).max(200).optional(),
   category: z.string().trim().max(120).nullable().optional(),
+  amount: decimalAmountSchema.optional(),
   accountId: z.string().trim().max(200).nullable().optional(),
   destinationAccountId: z.string().trim().max(200).nullable().optional(),
-  destinationAmount: z.number().positive().nullable().optional(),
+  destinationAmount: decimalAmountSchema.nullable().optional(),
   destinationCurrency: z.enum(["UYU", "USD"]).nullable().optional(),
   currency: z.enum(["UYU", "USD"]).optional(),
   kind: z.enum(["expense", "income", "transfer"]).optional(),
@@ -40,7 +76,7 @@ const contextSchema = z.object({
   if (value.accountId && value.destinationAccountId && value.accountId === value.destinationAccountId) {
     context.addIssue({ code: z.ZodIssueCode.custom, path: ["destinationAccountId"], message: "A transfer must use two different accounts" });
   }
-  if (!value.destinationAmount || value.destinationAmount <= 0) context.addIssue({ code: z.ZodIssueCode.custom, path: ["destinationAmount"], message: "A positive destination amount is required for transfers" });
+  if (!value.destinationAmount) context.addIssue({ code: z.ZodIssueCode.custom, path: ["destinationAmount"], message: "A positive destination amount is required for transfers" });
   if (!value.destinationCurrency) context.addIssue({ code: z.ZodIssueCode.custom, path: ["destinationCurrency"], message: "A destination currency is required for transfers" });
 });
 
@@ -66,10 +102,54 @@ const categorySchema = z.object({
   name: z.string().trim().min(1).max(120),
 });
 
-function categoryScope(request: { headers: Record<string, string | string[] | undefined> }) {
-  const header = request.headers[CLIENT_ID_HEADER];
-  const clientId = (Array.isArray(header) ? header[0] : header)?.trim();
-  return clientId || "anonymous";
+const financialEntrySchema = z.object({
+  title: z.string().trim().min(1).max(200),
+  kind: z.enum(["expense", "income"]),
+  amount: decimalAmountSchema,
+  currency: z.enum(["UYU", "USD"]),
+  category: z.string().trim().max(120).nullable().optional(),
+  accountId: z.string().trim().max(200).nullable().optional(),
+});
+
+const isoDateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Expected a YYYY-MM-DD date");
+
+const manualTransactionSchema = financialEntrySchema.extend({
+  observedAt: z.string().datetime({ offset: true }),
+});
+
+const pendingTransactionSchema = financialEntrySchema.extend({
+  estimatedExecutionDate: isoDateSchema,
+});
+
+const pendingTransactionPatchSchema = pendingTransactionSchema.partial().refine(
+  (value) => Object.keys(value).length > 0,
+  "At least one pending transaction field is required",
+);
+
+const executePendingTransactionSchema = z.object({
+  executedAt: z.string().datetime({ offset: true }),
+});
+
+function categoryScope(request: Parameters<typeof ownerScope>[0]) {
+  return ownerScope(request);
+}
+
+async function pendingOwnedBy(id: string, ownerId?: string) {
+  if (!ownerId) return true;
+  const result = await pool.query(
+    `select 1 from pending_financial_transactions where id = $1 and owner_id = $2 limit 1`,
+    [id, ownerId],
+  );
+  return (result.rowCount ?? 0) > 0;
+}
+
+async function accountOwnedBy(id: string, ownerId?: string) {
+  if (!ownerId) return true;
+  const result = await pool.query(
+    `select 1 from financial_accounts where id = $1 and owner_id = $2 limit 1`,
+    [id, ownerId],
+  );
+  return (result.rowCount ?? 0) > 0;
 }
 
 function normalizeCategoryName(name: string) {
@@ -104,18 +184,19 @@ export const registerFinancialTransactionRoutes: FastifyPluginAsync = async (app
     return reply.status(201).send({ category: result.rows[0] });
   });
 
-  app.get("/financial/accounts", async () => ({ accounts: await listFinancialAccounts() }));
+  app.get("/financial/accounts", async (request) => ({ accounts: await listFinancialAccounts(ownerScope(request)) }));
 
   app.post("/financial/accounts", async (request, reply) => {
     const parsed = accountSchema.safeParse(request.body);
     if (!parsed.success) return reply.status(400).send({ error: "invalid_financial_account", issues: parsed.error.flatten() });
-    return reply.status(201).send(await createFinancialAccount(parsed.data));
+    return reply.status(201).send(await createFinancialAccount({ ...parsed.data, ownerId: ownerScope(request) }));
   });
 
   app.patch("/financial/accounts/:id", async (request, reply) => {
     const params = request.params as { id?: string };
     const parsed = accountSchema.safeParse(request.body);
     if (!params.id?.trim() || !parsed.success) return reply.status(400).send({ error: "invalid_financial_account", issues: parsed.success ? undefined : parsed.error.flatten() });
+    if (!(await accountOwnedBy(params.id.trim(), ownerScope(request)))) return reply.status(404).send({ error: "financial_account_not_found" });
     try {
       const account = await updateFinancialAccount(params.id.trim(), parsed.data);
       if (!account) return reply.status(404).send({ error: "financial_account_not_found" });
@@ -129,6 +210,7 @@ export const registerFinancialTransactionRoutes: FastifyPluginAsync = async (app
     const params = request.params as { id?: string };
     const id = params.id?.trim();
     if (!id) return reply.status(400).send({ error: "invalid_financial_account_id" });
+    if (!(await accountOwnedBy(id, ownerScope(request)))) return reply.status(404).send({ error: "financial_account_not_found" });
     const result = await deleteFinancialAccount(id);
     if (!result) return reply.status(404).send({ error: "financial_account_not_found" });
     return result;
@@ -138,12 +220,93 @@ export const registerFinancialTransactionRoutes: FastifyPluginAsync = async (app
     const params = request.params as { id?: string };
     const parsed = adjustmentSchema.safeParse(request.body);
     if (!params.id?.trim() || !parsed.success) return reply.status(400).send({ error: "invalid_balance_adjustment", issues: parsed.success ? undefined : parsed.error.flatten() });
+    if (!(await accountOwnedBy(params.id.trim(), ownerScope(request)))) return reply.status(404).send({ error: "financial_account_not_found" });
     try {
-      const transaction = await createBalanceAdjustment({ accountId: params.id.trim(), ...parsed.data });
+      const transaction = await createBalanceAdjustment({ accountId: params.id.trim(), ...parsed.data, ownerId: ownerScope(request) });
       return reply.status(201).send(transaction);
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unable to create balance adjustment";
       return reply.status(message.includes("not found") ? 404 : 409).send({ error: "balance_adjustment_failed", message });
+    }
+  });
+
+  app.get("/financial/pending-transactions", async (request) => ({
+    items: await listPendingFinancialTransactions(ownerScope(request)),
+  }));
+
+  app.post("/financial/pending-transactions", async (request, reply) => {
+    const parsed = pendingTransactionSchema.safeParse(request.body);
+    if (!parsed.success) return reply.status(400).send({ error: "invalid_pending_financial_transaction", issues: parsed.error.flatten() });
+    try {
+      const pending = await createPendingFinancialTransaction({ ...parsed.data, ownerId: ownerScope(request) });
+      return reply.status(201).send(pending);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unable to create pending transaction";
+      if (message.includes("Financial account not found")) return reply.status(404).send({ error: "financial_account_not_found" });
+      return reply.status(409).send({ error: "pending_financial_transaction_failed", message });
+    }
+  });
+
+  app.patch("/financial/pending-transactions/:id", async (request, reply) => {
+    const id = (request.params as { id?: string }).id?.trim();
+    const parsed = pendingTransactionPatchSchema.safeParse(request.body);
+    if (!id || !parsed.success) return reply.status(400).send({ error: "invalid_pending_financial_transaction", issues: parsed.success ? undefined : parsed.error.flatten() });
+    if (!(await pendingOwnedBy(id, ownerScope(request)))) return reply.status(404).send({ error: "pending_financial_transaction_not_found" });
+    try {
+      const pending = await updatePendingFinancialTransaction(id, parsed.data, ownerScope(request));
+      if (!pending) return reply.status(404).send({ error: "pending_financial_transaction_not_found" });
+      return pending;
+    } catch (error) {
+      return reply.status(409).send({ error: "pending_financial_transaction_failed", message: error instanceof Error ? error.message : "Unable to update pending transaction" });
+    }
+  });
+
+  app.post("/financial/pending-transactions/:id/execute", async (request, reply) => {
+    const id = (request.params as { id?: string }).id?.trim();
+    const parsed = executePendingTransactionSchema.safeParse(request.body);
+    if (!id || !parsed.success) return reply.status(400).send({ error: "invalid_pending_financial_execution", issues: parsed.success ? undefined : parsed.error.flatten() });
+    if (!(await pendingOwnedBy(id, ownerScope(request)))) return reply.status(404).send({ error: "pending_financial_transaction_not_found" });
+    try {
+      const transaction = await executePendingFinancialTransaction(id, parsed.data.executedAt);
+      if (!transaction) return reply.status(404).send({ error: "pending_financial_transaction_not_found" });
+      return transaction;
+    } catch (error) {
+      return reply.status(409).send({ error: "pending_financial_execution_failed", message: error instanceof Error ? error.message : "Unable to execute pending transaction" });
+    }
+  });
+
+  app.delete("/financial/pending-transactions/:id", async (request, reply) => {
+    const id = (request.params as { id?: string }).id?.trim();
+    if (!id) return reply.status(400).send({ error: "invalid_pending_financial_transaction_id" });
+    if (!(await pendingOwnedBy(id, ownerScope(request)))) return reply.status(404).send({ error: "pending_financial_transaction_not_found" });
+    const cancelled = await cancelPendingFinancialTransaction(id);
+    if (!cancelled) return reply.status(404).send({ error: "pending_financial_transaction_not_found" });
+    return reply.status(204).send();
+  });
+
+  app.get("/financial/summary", async (request, reply) => {
+    const parsed = summaryQuerySchema.safeParse(request.query);
+    if (!parsed.success) {
+      return reply.status(400).send({ error: "invalid_financial_summary_query", issues: parsed.error.flatten() });
+    }
+    if (parsed.data.from && parsed.data.to && parsed.data.from > parsed.data.to) {
+      return reply.status(400).send({ error: "invalid_financial_summary_range", message: "The from value must be before the to value" });
+    }
+    const ownerId = ownerScope(request);
+    if (parsed.data.accountId && !(await accountOwnedBy(parsed.data.accountId, ownerId))) {
+      return reply.status(404).send({ error: "financial_account_not_found" });
+    }
+    try {
+      return await getFinancialSummary({ ...parsed.data, ownerId });
+    } catch (error) {
+      const code = error instanceof Error ? error.message : "financial_summary_failed";
+      if (code === "fx_rate_required" || code === "unsupported_conversion_currency") {
+        return reply.status(400).send({ error: code });
+      }
+      if (code === "fx_rate_not_found" || code === "fx_rate_unapproved" || code === "fx_rate_quote_mismatch" || code === "fx_rate_base_mismatch" || code === "fx_rate_scope_unsupported") {
+        return reply.status(409).send({ error: code });
+      }
+      return reply.status(500).send({ error: "financial_summary_failed" });
     }
   });
 
@@ -165,6 +328,7 @@ export const registerFinancialTransactionRoutes: FastifyPluginAsync = async (app
     }
 
     const items = await listFinancialTransactions(parsed.data.limit, {
+      ownerId: ownerScope(request),
       from: parsed.data.from,
       to: parsed.data.to,
     });
@@ -172,6 +336,19 @@ export const registerFinancialTransactionRoutes: FastifyPluginAsync = async (app
       count: items.length,
       items,
     };
+  });
+
+  app.post("/financial/transactions", async (request, reply) => {
+    const parsed = manualTransactionSchema.safeParse(request.body);
+    if (!parsed.success) return reply.status(400).send({ error: "invalid_manual_financial_transaction", issues: parsed.error.flatten() });
+    try {
+      const transaction = await createManualFinancialTransaction({ ...parsed.data, ownerId: ownerScope(request) });
+      return reply.status(201).send(transaction);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unable to create transaction";
+      if (message.includes("Financial account not found")) return reply.status(404).send({ error: "financial_account_not_found" });
+      return reply.status(409).send({ error: "manual_financial_transaction_failed", message });
+    }
   });
 
   app.get("/financial/transactions/:id", async (request, reply) => {
@@ -184,7 +361,7 @@ export const registerFinancialTransactionRoutes: FastifyPluginAsync = async (app
       });
     }
 
-    const transaction = await loadFinancialTransactionById(pool, id);
+    const transaction = await loadFinancialTransactionById(pool, id, ownerScope(request));
     if (!transaction) {
       return reply.status(404).send({
         error: "financial_transaction_not_found",
@@ -200,6 +377,17 @@ export const registerFinancialTransactionRoutes: FastifyPluginAsync = async (app
     const parsed = contextSchema.safeParse(request.body);
     if (!params.id?.trim() || !parsed.success) {
       return reply.status(400).send({ error: "invalid_financial_transaction_context", issues: parsed.success ? undefined : parsed.error.flatten() });
+    }
+    const ownerId = ownerScope(request);
+    if (!(await loadFinancialTransactionById(pool, params.id.trim(), ownerId))) {
+      return reply.status(404).send({ error: "financial_transaction_not_found" });
+    }
+    // Re-pointing a movement must not attach it to another owner's account.
+    if (parsed.data.accountId && !(await accountOwnedBy(parsed.data.accountId, ownerId))) {
+      return reply.status(404).send({ error: "financial_account_not_found" });
+    }
+    if (parsed.data.destinationAccountId && !(await accountOwnedBy(parsed.data.destinationAccountId, ownerId))) {
+      return reply.status(404).send({ error: "financial_account_not_found" });
     }
 
     try {
@@ -220,6 +408,12 @@ export const registerFinancialTransactionRoutes: FastifyPluginAsync = async (app
     if (!params.id?.trim() || !parsed.success) {
       return reply.status(400).send({ error: "invalid_financial_transaction_merge", issues: parsed.success ? undefined : parsed.error.flatten() });
     }
+    if (!(await loadFinancialTransactionById(pool, params.id.trim(), ownerScope(request)))) {
+      return reply.status(404).send({ error: "financial_transaction_not_found" });
+    }
+    if (!(await loadFinancialTransactionById(pool, parsed.data.duplicateId, ownerScope(request)))) {
+      return reply.status(404).send({ error: "financial_transaction_not_found" });
+    }
     try {
       const transaction = await mergeFinancialTransactions(params.id.trim(), parsed.data.duplicateId);
       if (!transaction) return reply.status(404).send({ error: "financial_transaction_not_found" });
@@ -232,8 +426,22 @@ export const registerFinancialTransactionRoutes: FastifyPluginAsync = async (app
   app.delete("/financial/transactions/:id", async (request, reply) => {
     const params = request.params as { id?: string };
     if (!params.id?.trim()) return reply.status(400).send({ error: "invalid_financial_transaction_id" });
+    if (!(await loadFinancialTransactionById(pool, params.id.trim(), ownerScope(request)))) {
+      return reply.status(404).send({ error: "financial_transaction_not_found" });
+    }
     const deleted = await hideFinancialTransaction(params.id.trim());
     if (!deleted) return reply.status(404).send({ error: "financial_transaction_not_found" });
     return reply.status(204).send();
+  });
+
+  app.post("/financial/transactions/:id/false-positive", async (request, reply) => {
+    const id = (request.params as { id?: string }).id?.trim();
+    if (!id) return reply.status(400).send({ error: "invalid_financial_transaction_id" });
+    if (!(await loadFinancialTransactionById(pool, id, ownerScope(request)))) {
+      return reply.status(404).send({ error: "financial_transaction_not_found" });
+    }
+    const marked = await markFinancialTransactionFalsePositive(id);
+    if (!marked) return reply.status(404).send({ error: "financial_transaction_not_found" });
+    return marked;
   });
 };

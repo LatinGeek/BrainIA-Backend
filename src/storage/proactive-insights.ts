@@ -3,6 +3,7 @@ import { config } from "../config.js";
 import { createKnowledgeDigest } from "./digests.js";
 import { insertDigestRun } from "./digest-repository.js";
 import { generateNaturalLanguageSummary } from "./deepseek.js";
+import { authorizeModelDispatch, listDeniedEgressSources, stillAuthorized } from "./privacy.js";
 import { buildInsightContent, INSIGHT_JSON_PROMPT, parseInsightContent } from "./generated-content.js";
 import { upsertEmbedding } from "./embeddings.js";
 import { insertInsightRun } from "./insight-repository.js";
@@ -139,6 +140,9 @@ export async function detectInsightCandidates(input: { clientId?: string | null;
     from financial_transactions transaction
     left join raw_events event on event.id = transaction.anchor_event_id
     where transaction.kind = 'expense' and not transaction.excluded_from_reports and transaction.hidden_at is null
+      and transaction.currency_status in ('explicit', 'account_confirmed', 'user_confirmed')
+      and transaction.amount_confirmed = true
+      and upper(transaction.currency) <> 'UNKNOWN'
       and transaction.observed_at >= $1 and transaction.observed_at <= $3
       and ($4::text is null or event.client_id is not distinct from $4)
     group by transaction.currency
@@ -167,6 +171,9 @@ export async function detectInsightCandidates(input: { clientId?: string | null;
       avg(transaction.amount)::float8 as "averageAmount"
     from financial_transactions transaction left join raw_events event on event.id = transaction.anchor_event_id
     where transaction.kind = 'expense' and not transaction.excluded_from_reports and transaction.hidden_at is null
+      and transaction.currency_status in ('explicit', 'account_confirmed', 'user_confirmed')
+      and transaction.amount_confirmed = true
+      and upper(transaction.currency) <> 'UNKNOWN'
       and transaction.observed_at >= $1 and ($2::text is null or event.client_id is not distinct from $2)
     group by transaction.normalized_merchant, transaction.currency having count(*) >= 4
   `, [time.quarterAgo, clientId]);
@@ -194,6 +201,9 @@ export async function detectInsightCandidates(input: { clientId?: string | null;
     cross join lateral unnest(profile.taxonomy_keys) as tag(taxonomy_key)
     left join raw_events event on event.id = transaction.anchor_event_id
     where transaction.kind = 'expense' and not transaction.excluded_from_reports and transaction.hidden_at is null
+      and transaction.currency_status in ('explicit', 'account_confirmed', 'user_confirmed')
+      and transaction.amount_confirmed = true
+      and upper(transaction.currency) <> 'UNKNOWN'
       and transaction.observed_at >= $1 and transaction.observed_at <= $3
       and ($4::text is null or event.client_id is not distinct from $4)
     group by tag.taxonomy_key, transaction.currency
@@ -358,6 +368,49 @@ export async function detectInsightCandidates(input: { clientId?: string | null;
   return stored.sort((left, right) => right.score - left.score);
 }
 
+/**
+ * Resolve the evidence sources behind insight candidates so missing or denied
+ * source policies fail closed instead of only relying on an owner-wide denied
+ * source list. Only owner-scoped rows contribute a source.
+ */
+async function resolveCandidateEvidenceSources(
+  candidates: StoredInsightCandidate[],
+  ownerId: string | null,
+) {
+  if (!ownerId) return [];
+  const eventIds = new Set<string>();
+  const transactionIds = new Set<string>();
+  const collect = (value: unknown, target: Set<string>) => {
+    if (!Array.isArray(value)) return;
+    for (const item of value) if (typeof item === "string" && item.trim()) target.add(item);
+  };
+  for (const candidate of candidates) {
+    const evidence = candidate.evidence as { eventIds?: unknown; transactionIds?: unknown };
+    collect(evidence?.eventIds, eventIds);
+    collect(evidence?.transactionIds, transactionIds);
+  }
+  const sources = new Set<string>();
+  if (eventIds.size) {
+    const result = await pool.query<{ source: string }>(`
+      select distinct source from raw_events
+      where id = any($1::text[])
+        and (owner_id = $2 or (owner_id is null and client_id = $2))
+    `, [[...eventIds], ownerId]);
+    for (const row of result.rows) sources.add(row.source);
+  }
+  if (transactionIds.size) {
+    const result = await pool.query<{ source: string }>(`
+      select distinct event.source
+      from financial_transactions transaction
+      join raw_events event on event.id = transaction.anchor_event_id
+      where transaction.id = any($1::text[])
+        and (event.owner_id = $2 or (event.owner_id is null and event.client_id = $2))
+    `, [[...transactionIds], ownerId]);
+    for (const row of result.rows) sources.add(row.source);
+  }
+  return [...sources];
+}
+
 export async function synthesizeTopInsightCandidates(input: { clientId?: string | null; limit?: number } = {}) {
   const limit = Math.min(10, Math.max(1, Math.trunc(input.limit ?? 5)));
   const result = await pool.query<StoredInsightCandidate>(`
@@ -387,15 +440,29 @@ export async function synthesizeTopInsightCandidates(input: { clientId?: string 
   let content = buildInsightContent(candidates);
   let summary = content.summary;
   let model: string | null = null;
-  if (config.deepseekApiKey) {
+  const insightAuthorization = await authorizeModelDispatch(pool, {
+    ownerId: input.clientId ?? null,
+    purpose: "proactive_insight_synthesis",
+    // Candidate evidence event/transaction anchors provide the explicit source
+    // set; any owner source that denies egress is added conservatively. A
+    // source with no policy row now fails closed in the shared gate.
+    sources: input.clientId
+      ? [
+          ...await resolveCandidateEvidenceSources(candidates, input.clientId),
+          ...await listDeniedEgressSources(pool, input.clientId),
+        ]
+      : [],
+  });
+  if (config.deepseekApiKey && insightAuthorization.allowed) {
     const generated = await generateNaturalLanguageSummary({
       apiKey: config.deepseekApiKey, model: config.deepseekModel,
+      privacy: insightAuthorization,
       systemPrompt: `You synthesize prioritized personal-knowledge changes for a calm mobile interface. ${INSIGHT_JSON_PROMPT}`,
-      userPrompt: JSON.stringify({ candidates: evidence.map(({ evidence: _rawEvidence, ...candidate }) => candidate) }),
+      userPrompt: JSON.stringify({ candidates: evidence }),
       jsonMode: true,
       audit: { clientId: input.clientId ?? null, operation: "proactive_insight_synthesis", promptVersion: "proactive-insight-v3" },
     });
-    const parsed = parseInsightContent(generated);
+    const parsed = await stillAuthorized(insightAuthorization) ? parseInsightContent(generated) : null;
     if (parsed) { content = parsed; summary = parsed.summary; model = config.deepseekModel; }
   }
   const confidence = Math.min(...candidates.map((candidate) => candidate.confidence));
@@ -408,13 +475,24 @@ export async function synthesizeTopInsightCandidates(input: { clientId?: string 
     candidateIds: candidates.map((candidate) => candidate.id), evidence,
     confidence, suggestedAction, deliveryStatus: "delivered",
     deliveredAt: new Date().toISOString(), expiresAt, promptVersion: "proactive-insight-v3",
+    ownerId: input.clientId ?? undefined,
+    policyVersion: insightAuthorization.allowed ? insightAuthorization.policyVersion : 0,
   });
   if (!run) return null;
   await pool.query(`
     update insight_candidates set status = 'delivered', delivered_at = now(), updated_at = now()
     where id = any($1::text[])
   `, [candidates.map((candidate) => candidate.id)]);
-  await upsertEmbedding(pool, { objectType: "insight", objectId: run.id, clientId: input.clientId ?? null, content: summary, metadata: { confidence, title: "Proactive insight" } });
+  // The summary may be derived from deterministic content when LLM synthesis
+  // was denied. Reuse the synthesis intersection: if any owner source denies
+  // egress the embedding must stay local instead of being independently
+  // re-authorized with an empty source set.
+  await upsertEmbedding(pool, {
+    objectType: "insight", objectId: run.id,
+    clientId: input.clientId ?? null, ownerId: input.clientId ?? null,
+    content: summary, metadata: { confidence, title: "Proactive insight" },
+    authorization: insightAuthorization,
+  });
   return run;
 }
 
@@ -425,7 +503,7 @@ export async function runDailyKnowledgeEvaluation(input: { clientId?: string | n
   const to = now.toISOString();
   const from = new Date(now.getTime() - 86_400_000).toISOString();
   const digest = await createKnowledgeDigest({
-    from, to, days: 1, eventLimit: 200,
+    from, to, days: 1, eventLimit: 200, ownerId: input.clientId ?? null,
     apiKey: config.deepseekApiKey, model: config.deepseekModel,
   });
   let digestRun = null;
@@ -434,13 +512,28 @@ export async function runDailyKnowledgeEvaluation(input: { clientId?: string | n
       toolName: "generate_daily_digest", scope: digest.scope,
       windowFrom: from, windowTo: to,
       request: { schedule: "daily", from, to }, response: digest,
-      summary: digest.summary, model: digest.model,
+      summary: digest.summary, model: digest.model, ownerId: input.clientId ?? undefined,
     });
-    if (digestRun && digest.summary) await upsertEmbedding(pool, {
-      objectType: "digest", objectId: digestRun.id,
-      clientId: input.clientId ?? null, content: digest.summary,
-      metadata: { title: digest.scope, events: digest.metrics.totalEvents },
-    });
+    if (digestRun && digest.summary) {
+      // Digest runs do not persist a source intersection. Be conservative: any
+      // owner source that denies egress keeps this derived embedding local.
+      const embeddingAuthorization = await authorizeModelDispatch(pool, {
+        ownerId: input.clientId ?? null,
+        purpose: "embedding",
+        sources: input.clientId
+          ? [
+              ...digest.metrics.eventsBySource.map((entry) => entry.source),
+              ...await listDeniedEgressSources(pool, input.clientId),
+            ]
+          : [],
+      });
+      await upsertEmbedding(pool, {
+        objectType: "digest", objectId: digestRun.id,
+        clientId: input.clientId ?? null, ownerId: input.clientId ?? null, content: digest.summary,
+        metadata: { title: digest.scope, events: digest.metrics.totalEvents },
+        authorization: embeddingAuthorization,
+      });
+    }
   }
   return { evaluatedAt: to, candidatesDetected: candidates.length, insight, digest: digestRun };
 }

@@ -1,16 +1,15 @@
-import type { FastifyPluginAsync } from "fastify";
+﻿import type { FastifyPluginAsync } from "fastify";
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
-import { CLIENT_ID_HEADER } from "../auth.js";
+import { ownerScope } from "../auth.js";
 import { pool, withTransaction } from "../storage/postgres.js";
 import { ensureOntology, listSemanticCandidates, resolveSemanticCandidate } from "../storage/semantic-repository.js";
 import { listEvents, previewEventSemantics, reprocessEvent } from "../storage/event-store.js";
 import { CATEGORY_CATALOG, SEMANTIC_GOVERNANCE_VERSION, TAXONOMY_VERSION } from "../domain/ontology.js";
 import { reconcileSemanticGraph } from "../storage/semantic-reconciler.js";
 
-function clientId(request: { headers: Record<string, string | string[] | undefined> }) {
-  const value = request.headers[CLIENT_ID_HEADER];
-  return (Array.isArray(value) ? value[0] : value)?.trim() || null;
+function clientId(request: Parameters<typeof ownerScope>[0]) {
+  return ownerScope(request) ?? null;
 }
 
 export const registerSemanticRoutes: FastifyPluginAsync = async (app) => {
@@ -42,8 +41,8 @@ export const registerSemanticRoutes: FastifyPluginAsync = async (app) => {
     }).safeParse(request.body ?? {});
     if (!parsed.success) return reply.status(400).send({ error: "invalid_semantic_backfill" });
     const scope = clientId(request);
-    const events = await listEvents();
-    const scoped = events.filter((event) => scope === null || event.clientId === scope);
+    const events = await listEvents(scope ?? undefined);
+    const scoped = scope === null ? events : events.filter((event) => event.clientId === scope);
     const cursorIndex = parsed.data.cursor ? scoped.findIndex((event) => event.id === parsed.data.cursor) + 1 : 0;
     const selected = scoped.slice(Math.max(0, cursorIndex), Math.max(0, cursorIndex) + (parsed.data.limit ?? parsed.data.batchSize));
     const runId = randomUUID();

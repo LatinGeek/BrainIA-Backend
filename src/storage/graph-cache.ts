@@ -41,3 +41,17 @@ export function writeGraphTraversalCache(cacheKey: string, graph: EntityGraph) {
 export function invalidateGraphTraversalCache() {
   graphTraversalCache.clear();
 }
+
+/**
+ * Deletion path: drop every cached traversal rooted at one of the removed or
+ * hidden entities. Cache entries contain derived node/relation text, so they
+ * must not survive a tombstone even for the short TTL.
+ */
+export function invalidateGraphTraversalCacheForEntities(entityIds: readonly string[]) {
+  const roots = new Set(entityIds.filter(Boolean));
+  if (!roots.size) return;
+  for (const key of [...graphTraversalCache.keys()]) {
+    const root = key.split(":", 1)[0]!;
+    if (roots.has(root)) graphTraversalCache.delete(key);
+  }
+}

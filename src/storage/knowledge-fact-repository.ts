@@ -63,42 +63,10 @@ export function deriveKnowledgeFacts(input: {
   return facts;
 }
 
-export async function replaceEventKnowledgeFacts(
-  db: Queryable,
-  input: { eventId: string; clientId: string | null; facts: KnowledgeFact[] },
-) {
-  await db.query("delete from knowledge_facts where event_id = $1", [input.eventId]);
-  const stored: StoredKnowledgeFact[] = [];
-  for (const candidate of input.facts) {
-    const fact = knowledgeFactSchema.parse(candidate);
-    const result = await db.query<StoredKnowledgeFact>(`
-      insert into knowledge_facts (
-        id, client_id, event_id, fact_type, value, normalized_value,
-        confidence, evidence, model, model_version, prompt_version,
-        extractor_version, visibility
-      ) values ($1,$2,$3,$4,$5::jsonb,$6,$7,$8::jsonb,$9,$10,$11,$12,$13)
-      on conflict (event_id, fact_type, normalized_value, extractor_version)
-      do update set value = excluded.value, confidence = excluded.confidence,
-        evidence = excluded.evidence, model = excluded.model,
-        model_version = excluded.model_version, prompt_version = excluded.prompt_version,
-        visibility = excluded.visibility, updated_at = now()
-      returning id, client_id as "clientId", event_id as "eventId",
-        fact_type as "factType", value, normalized_value as "normalizedValue",
-        confidence::float8 as confidence, evidence, model,
-        model_version as "modelVersion", prompt_version as "promptVersion",
-        extractor_version as "extractorVersion", visibility,
-        created_at as "createdAt", updated_at as "updatedAt"
-    `, [
-      `fact_${randomUUID()}`, input.clientId, input.eventId, fact.factType,
-      JSON.stringify(fact.value), fact.normalizedValue, fact.confidence,
-      JSON.stringify(fact.evidence), fact.model, fact.modelVersion,
-      fact.promptVersion, fact.extractorVersion, fact.visibility,
-    ]);
-    if (result.rows[0]) stored.push(result.rows[0]);
-  }
-  return stored;
-}
-
+// B04: the previous event-wide fact replacement helper was removed. Fact
+// replacement is scoped by extractor generation and fact type in
+// replaceClassificationFacts (event-repository); a projection rebuild must not
+// delete user-authored, other-extractor or other-domain facts.
 export async function listEventKnowledgeFacts(db: Queryable, eventId: string) {
   const result = await db.query<StoredKnowledgeFact>(`
     select id, client_id as "clientId", event_id as "eventId",

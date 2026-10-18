@@ -23,7 +23,13 @@ import {
 import { normalizeRelationType } from "../domain/relations.js";
 import { generateNaturalLanguageSummary } from "./deepseek.js";
 import { pool } from "./postgres.js";
-import { loadSourceProcessingPolicy, type SourceProcessingPolicy } from "./privacy.js";
+import {
+  authorizeModelDispatch,
+  loadSourceProcessingPolicy,
+  stillAuthorized,
+  type PrivacyAuthorization,
+  type SourceProcessingPolicy,
+} from "./privacy.js";
 import { retrieveSemanticContext } from "./hybrid-retrieval.js";
 
 // Hierarchy is for the meaning of an occurrence, never for the systems and
@@ -163,7 +169,7 @@ function decisionCategorization(paths: SemanticPathDecision[]) {
   return { primaryCategoryKey: primaryCategoryKey ?? null, secondaryCategoryKeys };
 }
 
-async function requestSemanticJson(input: {
+export async function requestSemanticJson(input: {
   apiKey: string;
   model: string;
   systemPrompt: string;
@@ -171,14 +177,18 @@ async function requestSemanticJson(input: {
   clientId: string | null;
   eventId: string | null;
   policy: SourceProcessingPolicy;
+  privacy?: PrivacyAuthorization | null;
   operation?: string;
+  completion?: typeof generateNaturalLanguageSummary;
 }) {
+  let validationErrors: Array<{path:string;message:string}> = [];
   for (let attempt = 0; attempt < 2; attempt += 1) {
-    const response = await generateNaturalLanguageSummary({
+    const response = await (input.completion ?? generateNaturalLanguageSummary)({
       apiKey: input.apiKey,
       model: input.model,
       systemPrompt: input.systemPrompt,
-      userPrompt: input.userPrompt,
+      userPrompt: attempt === 0 ? input.userPrompt : JSON.stringify({originalRequest:input.userPrompt,
+        repair:{instruction:'The previous response failed schema validation. Return the complete corrected JSON. Do not invent evidence to satisfy the schema.',errors:validationErrors}}),
       jsonMode: true,
       audit: {
         clientId: input.clientId,
@@ -188,12 +198,16 @@ async function requestSemanticJson(input: {
         attempt: attempt + 1,
       },
       redaction: input.policy,
+      privacy: input.privacy,
     });
     if (!response) continue;
+    if (input.privacy && !(await stillAuthorized(input.privacy))) return null;
     try {
       const parsed = modelSchema.safeParse(parseJson(response));
       if (parsed.success) return parsed.data;
+      validationErrors=parsed.error.issues.slice(0,20).map(issue=>({path:issue.path.join('.'),message:issue.message}));
     } catch {
+      validationErrors=[{path:'$',message:'Return one complete valid JSON object.'}];
       // A second bounded attempt is safer than materializing partial model output.
     }
   }
@@ -352,7 +366,7 @@ function structuralDecision(input: { entities: EntityDraft[]; inferredKind: stri
   };
 }
 
-export async function buildModelSemanticDecision(input: { entities: EntityDraft[]; source: string; inferredKind: string; title?: string; body?: string; clientId: string | null; independentSubjectAudit?: boolean; allowModel?: boolean; auditEventId?: string | null }): Promise<SemanticDecision> {
+export async function buildModelSemanticDecision(input: { entities: EntityDraft[]; source: string; inferredKind: string; title?: string; body?: string; clientId: string | null; independentSubjectAudit?: boolean; allowModel?: boolean; auditEventId?: string | null; humanContext?: { eventCategory?: string; explanation?: string } }): Promise<SemanticDecision> {
   const model = process.env.DEEPSEEK_MODEL ?? "deepseek-v4-flash";
   if (input.allowModel === false) return structuralDecision({ entities: input.entities, inferredKind: input.inferredKind, source: input.source, model, failureReason: "privacy_policy", status: "review" });
   if (!process.env.DEEPSEEK_API_KEY) return structuralDecision({ entities: input.entities, inferredKind: input.inferredKind, source: input.source, model, failureReason: "missing_api_key" });
@@ -362,6 +376,15 @@ export async function buildModelSemanticDecision(input: { entities: EntityDraft[
       return structuralDecision({ entities: input.entities, inferredKind: input.inferredKind, source: input.source, model, failureReason: "privacy_policy", status: "discarded" });
     }
     if (!policy.sendToLlm) {
+      return structuralDecision({ entities: input.entities, inferredKind: input.inferredKind, source: input.source, model, failureReason: "privacy_policy", status: "review" });
+    }
+    const authorization = await authorizeModelDispatch(pool, {
+      ownerId: input.clientId,
+      purpose: "semantic_enrichment",
+      sources: [input.source],
+      eventIds: input.auditEventId ? [input.auditEventId] : [],
+    });
+    if (!authorization.allowed) {
       return structuralDecision({ entities: input.entities, inferredKind: input.inferredKind, source: input.source, model, failureReason: "privacy_policy", status: "review" });
     }
     const retrievalQuery = [input.source, input.inferredKind, input.title, input.body,
@@ -380,6 +403,7 @@ export async function buildModelSemanticDecision(input: { entities: EntityDraft[
         ? String(input.entities.find((entity) => typeof entity.metadata?.eventId === "string")?.metadata?.eventId ?? "") || null
         : input.auditEventId,
       policy,
+      privacy: authorization,
       systemPrompt: `Return strict JSON only. Governance ${SEMANTIC_GOVERNANCE_VERSION}. You govern durable personal knowledge, not keywords.
 
 Roots: ${LIFE_DOMAINS.join(", ")}.
@@ -397,9 +421,12 @@ Every path must also define the durable identity of its subject. canonicalName m
 For paths ending at a catalog category, return its stable categoryKey. Return one primaryCategoryKey for the captured event, independently useful secondaryCategoryKeys only, and facets for merchant, account, channel, sender, recipient, location, recurrence, payment_method, or status. Facets never alter hierarchy.
 
 Return {"rootAlternatives":[{"value","confidence"}],"primaryCategoryKey":"stable.key|null","secondaryCategoryKeys":[],"facets":[{"type","value","confidence"}],"paths":[{"subjectNormalizedValue","identity":{"canonicalName","description","confidence"},"role":"primary|secondary","domain","action":"reuse|create|merge|discard|no_relation","hierarchyPath":["Root","Immediate child"],"categoryKey":"stable.key|null","steps":[{"parent","decision":"descend_existing|stop|propose_child|merge|discard|no_relation","selectedChild":null,"confidence", "alternatives":[]}],"confidence","rationale","proposedChild":{"value","description","parent","durable","confidence"}|null,"mergeTargetNormalizedValue":null}],"associations":[{"sourceNormalizedValue","targetNormalizedValue","relationType","confidence","rationale"}]}.`,
-      userPrompt: JSON.stringify({ source: input.source, inferredKind: input.inferredKind, title: input.title ?? null, body: input.body ?? null, subjects: input.entities.filter(isSemanticSubject).map((entity) => ({ type: entity.type, value: entity.value, normalizedValue: entity.normalizedValue })), canonicalContext }),
+      userPrompt: JSON.stringify({ source: input.source, inferredKind: input.inferredKind, title: input.title ?? null, body: input.body ?? null, humanContext: input.humanContext ?? null, subjects: input.entities.filter(isSemanticSubject).map((entity) => ({ type: entity.type, value: entity.value, normalizedValue: entity.normalizedValue })), canonicalContext }),
     });
     if (!parsed) return structuralDecision({ entities: input.entities, inferredKind: input.inferredKind, source: input.source, model, failureReason: "invalid_response" });
+    if (!(await stillAuthorized(authorization))) {
+      return structuralDecision({ entities: input.entities, inferredKind: input.inferredKind, source: input.source, model, failureReason: "privacy_policy", status: "review" });
+    }
     const subjectByValue = new Map(input.entities.filter(isSemanticSubject).map((entity) => [entity.normalizedValue, entity]));
     const roots = parsed.rootAlternatives.filter((root) => LIFE_DOMAINS.includes(root.value as typeof LIFE_DOMAINS[number])).sort((left, right) => right.confidence - left.confidence);
     const primaryAllowed = (roots[0]?.confidence ?? 0) >= PRIMARY_ROOT_CONFIDENCE && ((roots[0]?.confidence ?? 0) - (roots[1]?.confidence ?? 0) >= PRIMARY_ROOT_MARGIN || roots.length === 1);
@@ -419,6 +446,7 @@ Return {"rootAlternatives":[{"value","confidence"}],"primaryCategoryKey":"stable
           ? (typeof suppliedEvent.metadata?.eventId === "string" ? suppliedEvent.metadata.eventId : null)
           : input.auditEventId,
         policy,
+        privacy: authorization,
         operation: "semantic_event_identity",
         systemPrompt: `Return strict JSON only. Governance ${SEMANTIC_GOVERNANCE_VERSION}. Classify exactly one captured event as reusable knowledge evidence.
 

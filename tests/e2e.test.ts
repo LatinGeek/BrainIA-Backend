@@ -203,10 +203,12 @@ test("end-to-end capture, retrieval, insight, and digest flow stays coherent", a
       transaction.evidence.some((evidence) => evidence.rawEventId === notificationId || evidence.rawEventId === walletId),
     );
 
-    assert.equal(flowTransactions.length, 1);
-    assert.equal(flowTransactions[0]?.kind, "expense");
-    assert.equal(flowTransactions[0]?.evidence.length, 2);
-    assert.ok(flowTransactions[0]?.merchantLabel.toLowerCase().includes(merchant.toLowerCase()));
+    assert.equal(flowTransactions.length, 2);
+    assert.ok(flowTransactions.every((transaction) => transaction.kind === "expense"));
+    assert.ok(flowTransactions.every((transaction) => transaction.evidence.length === 1));
+    assert.ok(flowTransactions.every((transaction) =>
+      transaction.merchantLabel.toLowerCase().includes(merchant.toLowerCase()),
+    ));
 
     const preReviewQueueResponse = await app.inject({
       method: "GET",

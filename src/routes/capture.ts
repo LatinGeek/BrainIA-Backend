@@ -1,6 +1,6 @@
-import type { FastifyPluginAsync } from "fastify";
+﻿import type { FastifyPluginAsync } from "fastify";
 import { z } from "zod";
-import { resolveAuthContext, type AuthConfig, type AuthResult } from "../auth.js";
+import { ownerScope, type AuthConfig } from "../auth.js";
 import {
   buildCaptureBatchEvents,
   buildEmailCaptureEvent,
@@ -118,14 +118,6 @@ const captureBatchSchema = z.object({
   ).min(1),
 });
 
-function getAuthClientId(auth: AuthResult) {
-  if ("ok" in auth) {
-    return null;
-  }
-
-  return auth.mode === "disabled" ? null : auth.clientId;
-}
-
 export const registerCaptureRoutes = (options: CaptureRoutesOptions): FastifyPluginAsync => {
   const ingestEvent = options.ingestEvent ?? appendEvent;
 
@@ -137,17 +129,14 @@ export const registerCaptureRoutes = (options: CaptureRoutesOptions): FastifyPlu
         return reply.status(400).send({ error: "invalid_note_capture", issues: parsed.error.flatten() });
       }
 
-      const auth = resolveAuthContext(request.headers, options.authConfig);
-      if ("ok" in auth && !auth.ok) {
-        return reply.status(auth.statusCode).send({ error: auth.error, message: auth.message });
-      }
+      const clientId = ownerScope(request, options.authConfig);
 
       const stored = await ingestEvent(
         buildNoteCaptureEvent({
           ...parsed.data,
           raw: parsed.data.raw,
         }),
-        { clientId: getAuthClientId(auth) },
+        { clientId: clientId },
       );
 
       return reply.status(201).send(stored);
@@ -160,16 +149,13 @@ export const registerCaptureRoutes = (options: CaptureRoutesOptions): FastifyPlu
         return reply.status(400).send({ error: "invalid_email_capture", issues: parsed.error.flatten() });
       }
 
-      const auth = resolveAuthContext(request.headers, options.authConfig);
-      if ("ok" in auth && !auth.ok) {
-        return reply.status(auth.statusCode).send({ error: auth.error, message: auth.message });
-      }
+      const clientId = ownerScope(request, options.authConfig);
 
       const stored = await ingestEvent(
         buildEmailCaptureEvent({
           ...parsed.data,
         }),
-        { clientId: getAuthClientId(auth) },
+        { clientId: clientId },
       );
 
       return reply.status(201).send(stored);
@@ -182,17 +168,14 @@ export const registerCaptureRoutes = (options: CaptureRoutesOptions): FastifyPlu
         return reply.status(400).send({ error: "invalid_notification_capture", issues: parsed.error.flatten() });
       }
 
-      const auth = resolveAuthContext(request.headers, options.authConfig);
-      if ("ok" in auth && !auth.ok) {
-        return reply.status(auth.statusCode).send({ error: auth.error, message: auth.message });
-      }
+      const clientId = ownerScope(request, options.authConfig);
 
       const stored = await ingestEvent(
         buildNotificationCaptureEvent({
           ...parsed.data,
           raw: parsed.data.raw,
         }),
-        { clientId: getAuthClientId(auth) },
+        { clientId: clientId },
       );
 
       return reply.status(201).send(stored);
@@ -205,10 +188,7 @@ export const registerCaptureRoutes = (options: CaptureRoutesOptions): FastifyPlu
         return reply.status(400).send({ error: "invalid_wallet_capture", issues: parsed.error.flatten() });
       }
 
-      const auth = resolveAuthContext(request.headers, options.authConfig);
-      if ("ok" in auth && !auth.ok) {
-        return reply.status(auth.statusCode).send({ error: auth.error, message: auth.message });
-      }
+      const clientId = ownerScope(request, options.authConfig);
 
       const event = buildWalletCaptureEvent({
         ...parsed.data,
@@ -219,7 +199,7 @@ export const registerCaptureRoutes = (options: CaptureRoutesOptions): FastifyPlu
       let stored;
       try {
         stored = await ingestEvent(event, {
-          clientId: getAuthClientId(auth),
+          clientId: clientId,
           requestId: request.id,
         });
       } catch (error) {
@@ -239,10 +219,7 @@ export const registerCaptureRoutes = (options: CaptureRoutesOptions): FastifyPlu
         return reply.status(400).send({ error: "invalid_capture_batch", issues: parsed.error.flatten() });
       }
 
-      const auth = resolveAuthContext(request.headers, options.authConfig);
-      if ("ok" in auth && !auth.ok) {
-        return reply.status(auth.statusCode).send({ error: auth.error, message: auth.message });
-      }
+      const clientId = ownerScope(request, options.authConfig);
 
       const events = buildCaptureBatchEvents({
         batchId: parsed.data.batchId,
@@ -253,7 +230,7 @@ export const registerCaptureRoutes = (options: CaptureRoutesOptions): FastifyPlu
       for (const event of events) {
         stored.push(
           await ingestEvent(event, {
-            clientId: getAuthClientId(auth),
+            clientId: clientId,
           }),
         );
       }
