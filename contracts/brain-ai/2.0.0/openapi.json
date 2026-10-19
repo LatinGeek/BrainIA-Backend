@@ -2,9 +2,9 @@
   "openapi": "3.1.0",
   "jsonSchemaDialect": "https://json-schema.org/draft/2020-12/schema",
   "info": {
-    "title": "Brain AI proposed resolved API revision B02-r2",
+    "title": "Brain AI 2.0.0 approved revision B02-r3 (provisional operations implementation-blocked)",
     "version": "2.0.0",
-    "description": "UNAPPROVED revision. Resolved field decisions and provisional operation schemas; see open-items.json. Schema validity does not imply consent, ownership, source eligibility, implementation or runtime support."
+    "description": "Owner-approved revision B02-r3 (ledger v3). Resolved field decisions and provisional operation schemas; see open-items.json. Provisional operations remain implementation-blocked; schema validity does not imply ownership, source eligibility, implementation or runtime support."
   },
   "security": [
     {
@@ -26,7 +26,7 @@
       "get": {
         "operationId": "getapiv2capabilities",
         "x-required-scope": "capture:read",
-        "x-approval-status": "proposed-subset",
+        "x-approval-status": "approved-subset",
         "parameters": [],
         "responses": {
           "200": {
@@ -211,7 +211,7 @@
       "post": {
         "operationId": "postapiv2observations",
         "x-required-scope": "capture:write",
-        "x-approval-status": "proposed-subset",
+        "x-approval-status": "approved-subset",
         "parameters": [],
         "responses": {
           "200": {
@@ -416,7 +416,7 @@
       "post": {
         "operationId": "postapiv2observationsbatch",
         "x-required-scope": "capture:write",
-        "x-approval-status": "proposed-subset",
+        "x-approval-status": "approved-subset",
         "parameters": [],
         "responses": {
           "200": {
@@ -611,7 +611,7 @@
       "put": {
         "operationId": "putapiv2sourcesidpolicy",
         "x-required-scope": "privacy:write",
-        "x-approval-status": "proposed-subset",
+        "x-approval-status": "approved-subset",
         "parameters": [
           {
             "name": "id",
@@ -815,7 +815,7 @@
       "get": {
         "operationId": "getapiv2deletionsid",
         "x-required-scope": "privacy:read",
-        "x-approval-status": "proposed-subset",
+        "x-approval-status": "approved-subset",
         "parameters": [
           {
             "name": "id",
@@ -1009,7 +1009,7 @@
       "get": {
         "operationId": "getapiv2financialsummary",
         "x-required-scope": "finance:read",
-        "x-approval-status": "proposed-subset",
+        "x-approval-status": "approved-subset",
         "parameters": [
           {
             "name": "from",
@@ -1243,7 +1243,7 @@
       "get": {
         "operationId": "getapiv2observationsid",
         "x-required-scope": "capture:read",
-        "x-approval-status": "provisional-operation-schema-unapproved",
+        "x-approval-status": "provisional-operation-implementation-blocked",
         "x-owner-scoped": true,
         "parameters": [
           {
@@ -1438,7 +1438,7 @@
       "get": {
         "operationId": "getapiv2observationsidrevisions",
         "x-required-scope": "evidence:read",
-        "x-approval-status": "provisional-operation-schema-unapproved",
+        "x-approval-status": "provisional-operation-implementation-blocked",
         "x-owner-scoped": true,
         "parameters": [
           {
@@ -1651,7 +1651,7 @@
       "get": {
         "operationId": "getapiv2eventsid",
         "x-required-scope": "evidence:read",
-        "x-approval-status": "provisional-operation-schema-unapproved",
+        "x-approval-status": "provisional-operation-implementation-blocked",
         "x-owner-scoped": true,
         "parameters": [
           {
@@ -1846,7 +1846,7 @@
       "get": {
         "operationId": "getapiv2episodes",
         "x-required-scope": "evidence:read",
-        "x-approval-status": "provisional-operation-schema-unapproved",
+        "x-approval-status": "provisional-operation-implementation-blocked",
         "x-owner-scoped": true,
         "parameters": [
           {
@@ -2091,7 +2091,7 @@
       "get": {
         "operationId": "getapiv2episodesid",
         "x-required-scope": "evidence:read",
-        "x-approval-status": "provisional-operation-schema-unapproved",
+        "x-approval-status": "provisional-operation-implementation-blocked",
         "x-owner-scoped": true,
         "parameters": [
           {
@@ -2286,7 +2286,7 @@
       "get": {
         "operationId": "getapiv2financialtransactions",
         "x-required-scope": "finance:read",
-        "x-approval-status": "provisional-operation-schema-unapproved",
+        "x-approval-status": "provisional-operation-implementation-blocked",
         "x-owner-scoped": true,
         "parameters": [
           {
@@ -2531,7 +2531,7 @@
       "post": {
         "operationId": "postapiv2corrections",
         "x-required-scope": "corrections:write",
-        "x-approval-status": "provisional-operation-schema-unapproved",
+        "x-approval-status": "provisional-operation-implementation-blocked",
         "x-owner-scoped": true,
         "parameters": [],
         "responses": {
@@ -2737,7 +2737,7 @@
       "get": {
         "operationId": "getapiv2export",
         "x-required-scope": "privacy:export",
-        "x-approval-status": "provisional-operation-schema-unapproved",
+        "x-approval-status": "provisional-operation-implementation-blocked",
         "x-owner-scoped": true,
         "parameters": [
           {
@@ -2972,7 +2972,7 @@
       "post": {
         "operationId": "postapiv2queries",
         "x-required-scope": "intelligence:read",
-        "x-approval-status": "provisional-operation-schema-unapproved",
+        "x-approval-status": "provisional-operation-implementation-blocked",
         "x-owner-scoped": true,
         "parameters": [],
         "responses": {
@@ -3178,7 +3178,7 @@
       "get": {
         "operationId": "getapiv2queriesid",
         "x-required-scope": "intelligence:read",
-        "x-approval-status": "provisional-operation-schema-unapproved",
+        "x-approval-status": "provisional-operation-implementation-blocked",
         "x-owner-scoped": true,
         "parameters": [
           {
@@ -3373,7 +3373,7 @@
       "post": {
         "operationId": "postapiv2connectorsemailauthorize",
         "x-required-scope": "connectors:write",
-        "x-approval-status": "provisional-operation-schema-unapproved",
+        "x-approval-status": "provisional-operation-implementation-blocked",
         "x-owner-scoped": true,
         "parameters": [],
         "responses": {
@@ -3569,7 +3569,7 @@
       "get": {
         "operationId": "getapiv2connectorsemailcallback",
         "x-required-scope": "oauth:callback",
-        "x-approval-status": "provisional-operation-schema-unapproved",
+        "x-approval-status": "provisional-operation-implementation-blocked",
         "x-owner-scoped": false,
         "parameters": [
           {
@@ -3779,7 +3779,7 @@
       "post": {
         "operationId": "postapiv2connectorsidrevoke",
         "x-required-scope": "connectors:write",
-        "x-approval-status": "provisional-operation-schema-unapproved",
+        "x-approval-status": "provisional-operation-implementation-blocked",
         "x-owner-scoped": true,
         "parameters": [
           {

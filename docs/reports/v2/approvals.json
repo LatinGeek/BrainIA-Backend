@@ -1,5 +1,5 @@
 {
-  "ledger_version": 3,
+  "ledger_version": 4,
   "gates": [
     {
       "gate": "G1",
@@ -22,25 +22,25 @@
       "artifacts": {
         "bundle_manifest": {
           "path": "contracts/brain-ai/2.0.0/SHA256SUMS.json",
-          "sha256": "666af99fd84d08d43217c380993abcd1540dac66e9a99f618b43a79b2bebfb55",
+          "sha256": "da2a989f6a607439bec3dabc21fbb4331efa58b2765f94e71a6b213ed2fd621c",
           "hash_definition": "SHA-256 of exact manifest bytes; manifest pins all 15 other bundle files, independently rehashed before writing."
         },
         "normative_contract": {
           "path": "docs/BRAIN_AI_V2_API_CONTRACT_v2.0.0.md",
-          "sha256": "461864a300fd3eb6a611f6f911ef5d111a8ba4e2e013b458858cf08ed31769f1",
+          "sha256": "ee74de0eb890b4acf69b4356daef978934c8553731636093184fb14aae3022a1",
           "equals_bundle_spec_bytes": true
         },
         "spec": {
           "path": "contracts/brain-ai/2.0.0/spec.md",
-          "sha256": "461864a300fd3eb6a611f6f911ef5d111a8ba4e2e013b458858cf08ed31769f1"
+          "sha256": "ee74de0eb890b4acf69b4356daef978934c8553731636093184fb14aae3022a1"
         },
         "schema": {
           "path": "contracts/brain-ai/2.0.0/schema.json",
-          "sha256": "5654550269532eb1515c0633d55515813cece9a096a6722c7a541807351e7113"
+          "sha256": "d34666c486a858097245e5ab66f0ecaf69c6caac5a39c7b01ded33eb83681cc3"
         },
         "openapi": {
           "path": "contracts/brain-ai/2.0.0/openapi.json",
-          "sha256": "40c4ea56ac31246863811712e555541e195e76c27b2a930ad566ce6f2610cc2c"
+          "sha256": "1763edc93243e8445cbe95fdf3c08207a2c247ff2b409ab27b2571a89be6990d"
         },
         "fixtures": {
           "path": "contracts/brain-ai/2.0.0/fixtures.json",
@@ -48,7 +48,7 @@
         },
         "open_items": {
           "path": "contracts/brain-ai/2.0.0/open-items.json",
-          "sha256": "a9bbd64880170914b1e98bac80abce77da21cf66a65b303f8716c158fd5e7cf5"
+          "sha256": "11858ffc3b7b4d66d4174c82581e9e4ff2fdd9e5d567a8d5496d177039df7d68"
         }
       },
       "evidence_references": [
@@ -64,7 +64,7 @@
         "open_decision_count": 0,
         "all_open_fields_decided": false,
         "owner_decisions_resolved": 30,
-        "note": "The B02-r3 bundle encodes all owner decisions and passed independent review. Mobile API reviewer sign-off is still required before mobile implementation consumes this revision.",
+        "note": "B02-r4 is a metadata-only reseal of the approved B02-r3 bundle. The wire contract approved at 666af99f…bfb55 is unchanged; the bundle hash is now da2a989f…621c. Mobile must re-import the resealed bytes.",
         "mobile_api_review_required": false,
         "mobile_api_review_status": "signed-off-with-conditions for M01/M02; device/Play/signing/live-v2 remain blocked"
       },
@@ -795,7 +795,7 @@
         "operation_implementation_blocked": true,
         "capabilities_enabled_by_this_record": [],
         "production_or_destructive_approved": false,
-        "contract_bundle_sha256": "666af99fd84d08d43217c380993abcd1540dac66e9a99f618b43a79b2bebfb55",
+        "contract_bundle_sha256": "da2a989f6a607439bec3dabc21fbb4331efa58b2765f94e71a6b213ed2fd621c",
         "follow_up": "B02-r3 bundle published and independently reviewed. 13 operations remain implementation-blocked until their implementation tasks and gate evidence exist."
       },
       "revision_confirmation": {
@@ -803,7 +803,7 @@
         "confirmed_at": "2026-10-18",
         "approver": "repository owner (user)",
         "method": "explicit session confirmation of the resealed bundle hash and the six chosen wire values",
-        "bundle_sha256": "666af99fd84d08d43217c380993abcd1540dac66e9a99f618b43a79b2bebfb55",
+        "bundle_sha256": "da2a989f6a607439bec3dabc21fbb4331efa58b2765f94e71a6b213ed2fd621c",
         "independent_review": "docs/reports/v2/B02-verification-r2.md",
         "implementation_report": "docs/reports/v2/B02-r3.md",
         "confirmed_values": {
@@ -819,8 +819,61 @@
         "operations_implementation_blocked": 13,
         "deletion_operation_excluded": true,
         "production_or_destructive_approved": false
+      },
+      "metadata_reseal": {
+        "revision": "B02-r4",
+        "resealed_at": "2026-10-18",
+        "parent_bundle_sha256": "666af99fd84d08d43217c380993abcd1540dac66e9a99f618b43a79b2bebfb55",
+        "bundle_sha256": "da2a989f6a607439bec3dabc21fbb4331efa58b2765f94e71a6b213ed2fd621c",
+        "reason": "metadata-only status alignment; no wire, schema, OpenAPI or fixture semantics changed",
+        "report": "docs/reports/v2/B02-r4.md",
+        "operations_implementation_blocked": 13,
+        "deletion_operation_excluded": true
       }
+    },
+    {
+      "gate": "G0",
+      "status": "owner_authorized_pending_evidence",
+      "authorized_at": "2026-10-18",
+      "authorization": {
+        "approver": "repository owner (user)",
+        "method": "explicit session confirmation",
+        "scope": "Owner mapping and G0 authorization; evidence collection still pending for DB binding, restore, host limits, signing custody and device matrix."
+      },
+      "artifacts": {
+        "backend_snapshot": "docs/reports/v2/snapshot-2026-10-18-backend.json",
+        "backend_manifest_sha256": "f537e1c6b375fda662cf20b1ed0c9339c7f1170085072d5eff8793b63afba8a3",
+        "mobile_snapshot": "docs/reports/v2/snapshot-2026-10-18-mobile.json",
+        "mobile_manifest_sha256": "a8219cc11e3538f35757230cfea602430dcbaefd55e9f99e00584bea179dd727"
+      },
+      "signing_decision": "Accept and document existing APK signing; no key rotation or history rewrite. Google Play developer account is closed; distribution is APK sideload for personal use. Play continuity/upload-key attestation is not applicable.",
+      "conditions": [
+        "G0 evidence report completion",
+        "DB binding and restore evidence",
+        "effective host limits and cron history",
+        "device evidence from connected phone (option A)",
+        "independent G0 verification"
+      ]
+    },
+    {
+      "gate": "PRODUCTION",
+      "status": "owner_approved_pending_gate_evidence",
+      "authorized_at": "2026-10-18",
+      "authorization": {
+        "approver": "repository owner (user)",
+        "method": "explicit session confirmation",
+        "scope": "Schema migration, backend deployment with flags off, APK distribution, canary/read enablement, and rollback owner selection.",
+        "production_or_destructive_approved": true,
+        "not_an_instruction_to_deploy_now": true
+      },
+      "constraints": [
+        "Do not deploy until G0 and G2 evidence is complete and independently verified.",
+        "All v2 feature gates stay false at deploy time.",
+        "APK sideload only; no Play release.",
+        "Destructive cleanup remains deferred.",
+        "Record the exact deployed commit, migration ledger and APK hash at deploy time."
+      ]
     }
   ],
-  "updated_at": "2026-10-18T12:00:00Z"
+  "updated_at": "2026-10-18T22:00:00Z"
 }

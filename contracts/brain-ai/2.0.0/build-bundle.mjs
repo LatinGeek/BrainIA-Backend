@@ -214,11 +214,11 @@ callbackQuery.oneOf = [{ required: ['code'], properties: { code: callbackQuery.p
 defs.EmailCallbackQuery = callbackQuery;
 defs.ConnectorRevokeRequest = obj({ expectedVersion: ref('Version'), deleteCapturedData: bool });
 defs.ConnectorRevokeResponse = obj({ connectorId: ref('Id'), status: { const: 'revoked' }, version: ref('Version'), revokedAt: ref('UTC'), deleteCapturedData: bool, deletionId: nullable(ref('Id')) });
-const schema = { $schema: 'https://json-schema.org/draft/2020-12/schema', $id: 'https://brainia.invalid/contracts/brain-ai/2.0.0/schema.json', title: 'Brain AI 2.0.0 proposed revision B02-r3; see open-items.json', $defs: defs };
+const schema = { $schema: 'https://json-schema.org/draft/2020-12/schema', $id: 'https://brainia.invalid/contracts/brain-ai/2.0.0/schema.json', title: 'Brain AI 2.0.0 approved revision B02-r3; see open-items.json', $defs: defs };
 write('schema.json', schema);
 const items = [];
 const resolved = (name, where, why, decision, resolutionDetail, schemas = [], operations = []) => items.push({ name, where, why, decision, status: 'resolved', resolution: 'owner_confirmed_encoded', resolutionDetail, resolvedAt: '2026-10-17', schemas, operations });
-const provisional = (operation, why, fixtures) => items.push({ name: operation, where: operation, why: why + ' are not fully specified in the source draft.', decision: 'Approve full strict request/response schemas and semantics before implementing this operation.', status: 'schema_published_pending_review', resolution: 'provisional_contract_authorization', resolutionDetail: 'Strict schema, enums, pagination, error variants and positive/negative fixtures published in revision B02-r3. Implementation and mobile consumption remain blocked until this revision passes contracts:verify and independent review.', resolvedAt: '2026-10-17', schemas: [], operations: [operation], fixtures, implementationBlocked: true });
+const provisional = (operation, why, fixtures) => items.push({ name: operation, where: operation, why: why + ' are not fully specified in the source draft.', decision: 'Approve full strict request/response schemas and semantics before implementing this operation.', status: 'provisional_operations_implementation_blocked', resolution: 'provisional_contract_authorization', resolutionDetail: 'Strict schema, enums, pagination, error variants and positive/negative fixtures published in revision B02-r3 and approved with the ledger v3 B02-r3 bundle. The operation remains implementation-blocked: implementation and mobile consumption require their own gate evidence and are not authorized by this approval.', resolvedAt: '2026-10-17', schemas: [], operations: [operation], fixtures, implementationBlocked: true });
 resolved('activity.marker', 'content.type=activity', 'Observed/inferred marker has no field name or wire type; confidence/interval constraints incomplete.', 'Approve exact marker name/enum, signal types and interval/confidence semantics; Activity stays false.', 'activityMarker enum observed|inferred; closed signalTypes allowlist still|walking|running|cycling|driving|transit|unknown; interval {start,end} with end>=start; confidence 0..1. Activity capability stays false.', ['Activity']);
 resolved('email.addresses', 'Email.sender and Email.recipients[]', 'Address shape (string or structured) and validation are unspecified.', 'Approve sender and recipient DTOs; Email sender remains false.', 'Structured {address, displayName?} with format email and maxLength 320 for address, maxLength 256 for displayName. Email capability stays false.', ['Email', 'EmailAddress']);
 resolved('attachmentRefs.items', 'Email.attachmentRefs / ReceiptContent.attachmentRefs', 'Attachment reference DTO and authorization/expiry are unspecified.', 'Approve exact attachment reference DTO and lifecycle; only empty lists currently accepted.', 'Opaque {refId, provider?, mimeType?, sizeBytes?, sha256?, expiresAt?} DTO remains documented, but both attachmentRefs arrays are empty-only (maxItems: 0) until a connector is approved; no credentialed URLs. Non-empty arrays are rejected.', ['AttachmentRef', 'Email', 'ReceiptContent']);
@@ -250,29 +250,40 @@ resolved('Fact', 'Fact DTO (not an endpoint)', 'uncertainty candidates/value var
 resolved('enrollmentAndRetention', 'Out-of-band admin device/source issuance and PRD retention defaults', 'No public enrollment/rotation/logout wire flow approved; retention defaults require privacy owner approval.', 'Approve admin issuance/revocation ownership, source/device lifecycle, explicit empty-selection consent and dated retention decisions.', 'Device-to-owner credential registry for first release; owner-controlled audited admin issuance/revocation; no public enrollment API; explicit selection with empty selection capturing nothing. Retention defaults remain as recorded in the G1 ledger and do not create wire fields in this revision.', []);
 resolved('summary.filters', 'GET /api/v2/financial/summary query', 'conversionTo/fxRateId pairing specified, but time bounds/defaults and allowed conversion currencies incomplete.', 'Approve required time range, bound ordering and currency/rate registry; subset requires from/to.', 'from and to are required, from<=to, max range 366 days; conversion requires fxRateId; currency must be in the approved registry (confirmed UYU/USD subset); no defaults. Encoded by FinancialSummaryQuery and summary query fixtures.', ['FinancialSummary', 'FinancialSummaryQuery', 'CurrencyRegistry']);
 write('open-items.json', {
-  status: 'PROPOSED_REVISION_PENDING_REVIEW',
-  approvalReady: false,
+  status: 'APPROVED_REVISION_PROVISIONAL_OPERATIONS_IMPLEMENTATION_BLOCKED',
+  approvalReady: true,
+  approval: {
+    gate: 'G1',
+    ledger: 'docs/reports/v2/approvals.json',
+    ledgerVersion: 3,
+    gateStatus: 'owner_approved_b02_r3_with_provisional_capabilities',
+    approvedRevision: 'B02-r3',
+    approvedBundleSha256: '666af99fd84d08d43217c380993abcd1540dac66e9a99f618b43a79b2bebfb55',
+    confirmedAt: '2026-10-18',
+    reseal: 'B02-r4 metadata-only reseal; no wire, schema, OpenAPI path or fixture semantics changed',
+    operationsApprovedForImplementation: false
+  },
   revision: 'B02-r3',
   openDecisionCount: 0,
   resolvedDecisionCount: items.filter(x => x.status === 'resolved').length,
-  provisionalOperationCount: items.filter(x => x.status === 'schema_published_pending_review').length,
+  provisionalOperationCount: items.filter(x => x.status === 'provisional_operations_implementation_blocked').length,
   items,
   excludedOperations: ['POST /api/v2/deletions'],
   intentionallyExcludedOperations: [{ operation: 'POST /api/v2/deletions', reason: 'Destructive deletion creation remains excluded from OpenAPI and mobile implementation until a deletion worker and separate owner approval exist. Its response DTO is published for future structural review.' }],
   blockedMobileTasks: ['M07', 'activity capture', 'email capture', 'connectors'],
-  rule: 'Resolved decisions are encoded, not approved. Provisional operation schemas authorise no implementation until contracts:verify and independent review complete.'
+  rule: 'This bundle is approved under ledger v3 for revision B02-r3. The seventeen wire decisions are encoded and the thirteen provisional operation schemas authorise no implementation; POST /api/v2/deletions remains excluded. Schema validity does not certify runtime behavior.'
 });
 const response = name => ({ description: name, content: { 'application/json': { schema: { $ref: `./schema.json#/$defs/${name}` } } } });
 const parameter = (name, s, required = false, loc = 'query') => ({ name, in: loc, required, schema: s });
 const paths = {};
 function operation(route, method, scope, request, output, statuses = [200], parameters = []) {
- const op = { operationId: method + route.replace(/[^a-zA-Z0-9]/g, ''), 'x-required-scope': scope, 'x-approval-status': 'proposed-subset', parameters, responses: Object.fromEntries(statuses.map(s => [s, response(output)])) };
+ const op = { operationId: method + route.replace(/[^a-zA-Z0-9]/g, ''), 'x-required-scope': scope, 'x-approval-status': 'approved-subset', parameters, responses: Object.fromEntries(statuses.map(s => [s, response(output)])) };
  if (request) op.requestBody = { required: true, content: { 'application/json': { schema: { $ref: `./schema.json#/$defs/${request}` } } } };
  for (const status of [400, 401, 403, 404, 409, 413, 422, 429, 503]) op.responses[status] = { ...response('Error'), headers: { 'X-Request-Id': { schema: str }, ...(status === 429 || status === 503 ? { 'Retry-After': { required: true, schema: str } } : {}) } };
  paths[route] ??= {}; paths[route][method] = op;
 }
 function addOp(route, method, config) {
- const op = { operationId: method + route.replace(/[^a-zA-Z0-9]/g, ''), 'x-required-scope': config.scope, 'x-approval-status': 'provisional-operation-schema-unapproved', 'x-owner-scoped': config.ownerScoped !== false, parameters: config.parameters || [], responses: {} };
+ const op = { operationId: method + route.replace(/[^a-zA-Z0-9]/g, ''), 'x-required-scope': config.scope, 'x-approval-status': 'provisional-operation-implementation-blocked', 'x-owner-scoped': config.ownerScoped !== false, parameters: config.parameters || [], responses: {} };
  if (config.request) op.requestBody = { required: true, content: { 'application/json': { schema: { $ref: `./schema.json#/$defs/${config.request}` } } } };
  for (const [status, value] of Object.entries(config.success)) op.responses[status] = typeof value === 'string' ? response(value) : value;
  for (const status of config.errorStatuses || [400, 401, 403, 404, 409, 413, 422, 429, 503]) op.responses[status] = { ...response('Error'), headers: { 'X-Request-Id': { schema: str }, ...(status === 429 || status === 503 ? { 'Retry-After': { required: true, schema: str } } : {}) } };
@@ -311,7 +322,7 @@ Object.assign(paths['/api/v2/connectors/email/callback'].get, {
   'x-query-constraints': ['state is always required', 'exactly one of code or error must be present', 'a provider error callback omits code and returns a 302 redirect to the allowlisted route', 'Location must use the brainia:// scheme and must not contain a token']
 });
 addOp('/api/v2/connectors/{id}/revoke', 'post', { scope: 'connectors:write', request: 'ConnectorRevokeRequest', success: { 200: 'ConnectorRevokeResponse' }, parameters: [pathId] });
-write('openapi.json', { openapi: '3.1.0', jsonSchemaDialect: 'https://json-schema.org/draft/2020-12/schema', info: { title: 'Brain AI proposed resolved API revision B02-r2', version: '2.0.0', description: 'UNAPPROVED revision. Resolved field decisions and provisional operation schemas; see open-items.json. Schema validity does not imply consent, ownership, source eligibility, implementation or runtime support.' }, security: [{ deviceBearer: [] }], components: { securitySchemes: { deviceBearer: { type: 'http', scheme: 'bearer', description: 'Revocable owner/device-bound opaque credential; out-of-band issuance, no public enrollment API.' } } }, 'x-open-items': './open-items.json', paths });
+write('openapi.json', { openapi: '3.1.0', jsonSchemaDialect: 'https://json-schema.org/draft/2020-12/schema', info: { title: 'Brain AI 2.0.0 approved revision B02-r3 (provisional operations implementation-blocked)', version: '2.0.0', description: 'Owner-approved revision B02-r3 (ledger v3). Resolved field decisions and provisional operation schemas; see open-items.json. Provisional operations remain implementation-blocked; schema validity does not imply ownership, source eligibility, implementation or runtime support.' }, security: [{ deviceBearer: [] }], components: { securitySchemes: { deviceBearer: { type: 'http', scheme: 'bearer', description: 'Revocable owner/device-bound opaque credential; out-of-band issuance, no public enrollment API.' } } }, 'x-open-items': './open-items.json', paths });
 const ajv = new Ajv({ strict: true, code: { source: true }, allErrors: true });
 addFormats(ajv);
 ajv.addSchema(schema);

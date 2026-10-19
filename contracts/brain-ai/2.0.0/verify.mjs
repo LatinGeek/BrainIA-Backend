@@ -71,16 +71,18 @@ for (const [name, definition] of Object.entries(schema.$defs)) {
   if (definition?.type === 'object') check(definition.additionalProperties === false, 'strict object ' + name);
   if (definition?.oneOf) for (const variant of definition.oneOf) if (variant?.type === 'object') check(variant.additionalProperties === false, 'strict variant ' + name);
 }
-check(open.approvalReady === false && open.status === 'PROPOSED_REVISION_PENDING_REVIEW', 'approval cannot silently pass');
+check(open.approvalReady === true && open.status === 'APPROVED_REVISION_PROVISIONAL_OPERATIONS_IMPLEMENTATION_BLOCKED', 'approved ledger status');
+check(open.approval?.ledgerVersion === 3 && open.approval?.approvedRevision === 'B02-r3' && /^[0-9a-f]{64}$/.test(open.approval?.approvedBundleSha256 || '') && open.approval?.operationsApprovedForImplementation === false, 'approval metadata matches ledger v3');
+check(open.approval?.approvedBundleSha256 !== sha256(fs.readFileSync(path.join(dir, 'SHA256SUMS.json'))), 'reseal supersedes the approved hash instead of silently reusing it');
 check(open.revision === 'B02-r3', 'revision identifier');
 check(open.openDecisionCount === 0 && !open.items.some(x => x.status === 'open'), 'no open decisions remain');
 const requiredResolved = ['activity.marker', 'email.addresses', 'attachmentRefs.items', 'error.details', 'receipt.processing', 'capabilities.auth', 'capabilities.featureGates', 'timestamp.presence', 'raw.security', 'batch.minimumAndMalformedIdentity', 'decimal.storageAndFX', 'currency.registry', 'deletion.creationResponse', 'deletion.remainingCategories', 'Fact', 'enrollmentAndRetention', 'summary.filters'];
 for (const name of requiredResolved) check(open.items.some(x => x.name === name && x.status === 'resolved' && typeof x.resolutionDetail === 'string' && x.resolutionDetail.length > 0), 'resolved decision ' + name);
 const provisional = ['GET /api/v2/observations/{id}', 'GET /api/v2/observations/{id}/revisions', 'GET /api/v2/events/{id}', 'GET /api/v2/episodes', 'GET /api/v2/episodes/{id}', 'GET /api/v2/financial/transactions', 'POST /api/v2/corrections', 'GET /api/v2/export', 'POST /api/v2/queries', 'GET /api/v2/queries/{id}', 'POST /api/v2/connectors/email/authorize', 'GET /api/v2/connectors/email/callback', 'POST /api/v2/connectors/{id}/revoke'];
-for (const operation of provisional) check(open.items.some(x => x.name === operation && x.status === 'schema_published_pending_review' && x.implementationBlocked === true && Array.isArray(x.fixtures) && x.fixtures.length > 0), 'provisional operation ' + operation);
+for (const operation of provisional) check(open.items.some(x => x.name === operation && x.status === 'provisional_operations_implementation_blocked' && x.implementationBlocked === true && Array.isArray(x.fixtures) && x.fixtures.length > 0), 'provisional operation ' + operation);
 for (const item of open.items) {
   check(['name', 'where', 'why', 'decision'].every(k => typeof item[k] === 'string' && item[k].length > 0), 'actionable item ' + item.name);
-  check(['resolved', 'schema_published_pending_review'].includes(item.status), 'item status ' + item.name);
+  check(['resolved', 'provisional_operations_implementation_blocked'].includes(item.status), 'item status ' + item.name);
   for (const name of item.schemas) check(Object.hasOwn(schema.$defs, name), 'item schema exists ' + name);
 }
 check(schema.$defs.Activity.properties.activityMarker.enum.join(',') === 'observed,inferred', 'activity marker decision encoded');
@@ -180,4 +182,4 @@ for (const c of fixtures.moneyCases) { check(scaled(c.refund) - scaled(c.expense
 for (const c of fixtures.deferredCases) check(open.items.some(item => item.name === c.blockedBy) && c.runtimeVerified === false, 'deferred runtime scenario ' + c.name);
 console.log(`PASS ${checks} contract checks; ${fixtures.schemaCases.length} positive/negative schema+semantic fixtures; ${fixtures.identitySequences.length} identity sequences.`);
 console.log('Bundle manifest SHA-256: ' + sha256(fs.readFileSync(path.join(dir, 'SHA256SUMS.json'))));
-console.log('PROPOSED REVISION PENDING REVIEW: ' + open.openDecisionCount + ' open G1 decisions; ' + open.provisionalOperationCount + ' provisional operation schemas; deletion creation remains excluded. Pure fixture oracles do not certify runtime privacy, database, native capture or grounded synthesis.');
+console.log('APPROVED REVISION / PROVISIONAL OPERATIONS IMPLEMENTATION-BLOCKED: ' + open.openDecisionCount + ' open G1 decisions; ' + open.provisionalOperationCount + ' provisional operation schemas; deletion creation remains excluded. Pure fixture oracles do not certify runtime privacy, database, native capture or grounded synthesis.');

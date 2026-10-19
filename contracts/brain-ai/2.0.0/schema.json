@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://brainia.invalid/contracts/brain-ai/2.0.0/schema.json",
-  "title": "Brain AI 2.0.0 proposed revision B02-r3; see open-items.json",
+  "title": "Brain AI 2.0.0 approved revision B02-r3; see open-items.json",
   "$defs": {
     "Id": {
       "type": "string",

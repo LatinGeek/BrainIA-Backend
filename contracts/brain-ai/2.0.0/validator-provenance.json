@@ -1,5 +1,5 @@
 {
-  "schemaSha256": "5654550269532eb1515c0633d55515813cece9a096a6722c7a541807351e7113",
+  "schemaSha256": "d34666c486a858097245e5ab66f0ecaf69c6caac5a39c7b01ded33eb83681cc3",
   "compiler": "ajv 8.20.0",
   "formats": "ajv-formats 3.0.1",
   "bundler": "esbuild 0.28.1"

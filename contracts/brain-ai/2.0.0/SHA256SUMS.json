@@ -2,20 +2,20 @@
   "algorithm": "sha256",
   "encoding": "exact UTF-8 file bytes; no newline normalization",
   "files": {
-    "README.md": "57d6743a99881bb988513fc58c1004efbcf3751f0b620b6dce837c88772f6af9",
+    "README.md": "a40d4b1dea6f9efe5b385fdbb3c67b8ccb745f6f679c416f6a906be80a20eead",
     "ajv-formats.LICENSE": "9df3bb69929a3b650ed73b3bfa1756725aaff0ac296461605753547004eafeaf",
     "ajv.LICENSE": "a05350a88e318e4f5f2c2a1ff1e2e88daa4dd38e6e78b71cccae422bdc762cc3",
-    "build-bundle.mjs": "af4650faa553585a3c85a740e728fd5f217b2d6f31ef9200b4cf44a764d3b208",
+    "build-bundle.mjs": "d8e066053f4623ccb2175242d37e81b162f060fcabb082e886af5a0c458ff47b",
     "build-fixtures.mjs": "1b25ba03234e0ae442c0b191930b178bd79bc4d615d02e4f56f002eae94ce4a5",
     "canonical.mjs": "6be30ad2aa4c48ce3bcbe3f76eb9677592a19c9058e00053116b36c48951c61a",
     "fixtures.json": "cfc5b5b063438cb5733de445e971249f6f28b3cfbdaebe5e526b4211c9b1b541",
-    "open-items.json": "a9bbd64880170914b1e98bac80abce77da21cf66a65b303f8716c158fd5e7cf5",
-    "openapi.json": "40c4ea56ac31246863811712e555541e195e76c27b2a930ad566ce6f2610cc2c",
-    "schema.json": "5654550269532eb1515c0633d55515813cece9a096a6722c7a541807351e7113",
+    "open-items.json": "11858ffc3b7b4d66d4174c82581e9e4ff2fdd9e5d567a8d5496d177039df7d68",
+    "openapi.json": "1763edc93243e8445cbe95fdf3c08207a2c247ff2b409ab27b2571a89be6990d",
+    "schema.json": "d34666c486a858097245e5ab66f0ecaf69c6caac5a39c7b01ded33eb83681cc3",
     "seal.mjs": "9618ae503a31ba6bcd1143409f7d687290ff139161f9e55ec65c7ad1d991ad1b",
-    "spec.md": "461864a300fd3eb6a611f6f911ef5d111a8ba4e2e013b458858cf08ed31769f1",
-    "validator-provenance.json": "f75145fbfe85ff53ec58db005ba92fa05bc340bc88ecf03aba4cdb3aebc4d171",
+    "spec.md": "ee74de0eb890b4acf69b4356daef978934c8553731636093184fb14aae3022a1",
+    "validator-provenance.json": "d251968620f5acb98b70d972a51fa0be91ac183b6a9ab04ecf4d91e956e1e83d",
     "validators.cjs": "f051ad351d0105e5ef5c19dc54946b482c1667872c756041596765fed9f960db",
-    "verify.mjs": "fa1617d25bd201af472e03cf49be366250da45038b9783efe647375f7bdc0203"
+    "verify.mjs": "14e54b354d0be9086dbb0ba58aefe3ade23df3ee14b0cf91d971738005c1d582"
   }
 }
