@@ -247,7 +247,14 @@ export async function findCanonicalMerchantByValue(db: Queryable, value: string)
   return result.rows[0] ? loadCanonicalEntityById(db, result.rows[0].id) : null;
 }
 
-export async function upsertEntity(db: Queryable, draft: EntityDraft): Promise<EntityRecord> {
+export async function upsertEntity(
+  db: Queryable,
+  draft: EntityDraft,
+  options: { ownerId?: string | null } = {},
+): Promise<EntityRecord> {
+  // The owner applies only to a newly inserted personal identity. Public
+  // taxonomy stays ownerless, and an existing row never changes owner here.
+  const ownerId = draft.type === "domain" || draft.type === "concept" ? null : options.ownerId ?? null;
   const result = await db.query<{ id: string }>(
     `
       insert into entities (
@@ -257,7 +264,8 @@ export async function upsertEntity(db: Queryable, draft: EntityDraft): Promise<E
         normalized_value,
         description,
         identity_source,
-        metadata
+        metadata,
+        owner_id
       ) values (
         next_sequence_value('entity'),
         $1,
@@ -265,7 +273,8 @@ export async function upsertEntity(db: Queryable, draft: EntityDraft): Promise<E
         $3,
         $4,
         $5,
-        $6::jsonb
+        $6::jsonb,
+        $7
       )
       on conflict (type, normalized_value)
       do update set
@@ -279,7 +288,7 @@ export async function upsertEntity(db: Queryable, draft: EntityDraft): Promise<E
       returning
         id
     `,
-    [draft.type, draft.value, draft.normalizedValue, draft.description?.trim() ?? "", draft.identitySource ?? "extracted", JSON.stringify(draft.metadata ?? {})],
+    [draft.type, draft.value, draft.normalizedValue, draft.description?.trim() ?? "", draft.identitySource ?? "extracted", JSON.stringify(draft.metadata ?? {}), ownerId],
   );
 
   const storedEntity = await loadCanonicalEntityById(db, result.rows[0].id);

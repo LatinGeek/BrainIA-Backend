@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { pool } from "./postgres.js";
 import { mergeEntities, resolveCanonicalEntityId, upsertEntity } from "./entity-repository.js";
+import { semanticMergeSkipReason } from "./semantic-repository.js";
 
 type Queryable = Pick<typeof pool, "query">;
 
@@ -408,6 +409,17 @@ export async function resolveEntityReview(
   }
 
   const existingAlias = await findEntityAliasByNormalizedAlias(db, normalizeAlias(input.alias));
+  const skipMerge = async (reason: string) => {
+    await db.query(`update entity_review_queue set reason = $2, updated_at = now() where id = $1`, [reviewId, reason]);
+    return { reviewId, entityId: review.entityId, alias: null, status: "pending" as const, alreadyResolved: false, skipReason: reason };
+  };
+  // Validate every participating identity before the first merge. In particular,
+  // an existing alias may collide even when the explicitly selected target fits.
+  for (const targetId of [input.targetEntityId, existingAlias?.entityId]) {
+    if (!targetId) continue;
+    const reason = await semanticMergeSkipReason(db, review.entityId, targetId);
+    if (reason) return skipMerge(reason);
+  }
   let aliasEntityId = review.entityId;
   const targetSelected = Boolean(input.targetEntityId);
 
@@ -419,35 +431,46 @@ export async function resolveEntityReview(
       throw new Error("Both the review entity and selected entity must exist before an alias can be unified");
     }
 
-    if (reviewCanonicalId !== targetCanonicalId) {
-      await mergeEntities(db, reviewCanonicalId, targetCanonicalId, {
-        reason: "review_entity_match",
-        confidence: 0.96,
-      });
-    }
-
     aliasEntityId = targetCanonicalId;
 
-    const targetEntity = await db.query<{ type: string; value: string; description: string }>(
-      `select type, value, description from entities where id = $1`,
+    const targetEntity = await db.query<{ type: string; value: string; description: string; ownerId: string | null }>(
+      `select type, value, description, owner_id as "ownerId" from entities where id = $1`,
       [targetCanonicalId],
     );
     const current = targetEntity.rows[0];
+    let friendlyEntity: Awaited<ReturnType<typeof upsertEntity>> | null = null;
     if (current && normalizeAlias(current.value) !== normalizeAlias(input.alias)) {
-      const friendlyEntity = await upsertEntity(db, {
+      const existingFriendly = await db.query<{ id: string }>(`
+        select id from entities where type = $1 and normalized_value = $2 limit 1
+      `, [current.type, normalizeAlias(input.alias)]);
+      if (existingFriendly.rows[0]) {
+        const reason = await semanticMergeSkipReason(db, targetCanonicalId, existingFriendly.rows[0].id);
+        if (reason) return skipMerge(reason);
+      }
+      friendlyEntity = await upsertEntity(db, {
         type: current.type,
         value: input.alias.trim(),
         normalizedValue: normalizeAlias(input.alias),
         description: current.description,
         identitySource: "user",
         metadata: { source: "review_friendly_name", preferred: true },
-      });
+      }, { ownerId: current.ownerId });
       if (friendlyEntity.id !== targetCanonicalId) {
-        await mergeEntities(db, targetCanonicalId, friendlyEntity.id, {
-          reason: "review_friendly_name",
-          confidence: 1,
-        });
+        const reason = await semanticMergeSkipReason(db, targetCanonicalId, friendlyEntity.id);
+        if (reason) return skipMerge(reason);
       }
+    }
+    if (reviewCanonicalId !== targetCanonicalId) {
+      await mergeEntities(db, reviewCanonicalId, targetCanonicalId, {
+        reason: "review_entity_match",
+        confidence: 0.96,
+      });
+    }
+    if (friendlyEntity) {
+      if (friendlyEntity.id !== targetCanonicalId) await mergeEntities(db, targetCanonicalId, friendlyEntity.id, {
+        reason: "review_friendly_name",
+        confidence: 1,
+      });
       aliasEntityId = friendlyEntity.id;
     }
   }

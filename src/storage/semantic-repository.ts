@@ -2,12 +2,29 @@ import { randomUUID } from "node:crypto";
 import { ontologyDraft, LIFE_DOMAINS, ONTOLOGY_PARENT_RELATIONS, SEEDED_CONCEPTS, SEMANTIC_GOVERNANCE_VERSION, SEMANTIC_PROMPT_VERSION } from "../domain/ontology.js";
 import { normalizeEntityValue, type EntityDraft } from "../domain/entities.js";
 import { normalizeRelationType, type RelationDraft } from "../domain/relations.js";
-import { upsertEntity } from "./entity-repository.js";
+import { loadCanonicalEntityById, resolveCanonicalEntityId, upsertEntity } from "./entity-repository.js";
 import { linkEventRelation, upsertRelation } from "./relation-repository.js";
 import { pool } from "./postgres.js";
 
 type Queryable = Pick<typeof pool, "query">;
 const RULE_ELIGIBLE_ENTITY_TYPES = new Set(["app", "merchant", "sender", "recipient", "email_message", "financial_event", "activity_instance"]);
+
+// Semantic callers must validate the current roots, not just model-supplied
+// types or IDs that may have been merged since a proposal was produced.
+export async function semanticMergeSkipReason(db: Queryable, sourceId: string, targetId: string) {
+  const sourceRootId = await resolveCanonicalEntityId(db, sourceId);
+  const targetRootId = await resolveCanonicalEntityId(db, targetId);
+  if (!sourceRootId || !targetRootId) throw new Error("Both entities must exist before they can be merged");
+  const result = await db.query<{ id: string; type: string; ownerId: string | null }>(`
+    select id, type, owner_id as "ownerId" from entities where id = any($1::text[])
+  `, [[sourceRootId, targetRootId]]);
+  const source = result.rows.find((row) => row.id === sourceRootId);
+  const target = result.rows.find((row) => row.id === targetRootId);
+  if (!source || !target) throw new Error("Both entities must exist before they can be merged");
+  if (source.type !== target.type) return "entity_type_mismatch" as const;
+  if (source.ownerId !== target.ownerId) return "entity_owner_mismatch" as const;
+  return null;
+}
 
 export type SemanticCandidate = {
   id: string; clientId: string | null; eventId: string | null; subjectEntityId: string | null;
@@ -56,23 +73,33 @@ export async function ensureOntology(db: Queryable, clientId: string | null) {
 export async function consolidateProviderIdentity(db: Queryable, draft: EntityDraft) {
   if (draft.type !== "app") return upsertEntity(db, draft);
   const canonical = await upsertEntity(db, draft);
-  // Older classifiers used several labels for the same installed app
-  // (source, application, app_name, and even notification/merchant).  An
-  // installed app is a provider identity, so retain one canonical app node and
-  // merge only non-ontology records with exactly the same normalized name.
-  const matches = await db.query<{ id: string }>(
-    `select entity.id from entities entity
+  // A shared name does not make a merchant, notification, or other identity an
+  // app. Keep taxonomy untouched and record incompatible legacy matches.
+  const matches = await db.query<{ id: string; type: string }>(
+    `select entity.id, entity.type from entities entity
+      join entities canonical on canonical.id = $2
       left join entity_merges merged on merged.alias_entity_id = entity.id
       where entity.normalized_value = $1
         and entity.type not in ('domain', 'concept')
+        and entity.owner_id is not distinct from canonical.owner_id
         and entity.id <> $2
         and merged.alias_entity_id is null`,
     [draft.normalizedValue, canonical.id],
   );
+  const skipped: Array<{ entityId: string; type: string; reason: string }> = [];
   for (const match of matches.rows) {
+    const reason = await semanticMergeSkipReason(db, match.id, canonical.id);
+    if (reason) {
+      skipped.push({ entityId: match.id, type: match.type, reason });
+      continue;
+    }
     const { mergeEntities } = await import("./entity-repository.js");
     await mergeEntities(db, match.id, canonical.id, { reason: "provider_identity_normalization", confidence: 1 });
   }
+  if (skipped.length) await db.query(`
+    update entities set metadata = metadata || jsonb_build_object('providerIdentityMergeSkips', $2::jsonb)
+    where id = $1
+  `, [canonical.id, JSON.stringify(skipped)]);
   return canonical;
 }
 
@@ -306,13 +333,36 @@ export async function resolveSemanticCandidate(db: Queryable, candidateId: strin
     await db.query(`update semantic_candidates set status = 'rejected', resolved_at = now(), updated_at = now() where id = $1`, [candidateId]);
     return { ...candidate, status: "rejected" as const };
   }
+  const skipMerge = async (reason: string) => {
+    const marker = `[Merge skipped: ${reason}]`;
+    const rationale = candidate.rationale?.includes(marker) ? candidate.rationale : `${candidate.rationale ?? ""} ${marker}`.trim();
+    await db.query(`update semantic_candidates set rationale = $2, updated_at = now() where id = $1`, [candidateId, rationale]);
+    return { ...candidate, rationale, skipReason: reason };
+  };
+  // A default merge target is the subject's own identity, so a newly created
+  // target inherits the subject root's owner. Other decisions keep public targets.
+  let mergeTargetOwnerId: string | null = null;
+  if (candidate.decisionKind === "merge" && candidate.subjectEntityId && !input.targetEntityId) {
+    const subject = await loadCanonicalEntityById(db, candidate.subjectEntityId);
+    if (subject && subject.type !== candidate.targetType) return skipMerge("entity_type_mismatch");
+    if (subject) {
+      const owner = await db.query<{ ownerId: string | null }>(`select owner_id as "ownerId" from entities where id = $1`, [subject.id]);
+      mergeTargetOwnerId = owner.rows[0]?.ownerId ?? null;
+      // Check an existing identity before upsert would rewrite its description.
+      const existing = await db.query<{ id: string }>(`select id from entities where type = $1 and normalized_value = $2`, [candidate.targetType, candidate.targetNormalizedValue]);
+      const reason = existing.rows[0] ? await semanticMergeSkipReason(db, subject.id, existing.rows[0].id) : null;
+      if (reason) return skipMerge(reason);
+    }
+  }
   const target = input.targetEntityId ? await db.query<{ id: string; type: string; value: string; normalizedValue: string }>(`select id, type, value, normalized_value as "normalizedValue" from entities where id = $1`, [input.targetEntityId]) : null;
-  const targetRecord = target?.rows[0] ?? await upsertEntity(db, { type: candidate.targetType, value: candidate.targetValue, normalizedValue: candidate.targetNormalizedValue, description: candidate.rationale ?? `A reviewed knowledge concept representing ${candidate.targetValue}.`, identitySource: "ai", metadata: { source: "semantic-review", governanceVersion: candidate.governanceVersion, aiIdentity: true } });
+  const targetRecord = target?.rows[0] ?? await upsertEntity(db, { type: candidate.targetType, value: candidate.targetValue, normalizedValue: candidate.targetNormalizedValue, description: candidate.rationale ?? `A reviewed knowledge concept representing ${candidate.targetValue}.`, identitySource: "ai", metadata: { source: "semantic-review", governanceVersion: candidate.governanceVersion, aiIdentity: true } }, { ownerId: mergeTargetOwnerId });
   const targetEntity = { id: targetRecord.id, type: "type" in targetRecord ? targetRecord.type : candidate.targetType, value: targetRecord.value, normalizedValue: targetRecord.normalizedValue };
   if (!candidate.subjectEntityId) throw new Error("Candidate is missing its subject entity");
   const subject = await db.query<{ id: string; type: string; value: string; normalizedValue: string }>(`select id, type, value, normalized_value as "normalizedValue" from entities where id = $1`, [candidate.subjectEntityId]);
   if (!subject.rows[0]) throw new Error("Candidate subject no longer exists");
   if (candidate.decisionKind === "merge") {
+    const skipReason = await semanticMergeSkipReason(db, candidate.subjectEntityId, targetEntity.id);
+    if (skipReason) return skipMerge(skipReason);
     const { mergeEntities } = await import("./entity-repository.js");
     await mergeEntities(db, candidate.subjectEntityId, targetEntity.id, { reason: "semantic_review", confidence: candidate.confidence });
   } else if (candidate.decisionKind === "association") {

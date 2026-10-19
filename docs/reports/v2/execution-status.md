@@ -1,15 +1,17 @@
 # Brain AI v2 execution status ledger
 
-Date: 2026-10-18 (UTC). Repository: `D:/Coding/BrainIA/BrainIA-Backend` @ `9180904` (clean). Mobile @ `b4c8748` (untracked `untitled.md` only). Both pushed to `origin/main`.
+Historical verification baseline: 2026-10-18 (UTC). Repository: `D:/Coding/BrainIA/BrainIA-Backend` @ `9180904` (clean). Mobile @ `b4c8748` (untracked `untitled.md` only). Both pushed to `origin/main`.
 This ledger records orchestrated execution after the baseline snapshot `docs/reports/v2/snapshot-backend.json` (`ea41cb12…cb444`) and `snapshot-mobile.json` (`596cff0d…af68`).
+
+Current disposition updated 2026-10-19: the owner explicitly accepted G0/G2 with conditions and authorized implementation of the 19 published v2 operations; `POST /api/v2/deletions` stays excluded. This supersedes earlier implementation-blocked planning notes only within that scope. Historical test results below are not reruns or current deployed-state certification. See `G0-closure-2026-10-19.md`, `G2-closure-2026-10-19.md`, `V2-API-implementation-scope.md` and `approvals.json` v5.
 
 ## Task states
 
 | Task | State | Evidence | Notes |
 |---|---|---|---|
-| B00 | accepted-with-conditions | `B00-verification.md` | G0 remains blocked on deployed/APK/restore facts. |
+| B00 | accepted-with-conditions | `B00-verification.md` | G0 owner_accepted_with_conditions on 2026-10-19; restore and other technical evidence remain incomplete. |
 | B01 | accepted-with-conditions | `B01-verification.md` | Synthetic corpus only. |
-| B02 | **accepted-with-conditions — approved revision** | `B02-r2.md`, `B02-r3.md`, `B02-verification-r2.md`, `approvals.json` v3 | B02-r3 bundle `666af99f…bfb55`, 912 checks, 152 fixtures, 0 open decisions. 13 operations have strict schemas but remain implementation-blocked; deletions excluded. Mobile reviewer sign-off still required. |
+| B02 | **accepted-with-conditions — approved revision** | `B02-r2.md`, `B02-r3.md`, `B02-verification-r2.md`, `approvals.json` v3 | B02-r3 bundle `666af99f…bfb55`, 912 checks, 152 fixtures, 0 open decisions. Historical schema approval retained; 2026-10-19 owner authorization now permits the 19 published operations, excluding POST deletions. Mobile API review is signed off with conditions; native/live-v2 evidence remains incomplete. |
 | B03 | accepted-with-conditions | `B03-verification.md` | G1 ledger; owner decisions now resolved (below). |
 | B09 | accepted-with-conditions | `B09-verification.md` | E11 adapter still blocked. |
 | B04 | **accepted-with-conditions** | `B04-r2.md`, `B04-verification-r2.md` | Rejection remediated: cross-domain/cross-generation anchors preserved, deferred transitions become review candidates, dormant global sweeps removed. LOW closed on re-verification. V2 adapters still blocked. |
@@ -22,18 +24,21 @@ This ledger records orchestrated execution after the baseline snapshot `docs/rep
 | M00 | **blocked (audit complete)** | `BrainIA-Mobile/docs/reports/v2/mobile-baseline.md` | Read-only audit: 0 implemented, 2 partial (F11/F12), 1 missing (F14), 1 unverified (F13). |
 | M01 | **accepted-with-conditions** | `M01-r1.md`, `M01-verification.md` | Approved bundle `666af99f…bfb55` imported byte-identically; 912 sealed + 204 mobile checks; transport blocked-auth/held; 111 defs / 19 paths. Conditions: offline classification fixed in M02, local extension trust root, contracts untracked, blocked operations reachable via generic request. |
 | M02 | **accepted-with-conditions** | `M02-r2.md`, `M02-verification.md` | Secure token lifecycle, explicit empty vs unconfigured consent, sanitized logs/backup, JVM 21/21, credential probe 29/29, offline fix. Conditions: `lib/api.ts` scope ratification, untracked reproducibility artifacts, rotation metadata wording, settings epoch/confirmation polish, device/Play/signing/live-v2 blocked. |
-| B05…B32 backend | not started except above | — | B06/B08 are now dependency-ready. |
+| B13–B17 (v2 API) | **implemented — independent PASS** | `B13-B17-r1.md`, `B13-B17-schema-r1.md`, `V2-final-verification-2026-10-19.md` | All 19 published operations registered; `POST /api/v2/deletions` excluded/404; 55 migrations / 2,275 objects; 233/233 isolated tests; lint/build/contracts/schema green. Conditions: PGlite only, not deployed, no production v2 exercise, retention/deletion cleanup pending. |
+| Semantic merge fix | **implemented — independently verified** | `B18-semantic-merge-fix.md`, `V2-final-verification-2026-10-19.md` | Cross-type candidates now skip/review instead of throwing; strict `mergeEntities` invariant retained; owned same-owner friendly-name/default-target flows fixed; regression genuinely fails at HEAD (7/10). |
+| B18–B32 remaining backend | not started | — | B18 is the G3 milestone; later phase tasks remain dependency-blocked. |
 | M01–M09 mobile | not started | — | Blocked by G1 mobile review + M00 conditions. |
 
 ## Gate status
 
 | Gate | State | Basis |
 |---|---|---|
-| G0 | **BLOCKED (evidence substantially collected)** | `G0-evidence-2026-10-18.md`, `G0-evidence-request.md`, `play-console-status.md`, `signing-and-build-2026-10-18.md` | Vercel Pro, env names/counts, 300 s function, cron 500→200 recovery, build logs; Neon `crimson-grass-81453010`, 6 h history, no snapshots; Play SmartSnippet unverified (identity/device/phone pending); signed AAB/APK built; device installed/launched new key. Still missing: DSN→branch binding, snapshot/checksum, executed restore, concurrency quota, Play approval, end-to-end capture. |
-| G1 decisions | **RESOLVED (30/30)** | Owner confirmed all 30 on 2026-10-17. 17 confirmed; 13 endpoint decisions provisionally authorize strict schema publication. `POST /api/v2/deletions` remains implementation-blocked. Feature gates stay false. |
-| G1 contract | **APPROVED (B02-r3)** | Bundle `666af99f…bfb55`, 0 open decisions, independently verified. Mobile API reviewer sign-off is still missing; 13 operations remain implementation-blocked. |
-| G2–G5 | **G2 BLOCKED; G3–G5 BLOCKED** | `G2.md` (`4aea895c…7c05`), `snapshot-2026-10-18-*.json` | G2 re-bound to backend `9180904` / mobile `b4c8748` / contract `666af99f…bfb55`. Independent probes 26/26. E01 improved to 250/500 but still FAIL; E03/E05/E06/E07/E11/E12 BLOCKED; no real PostgreSQL/restore; no device/APK/signing/live-v2; G0 missing. Q1–Q5/Q7–Q9 unsatisfied; Q6 deferred to G3. |
-| Production/destructive | **BLOCKED** | Not approved by this session. |
+| G0 | **owner_accepted_with_conditions (2026-10-19); technical PASS not certified** | `G0-closure-2026-10-19.md`, `G0-evidence-2026-10-18.md`, `production-deploy-2026-10-18.md`, `approvals.json` v5. Owner acceptance retains DSN-to-branch, durable backup/restore/RPO/RTO, concurrency, signing/device and Play conditions. |
+| G1 decisions | **RESOLVED (30/30); implementation authorization updated 2026-10-19** | Historical owner decisions retained. The 19 published operations are now authorized for implementation; `POST /api/v2/deletions` remains excluded; no capability enabled by this record. |
+| G1 contract | **APPROVED wire revision; B02-r4 metadata reseal** | Current ledger bundle `da2a989f…621c`; earlier G2 verification bound `666af99f…bfb55`. Mobile API review signed off with conditions; no new verifier/reseal asserted. |
+| G2 | **owner_accepted_with_conditions (2026-10-19); technical BLOCKED** | `G2-closure-2026-10-19.md`, `G2.md`, `approvals.json` v5. Historical independent probes 26/26, isolated 202/202; E01 FAIL 250 pass / 250 fail of 500; E03/E05/E06/E07/E11/E12 BLOCKED. No real PostgreSQL/RLS/restore matrix; Q1-Q5/Q7-Q9 uncertified; Q6 deferred to G3. |
+| G3-G5 | **BLOCKED / not certified by owner closure** | Bounded implementation authorization does not certify later gates or native/live-v2 behavior. |
+| Production/destructive | **Production already deployed; no new action authorized here** | `production-deploy-2026-10-18.md` records READY initial deploy and October 19 corrected Neon runtime redeploy `brain-owra6uznl…`, auth and v1 capture verified (33 x 201). `production-migration-2026-10-18.md`: 54 migrations, production schema verification drift. Six-hour PITR/no snapshots/no restore drill; previous legacy secret unrecoverable. Destructive cleanup remains deferred. |
 
 ## What is ready next
 
@@ -42,12 +47,12 @@ This ledger records orchestrated execution after the baseline snapshot `docs/rep
 3. **G2 closure** — E01 extraction/classification, E03/E05/E06/E07/E11/E12 adapters, fixture adjudication, real PostgreSQL, device/APK/signing/live-v2.
 4. **M02 follow-ups** — fresh independent verification of `M01-r2`/`M02-r3`; device/connected tests, Play/signing custody, live v2.
 5. **G0 evidence** — DB binding, backup/restore, env names/counts, host limits, cron history, signing/Play, owner mapping; `G0-evidence-request.md`.
-6. **Phase 2–4** — B13–B32 remain dependency-blocked by G2; mobile M03–M09 blocked by M02/B14.
+6. **Phase 2 v2 API — implemented** — the 19 operations are served and independently verified; `POST /api/v2/deletions` remains excluded. Deployment, real PostgreSQL evidence, and mobile consumption remain separate actions. Later phase tasks are still dependency-blocked.
 
-## Environment evidence (this session)
+## Historical environment evidence (2026-10-18 verification)
 
 - Backend: lint 0, build 0, isolated tests **202/202**, schema verify `problems: []`, schema contract **54 migrations / 1972 objects**, contracts:verify 0 (bundle `666af99f…bfb55`).
-- B10 finance suite: E01 **FAIL** 250/250 (was 50/450; extraction/classification gaps remain); E03/E05 **BLOCKED**.
+- B10 finance suite: E01 **FAIL** 250 pass / 250 fail of 500 (was 50/450; extraction/classification gaps remain); E03/E05 **BLOCKED**.
 - Mobile: lint 0, typecheck 0, contracts:verify 0 (914 sealed + 221 mobile checks). JVM 21/21.
 - Signing: new upload key `CN=BrainIA Upload` (`de1515ef…b15`); AAB `a903b871…b66`; APK `c5391404…592`; installed and launched on model 25069PTEBG (Android 16), listener connected.
 - Play: SmartSnippet verification pending (identity submitted, device/phone outstanding); no app created.
@@ -56,10 +61,24 @@ This ledger records orchestrated execution after the baseline snapshot `docs/rep
 - B05 suites E06/E11: **BLOCKED** (270 cases, 0 pass/0 fail).
 - Graphify updated: 2601 nodes / 4021 edges / 227 communities.
 
+## Implementation evidence (2026-10-19)
+
+- Backend: lint 0, build 0, isolated tests **233/233** on the final rerun (one first-run failure did not reproduce), contracts:verify 0 (**914 checks**, bundle `da2a989f…621c` unchanged), schema verify `problems: []`, schema contract **55 migrations / 2,275 objects**.
+- V2 API: 19/19 published operations registered; `POST /api/v2/deletions` absent; independent HTTP probe 60/60; bearer/owner/header-spoof, foreign-ID 404, decimal money, feature-gate and error-enum checks passed.
+- Semantic merge: targeted tests 22/22 before the final v2 integration; final suite 233/233; counterfactual against HEAD fails 7/10 with the production error, proving the regression is genuine.
+- G0/G2: owner conditional acceptance recorded; no technical PASS, real PostgreSQL/restore, Play approval or new deployment is claimed.
+- Not done in this iteration: production deployment of the v2/merge changes, production dead-letter replay, and real PostgreSQL/RLS/restore evidence.
+
 ## Explicit non-claims
 
-- No task is production-ready; G0 and G2–G5 remain blocked.
-- No mobile implementation was performed or approved.
+- G0/G2 have owner conditional acceptance, not technical PASS; G2 technical evidence and G3-G5 remain blocked/uncertified. The live v1 backend does not certify complete gate readiness.
+- This closure performed no mobile implementation and supplies no new mobile/native certification; prior M01/M02 work remains subject to its recorded conditions.
 - B05's RLS policies, per-owner runtime role and FK validation are B06 work.
-- The contract bundle has not been resealed; owner decisions are recorded in the ledger, not in `open-items.json`.
+- The current ledger records the B02-r4 metadata reseal; this closure did not change contract bytes or rebind historical G2 verification.
 - Historical pre-snapshot write attribution remains unprovable; post-snapshot writes are attributed in `B04-r2.md`, `B05-r2.md`, and the M00 report.
+
+## Closure task notes (2026-10-19)
+
+Owner decision: explicitly proceed with G0/G2 closure as `owner_accepted_with_conditions`, accepting the residual evidence debt in the two closure reports. Implementation authorization covers exactly the 19 operations in `V2-API-implementation-scope.md`; POST /api/v2/deletions is excluded. Earlier blocked-operation notes and production approval constraints are retained historically in `approvals.json`, with an explicit current authorization/reference; they do not become technical PASS claims.
+
+The later production report supersedes earlier deployment-stop/configuration-pending observations: runtime was switched to migrated Neon and v1 auth/capture verified. It does not establish DSN-to-branch attestation or a real PostgreSQL/RLS/restore matrix. The signing report establishes signed artifacts; Play remains unapproved. Code rollback does not undo data/migrations, the old write-only DSN cannot be recovered, and six-hour PITR without an executed drill is not certified recovery. No tests, production operations, commit, push or deployment were performed for this documentation closure.

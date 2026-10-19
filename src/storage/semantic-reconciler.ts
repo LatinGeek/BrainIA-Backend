@@ -4,7 +4,7 @@ import { mergeEntities } from "./entity-repository.js";
 import { invalidateGraphTraversalCache } from "./graph-cache.js";
 import { pool, withSemanticMaterializationLock, withTransaction } from "./postgres.js";
 import { authorizeModelDispatch, listDeniedEgressSources, stillAuthorized, type PrivacyAuthorization } from "./privacy.js";
-import { rootEventEvidenceFromAnchors, settleSatisfiedSemanticCandidates } from "./semantic-repository.js";
+import { rootEventEvidenceFromAnchors, semanticMergeSkipReason, settleSatisfiedSemanticCandidates } from "./semantic-repository.js";
 
 const AUTO_RECONCILE_CONFIDENCE = 0.95;
 
@@ -48,6 +48,7 @@ type ReconciliationNode = {
   parentType: string | null;
   parentValue: string | null;
   evidenceCount: number;
+  ownerId?: string | null;
 };
 
 export function selectVerifiedReconciliationActions(
@@ -63,7 +64,8 @@ export function selectVerifiedReconciliationActions(
     const duplicateIds = proposal.duplicateIds.filter((id) => {
       const duplicate = byId.get(id);
       const verdict = mergeVerdicts.get(`${proposal.canonicalId}|${id}`);
-      if (!duplicate || duplicate.type !== canonical.type || duplicate.identitySource === "user") return false;
+      if (!duplicate || id === canonical.id || duplicate.type !== canonical.type || duplicate.identitySource === "user") return false;
+      if ((duplicate.ownerId ?? null) !== (canonical.ownerId ?? null)) return false;
       if (!verdict?.sameIdentity || verdict.confidence < AUTO_RECONCILE_CONFIDENCE) return false;
       const rationale = `${proposal.rationale} ${verdict.rationale}`;
       if (canonical.type === "app" && /\b(component|connector|integration)\b/iu.test(rationale)) return false;
@@ -117,7 +119,7 @@ async function requestStructured<T>(input: {
 
 async function loadReconciliationNodes(ownerId?: string | null): Promise<ReconciliationNode[]> {
   const result = await pool.query<ReconciliationNode>(`
-    select entity.id, entity.type, entity.value, entity.description,
+    select entity.id, entity.type, entity.value, entity.description, entity.owner_id as "ownerId",
       entity.identity_source as "identitySource",
       parent.id as "parentId", parent.type as "parentType", parent.value as "parentValue",
       count(distinct evidence.id)::int as "evidenceCount"
@@ -167,7 +169,7 @@ async function reconcileSemanticGraphUnlocked(input: { dryRun?: boolean; ownerId
     privacy: authorization,
     systemPrompt: `Return strict JSON only. Audit canonical durable nodes after a semantic ingestion batch.
 
-Merge only nodes with the same real-world identity or exactly the same reusable meaning. Related concepts are not duplicates. Concepts may auto-merge only when they share the same immediate parent. Apps, merchants, senders, and recipients may merge across parents when they are the same identity. Prefer user-owned identities, then the clearest concise name and description, then the node with more evidence.
+Merge only nodes with exactly the same entity type and owner, and the same real-world identity or exactly the same reusable meaning. Never propose a cross-type merge, even when names match. Related concepts are not duplicates. Concepts may auto-merge only when they share the same immediate parent. Apps, merchants, senders, and recipients may merge across parents when they are the same identity. Prefer user-owned identities, then the clearest concise name and description, then the node with more evidence.
 
 Demote only AI concepts that cannot independently represent durable knowledge: raw fragments, one-off occurrences, generic or unspecified notifications, amounts, timestamps, or concepts whose description admits they are an event instance. Never demote apps, merchants, people, accounts, user-owned nodes, seeded ontology, or a specific reusable event class such as motion detection or a device-offline alert.
 
@@ -178,9 +180,10 @@ Return {"merges":[{"canonicalId","duplicateIds":[],"rationale","confidence"}],"d
 
   const verification = await requestStructured<z.infer<typeof verificationSchema>>({
     schema: verificationSchema,
+    privacy: authorization,
     systemPrompt: `Return strict JSON only. Independently challenge a proposed knowledge-graph reconciliation.
 
-For each merge pair, sameIdentity is true only when replacing either node everywhere loses no meaning. A company is not its subscription, an app is not one connector or notification, a person is not their email address, and a platform is not one component. For concepts, differently worded reusable event classes may be identical only when their descriptions and parent context denote the same recurring event meaning.
+For each merge pair, sameIdentity is true only when both nodes have exactly the same entity type and owner, and replacing either node everywhere loses no meaning. Cross-type pairs must receive sameIdentity false. A company is not its subscription, an app is not one connector or notification, a person is not their email address, and a platform is not one component. For concepts, differently worded reusable event classes may be identical only when their descriptions and parent context denote the same recurring event meaning.
 
 For each demotion, shouldDemote is true only for a raw fragment, one-off occurrence, unspecified notification, or mislabeled event instance. A specific repeatable event class such as device-offline alerts is durable and must not be demoted.
 
@@ -194,7 +197,11 @@ Return {"mergeVerdicts":[{"canonicalId","duplicateId","sameIdentity","rationale"
   }
 
   const { acceptedMerges, acceptedDemotions } = selectVerifiedReconciliationActions(nodes, parsed, verification);
-  const review = parsed.merges.length - acceptedMerges.length + parsed.demotions.length - acceptedDemotions.length;
+  // Count pairs, so a partially accepted proposal still records its rejected
+  // cross-type siblings as review work.
+  let review = parsed.merges.reduce((count, proposal) => count + proposal.duplicateIds.length, 0)
+    - acceptedMerges.reduce((count, proposal) => count + proposal.duplicateIds.length, 0)
+    + parsed.demotions.length - acceptedDemotions.length;
   if (input.dryRun) return {
     status: "preview" as const,
     merged: acceptedMerges.reduce((count, proposal) => count + proposal.duplicateIds.length, 0),
@@ -213,6 +220,10 @@ Return {"mergeVerdicts":[{"canonicalId","duplicateId","sameIdentity","rationale"
     for (const proposal of acceptedMerges) {
       for (const duplicateId of proposal.duplicateIds) {
         if (duplicateId === proposal.canonicalId || alreadyMerged.has(duplicateId)) continue;
+        if (await semanticMergeSkipReason(db, duplicateId, proposal.canonicalId)) {
+          review += 1;
+          continue;
+        }
         await mergeEntities(db, duplicateId, proposal.canonicalId, {
           reason: "llm_post_ingestion_reconciliation",
           confidence: proposal.confidence,

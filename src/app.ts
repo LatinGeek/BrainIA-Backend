@@ -24,6 +24,7 @@ import { registerClientDiagnosticRoutes } from "./routes/client-diagnostics.js";
 import { config } from "./config.js";
 import type { AuthConfig } from "./auth.js";
 import { registerIntelligenceRoutes } from './routes/intelligence.js';
+import { registerV2Routes } from "./routes/v2/index.js";
 
 export async function buildApp(options: { authConfig?: AuthConfig } = {}) {
   const authConfig = options.authConfig ?? loadAuthConfig();
@@ -78,6 +79,7 @@ export async function buildApp(options: { authConfig?: AuthConfig } = {}) {
   });
   await app.register(registerDashboardRoutes, {});
   app.addHook("preHandler", createApiAuthHook(authConfig));
+  await app.register(registerV2Routes({ authConfig }), { prefix: "/api/v2" });
   await app.register(registerAgentRoutes, { prefix: config.apiPrefix });
   await app.register(registerAgentInspectRoutes, { prefix: config.apiPrefix });
   await app.register(registerCaptureRoutes({ authConfig }), { prefix: config.apiPrefix });

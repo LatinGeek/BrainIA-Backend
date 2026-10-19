@@ -1,5 +1,5 @@
 {
-  "ledger_version": 4,
+  "ledger_version": 5,
   "gates": [
     {
       "gate": "G1",
@@ -829,11 +829,12 @@
         "report": "docs/reports/v2/B02-r4.md",
         "operations_implementation_blocked": 13,
         "deletion_operation_excluded": true
-      }
+      },
+      "current_implementation_authorization_ref": "v2_implementation_authorization"
     },
     {
       "gate": "G0",
-      "status": "owner_authorized_pending_evidence",
+      "status": "owner_accepted_with_conditions",
       "authorized_at": "2026-10-18",
       "authorization": {
         "approver": "repository owner (user)",
@@ -853,7 +854,26 @@
         "effective host limits and cron history",
         "device evidence from connected phone (option A)",
         "independent G0 verification"
-      ]
+      ],
+      "accepted_at": "2026-10-19",
+      "approver": "repository owner (user)",
+      "method": "explicit owner session approval to proceed with G0 and G2 closure, supplied in coordinator dispatch",
+      "technical_pass": false,
+      "residual_conditions": [
+        "Runtime DSN-to-branch binding not documented",
+        "No durable snapshot/checksum or executed isolated restore with measured RPO/RTO",
+        "Numeric concurrency quota and deployed memory attestation missing",
+        "Signing custody/native durability matrix incomplete; no Play approval",
+        "Production schema verification drift remains unresolved by evidence"
+      ],
+      "closure_report": "docs/reports/v2/G0-closure-2026-10-19.md",
+      "closure_authorization": {
+        "date": "2026-10-19",
+        "approver": "repository owner (user)",
+        "method": "explicit owner session approval to proceed with G0 and G2 closure, supplied in coordinator dispatch",
+        "independent_verification": false,
+        "supersedes": "Earlier pending owner closure status only; technical evidence requirements remain residual conditions."
+      }
     },
     {
       "gate": "PRODUCTION",
@@ -872,8 +892,70 @@
         "APK sideload only; no Play release.",
         "Destructive cleanup remains deferred.",
         "Record the exact deployed commit, migration ledger and APK hash at deploy time."
-      ]
+      ],
+      "current_evidence_note": "Historical authorization and constraints retained; later deployment and 2026-10-19 runtime correction are recorded in docs/reports/v2/production-deploy-2026-10-18.md. Owner conditional G0/G2 closure does not certify technical completion or authorize a new production action."
+    },
+    {
+      "gate": "G2",
+      "status": "owner_accepted_with_conditions",
+      "accepted_at": "2026-10-19",
+      "approver": "repository owner (user)",
+      "method": "explicit owner session approval to proceed with G0 and G2 closure, supplied in coordinator dispatch",
+      "technical_pass": false,
+      "residual_conditions": [
+        "E01 FAIL: 250 pass / 250 fail out of 500",
+        "E03/E05/E06/E07/E11/E12 BLOCKED",
+        "Real PostgreSQL/RLS/multi-connection/restore matrix absent",
+        "Adjudicated fixtures and independent mobile follow-up verification incomplete",
+        "Q1-Q5/Q7-Q9 not certified; Q6 deferred to G3",
+        "G0 residual conditions remain; v1 capture is not live-v2 certification"
+      ],
+      "closure_report": "docs/reports/v2/G2-closure-2026-10-19.md",
+      "closure_authorization": {
+        "date": "2026-10-19",
+        "approver": "repository owner (user)",
+        "method": "explicit owner session approval to proceed with G0 and G2 closure, supplied in coordinator dispatch",
+        "independent_verification": false,
+        "supersedes": "Earlier pending owner closure status only; technical evidence requirements remain residual conditions."
+      }
     }
   ],
-  "updated_at": "2026-10-18T22:00:00Z"
+  "updated_at": "2026-10-19",
+  "v2_implementation_authorization": {
+    "status": "owner_authorized_for_implementation",
+    "date": "2026-10-19",
+    "approver": "repository owner (user)",
+    "method": "explicit owner authorization supplied in coordinator dispatch and implementation scope",
+    "scope_report": "docs/reports/v2/V2-API-implementation-scope.md",
+    "operations_count": 19,
+    "operations": [
+      "GET /api/v2/capabilities",
+      "POST /api/v2/observations",
+      "POST /api/v2/observations/batch",
+      "GET /api/v2/observations/{id}",
+      "GET /api/v2/observations/{id}/revisions",
+      "GET /api/v2/events/{id}",
+      "GET /api/v2/episodes",
+      "GET /api/v2/episodes/{id}",
+      "GET /api/v2/financial/transactions",
+      "GET /api/v2/financial/summary",
+      "POST /api/v2/corrections",
+      "PUT /api/v2/sources/{id}/policy",
+      "GET /api/v2/deletions/{id}",
+      "GET /api/v2/export",
+      "POST /api/v2/queries",
+      "GET /api/v2/queries/{id}",
+      "POST /api/v2/connectors/email/authorize",
+      "GET /api/v2/connectors/email/callback",
+      "POST /api/v2/connectors/{id}/revoke"
+    ],
+    "excluded_operations": [
+      "POST /api/v2/deletions"
+    ],
+    "contract_bundle_sha256": "da2a989f6a607439bec3dabc21fbb4331efa58b2765f94e71a6b213ed2fd621c",
+    "technical_gate_pass": false,
+    "production_or_destructive_approved": false,
+    "capabilities_enabled_by_this_record": [],
+    "supersedes": "Earlier G1 implementation-blocked statements for these 19 operations only; historical fields retained. No runtime certification, contract reseal, feature enablement or new deployment authority."
+  }
 }

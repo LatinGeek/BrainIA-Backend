@@ -1,4 +1,5 @@
 import type { IncomingHttpHeaders } from "node:http";
+import { createHash, timingSafeEqual } from "node:crypto";
 import type { FastifyReply, FastifyRequest } from "fastify";
 
 export const API_KEY_HEADER = "x-brainia-api-key";
@@ -10,6 +11,8 @@ export const OWNER_HEADERS = ["x-brainia-owner-id", "x-owner-id"] as const;
 export type AuthConfig = {
   globalApiKey: string | null;
   clientKeys: Map<string, string>;
+  /** v2 bearer credentials keyed by their server-configured owner. */
+  deviceTokens?: Map<string, string>;
 };
 
 export type Principal = {
@@ -32,6 +35,9 @@ export type AuthFailure = {
 export type AuthResult = AuthContext | AuthFailure;
 
 declare module "fastify" {
+  interface FastifyContextConfig {
+    v2Scope?: string;
+  }
   interface FastifyRequest {
     principal?: Principal;
   }
@@ -92,6 +98,7 @@ export function loadAuthConfig(env: NodeJS.ProcessEnv = process.env): AuthConfig
   return {
     globalApiKey: env.BRAINIA_API_KEY?.trim() || null,
     clientKeys: parseClientKeyPairs(env.BRAINIA_CLIENT_KEYS),
+    deviceTokens: parseDeviceTokens(env.BRAINIA_DEVICE_TOKENS),
   };
 }
 
@@ -251,6 +258,8 @@ export function createApiAuthHook(config: AuthConfig) {
     reply: FastifyReply,
   ) {
     const url = request.raw.url ?? "";
+    const v2Path = url.split("?")[0] ?? "";
+    if (v2Path === "/api/v2" || v2Path.startsWith("/api/v2/")) return;
     if (!url.startsWith("/api/")) {
       return;
     }
@@ -297,5 +306,79 @@ export function createApiAuthHook(config: AuthConfig) {
     }
 
     request.principal = result as AuthContext;
+  };
+}
+
+export const V2_SCOPES = [
+  "capture:read", "capture:write", "privacy:read", "privacy:write", "privacy:export",
+  "finance:read", "evidence:read", "corrections:write", "intelligence:read", "connectors:write",
+] as const;
+export type V2Scope = typeof V2_SCOPES[number];
+
+export function parseDeviceTokens(raw: string | undefined | null): Map<string, string> {
+  const entries = new Map<string, string>();
+  if (!raw) return entries;
+  for (const chunk of raw.split(/[,\n]/)) {
+    const trimmed = chunk.trim();
+    if (!trimmed) continue;
+    const separator = trimmed.indexOf(":");
+    const ownerId = trimmed.slice(0, separator).trim();
+    const token = trimmed.slice(separator + 1).trim();
+    if (separator <= 0 || !ownerId || !token || /\s/.test(token) || [...ownerId].length > 160) {
+      throw new Error("BRAINIA_DEVICE_TOKENS must use the format ownerId:token,ownerId2:token2");
+    }
+    if (entries.has(ownerId) || [...entries.values()].includes(token)) {
+      throw new Error("BRAINIA_DEVICE_TOKENS must contain unique owners and tokens");
+    }
+    entries.set(ownerId, token);
+  }
+  return entries;
+}
+
+function equalCredential(actual: string, expected: string): boolean {
+  // Hash first so token length and matching prefixes do not affect comparison.
+  return timingSafeEqual(createHash("sha256").update(actual).digest(), createHash("sha256").update(expected).digest());
+}
+
+/** v2 never enters the v1 disabled-auth path, even in local development. */
+export function resolveV2Bearer(headers: IncomingHttpHeaders, config: AuthConfig): Principal {
+  const authorization = headers.authorization;
+  const match = typeof authorization === "string" ? /^Bearer ([^\s]+)$/i.exec(authorization) : null;
+  if (!match) throw new AuthzError("unauthenticated", 401, "A bearer credential is required");
+  const token = match[1];
+  if (config.globalApiKey && equalCredential(token, config.globalApiKey)) {
+    throw new AuthzError("insufficient_scope", 403, "An owner credential is required");
+  }
+  const owners = new Set<string>();
+  for (const [ownerId, credential] of config.deviceTokens ?? []) {
+    if (equalCredential(token, credential)) owners.add(ownerId);
+  }
+  // Legacy bearer bootstrap is unambiguous only in a single-client installation.
+  if (config.clientKeys.size === 1) {
+    for (const [clientId, credential] of config.clientKeys) {
+      if (equalCredential(token, credential)) owners.add(clientId);
+    }
+  }
+  if (owners.size === 0) throw new AuthzError("unauthenticated", 401, "Invalid bearer credential");
+  if (owners.size !== 1 || ![...owners][0]) {
+    throw new AuthzError("insufficient_scope", 403, "An unambiguous owner credential is required");
+  }
+  if (OWNER_HEADERS.some(header => headers[header] !== undefined)) {
+    throw new AuthzError("forbidden", 403, "Owner selection headers are not accepted");
+  }
+  const ownerId = [...owners][0];
+  return { ownerId, clientId: ownerId, mode: "client", scopes: [...V2_SCOPES], authenticated: true };
+}
+
+export function createV2AuthHook(config: AuthConfig) {
+  return async function v2AuthHook(request: FastifyRequest, _reply: FastifyReply) {
+    const path = (request.raw.url ?? "").split("?")[0];
+    // Only the provider callback is public; similarly prefixed routes are not.
+    if (request.method === "GET" && path === "/api/v2/connectors/email/callback") return;
+    request.principal = resolveV2Bearer(request.headers, config);
+    const scope = request.routeOptions.config.v2Scope;
+    if (scope && !request.principal.scopes.includes(scope)) {
+      throw new AuthzError("insufficient_scope", 403, "The bearer credential does not grant this scope");
+    }
   };
 }
