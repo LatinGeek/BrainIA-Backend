@@ -29,7 +29,7 @@ This ledger records orchestrated execution after the baseline snapshot `docs/rep
 
 | Gate | State | Basis |
 |---|---|---|
-| G0 | **BLOCKED (deployed revision now evidenced)** | `G0-evidence-request.md`, `G2.md` | Production `brain-ia` is READY at commit `e0ccc56` (2026-10-04), region `iad1`, Node 24.x, Fastify; local link matches. All v2 code is uncommitted and **not deployed**. Still missing: DB alias/binding, backup/restore identity, env names/counts, host limits, cron history, signing/Play custody, owner mapping, device/APK↔source evidence. |
+| G0 | **BLOCKED (evidence substantially collected)** | `G0-evidence-2026-10-18.md`, `G0-evidence-request.md`, `play-console-status.md`, `signing-and-build-2026-10-18.md` | Vercel Pro, env names/counts, 300 s function, cron 500→200 recovery, build logs; Neon `crimson-grass-81453010`, 6 h history, no snapshots; Play SmartSnippet unverified (identity/device/phone pending); signed AAB/APK built; device installed/launched new key. Still missing: DSN→branch binding, snapshot/checksum, executed restore, concurrency quota, Play approval, end-to-end capture. |
 | G1 decisions | **RESOLVED (30/30)** | Owner confirmed all 30 on 2026-10-17. 17 confirmed; 13 endpoint decisions provisionally authorize strict schema publication. `POST /api/v2/deletions` remains implementation-blocked. Feature gates stay false. |
 | G1 contract | **APPROVED (B02-r3)** | Bundle `666af99f…bfb55`, 0 open decisions, independently verified. Mobile API reviewer sign-off is still missing; 13 operations remain implementation-blocked. |
 | G2–G5 | **G2 BLOCKED; G3–G5 BLOCKED** | `G2.md` (`4aea895c…7c05`), `snapshot-2026-10-18-*.json` | G2 re-bound to backend `9180904` / mobile `b4c8748` / contract `666af99f…bfb55`. Independent probes 26/26. E01 improved to 250/500 but still FAIL; E03/E05/E06/E07/E11/E12 BLOCKED; no real PostgreSQL/restore; no device/APK/signing/live-v2; G0 missing. Q1–Q5/Q7–Q9 unsatisfied; Q6 deferred to G3. |
@@ -48,7 +48,9 @@ This ledger records orchestrated execution after the baseline snapshot `docs/rep
 
 - Backend: lint 0, build 0, isolated tests **202/202**, schema verify `problems: []`, schema contract **54 migrations / 1972 objects**, contracts:verify 0 (bundle `666af99f…bfb55`).
 - B10 finance suite: E01 **FAIL** 250/250 (was 50/450; extraction/classification gaps remain); E03/E05 **BLOCKED**.
-- Mobile: lint 0, typecheck 0, contracts:verify 0 (912 sealed + 221 mobile checks).
+- Mobile: lint 0, typecheck 0, contracts:verify 0 (914 sealed + 221 mobile checks). JVM 21/21.
+- Signing: new upload key `CN=BrainIA Upload` (`de1515ef…b15`); AAB `a903b871…b66`; APK `c5391404…592`; installed and launched on model 25069PTEBG (Android 16), listener connected.
+- Play: SmartSnippet verification pending (identity submitted, device/phone outstanding); no app created.
 - Mobile: 1774 files hashed, 72 dirty entries preserved; no writes except the M00 report.
 - B04 suites E02/E03/E05: **BLOCKED** (550 cases, 0 pass/0 fail).
 - B05 suites E06/E11: **BLOCKED** (270 cases, 0 pass/0 fail).
