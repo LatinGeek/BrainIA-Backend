@@ -66,3 +66,13 @@ Seeded for `client_scope = brainia-personal` with `enabled=true`, `send_to_llm=t
 IBKR is **not installed** on the device, so no package name could be verified. The policy will be added once the app is installed and its package name is read from the device.
 
 Note: the app's capture consent selection is separate from these backend policies. The selected packages must also be chosen in **Ajustes → Elegir aplicaciones**.
+
+## IBKR policy
+
+Interactive Brokers is installed as `atws.app` (version 8.4.943). Policy seeded for `client_scope = brainia-personal` with enabled/send-to-LLM/redaction.
+
+Active package policies now: `uy.com.Santander`, `com.mercadopago.wallet`, `atws.app`, plus the four capture channels.
+
+## Device automation limit
+
+The HyperOS developer toggle **Depuración USB (ajustes de seguridad)** is enabled (`checked=true`), but `adb shell input` still fails with `INJECT_EVENTS` even after an adb server restart. Low-level `/dev/input/event5` writes are SELinux-denied. App credential entry and package selection therefore require either a phone reboot/retry or manual entry on the device.
