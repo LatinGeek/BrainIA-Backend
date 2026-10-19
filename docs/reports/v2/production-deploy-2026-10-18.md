@@ -55,3 +55,14 @@ Until configured, the app can reach `/health` but data requests return 401.
 - v2 API endpoints (B13+) are not implemented; the app uses v1 routes.
 - No database snapshot/restore drill.
 - Native capture → queue → sync not yet exercised with the production credentials.
+
+## Notification package policies (2026-10-18)
+
+Seeded for `client_scope = brainia-personal` with `enabled=true`, `send_to_llm=true`, email/financial redaction:
+
+- `uy.com.Santander` (Santander, installed version 11.1.0)
+- `com.mercadopago.wallet` (MercadoPago, installed version 2.457.2)
+
+IBKR is **not installed** on the device, so no package name could be verified. The policy will be added once the app is installed and its package name is read from the device.
+
+Note: the app's capture consent selection is separate from these backend policies. The selected packages must also be chosen in **Ajustes → Elegir aplicaciones**.
