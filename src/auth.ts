@@ -137,6 +137,16 @@ export function resolveAuthContext(
   if (config.clientKeys.size > 0) {
     const clientId = readHeader(headers, CLIENT_ID_HEADER)?.trim();
     if (!clientId) {
+      if (readHeader(headers, CLIENT_ID_HEADER) === null && config.globalApiKey && apiKey === config.globalApiKey) {
+        // Single-user production owner, verified against the existing ledger.
+        return {
+          clientId: null,
+          ownerId: "brainia-personal",
+          mode: "client",
+          scopes: ["owner"],
+          authenticated: true,
+        };
+      }
       return {
         ok: false,
         statusCode: 401,

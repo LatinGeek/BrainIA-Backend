@@ -72,6 +72,64 @@ test("client-scoped auth resolves the configured identity", () => {
   assert.equal(authContext.mode, "client");
 });
 
+test("global key without a client header resolves the single production owner", () => {
+  const authConfig: AuthConfig = {
+    globalApiKey: "global-test-key",
+    clientKeys: new Map([["mobile", "client-test-key"]]),
+  };
+
+  assert.deepEqual(resolveAuthContext({ "x-brainia-api-key": "global-test-key" }, authConfig), {
+    clientId: null,
+    ownerId: "brainia-personal",
+    mode: "client",
+    scopes: ["owner"],
+    authenticated: true,
+  });
+
+  for (const headers of [{}, { "x-brainia-api-key": "wrong-test-key" }, { "x-brainia-api-key": "client-test-key" }]) {
+    const result = resolveAuthContext(headers, authConfig);
+    assert.ok("ok" in result && !result.ok);
+    assert.equal(result.statusCode, 401);
+    assert.equal(result.error, "missing_client_id");
+  }
+
+  const noGlobalKey = resolveAuthContext({ "x-brainia-api-key": "global-test-key" }, { ...authConfig, globalApiKey: null });
+  assert.ok("ok" in noGlobalKey && !noGlobalKey.ok);
+  assert.equal(noGlobalKey.statusCode, 401);
+});
+
+test("global fallback preserves explicit client authentication and rejection paths", () => {
+  const authConfig: AuthConfig = {
+    globalApiKey: "global-test-key",
+    clientKeys: new Map([["mobile", "client-test-key"]]),
+  };
+  assert.deepEqual(resolveAuthContext({
+    "x-brainia-client-id": "mobile",
+    "x-brainia-api-key": "client-test-key",
+  }, authConfig), {
+    clientId: "mobile", ownerId: "mobile", mode: "client", scopes: ["owner"], authenticated: true,
+  });
+
+  for (const clientId of ["unknown", "", "   "]) {
+    const result = resolveAuthContext({
+      "x-brainia-client-id": clientId,
+      "x-brainia-api-key": "global-test-key",
+    }, authConfig);
+    assert.ok("ok" in result && !result.ok);
+    assert.equal(result.statusCode, clientId === "unknown" ? 403 : 401);
+    assert.equal(result.error, clientId === "unknown" ? "unknown_client" : "missing_client_id");
+  }
+  for (const apiKey of ["global-test-key", "wrong-test-key", undefined]) {
+    const result = resolveAuthContext({
+      "x-brainia-client-id": "mobile",
+      "x-brainia-api-key": apiKey,
+    }, authConfig);
+    assert.ok("ok" in result && !result.ok);
+    assert.equal(result.statusCode, 401);
+    assert.equal(result.error, "invalid_api_key");
+  }
+});
+
 test("event dedupe keys scope retries by client and contract version", () => {
   const dedupeKey = buildEventDedupeKey(
     {
