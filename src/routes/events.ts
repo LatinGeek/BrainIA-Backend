@@ -15,6 +15,7 @@ import {
   reprocessEvent,
 } from "../storage/event-store.js";
 import { listEventHistoryPage, listStoredEvents, loadStoredEventById } from "../storage/event-repository.js";
+import { withEventProgress } from "../storage/event-progress.js";
 
 type EventRoutesOptions = {
   authConfig: AuthConfig;
@@ -78,7 +79,11 @@ export const registerEventRoutes = (options: EventRoutesOptions): FastifyPluginA
       }
 
       const ownerId = ownerScope(request);
-      const event = await withOwnerRead(ownerId, (db) => loadStoredEventById(db, eventId, ownerId));
+      // `progress` is additive: processingStatus and every existing field are unchanged.
+      const event = await withOwnerRead(ownerId, async (db) => {
+        const stored = await loadStoredEventById(db, eventId, ownerId);
+        return stored ? withEventProgress(db, stored) : null;
+      });
       return event ?? reply.status(404).send({
         error: "event_not_found",
         message: "No stored event matches the provided id",
@@ -116,7 +121,14 @@ export const registerEventRoutes = (options: EventRoutesOptions): FastifyPluginA
         "event ingested",
       );
 
-      return reply.status(201).send(stored);
+      // Lets the capture response say "Expense recorded; interpretation pending."
+      // Progress is informational: never fail an already-persisted capture over it.
+      const withProgress = await withOwnerRead(clientId, (db) => withEventProgress(db, stored))
+        .catch((error) => {
+          request.log.warn({ eventId: stored.id, error: String(error) }, "event progress unavailable");
+          return stored;
+        });
+      return reply.status(201).send(withProgress);
     });
 
     app.post("/events/:id/reprocess", async (request, reply) => {

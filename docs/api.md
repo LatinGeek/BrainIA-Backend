@@ -317,6 +317,89 @@ set that produced them; replaying one for another owner or with different filter
 `400 invalid_cursor`. Fetch full detail (entities, relations, raw payload) with
 `GET /api/v1/events/:id`. `bodyPreview` is the only body text in list entries.
 
+## Event processing progress
+
+`GET /api/v1/events/:id` and the `201` response of `POST /api/v1/events` carry an additive `progress` object. `processingStatus` and every other existing field are unchanged. The list endpoints (`GET /events` in both shapes) do **not** include `progress`; fetch the detail when you need it.
+
+`progress` is a read-only projection. Nothing is stored for it: each stage is derived on every request from records that already exist, so it cannot disagree with them. Source: `src/domain/event-progress.ts` (pure derivation) and `src/storage/event-progress.ts` (reads).
+
+### Shape
+
+```json
+{
+  "version": 1,
+  "summary": { "status": "pending", "partial": true, "message": "Expense recorded; interpretation pending." },
+  "stages": {
+    "classification":         { "status": "completed", "code": "classified", "message": "Event classified.", "evidence": "record", "job": { "status": "succeeded", "attempt": 1, "maxAttempts": 5, "nextAttemptAt": null } },
+    "semanticInterpretation": { "status": "pending", "code": "job_queued", "message": "Waiting in the queue for interpretation.", "evidence": "job", "job": { "status": "queued", "attempt": 1, "maxAttempts": 5, "nextAttemptAt": null } },
+    "financialProjection":    { "status": "completed", "code": "ledger_linked", "message": "Transaction recorded in the ledger.", "evidence": "record", "job": null },
+    "searchIndexing":         { "status": "pending", "code": "waiting_for_semanticInterpretation", "message": "Search indexing is waiting for interpretation.", "evidence": "dependency", "job": null }
+  },
+  "derivedAt": "2026-10-24T12:00:00.000Z"
+}
+```
+
+- `stages.<name>.status` is one of `pending`, `running`, `completed`, `awaiting_review`, `recoverable_failure`, `terminal_failure`, `not_applicable`.
+- `code` is stable and safe to branch on or localize. `message` is an English fallback; do not parse it.
+- `evidence` says what decided the status: `record` (a produced row), `job` (the newest background job for the stage), `policy` (privacy or processing policy), `dependency` (an upstream stage), `none` (nothing exists yet).
+- `job` is present only when a job row informed the stage. `nextAttemptAt` is set only for `retry_scheduled`. Raw job errors (`last_error`) are never exposed.
+- `summary.status` is the most severe open stage (`terminal_failure` > `recoverable_failure` > `awaiting_review` > `running` > `pending`); it is `completed` when every applicable stage is done and `not_applicable` when none applies. `partial` is `true` when at least one stage is completed while another is still open.
+
+### Stages and where each status comes from
+
+| Stage | `completed` when | Otherwise |
+| --- | --- | --- |
+| `classification` | a `classified_events` row exists | newest `classification` job: `queued` → pending, `running` with a live lease → running, `running` with an expired lease → pending (`lease_expired`), `retry_scheduled` → recoverable_failure, `dead_letter`/`cancelled` → terminal_failure. No job: `processing_status = retryable` → recoverable_failure, else pending (`not_scheduled`). A succeeded job with no row stays pending (`awaiting_record`). |
+| `semanticInterpretation` | `classified_events.interpretation_status = resolved` | `review` (or `processing_status = review`) → awaiting_review. Pending/retryable/unclassified: newest `semantic_enrichment` job decides as above; with no job, `retryable`/`unclassified` → recoverable_failure, `pending` → pending (`not_scheduled`). Blocked by classification: pending while it is open, terminal_failure if it is (`blocked_by_classification`). `discarded` by the semantic decision → not_applicable. |
+| `financialProjection` | a `financial_transaction_events` row links the event | Classified and not financial (`expense`/`income`/`transfer`) → not_applicable. Classified as financial but no ledger row → terminal_failure (`ledger_not_derived`). Not classified yet → pending (`waiting_for_classification` for a financial raw kind, `applicability_unknown` otherwise). There is no separate financial job: the ledger row is written inside the classification transaction. |
+| `searchIndexing` | a `knowledge_embeddings` row (`object_type = event`) exists at the current embedding version | `discarded` → not_applicable. Newest `embedding` job decides; a succeeded job that stored nothing → not_applicable (`not_indexable`, privacy policy). No job: pending (`not_scheduled`) once interpretation is completed or awaiting review, pending (`waiting_for_semanticInterpretation`) before, terminal_failure (`blocked_by_semanticInterpretation`) if interpretation failed terminally. |
+
+Every stage is `not_applicable` when `processing_allowed = false` (codes `processing_disabled`) or `privacy_status = hidden` (`hidden_event`).
+
+### Precedence rules
+
+1. A produced record always wins over job state: a stage with its record is `completed` even if a later job is running (for example a reprocess). The `job` object still shows the later job.
+2. A queued job is never `completed`. `completed` requires the record the stage produces; a job that merely succeeded without it is `pending`/`awaiting_record`.
+3. Failures are split by the job: `retry_scheduled` is `recoverable_failure` (more attempts will run), `dead_letter` and `cancelled` are `terminal_failure` (retries exhausted; an operator replay re-queues the job and the stage returns to `pending`).
+4. Downstream stages follow an upstream terminal failure with `blocked_by_<stage>` instead of staying `pending` forever.
+5. Historical events (captured before the queue existed, or with no job rows) are judged by their records alone. With neither a record nor a job a stage is `pending` with `not_scheduled`, never `completed`.
+
+### More examples
+
+Retry scheduled, attempt 2 of 5 (summary `recoverable_failure`, `"Interpretation failed and will retry."`):
+
+```json
+"semanticInterpretation": { "status": "recoverable_failure", "code": "retry_scheduled",
+  "message": "Interpretation failed (attempt 2 of 5); a retry is scheduled.", "evidence": "job",
+  "job": { "status": "retry_scheduled", "attempt": 2, "maxAttempts": 5, "nextAttemptAt": "2026-10-24T12:05:00.000Z" } }
+```
+
+Classification exhausted (summary `terminal_failure`, `"Classification failed."`; interpretation and financialProjection report `blocked_by_classification`):
+
+```json
+"classification": { "status": "terminal_failure", "code": "retries_exhausted",
+  "message": "Classification failed after 5 attempts and will not retry automatically.", "evidence": "job",
+  "job": { "status": "dead_letter", "attempt": 5, "maxAttempts": 5, "nextAttemptAt": null } }
+```
+
+Historical, fully processed, no job rows (summary `completed`, `"Expense recorded; processing complete."`): classification `classified`, semanticInterpretation `interpreted`, financialProjection `ledger_linked`, searchIndexing `indexed`, all `evidence: "record"` and `job: null`.
+
+### Stable codes
+
+`classified`, `interpreted`, `ledger_linked`, `indexed`, `job_queued`, `job_running`, `lease_expired`, `retry_scheduled`, `retries_exhausted`, `job_cancelled`, `needs_review`, `not_scheduled`, `awaiting_record`, `retryable_without_job`, `interpretation_retryable`, `interpretation_unresolved`, `waiting_for_classification`, `waiting_for_semanticInterpretation`, `applicability_unknown`, `blocked_by_classification`, `blocked_by_semanticInterpretation`, `ledger_not_derived`, `not_financial`, `not_indexable`, `discarded`, `discarded_by_semantic_decision`, `hidden_event`, `processing_disabled`. Treat unknown codes as their `status`.
+
+### Known limitations
+
+- Events whose `interpretation_status` is still the migration default `pending` but whose `processing_status` is `semantically_resolved` (resolved before the column existed) are reported as interpreted.
+- Deleting a ledger transaction cascades its `financial_transaction_events` link, so the source event then reports `financialProjection` as `terminal_failure` / `ledger_not_derived`. No tombstone exists to tell it apart from a transaction that was never derived.
+- `financial_correlation` jobs are not enqueued anywhere today, so they are not read; the ledger link itself is the only evidence for `financialProjection`.
+- `/capture/*` routes do not return `progress`; use `GET /events/:id` or `POST /events`.
+
+### Consumer notes
+
+- Backward compatibility: clients that ignore `progress` keep working. The mobile app parses it tolerantly (`lib/event-progress.ts`) and renders it in the event detail ("Procesamiento"); the Spanish copy is client side and keyed by `status`, not by `message`.
+- Operational note: `background_jobs` and `knowledge_embeddings` are under owner RLS. The progress read runs in the same owner-scoped transaction as the event read, so it has the same visibility as the event itself. Today `raw_events` and enqueued jobs are both written with a null `owner_id`; if `BRAINIA_DB_ENFORCE_RLS=true` is enabled before that is backfilled, the event detail itself is hidden too, and a job hidden from the read would show its stage as `not_scheduled`.
+
 ## Event reprocessing
 
 ### `POST /api/v1/events/:id/reprocess`
