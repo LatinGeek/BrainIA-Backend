@@ -120,13 +120,13 @@
     "semantic_hash": ""
   },
   "src/app.ts": {
-    "mtime": 1792266251.9518287,
-    "ast_hash": "e2cd0dba1c1cdb53e33e5d615f480c92",
+    "mtime": 1792376137.7540066,
+    "ast_hash": "ddd1088ea654b8285f91e191e265062a",
     "semantic_hash": ""
   },
   "src/auth.ts": {
-    "mtime": 1792268579.1641176,
-    "ast_hash": "251c548a0a3c4c30888d74694e749c79",
+    "mtime": 1792645345.3798869,
+    "ast_hash": "ed2bed3f33e7f868b455166f108455d5",
     "semantic_hash": ""
   },
   "src/config.ts": {
@@ -205,8 +205,8 @@
     "semantic_hash": ""
   },
   "src/routes/events.ts": {
-    "mtime": 1792354549.326007,
-    "ast_hash": "f2149503750d42ec9887db9c3ea59cac",
+    "mtime": 1792874807.2916195,
+    "ast_hash": "6b8769db0af49c148435ded88f73f3fe",
     "semantic_hash": ""
   },
   "src/routes/financial-transactions.ts": {
@@ -290,18 +290,18 @@
     "semantic_hash": ""
   },
   "src/storage/entity-alias-repository.ts": {
-    "mtime": 1792268256.3911228,
-    "ast_hash": "870f455423fe7096ba89065a9f64e908",
+    "mtime": 1792379191.1249473,
+    "ast_hash": "3c93e61acc42f03534404c4e8ac776a1",
     "semantic_hash": ""
   },
   "src/storage/entity-repository.ts": {
-    "mtime": 1792353986.2227876,
-    "ast_hash": "73f22f31e3837a2c94655cf10bf5cb3f",
+    "mtime": 1792379182.7146776,
+    "ast_hash": "548e02926d1481dd521eba56e79fc979",
     "semantic_hash": ""
   },
   "src/storage/event-repository.ts": {
-    "mtime": 1792353968.3311813,
-    "ast_hash": "4d232ccbd46fe0e90828d69aff027666",
+    "mtime": 1792865699.7195556,
+    "ast_hash": "01786fe551ac6b4dd3095e0fd337697b",
     "semantic_hash": ""
   },
   "src/storage/event-store.ts": {
@@ -375,8 +375,8 @@
     "semantic_hash": ""
   },
   "tests/p0-foundation.test.ts": {
-    "mtime": 1783955260.5195842,
-    "ast_hash": "8f8f49a9b0d287c473b165365cbcabe2",
+    "mtime": 1792645345.3798869,
+    "ast_hash": "ec02405cb885fd21cdfa07f058d9515b",
     "semantic_hash": ""
   },
   "tests/p1-knowledge.test.ts": {
@@ -415,8 +415,8 @@
     "semantic_hash": ""
   },
   "docs/api.md": {
-    "mtime": 1785679301.8070688,
-    "ast_hash": "6943d917c75d09ae585417fe9659ba62",
+    "mtime": 1792882934.6914513,
+    "ast_hash": "646ce13ba654f74f5310ae1f8bbcfa5e",
     "semantic_hash": ""
   },
   "docs/architecture.md": {
@@ -430,8 +430,8 @@
     "semantic_hash": ""
   },
   "docs/changelog.md": {
-    "mtime": 1783981883.5475767,
-    "ast_hash": "9d9f3ec5c1733425e94c37aed39ed15a",
+    "mtime": 1792872722.522246,
+    "ast_hash": "a49e56c6defee42046ee98e7f60e0bb9",
     "semantic_hash": ""
   },
   "docs/domain.md": {
@@ -570,8 +570,8 @@
     "semantic_hash": ""
   },
   "src/storage/semantic-repository.ts": {
-    "mtime": 1792261157.2254982,
-    "ast_hash": "f7dbc77147ebe74aa479a4cad3fc4427",
+    "mtime": 1792379273.5586631,
+    "ast_hash": "3da090a389c89380f14575496e2e5257",
     "semantic_hash": ""
   },
   "docs/semantic-governance.md": {
@@ -640,8 +640,8 @@
     "semantic_hash": ""
   },
   "src/storage/semantic-reconciler.ts": {
-    "mtime": 1792273478.0106022,
-    "ast_hash": "2f537bb7c7cc0ec3ba6849617d9619aa",
+    "mtime": 1792375918.21995,
+    "ast_hash": "fee140a372c51de8f74caf02d94e2daa",
     "semantic_hash": ""
   },
   "src/scripts/reprocess-pending-semantics.ts": {
@@ -1020,13 +1020,13 @@
     "semantic_hash": ""
   },
   "contracts/brain-ai/2.0.0/SHA256SUMS.json": {
-    "mtime": 1792293949.5311387,
-    "ast_hash": "bb5d86360cbc8c69a6409e071ce924cf",
+    "mtime": 1792370567.708679,
+    "ast_hash": "00d42cc13adffa7ec8cce7a446d1d50c",
     "semantic_hash": ""
   },
   "contracts/brain-ai/2.0.0/build-bundle.mjs": {
-    "mtime": 1792293945.7480583,
-    "ast_hash": "c40275a4d702b46210f50dd64ea24510",
+    "mtime": 1792370519.6844642,
+    "ast_hash": "d9f76981f4e979ade09020cd427cf042",
     "semantic_hash": ""
   },
   "contracts/brain-ai/2.0.0/build-fixtures.mjs": {
@@ -1045,18 +1045,18 @@
     "semantic_hash": ""
   },
   "contracts/brain-ai/2.0.0/open-items.json": {
-    "mtime": 1792293948.9454257,
-    "ast_hash": "0f7f2f333d5ea118930a72aeda0ff744",
+    "mtime": 1792370564.585963,
+    "ast_hash": "04bbe8eb1ef1c1b3a157af6f5e251a13",
     "semantic_hash": ""
   },
   "contracts/brain-ai/2.0.0/openapi.json": {
-    "mtime": 1792293948.9474332,
-    "ast_hash": "7493b9391b819890340bf7dbf07a1542",
+    "mtime": 1792370513.904646,
+    "ast_hash": "33fb4e8a7848da59358169dafd59c1d5",
     "semantic_hash": ""
   },
   "contracts/brain-ai/2.0.0/schema.json": {
-    "mtime": 1792293948.94492,
-    "ast_hash": "afbec4b3af44e4874f21105bcc368b97",
+    "mtime": 1792370513.829939,
+    "ast_hash": "a82fc067fad6001ee2a5af3de279975e",
     "semantic_hash": ""
   },
   "contracts/brain-ai/2.0.0/seal.mjs": {
@@ -1065,13 +1065,13 @@
     "semantic_hash": ""
   },
   "contracts/brain-ai/2.0.0/validator-provenance.json": {
-    "mtime": 1792293949.3467848,
-    "ast_hash": "71f0c9ce986a5c597d536d287943c801",
+    "mtime": 1792370547.7213514,
+    "ast_hash": "d9e662f09b7821b5a963e76c603f8c5a",
     "semantic_hash": ""
   },
   "contracts/brain-ai/2.0.0/verify.mjs": {
-    "mtime": 1792293910.5418785,
-    "ast_hash": "2d80a076ec8beb7658c53c306dcbfef8",
+    "mtime": 1792370526.2032402,
+    "ast_hash": "570db55b2f8e1e1dc20571aac12db403",
     "semantic_hash": ""
   },
   "contracts/schema/E11-isolated.json": {
@@ -1095,8 +1095,8 @@
     "semantic_hash": ""
   },
   "contracts/schema/manifest.json": {
-    "mtime": 1792290519.0518093,
-    "ast_hash": "1deabb6333e643f3bb8a221f1484030b",
+    "mtime": 1792377348.4190288,
+    "ast_hash": "f78485bcc42445f23108d6017324a571",
     "semantic_hash": ""
   },
   "contracts/schema/preload-isolated.mjs": {
@@ -1125,8 +1125,8 @@
     "semantic_hash": ""
   },
   "docs/reports/v2/approvals.json": {
-    "mtime": 1792336573.4352155,
-    "ast_hash": "2202b29394465d4f2eaa21d34279fb25",
+    "mtime": 1792375908.757676,
+    "ast_hash": "4b6c372ad20839d534d4ae1e271cb781",
     "semantic_hash": ""
   },
   "docs/reports/v2/snapshot-backend.json": {
@@ -1200,7 +1200,7 @@
     "semantic_hash": ""
   },
   "tests/v2-harness/artifacts/latest.json": {
-    "mtime": 1792355222.897921,
+    "mtime": 1792355794.3228302,
     "ast_hash": "3721e7149b5c3dc481ef93258ceed59e",
     "semantic_hash": ""
   },
@@ -1275,13 +1275,13 @@
     "semantic_hash": ""
   },
   "contracts/brain-ai/2.0.0/README.md": {
-    "mtime": 1792293932.3640063,
-    "ast_hash": "6d5447b6212dd0ad1909dd2b023e2d5a",
+    "mtime": 1792370530.3400457,
+    "ast_hash": "dadfdf849473b7f6db64b870fcb475ab",
     "semantic_hash": ""
   },
   "contracts/brain-ai/2.0.0/spec.md": {
-    "mtime": 1792293938.1217706,
-    "ast_hash": "0209574d25c64be36b60e02bf3cc5adb",
+    "mtime": 1792370537.240335,
+    "ast_hash": "5deec3c9ff4c92f29054731a49940392",
     "semantic_hash": ""
   },
   "contracts/schema/README.md": {
@@ -1290,8 +1290,8 @@
     "semantic_hash": ""
   },
   "docs/BRAIN_AI_V2_API_CONTRACT_v2.0.0.md": {
-    "mtime": 1792293938.1217706,
-    "ast_hash": "0209574d25c64be36b60e02bf3cc5adb",
+    "mtime": 1792370537.240335,
+    "ast_hash": "5deec3c9ff4c92f29054731a49940392",
     "semantic_hash": ""
   },
   "docs/BRAIN_AI_V2_ARCHITECTURE.md": {
@@ -1395,8 +1395,8 @@
     "semantic_hash": ""
   },
   "docs/reports/v2/baseline-snapshot.md": {
-    "mtime": 1792261116.8579476,
-    "ast_hash": "fa8879db021cb5602d3b4b03d34478d1",
+    "mtime": 1792355282.1892052,
+    "ast_hash": "811afaea6295ffdef779df8e101dd0a4",
     "semantic_hash": ""
   },
   "docs/reports/v2/baseline.md": {
@@ -1500,8 +1500,8 @@
     "semantic_hash": ""
   },
   "docs/reports/v2/execution-status.md": {
-    "mtime": 1792340419.5084977,
-    "ast_hash": "872eefc8d43cb9264dc4b999420d2a56",
+    "mtime": 1792380473.9984128,
+    "ast_hash": "3b796f9972c1586c5ead842942a26247",
     "semantic_hash": ""
   },
   "migrations/20261017120000_owner_runs.sql": {
@@ -1725,8 +1725,168 @@
     "semantic_hash": ""
   },
   "docs/reports/v2/G2.md": {
-    "mtime": 1792337883.0994213,
-    "ast_hash": "bb9129013f80142c9aef96f4b6d1942d",
+    "mtime": 1792355807.3678596,
+    "ast_hash": "61dc3f916a111a27c1f1b6b21159617d",
+    "semantic_hash": ""
+  },
+  "docs/reports/v2/snapshot-2026-10-18-backend.json": {
+    "mtime": 1792355269.2058158,
+    "ast_hash": "03300b2b2f4b69c54a0dba2784453790",
+    "semantic_hash": ""
+  },
+  "docs/reports/v2/snapshot-2026-10-18-mobile.json": {
+    "mtime": 1792355277.5936353,
+    "ast_hash": "9e897535f580f319530240de5b8b458f",
+    "semantic_hash": ""
+  },
+  "migrations/20261019120000_v2_api.sql": {
+    "mtime": 1792376612.2914317,
+    "ast_hash": "f1622b78ebd16a5ad762a122f954ac0e",
+    "semantic_hash": ""
+  },
+  "src/domain/event-history.ts": {
+    "mtime": 1792810170.2899477,
+    "ast_hash": "3360642691082a69c6682330de112a3f",
+    "semantic_hash": ""
+  },
+  "src/domain/event-progress.ts": {
+    "mtime": 1792882934.6872485,
+    "ast_hash": "1c830c721c72fcd2d3fd99ecf5b1834e",
+    "semantic_hash": ""
+  },
+  "src/domain/v2/contracts.ts": {
+    "mtime": 1792376321.4430876,
+    "ast_hash": "ffb33a1e8ae3e9af52df654512f592e5",
+    "semantic_hash": ""
+  },
+  "src/routes/v2/index.ts": {
+    "mtime": 1792379223.760275,
+    "ast_hash": "ec3314137f29b41c818074d948e93a0b",
+    "semantic_hash": ""
+  },
+  "src/storage/event-progress.ts": {
+    "mtime": 1792882934.6872485,
+    "ast_hash": "98827e91b80bcc1fbb1c000ed2ab48cd",
+    "semantic_hash": ""
+  },
+  "src/storage/v2/controls.ts": {
+    "mtime": 1792376762.7077613,
+    "ast_hash": "2a052c1484caea67bc64eb4f76cce609",
+    "semantic_hash": ""
+  },
+  "src/storage/v2/cursors.ts": {
+    "mtime": 1792376214.8242855,
+    "ast_hash": "05ea17c5a2e5cf8464a6713cf17d783e",
+    "semantic_hash": ""
+  },
+  "src/storage/v2/discovery.ts": {
+    "mtime": 1792376741.6527832,
+    "ast_hash": "ef252aca970db943efe47f0e1a3efad4",
+    "semantic_hash": ""
+  },
+  "src/storage/v2/observations.ts": {
+    "mtime": 1792376795.3156457,
+    "ast_hash": "1c5bf08361e460591525431a6b165d81",
+    "semantic_hash": ""
+  },
+  "src/storage/v2/reads.ts": {
+    "mtime": 1792376678.5742111,
+    "ast_hash": "fc2421e2b17130cece9d62336846a2dc",
+    "semantic_hash": ""
+  },
+  "tests/event-history.test.ts": {
+    "mtime": 1792865699.7210689,
+    "ast_hash": "67237ffde536ec5f9cf84aacdcfec0e6",
+    "semantic_hash": ""
+  },
+  "tests/event-progress.test.ts": {
+    "mtime": 1792882934.6894815,
+    "ast_hash": "098ad24e14198fdc927037a56e085ac9",
+    "semantic_hash": ""
+  },
+  "tests/semantic-merge-types.test.ts": {
+    "mtime": 1792379275.5386796,
+    "ast_hash": "85ac82779f29297b0b3c23c28701a1ae",
+    "semantic_hash": ""
+  },
+  "tests/v2-api.test.ts": {
+    "mtime": 1792379238.1191604,
+    "ast_hash": "a1e3296be2f0baa3e465f3b3d9b2fd40",
+    "semantic_hash": ""
+  },
+  "docs/reports/v2/B02-r4.md": {
+    "mtime": 1792370606.2204113,
+    "ast_hash": "d7d6e13ccf48ede2d5e463af6c0cb17f",
+    "semantic_hash": ""
+  },
+  "docs/reports/v2/B13-B17-r1.md": {
+    "mtime": 1792377228.0952096,
+    "ast_hash": "e00f1aa0980de8903b2110b359c56d00",
+    "semantic_hash": ""
+  },
+  "docs/reports/v2/B13-B17-schema-r1.md": {
+    "mtime": 1792377529.220026,
+    "ast_hash": "575322cbf3dd05a0b4b76faa474dfd43",
+    "semantic_hash": ""
+  },
+  "docs/reports/v2/B18-semantic-merge-fix.md": {
+    "mtime": 1792379375.665905,
+    "ast_hash": "e7b6a256a1e9b65b82baf33afc845571",
+    "semantic_hash": ""
+  },
+  "docs/reports/v2/G0-closure-2026-10-19.md": {
+    "mtime": 1792375908.7701354,
+    "ast_hash": "0bdc9d6a24c82f09c803c09f581a1ba2",
+    "semantic_hash": ""
+  },
+  "docs/reports/v2/G0-evidence-2026-10-18.md": {
+    "mtime": 1792371056.3130717,
+    "ast_hash": "5a7d3288bb937bf7ce8d52ccf81166e9",
+    "semantic_hash": ""
+  },
+  "docs/reports/v2/G2-closure-2026-10-19.md": {
+    "mtime": 1792375908.781644,
+    "ast_hash": "98aa9e5972862c99d13ea1e465e77aa8",
+    "semantic_hash": ""
+  },
+  "docs/reports/v2/V2-API-implementation-scope.md": {
+    "mtime": 1792376248.7925358,
+    "ast_hash": "5c4a817f263364d45e224b9b6c5edd15",
+    "semantic_hash": ""
+  },
+  "docs/reports/v2/V2-final-verification-2026-10-19.md": {
+    "mtime": 1792379788.5394752,
+    "ast_hash": "22d2df4d761f3e4a0e45c8a4afac5866",
+    "semantic_hash": ""
+  },
+  "docs/reports/v2/device-evidence-new-signing-2026-10-18.md": {
+    "mtime": 1792373097.333296,
+    "ast_hash": "fc7dee0ff0d1abbe9e7b5bd14c35276c",
+    "semantic_hash": ""
+  },
+  "docs/reports/v2/play-console-status.md": {
+    "mtime": 1792371557.9964385,
+    "ast_hash": "c798db2b56996ec58b85c74b6250516c",
+    "semantic_hash": ""
+  },
+  "docs/reports/v2/production-deploy-2026-10-18.md": {
+    "mtime": 1792374988.1948586,
+    "ast_hash": "d2064148879eb87dd2af86db835e4e10",
+    "semantic_hash": ""
+  },
+  "docs/reports/v2/production-migration-2026-10-18.md": {
+    "mtime": 1792373387.003617,
+    "ast_hash": "fa66298a0be34601224c80a91322f15c",
+    "semantic_hash": ""
+  },
+  "docs/reports/v2/signing-and-build-2026-10-18.md": {
+    "mtime": 1792372620.934655,
+    "ast_hash": "5845859460fa08d0ce6d95a9d618f3b9",
+    "semantic_hash": ""
+  },
+  "docs/reports/v2/device-evidence/new-signing-2026-10-18.png": {
+    "mtime": 1792373069.0310423,
+    "ast_hash": "52c10985c55a79b04654f76478cc0ecd",
     "semantic_hash": ""
   }
 }
