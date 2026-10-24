@@ -28,9 +28,14 @@ export async function loadEventProgress(
     where event_id = $1 and job_type = any($2::text[])
     order by job_type, updated_at desc, created_at desc
   `, [event.id, [...PROGRESS_JOB_TYPES]]);
-  const facts = await db.query<{ linked: boolean; embedded: boolean }>(`
+  const facts = await db.query<{ links: number; visibleLinks: number; embedded: boolean }>(`
     select
-      exists(select 1 from financial_transaction_events where raw_event_id = $1) as linked,
+      -- A merged observation follows its canonical transaction; hidden_at marks a user removal.
+      (select count(*)::int from financial_transaction_events link where link.raw_event_id = $1) as links,
+      (select count(*)::int from financial_transaction_events link
+        join financial_transactions own on own.id = link.transaction_id
+        left join financial_transactions canonical on canonical.id = own.merged_into_transaction_id
+        where link.raw_event_id = $1 and coalesce(canonical.hidden_at, own.hidden_at) is null) as "visibleLinks",
       exists(select 1 from knowledge_embeddings
         where object_type = 'event' and object_id = $1 and embedding_version = $2) as embedded
   `, [event.id, EMBEDDING_VERSION]);
@@ -54,7 +59,8 @@ export async function loadEventProgress(
     classification: event.classificationVersion
       ? { inferredKind: event.inferredKind, interpretationStatus: event.interpretationStatus }
       : null,
-    financialLinked: facts.rows[0]?.linked === true,
+    financialLink: Number(facts.rows[0]?.visibleLinks) > 0 ? "linked"
+      : Number(facts.rows[0]?.links) > 0 ? "removed" : "none",
     embedded: facts.rows[0]?.embedded === true,
     jobs: byType,
   }, now);

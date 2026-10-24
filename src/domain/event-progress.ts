@@ -40,8 +40,11 @@ export type EventProgressSnapshot = {
   };
   /** Present when a classified_events row exists for the event. */
   classification: { inferredKind: string; interpretationStatus: string } | null;
-  /** A financial_transaction_events row links the event to the ledger. */
-  financialLinked: boolean;
+  /**
+   * Ledger link state: `linked` (a visible transaction), `removed` (the linked
+   * transaction was hidden by the user or merged into a hidden one), `none`.
+   */
+  financialLink: "linked" | "removed" | "none";
   /** A knowledge_embeddings row for the event exists at the current version. */
   embedded: boolean;
   /** Newest job per stage, when one was ever enqueued. */
@@ -197,8 +200,12 @@ function deriveInterpretation(s: EventProgressSnapshot, classification: StagePro
 }
 
 function deriveFinancial(s: EventProgressSnapshot, classification: StageProgress): StageProgress {
-  if (s.financialLinked) {
+  if (s.financialLink === "linked") {
     return stage("completed", "ledger_linked", "Transaction recorded in the ledger.", "record");
+  }
+  // A user-hidden transaction is a deliberate outcome, not a processing failure.
+  if (s.financialLink === "removed") {
+    return stage("not_applicable", "ledger_removed", "The recorded transaction was removed from the ledger.", "record");
   }
   if (s.classification) {
     if (!isFinancialKind(s.classification.inferredKind)) {

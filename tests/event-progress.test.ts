@@ -23,7 +23,7 @@ function snapshot(overrides: Partial<EventProgressSnapshot> = {}): EventProgress
   return {
     event: { kind: 'note', processingStatus: 'captured', processingAllowed: true, privacyStatus: 'standard' },
     classification: null,
-    financialLinked: false,
+    financialLink: 'none',
     embedded: false,
     jobs: {},
     ...overrides,
@@ -57,7 +57,7 @@ test('expense recorded while interpretation is still pending is partial success'
   const s = snapshot({
     event: { kind: 'expense', processingStatus: 'classified', processingAllowed: true, privacyStatus: 'standard' },
     classification: classified('expense'),
-    financialLinked: true,
+    financialLink: 'linked',
     jobs: { classification: job('succeeded'), semantic_enrichment: job('queued') },
   });
   const progress = deriveEventProgress(s, NOW);
@@ -132,7 +132,7 @@ test('a fully processed financial event completes every applicable stage', () =>
   const s = snapshot({
     event: { kind: 'expense', processingStatus: 'semantically_resolved', processingAllowed: true, privacyStatus: 'standard' },
     classification: classified('expense', 'resolved'),
-    financialLinked: true,
+    financialLink: 'linked',
     embedded: true,
   });
   const progress = deriveEventProgress(s, NOW);
@@ -145,6 +145,17 @@ test('financial detection without a ledger row is surfaced, not hidden as not_ap
   const stage = deriveEventProgress(s, NOW).stages.financialProjection;
   assert.equal(stage.status, 'terminal_failure');
   assert.equal(stage.code, 'ledger_not_derived');
+});
+
+test('a user-removed ledger transaction is not applicable, not a failure', () => {
+  const s = snapshot({
+    event: { kind: 'expense', processingStatus: 'semantically_resolved', processingAllowed: true, privacyStatus: 'standard' },
+    classification: classified('expense', 'resolved'), financialLink: 'removed', embedded: true,
+  });
+  const stage = deriveEventProgress(s, NOW).stages.financialProjection;
+  assert.equal(stage.status, 'not_applicable');
+  assert.equal(stage.code, 'ledger_removed');
+  assert.equal(deriveEventProgress(s, NOW).summary.status, 'completed');
 });
 
 test('non-financial events mark the financial stage not applicable', () => {
@@ -171,7 +182,7 @@ test('historical events are judged by their records, not by missing jobs', () =>
   const withRecords = snapshot({
     event: { kind: 'expense', processingStatus: 'semantically_resolved', processingAllowed: true, privacyStatus: 'standard' },
     classification: classified('expense', 'resolved'),
-    financialLinked: true,
+    financialLink: 'linked',
     embedded: true,
     jobs: {},
   });
@@ -288,6 +299,12 @@ test('GET /events/:id keeps processingStatus and adds stage progress derived fro
     assert.equal(failed.progress.stages.semanticInterpretation.status, 'terminal_failure');
     assert.equal(failed.progress.stages.financialProjection.status, 'completed');
     assert.equal(failed.progress.summary.message, 'Expense recorded; interpretation failed.');
+
+    // Hiding the transaction (the app's "delete") flips the stage to not_applicable.
+    await pool.query(`update financial_transactions set hidden_at = now() where id = $1`, [`txn_${expense}`]);
+    const hiddenTxn = await getProgress(app, expense);
+    assert.equal(hiddenTxn.progress.stages.financialProjection.code, 'ledger_removed');
+    await pool.query(`update financial_transactions set hidden_at = null where id = $1`, [`txn_${expense}`]);
 
     // Embedding at the current version completes search once interpretation resolves.
     await pool.query(`update classified_events set interpretation_status='resolved' where raw_event_id=$1`, [expense]);
