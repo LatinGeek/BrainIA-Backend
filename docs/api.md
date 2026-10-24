@@ -265,7 +265,57 @@ duplicates.
 
 ### `GET /api/v1/events`
 
-Returns the stored events in append order.
+The response shape depends on whether the request has a query string.
+
+**Without query parameters (legacy, deprecated).** Returns every stored event of the
+caller as a full-record array in append order (`created_at asc`), including `raw`,
+`body`, `entities` and `relations`. The response carries `Deprecation: true` and a
+`Link: </api/v1/events?limit=25>; rel="successor-version"` header. Existing consumers keep
+working unchanged; new code should use the paginated form.
+
+**With any query parameter (paginated history).** Returns summaries only. Unknown or
+invalid parameters are rejected with `400 invalid_event_query`.
+
+| Parameter | Meaning |
+| --- | --- |
+| `limit` | 1-100, default 25. May change between pages. |
+| `cursor` | Opaque `page.nextCursor` from the previous response. |
+| `order` | `desc` (default, newest first) or `asc`. |
+| `dateField` | `occurredAt` (default) or `ingestedAt`; selects the time used by `from`, `to` and ordering. |
+| `from` / `to` | ISO-8601 date-times with timezone; `from` inclusive, `to` exclusive. |
+| `source` | Exact source(s); repeat or comma-separate (max 20). |
+| `category` | Primary semantic category key(s); repeat or comma-separate. |
+| `status` | `captured`, `classified`, `semantically_resolved`, `review`, `retryable`, `discarded`; repeat or comma-separate. |
+
+Filters combine with AND; values inside one filter combine with OR.
+
+Time semantics: `occurredAt` is the event's own `timestamp`, falling back to the ingestion
+time when the producer sent none. `ingestedAt` is when BrainIA stored the event.
+
+Ordering is `(dateField, id)` in the requested direction, so equal timestamps are broken by
+event id and paging a stable dataset yields no duplicates or gaps. Rows inserted while paging
+may appear or not, but never cause duplicates of already-seen rows.
+
+```json
+{
+  "items": [
+    {
+      "id": "...", "source": "capture.wallet", "kind": "expense", "inferredKind": "expense",
+      "title": "...", "displayTitle": null, "bodyPreview": "first 200 chars of body",
+      "occurredAt": "2026-03-01T10:00:00.000Z", "ingestedAt": "2026-03-02T00:00:00.000Z",
+      "processingStatus": "classified", "primaryCategoryKey": "finance",
+      "interpretationStatus": "pending", "privacyStatus": "standard"
+    }
+  ],
+  "page": { "limit": 25, "hasMore": true, "nextCursor": "eyJ2Ijox..." },
+  "query": { "order": "desc", "dateField": "occurredAt" }
+}
+```
+
+`nextCursor` is `null` on the last page. Cursors are bound to the owner and to the filter/order
+set that produced them; replaying one for another owner or with different filters returns
+`400 invalid_cursor`. Fetch full detail (entities, relations, raw payload) with
+`GET /api/v1/events/:id`. `bodyPreview` is the only body text in list entries.
 
 ## Event reprocessing
 

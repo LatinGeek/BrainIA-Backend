@@ -1,6 +1,11 @@
 import { randomUUID } from "node:crypto";
 import { pool } from "./postgres.js";
 import type { ClassifiedEvent, EventInput } from "../domain/event.js";
+import {
+  decodeEventHistoryCursor,
+  encodeEventHistoryCursor,
+  type EventHistoryFilters,
+} from "../domain/event-history.js";
 
 type Queryable = Pick<typeof pool, "query">;
 
@@ -573,6 +578,101 @@ export async function listStoredEvents(clientId?: string, db: Queryable = pool) 
   );
 
   return result.rows as StoredEventRecord[];
+}
+
+export type EventHistoryItem = {
+  id: string;
+  source: string;
+  kind: string;
+  inferredKind: string | null;
+  title: string;
+  displayTitle: string | null;
+  /** First 200 characters of the body; the full body is only on GET /events/:id. */
+  bodyPreview: string | null;
+  occurredAt: string;
+  ingestedAt: string;
+  processingStatus: StoredEventRecord["processingStatus"];
+  primaryCategoryKey: string | null;
+  interpretationStatus: string | null;
+  privacyStatus: StoredEventRecord["privacyStatus"];
+};
+
+export type EventHistoryPage = {
+  items: EventHistoryItem[];
+  hasMore: boolean;
+  nextCursor: string | null;
+};
+
+// Summary-only keyset page over raw_events. Deliberately skips raw payloads,
+// bodies, entities and relations; clients fetch those with GET /events/:id.
+export async function listEventHistoryPage(
+  db: Queryable,
+  options: { ownerId?: string; limit: number; cursor?: string; filters: EventHistoryFilters },
+): Promise<EventHistoryPage> {
+  const { ownerId, limit, filters } = options;
+  const position = options.cursor ? decodeEventHistoryCursor(options.cursor, ownerId, filters) : null;
+
+  const sortExpr = filters.dateField === "ingestedAt" ? "r.created_at" : "coalesce(r.timestamp, r.created_at)";
+  const descending = filters.order === "desc";
+  const params: unknown[] = [ownerId ?? null];
+  const where: string[] = ["($1::text is null or r.client_id = $1)"];
+  const bind = (value: unknown) => {
+    params.push(value);
+    return `$${params.length}`;
+  };
+
+  if (filters.from) where.push(`${sortExpr} >= ${bind(filters.from)}::timestamptz`);
+  if (filters.to) where.push(`${sortExpr} < ${bind(filters.to)}::timestamptz`);
+  if (filters.source) where.push(`r.source = any(${bind(filters.source)}::text[])`);
+  if (filters.category) where.push(`semantic.primary_category_key = any(${bind(filters.category)}::text[])`);
+  if (filters.status) where.push(`r.processing_status = any(${bind(filters.status)}::text[])`);
+  if (position) {
+    const op = descending ? "<" : ">";
+    where.push(`(${sortExpr}, r.id::text) ${op} (${bind(position.key)}::timestamptz, ${bind(position.id)}::text)`);
+  }
+
+  const direction = descending ? "desc" : "asc";
+  const result = await db.query<EventHistoryItem & { sortKey: string }>(
+    `
+      select
+        r.id::text as id,
+        r.source,
+        r.kind,
+        c.inferred_kind as "inferredKind",
+        r.title,
+        c.display_title as "displayTitle",
+        left(r.body, 200) as "bodyPreview",
+        coalesce(r.timestamp, r.created_at) as "occurredAt",
+        r.created_at as "ingestedAt",
+        r.processing_status as "processingStatus",
+        semantic.primary_category_key as "primaryCategoryKey",
+        c.interpretation_status as "interpretationStatus",
+        r.privacy_status as "privacyStatus",
+        (${sortExpr})::text as "sortKey"
+      from raw_events r
+      left join classified_events c on c.raw_event_id = r.id
+      left join semantic_event_decisions semantic on semantic.event_id = r.id
+      where ${where.join(" and ")}
+      order by ${sortExpr} ${direction}, r.id::text ${direction}
+      limit ${bind(limit + 1)}
+    `,
+    params,
+  );
+
+  const hasMore = result.rows.length > limit;
+  const rows = hasMore ? result.rows.slice(0, limit) : result.rows;
+  const last = rows[rows.length - 1];
+  const items = rows.map(({ sortKey: _sortKey, ...item }) => ({
+    ...item,
+    occurredAt: new Date(item.occurredAt).toISOString(),
+    ingestedAt: new Date(item.ingestedAt).toISOString(),
+  }));
+
+  return {
+    items,
+    hasMore,
+    nextCursor: hasMore && last ? encodeEventHistoryCursor({ key: last.sortKey, id: last.id }, ownerId, filters) : null,
+  };
 }
 
 export async function countKnowledgeMetrics(db: Queryable) {

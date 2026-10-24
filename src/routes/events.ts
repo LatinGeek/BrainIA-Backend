@@ -1,6 +1,11 @@
 ﻿import type { FastifyPluginAsync } from "fastify";
 import { ownerScope, type AuthConfig } from "../auth.js";
 import { eventSchema } from "../domain/event.js";
+import {
+  eventHistoryFilters,
+  eventHistoryQuerySchema,
+  InvalidEventCursorError,
+} from "../domain/event-history.js";
 import { withOwnerRead } from "../storage/postgres.js";
 import {
   appendEvent,
@@ -9,7 +14,7 @@ import {
   getEvent,
   reprocessEvent,
 } from "../storage/event-store.js";
-import { listStoredEvents, loadStoredEventById } from "../storage/event-repository.js";
+import { listEventHistoryPage, listStoredEvents, loadStoredEventById } from "../storage/event-repository.js";
 
 type EventRoutesOptions = {
   authConfig: AuthConfig;
@@ -17,9 +22,50 @@ type EventRoutesOptions = {
 
 export const registerEventRoutes = (options: EventRoutesOptions): FastifyPluginAsync => {
   return async (app) => {
-    app.get("/events", async (request) => {
+    // Two response shapes, selected by whether the request carries any query string:
+    //  - no query params: legacy unbounded array of full records (deprecated; existing
+    //    consumers such as the mobile client keep working unchanged);
+    //  - any query param: paginated summary envelope, see domain/event-history.ts.
+    app.get("/events", async (request, reply) => {
       const ownerId = ownerScope(request);
-      return withOwnerRead(ownerId, (db) => listStoredEvents(ownerId, db));
+      const rawQuery = (request.query ?? {}) as Record<string, unknown>;
+
+      if (Object.keys(rawQuery).length === 0) {
+        reply.header("Deprecation", "true");
+        reply.header("Link", `<${request.url.split("?")[0]}?limit=25>; rel="successor-version"`);
+        return withOwnerRead(ownerId, (db) => listStoredEvents(ownerId, db));
+      }
+
+      const parsed = eventHistoryQuerySchema.safeParse(rawQuery);
+      if (!parsed.success) {
+        // A bad cursor is reported with the same code regardless of how it is bad.
+        if (parsed.error.issues.some((issue) => issue.path[0] === "cursor")) {
+          return reply.status(400).send({ error: "invalid_cursor", message: new InvalidEventCursorError().message });
+        }
+        return reply.status(400).send({
+          error: "invalid_event_query",
+          message: "The event history query is invalid",
+          issues: parsed.error.flatten(),
+        });
+      }
+
+      const query = parsed.data;
+      const filters = eventHistoryFilters(query);
+      try {
+        const page = await withOwnerRead(ownerId, (db) =>
+          listEventHistoryPage(db, { ownerId, limit: query.limit, cursor: query.cursor, filters }),
+        );
+        return {
+          items: page.items,
+          page: { limit: query.limit, hasMore: page.hasMore, nextCursor: page.nextCursor },
+          query: filters,
+        };
+      } catch (error) {
+        if (error instanceof InvalidEventCursorError) {
+          return reply.status(400).send({ error: "invalid_cursor", message: error.message });
+        }
+        throw error;
+      }
     });
 
     app.get("/events/:id", async (request, reply) => {
