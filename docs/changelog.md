@@ -59,3 +59,13 @@
 - added an end-to-end regression test for capture, search, graph, inspect, insight, digest, and agent surfaces
 - added a concrete future feature list document for post-version planning
 - added a canonical financial transaction layer with evidence rows, plus cleanup support for financial test data
+
+## 2026-10-24
+
+- added cursor pagination and combined filters (date range, source, category, processing status) to `GET /api/v1/events`; see `docs/api.md`
+- list entries are summaries (with a 200-character `bodyPreview`) instead of full records with entities and relations
+- date filters and ordering use `occurredAt` (event timestamp, falling back to ingestion time) or `ingestedAt` (selected with `dateField`), with the event id as tie-breaker
+- cursors are bound to the owner and the filter/order set; invalid or mismatched cursors return `400 invalid_cursor`
+- `GET /api/v1/events` without query parameters still returns the legacy full array and now sends a `Deprecation` header
+- added `tests/event-history.test.ts` (run with `npm run test:isolated`)
+- known gap: no index backs the default sort `coalesce(timestamp, created_at)`
