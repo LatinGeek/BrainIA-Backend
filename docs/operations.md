@@ -64,7 +64,7 @@ Current state:
 - email extraction now normalizes sender and recipient metadata before entity and relation building
 - relation descriptions are part of the canonical schema
 - event ingestion is idempotent through a dedupe key
-- reprocessing is available for a single stored event and prunes the event-local graph surface when rerun
+- reprocessing is available for a single stored event; selective stage requests run through the job queue and coalesce repeated work, while bodyless requests keep the legacy synchronous path
 - a lightweight metrics endpoint is available
 - knowledge query endpoints are available for entities and relations
 - entity resolve endpoint is available for resolving ids or textual hints

@@ -1,6 +1,7 @@
 import crypto, { randomUUID } from "node:crypto";
 import { estimateTokens, modelRequestFingerprint, recordModelCallAudit } from "./model-audit.js";
-import { pool } from "./postgres.js";
+import { pool, withTransaction } from "./postgres.js";
+import { assertJobFence, type JobFence } from "./job-repository.js";
 import {
   acquireProviderSlot,
   authorizeModelDispatch,
@@ -285,7 +286,11 @@ export async function upsertEmbedding(db: Queryable, input: {
   return result.rows[0] ?? null;
 }
 
-export async function refreshEventEmbeddings(db: Queryable, eventId: string) {
+export async function refreshEventEmbeddings(
+  db: Queryable,
+  eventId: string,
+  options: { fence?: JobFence | null } = {},
+) {
   const event = await db.query<{
     id: string; clientId: string | null; ownerId: string | null; source: string; kind: string;
     title: string | null; body: string | null; displayTitle: string | null;
@@ -299,9 +304,19 @@ export async function refreshEventEmbeddings(db: Queryable, eventId: string) {
   `, [eventId]);
   const row = event.rows[0];
   if (!row) return [];
+  // A fenced write is one transaction containing the ownership check and the
+  // upsert. A claim that advanced the fence therefore cannot be overwritten by
+  // an expired worker, even when the model/vector generation happened before.
+  const write = async (input: Parameters<typeof upsertEmbedding>[1]) => {
+    if (!options.fence) return upsertEmbedding(db, input);
+    return withTransaction(async (tx) => {
+      await assertJobFence(tx, options.fence!, "embedding_write");
+      return upsertEmbedding(tx, input);
+    });
+  };
   const stored = [];
   const ownerId = row.ownerId ?? row.clientId;
-  const eventEmbedding = await upsertEmbedding(db, {
+  const eventEmbedding = await write({
     clientId: row.clientId, ownerId, objectType: "event", objectId: row.id,
     content: [row.displayTitle, row.displayDescription, row.title, row.body, row.source, row.kind].filter(Boolean).join("\n"),
     metadata: { source: row.source, kind: row.kind }, eventIds: [row.id],
@@ -316,7 +331,7 @@ export async function refreshEventEmbeddings(db: Queryable, eventId: string) {
     where link.event_id = $1 and merged.alias_entity_id is null and entity.visibility <> 'hidden'
   `, [eventId]);
   for (const entity of entities.rows) {
-    const embedding = await upsertEmbedding(db, {
+    const embedding = await write({
       clientId: row.clientId, ownerId, objectType: "entity", objectId: entity.id,
       content: [entity.value, entity.description, entity.type, ...entity.aliases].filter(Boolean).join("\n"),
       metadata: { type: entity.type, source: row.source }, eventIds: [row.id],

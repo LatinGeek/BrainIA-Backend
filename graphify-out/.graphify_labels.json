@@ -229,6 +229,7 @@
   "227": "Count",
   "228": "Version",
   "229": "Hash",
+  "230": "relation-repository.ts",
   "231": "backup-verification.ts",
   "232": "Event processing progress",
   "233": "B13–B17 v2 API implementation, revision 1",
@@ -240,8 +241,15 @@
   "239": "G0 closure - 2026-10-19",
   "240": "G2 closure - 2026-10-19",
   "241": "B13–B17 reviewed schema catalog update, revision 1",
+  "242": "semantic.ts",
+  "243": "`POST /api/v1/events/:id/reprocess`",
   "244": "Receipt",
   "245": "ConversionRate",
   "246": "Decimal",
-  "247": "ApiError"
+  "247": "ApiError",
+  "248": "v2-authorization.test.ts",
+  "249": "Currency",
+  "250": "PolicyResponse",
+  "251": "Event",
+  "252": "Magnitude"
 }

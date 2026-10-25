@@ -1,5 +1,20 @@
+import { randomUUID } from "node:crypto";
 import { classifyEvent } from "../domain/classification.js";
 import type { ClassifiedEvent, EventInput } from "../domain/event.js";
+import {
+  missingReprocessPrerequisites,
+  normalizeReprocessStages,
+  REPROCESS_STAGE_SPECS,
+  ReprocessEventNotFoundError,
+  ReprocessInProgressError,
+  ReprocessNotProcessableError,
+  ReprocessPrerequisitesMissingError,
+  ReprocessRequestIdConflictError,
+  reprocessStageKey,
+  sameReprocessSelection,
+  type ReprocessExecutionMode,
+  type ReprocessStage,
+} from "../domain/event-reprocess.js";
 import { buildEntityDrafts, type EntityDraft } from "../domain/entities.js";
 import { buildRelationDrafts } from "../domain/relations.js";
 import { pool, withSemanticMaterializationLock, withTransaction } from "./postgres.js";
@@ -32,7 +47,7 @@ import { buildModelSemanticDecision } from "./semantic-enrichment.js";
 import type { SemanticDecision } from "./semantic-enrichment.js";
 import { buildEventInterpretation } from "../domain/event-interpretation.js";
 import { deriveKnowledgeFacts } from "./knowledge-fact-repository.js";
-import { enqueueBackgroundJob, claimBackgroundJob, completeBackgroundJob, failBackgroundJob, assertJobFence, StaleJobClaimError, type JobFence } from "./job-repository.js";
+import { enqueueBackgroundJob, claimBackgroundJob, completeBackgroundJob, failBackgroundJob, assertJobFence, StaleJobClaimError, findEventReprocessJobByKey, listActiveEventReprocessJobs, type BackgroundJob, type JobFence } from "./job-repository.js";
 import { loadSourceProcessingPolicy } from "./privacy.js";
 import { config } from "../config.js";
 import { SEMANTIC_GOVERNANCE_VERSION } from "../domain/ontology.js";
@@ -457,15 +472,213 @@ export async function classifyCapturedEvent(eventId: string, options: { fence?: 
   });
 }
 
-export async function reprocessEvent(eventId: string, options: { ensureOntology?: boolean; reuseClassification?: boolean; skipFinancial?: boolean } = {}) {
+export type QueueEventReprocessInput = {
+  eventId: string;
+  stages: unknown;
+  execution?: ReprocessExecutionMode;
+  /** Caller-supplied dedupe key. Only participates in coalesce mode. */
+  idempotencyKey?: string | null;
+  clientId?: string | null;
+  ownerId?: string | null;
+};
+
+export type EventReprocessDisposition = "queued" | "coalesced" | "already_completed" | "revived";
+
+export type EventReprocessAcceptance = {
+  accepted: true;
+  eventId: string;
+  requestedStages: ReprocessStage[];
+  /** Stages the coalesced job actually runs. It can be a superset. */
+  executionStages: ReprocessStage[];
+  disposition: EventReprocessDisposition;
+  created: boolean;
+  coalesced: boolean;
+  revived: boolean;
+  job: {
+    id: string;
+    jobType: "event_reprocess";
+    status: BackgroundJob["status"];
+    attemptCount: number;
+    maxAttempts: number;
+    runAfter: string;
+    createdAt: string;
+    idempotencyKey: string;
+  };
+  jobIds: string[];
+  stages: Array<{
+    stage: ReprocessStage;
+    jobId: string;
+    status: BackgroundJob["status"];
+    prerequisites: ReprocessStage[];
+  }>;
+};
+
+function activeStagesFor(job: BackgroundJob): ReprocessStage[] {
+  try {
+    return normalizeReprocessStages(job.payload?.stages);
+  } catch {
+    // A legacy or malformed row must not make the event permanently
+    // unqueueable. Treat it as an execution that covers every stage.
+    return normalizeReprocessStages([
+      "classification", "semanticInterpretation", "financialCorrelation", "embeddings",
+    ]);
+  }
+}
+
+function reprocessAcceptance(
+  job: BackgroundJob,
+  requestedStages: ReprocessStage[],
+  disposition: EventReprocessDisposition,
+): EventReprocessAcceptance {
+  const executionStages = activeStagesFor(job);
+  return {
+    accepted: true,
+    eventId: job.eventId ?? String(job.payload.eventId),
+    requestedStages,
+    executionStages,
+    disposition,
+    created: disposition === "queued",
+    coalesced: disposition !== "queued",
+    revived: disposition === "revived",
+    job: {
+      id: job.id,
+      jobType: "event_reprocess",
+      status: job.status,
+      attemptCount: job.attemptCount,
+      maxAttempts: job.maxAttempts,
+      runAfter: job.runAfter,
+      createdAt: job.createdAt,
+      idempotencyKey: job.idempotencyKey,
+    },
+    jobIds: [job.id],
+    stages: requestedStages.map((stage) => ({
+      stage,
+      jobId: job.id,
+      status: job.status,
+      prerequisites: [...REPROCESS_STAGE_SPECS[stage].prerequisites],
+    })),
+  };
+}
+
+/**
+ * Selectively queue reprocessing for one event.
+ *
+ * Guarantees:
+ * - dependencies are validated against persisted records before acceptance;
+ * - at most one active execution exists per event; a request covered by the
+ *   active execution reuses it, an overlapping different request is rejected;
+ * - coalesce mode is repeat-safe even after completion, while `execution:new`
+ *   is the explicit way to run the same stages again after a previous job
+ *   finished;
+ * - no stage is added implicitly, so a selective request runs exactly the
+ *   requested work (plus the prerequisite classification it may include).
+ */
+export async function queueEventReprocess(input: QueueEventReprocessInput): Promise<EventReprocessAcceptance> {
+  const stages = normalizeReprocessStages(input.stages);
+  return withTransaction(async (db) => {
+    // Serialize request admission per event. Workers claiming other job types
+    // do not need this lock; it only makes repeated/overlapping reprocess
+    // requests single-writer.
+    await db.query("select pg_advisory_xact_lock(hashtextextended('event-reprocess:' || $1, 0))", [input.eventId]);
+
+    const event = await db.query<{
+      clientId: string | null;
+      ownerId: string | null;
+      processingAllowed: boolean;
+      privacyStatus: string;
+      classificationVersion: string | null;
+    }>(`
+      select r.client_id as "clientId", r.owner_id as "ownerId",
+        r.processing_allowed as "processingAllowed", r.privacy_status as "privacyStatus",
+        c.classification_version as "classificationVersion"
+      from raw_events r
+      left join classified_events c on c.raw_event_id = r.id
+      where r.id = $1 and ($2::text is null or r.client_id is not distinct from $2)
+      limit 1
+    `, [input.eventId, input.clientId ?? null]);
+    const stored = event.rows[0];
+    if (!stored) throw new ReprocessEventNotFoundError();
+    if (!stored.processingAllowed) throw new ReprocessNotProcessableError("processing_disabled");
+    if (stored.privacyStatus === "hidden") throw new ReprocessNotProcessableError("hidden_event");
+
+    const missing = missingReprocessPrerequisites(stages, {
+      classification: Boolean(stored.classificationVersion),
+    });
+    if (missing.length) throw new ReprocessPrerequisitesMissingError(missing);
+
+    const activeJobs = await listActiveEventReprocessJobs(db, input.eventId, input.clientId ?? null);
+    for (const activeJob of activeJobs) {
+      const activeStages = activeStagesFor(activeJob);
+      if (stages.every((stage) => activeStages.includes(stage))) {
+        return reprocessAcceptance(activeJob, stages, "coalesced");
+      }
+      throw new ReprocessInProgressError(activeJob.id, activeStages);
+    }
+
+    const execution = input.execution ?? "coalesce";
+    const stageKey = reprocessStageKey(stages);
+    const requestKey = input.idempotencyKey?.trim();
+    // In coalesce mode an explicit key replaces the automatic event+stages key.
+    // In new mode the key always gets a fresh suffix, so the same explicit key
+    // can intentionally start a later execution.
+    const baseKey = requestKey
+      ? `reprocess:${input.eventId}:request:${requestKey}`
+      : `reprocess:${input.eventId}:${stageKey}`;
+    const key = execution === "new" ? `${baseKey}:new:${randomUUID()}` : baseKey;
+
+    if (execution === "coalesce") {
+      const existing = await findEventReprocessJobByKey(db, key);
+      if (existing) {
+        const existingStages = activeStagesFor(existing);
+        if (requestKey && !sameReprocessSelection(existingStages, stages)) {
+          throw new ReprocessRequestIdConflictError();
+        }
+        if (existing.status === "dead_letter" || existing.status === "cancelled") {
+          const revived = await enqueueBackgroundJob(db, {
+            clientId: input.clientId ?? stored.clientId,
+            ownerId: input.ownerId ?? stored.ownerId ?? input.clientId ?? stored.clientId,
+            eventId: input.eventId,
+            jobType: "event_reprocess",
+            idempotencyKey: key,
+            payload: { eventId: input.eventId, stages, requestKey: requestKey ?? null },
+            priority: 15,
+            reviveFailed: true,
+          });
+          return reprocessAcceptance(revived, stages, "revived");
+        }
+        return reprocessAcceptance(
+          existing,
+          stages,
+          existing.status === "succeeded" ? "already_completed" : "coalesced",
+        );
+      }
+    }
+
+    const job = await enqueueBackgroundJob(db, {
+      clientId: input.clientId ?? stored.clientId,
+      ownerId: input.ownerId ?? stored.ownerId ?? input.clientId ?? stored.clientId,
+      eventId: input.eventId,
+      jobType: "event_reprocess",
+      idempotencyKey: key,
+      payload: { eventId: input.eventId, stages, requestKey: requestKey ?? null },
+      priority: 15,
+    });
+    return reprocessAcceptance(job, stages, "queued");
+  });
+}
+
+export async function reprocessEvent(eventId: string, options: { ensureOntology?: boolean; reuseClassification?: boolean; skipFinancial?: boolean; fence?: JobFence | null } = {}) {
   return withSemanticMaterializationLock(() => reprocessEventUnlocked(eventId, options));
 }
 
-async function reprocessEventUnlocked(eventId: string, options: { ensureOntology?: boolean; reuseClassification?: boolean; skipFinancial?: boolean } = {}) {
+async function reprocessEventUnlocked(eventId: string, options: { ensureOntology?: boolean; reuseClassification?: boolean; skipFinancial?: boolean; fence?: JobFence | null } = {}) {
   const rawEvent = await loadRawEventById(pool, eventId);
   if (!rawEvent) {
     return null;
   }
+  // Cheap preflight for expensive model work. The authoritative fence check is
+  // repeated inside the write transaction below.
+  if (options.fence) await assertJobFence(pool, options.fence, "semantic_preflight");
   const existing = options.reuseClassification ? await loadStoredEventById(pool, eventId) : null;
   const inferred = existing?.classificationVersion ? {
     ...rawEvent,
@@ -488,6 +701,10 @@ async function reprocessEventUnlocked(eventId: string, options: { ensureOntology
   const graphDrafts = governedGraphDrafts(semanticDecision, entityDrafts);
   return withTransaction(async (db) => {
     await db.query('select id from raw_events where id=$1 for update', [eventId]);
+    // Hold the job row share lock for the whole semantic projection. A claim
+    // that already advanced the fence makes this fail before any write; a
+    // concurrent claim waits until this transaction commits.
+    if (options.fence) await assertJobFence(db, options.fence, "semantic_projection");
     await replaceSemanticProjection(db, {
       eventId, clientId: rawEvent.clientId, generation: semanticDecision.governanceVersion,
       domains: [...new Set(semanticDecision.paths.map(path => path.domain))],

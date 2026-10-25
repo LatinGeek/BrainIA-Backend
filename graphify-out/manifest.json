@@ -205,8 +205,8 @@
     "semantic_hash": ""
   },
   "src/routes/events.ts": {
-    "mtime": 1792874807.2916195,
-    "ast_hash": "6b8769db0af49c148435ded88f73f3fe",
+    "mtime": 1792888214.55943,
+    "ast_hash": "fe38d8383de113bc0715aed690f1dc85",
     "semantic_hash": ""
   },
   "src/routes/financial-transactions.ts": {
@@ -305,8 +305,8 @@
     "semantic_hash": ""
   },
   "src/storage/event-store.ts": {
-    "mtime": 1792354546.515951,
-    "ast_hash": "a01cbba8ad0dec509622ef309afb1365",
+    "mtime": 1792888182.514373,
+    "ast_hash": "2fa1b3a1ea9947404a756f572eed3892",
     "semantic_hash": ""
   },
   "src/storage/financial-transaction-repository.ts": {
@@ -415,8 +415,8 @@
     "semantic_hash": ""
   },
   "docs/api.md": {
-    "mtime": 1792882934.6914513,
-    "ast_hash": "646ce13ba654f74f5310ae1f8bbcfa5e",
+    "mtime": 1792889972.8004234,
+    "ast_hash": "1e8d989678c58bc8f50f53db7806f0d4",
     "semantic_hash": ""
   },
   "docs/architecture.md": {
@@ -465,8 +465,8 @@
     "semantic_hash": ""
   },
   "docs/operations.md": {
-    "mtime": 1784731570.8629484,
-    "ast_hash": "a66fc939353b2968354e2247f577132e",
+    "mtime": 1792888546.3950336,
+    "ast_hash": "c48ed8cdd59c9aa0988f9de7594be03a",
     "semantic_hash": ""
   },
   "docs/postgres-schema.md": {
@@ -480,8 +480,8 @@
     "semantic_hash": ""
   },
   "docs/runbooks.md": {
-    "mtime": 1783982194.5214686,
-    "ast_hash": "9ba590f7d552bcf3fae9e420ae4fea4c",
+    "mtime": 1792888544.4411407,
+    "ast_hash": "b0e49180c74c88bb30df980400081a58",
     "semantic_hash": ""
   },
   "memory.md": {
@@ -720,8 +720,8 @@
     "semantic_hash": ""
   },
   "src/storage/embeddings.ts": {
-    "mtime": 1792280561.315473,
-    "ast_hash": "a64a7f17f6eef674fb6d2cc8673b1990",
+    "mtime": 1792888191.048768,
+    "ast_hash": "5a936e8ee8cce78ef30e41ef0f0024ab",
     "semantic_hash": ""
   },
   "src/storage/hybrid-retrieval.ts": {
@@ -730,13 +730,13 @@
     "semantic_hash": ""
   },
   "src/storage/job-repository.ts": {
-    "mtime": 1792354022.698071,
-    "ast_hash": "bde5274d27e03e6fdf02b9648fa5ceb1",
+    "mtime": 1792888153.2190194,
+    "ast_hash": "28f0119738549f2a5ff4f0899783b5df",
     "semantic_hash": ""
   },
   "src/storage/job-worker.ts": {
-    "mtime": 1792354034.1705873,
-    "ast_hash": "453953c376e1e04cd923fa3659dcf2b1",
+    "mtime": 1792888926.2649353,
+    "ast_hash": "c6e9b7404dc5c07a375da9f4153ed875",
     "semantic_hash": ""
   },
   "src/storage/knowledge-fact-repository.ts": {
@@ -1887,6 +1887,21 @@
   "docs/reports/v2/device-evidence/new-signing-2026-10-18.png": {
     "mtime": 1792373069.0310423,
     "ast_hash": "52c10985c55a79b04654f76478cc0ecd",
+    "semantic_hash": ""
+  },
+  "migrations/20261024120000_event_reprocess_jobs.sql": {
+    "mtime": 1792888217.4862003,
+    "ast_hash": "ac0cc91487b9946abe432ec67c20e406",
+    "semantic_hash": ""
+  },
+  "src/domain/event-reprocess.ts": {
+    "mtime": 1792888137.1421552,
+    "ast_hash": "32a4d6f2c69da1a4e5aff10c7d90765b",
+    "semantic_hash": ""
+  },
+  "tests/event-reprocess.test.ts": {
+    "mtime": 1792888448.5154614,
+    "ast_hash": "c39a7bd90063634f9407283d9fb7b69d",
     "semantic_hash": ""
   }
 }

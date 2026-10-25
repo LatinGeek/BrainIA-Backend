@@ -1,25 +1,40 @@
 ﻿import type { FastifyPluginAsync } from "fastify";
+import { z } from "zod";
 import { ownerScope, type AuthConfig } from "../auth.js";
+import { config } from "../config.js";
 import { eventSchema } from "../domain/event.js";
 import {
   eventHistoryFilters,
   eventHistoryQuerySchema,
   InvalidEventCursorError,
 } from "../domain/event-history.js";
+import {
+  REPROCESS_STAGES,
+  ReprocessRequestError,
+} from "../domain/event-reprocess.js";
 import { withOwnerRead } from "../storage/postgres.js";
 import {
   appendEvent,
   classifyCapturedEvent,
   correlateFinancialEvent,
   getEvent,
+  queueEventReprocess,
   reprocessEvent,
 } from "../storage/event-store.js";
+import { listEventBackgroundJobs } from "../storage/job-repository.js";
 import { listEventHistoryPage, listStoredEvents, loadStoredEventById } from "../storage/event-repository.js";
 import { withEventProgress } from "../storage/event-progress.js";
 
 type EventRoutesOptions = {
   authConfig: AuthConfig;
 };
+
+const reprocessRequestSchema = z.object({
+  stages: z.array(z.string().trim().min(1)).min(1).max(REPROCESS_STAGES.length).optional(),
+  execution: z.enum(["coalesce", "new"]).optional(),
+  idempotencyKey: z.string().trim().min(8).max(200).optional(),
+  mode: z.enum(["queued", "legacy"]).optional(),
+});
 
 export const registerEventRoutes = (options: EventRoutesOptions): FastifyPluginAsync => {
   return async (app) => {
@@ -131,6 +146,30 @@ export const registerEventRoutes = (options: EventRoutesOptions): FastifyPluginA
       return reply.status(201).send(withProgress);
     });
 
+    app.get("/events/:id/jobs", async (request, reply) => {
+      const eventId = (request.params as { id?: string }).id?.trim();
+      if (!eventId) {
+        return reply.status(400).send({
+          error: "invalid_event_id",
+          message: "The event id is required",
+        });
+      }
+
+      const ownerId = ownerScope(request);
+      const jobs = await withOwnerRead(ownerId, async (db) => {
+        const stored = await loadStoredEventById(db, eventId, ownerId);
+        if (!stored) return null;
+        return listEventBackgroundJobs(db, eventId);
+      });
+      if (!jobs) {
+        return reply.status(404).send({
+          error: "event_not_found",
+          message: "No stored event matches the provided id",
+        });
+      }
+      return { eventId, count: jobs.length, jobs };
+    });
+
     app.post("/events/:id/reprocess", async (request, reply) => {
       const params = request.params as { id?: string };
       const eventId = params.id?.trim();
@@ -139,6 +178,33 @@ export const registerEventRoutes = (options: EventRoutesOptions): FastifyPluginA
         return reply.status(400).send({
           error: "invalid_event_id",
           message: "The event id is required",
+        });
+      }
+
+      const parsed = reprocessRequestSchema.safeParse(request.body ?? {});
+      if (!parsed.success) {
+        return reply.status(400).send({
+          error: "invalid_reprocess_request",
+          message: "The reprocessing request is invalid",
+          issues: parsed.error.flatten(),
+          allowedStages: [...REPROCESS_STAGES],
+        });
+      }
+      const body = parsed.data;
+      if (body.mode === "legacy" && body.stages !== undefined) {
+        return reply.status(400).send({
+          error: "invalid_reprocess_request",
+          message: "mode=legacy does not accept a stage selection",
+        });
+      }
+      // Compatibility: a body without `stages` and without `mode=queued` is the
+      // pre-queue synchronous reprocess. Existing clients (including capture
+      // retries and the mobile detail action) keep their 200 response shape.
+      const queued = body.mode !== "legacy" && (body.stages !== undefined || body.mode === "queued");
+      if (!queued && (body.execution !== undefined || body.idempotencyKey !== undefined)) {
+        return reply.status(400).send({
+          error: "invalid_reprocess_request",
+          message: "execution/idempotencyKey require stages or mode=queued",
         });
       }
 
@@ -151,6 +217,43 @@ export const registerEventRoutes = (options: EventRoutesOptions): FastifyPluginA
         });
       }
 
+      if (queued) {
+        try {
+          const acceptance = await queueEventReprocess({
+            eventId,
+            stages: body.stages ?? [...REPROCESS_STAGES],
+            execution: body.execution,
+            idempotencyKey: body.idempotencyKey,
+            clientId,
+            ownerId: clientId,
+          });
+          request.log.info(
+            {
+              eventId,
+              jobId: acceptance.job.id,
+              disposition: acceptance.disposition,
+              requestedStages: acceptance.requestedStages,
+              executionStages: acceptance.executionStages,
+            },
+            "event reprocessing accepted",
+          );
+          return reply.status(202).send({
+            ...acceptance,
+            links: {
+              event: `${config.apiPrefix}/events/${encodeURIComponent(eventId)}`,
+              jobs: `${config.apiPrefix}/events/${encodeURIComponent(eventId)}/jobs`,
+            },
+          });
+        } catch (error) {
+          if (error instanceof ReprocessRequestError) {
+            return reply.status(error.statusCode).send(error.toResponse());
+          }
+          throw error;
+        }
+      }
+
+      // Legacy synchronous mode. Selective callers should send `stages`; this
+      // path is retained unchanged for backward compatibility.
       const stored = await reprocessEvent(eventId);
       if (!stored) {
         return reply.status(404).send({

@@ -2,7 +2,13 @@ import { randomUUID } from "node:crypto";
 import { verifyConfiguredBackup } from "./backup-verification.js";
 import { applyRetentionPolicies } from "./data-controls.js";
 import { refreshEventEmbeddings } from "./embeddings.js";
-import { classifyCapturedEvent, correlateFinancialEvent, reprocessEvent } from "./event-store.js";
+import { classifyCapturedEvent, correlateFinancialEvent, getEvent, reprocessEvent } from "./event-store.js";
+import {
+  normalizeReprocessStages,
+  REPROCESS_STAGE_ORDER,
+  ReprocessPrerequisiteError,
+  type ReprocessStage,
+} from "../domain/event-reprocess.js";
 import {
   claimBackgroundJobs, completeBackgroundJob, enqueueBackgroundJob, failBackgroundJob,
   heartbeatBackgroundJob, StaleJobClaimError,
@@ -34,6 +40,14 @@ async function requireEventId(job: BackgroundJob) {
   const eventId = job.eventId ?? (typeof job.payload.eventId === "string" ? job.payload.eventId : null);
   if (!eventId) throw new Error(`${job.jobType} job requires an eventId`);
   return eventId;
+}
+
+async function requireEventClassification(eventId: string, stage: ReprocessStage) {
+  const stored = await getEvent(eventId);
+  if (!stored?.classificationVersion) {
+    throw new ReprocessPrerequisiteError(stage, ["classification"]);
+  }
+  return stored;
 }
 
 function boundedEnvMs(name: string, fallback: number, min: number, max: number) {
@@ -78,7 +92,7 @@ export async function executeBackgroundJob(job: BackgroundJob): Promise<Backgrou
     }
     case "semantic_enrichment": {
       const eventId = await requireEventId(job);
-      const enriched = await reprocessEvent(eventId, { reuseClassification: true, skipFinancial: true });
+      const enriched = await reprocessEvent(eventId, { reuseClassification: true, skipFinancial: true, fence: job });
       if (!enriched) throw new Error(`Event ${eventId} is unavailable for semantic enrichment`);
       return {
         value: enriched,
@@ -96,8 +110,51 @@ export async function executeBackgroundJob(job: BackgroundJob): Promise<Backgrou
         }],
       };
     }
+    case "event_reprocess": {
+      const eventId = await requireEventId(job);
+      const requested = normalizeReprocessStages(job.payload.stages);
+      const executed: ReprocessStage[] = [];
+      const skipped: Array<{ stage: ReprocessStage; reason: string }> = [];
+      for (const stage of REPROCESS_STAGE_ORDER) {
+        if (!requested.includes(stage)) continue;
+        // Classification always materializes the financial projection in the
+        // same transaction. Running the separate correlation stage again would
+        // be redundant work with no additional effect.
+        if (stage === "financialCorrelation" && executed.includes("classification")) {
+          skipped.push({ stage, reason: "satisfied_by_classification" });
+          continue;
+        }
+        switch (stage) {
+          case "classification": {
+            const classified = await classifyCapturedEvent(eventId, { fence: job });
+            if (!classified) throw new Error(`Event ${eventId} is unavailable for classification`);
+            break;
+          }
+          case "semanticInterpretation": {
+            await requireEventClassification(eventId, stage);
+            const enriched = await reprocessEvent(eventId, {
+              reuseClassification: true, skipFinancial: true, fence: job,
+            });
+            if (!enriched) throw new Error(`Event ${eventId} is unavailable for semantic enrichment`);
+            break;
+          }
+          case "financialCorrelation": {
+            await requireEventClassification(eventId, stage);
+            await correlateFinancialEvent(eventId, { fence: job });
+            break;
+          }
+          case "embeddings": {
+            await requireEventClassification(eventId, stage);
+            await refreshEventEmbeddings(pool, eventId, { fence: job });
+            break;
+          }
+        }
+        executed.push(stage);
+      }
+      return { value: { eventId, executedStages: executed, skippedStages: skipped }, effects: [] };
+    }
     case "embedding":
-      return { value: await refreshEventEmbeddings(pool, await requireEventId(job)), effects: [] };
+      return { value: await refreshEventEmbeddings(pool, await requireEventId(job), { fence: job }), effects: [] };
     case "financial_correlation":
       return { value: await correlateFinancialEvent(await requireEventId(job), { fence: job }), effects: [] };
     case "insight_detection":

@@ -391,32 +391,135 @@ Historical, fully processed, no job rows (summary `completed`, `"Expense recorde
 ### Known limitations
 
 - Events whose `interpretation_status` is still the migration default `pending` but whose `processing_status` is `semantically_resolved` (resolved before the column existed) are reported as interpreted.
-- `financial_correlation` jobs are not enqueued anywhere today, so they are not read; the ledger link itself is the only evidence for `financialProjection`.
+- `financial_correlation` jobs are not read by the progress projection; the ledger link itself is the only evidence for `financialProjection`.
+- Selective reprocessing runs as a single `event_reprocess` job. `progress` still reports the latest stage-specific job (classification/semantic/embedding) and the produced records; use `GET /events/:id/jobs` to follow the reprocessing execution itself.
 - `/capture/*` routes do not return `progress`; use `GET /events/:id` or `POST /events`.
 
 ### Consumer notes
 
 - Backward compatibility: clients that ignore `progress` keep working. The mobile app parses it tolerantly (`lib/event-progress.ts`) and renders it in the event detail ("Procesamiento"); the Spanish copy is client side and keyed by `status`, not by `message`.
-- Operational note: `background_jobs` and `knowledge_embeddings` are under owner RLS. The progress read runs in the same owner-scoped transaction as the event read, so it has the same visibility as the event itself. Today `raw_events` and enqueued jobs are both written with a null `owner_id`; if `BRAINIA_DB_ENFORCE_RLS=true` is enabled before that is backfilled, the event detail itself is hidden too, and a job hidden from the read would show its stage as `not_scheduled`.
+- Operational note: `background_jobs` and `knowledge_embeddings` are under owner RLS. The progress read runs in the same owner-scoped transaction as the event read, so it has the same visibility as the event itself. Legacy raw events and most enqueued jobs are still written with a null `owner_id`; selective reprocess jobs persist the resolved owner. If `BRAINIA_DB_ENFORCE_RLS=true` is enabled before legacy rows are backfilled, the event detail itself is hidden, and a job hidden from the read would show its stage as `not_scheduled`.
 
 ## Event reprocessing
 
 ### `POST /api/v1/events/:id/reprocess`
 
-Rebuilds the derived knowledge for a stored event using the current heuristics.
+Rebuilds derived knowledge for a stored event.
 
-This is the first reprocessing primitive. It deletes the previous derived links for that event and rebuilds them from the raw source record.
+The endpoint has two modes:
 
-Response shape:
+1. **Legacy synchronous mode (preserved).** A request with no `stages` and no `mode: "queued"` runs the previous inline semantic reprocess and returns `200` with the stored event record. Existing clients (including the mobile detail action, which posts `{}`) keep working unchanged.
+2. **Queued selective mode.** Sending `stages`, or `mode: "queued"`, validates the selection, queues one fenced `event_reprocess` job, and returns `202` with queryable job identifiers. No expensive reprocessing runs in the HTTP request.
 
 ```json
 {
-  "id": "evt_123",
-  "source": "tasker",
-  "inferredKind": "expense",
-  "classificationVersion": "heuristic-v1"
+  "stages": ["semanticInterpretation", "embeddings"],
+  "execution": "coalesce",
+  "idempotencyKey": "manual-recovery-2026-10-24-42",
+  "mode": "queued"
 }
 ```
+
+| Field | Meaning |
+| --- | --- |
+| `stages` | Non-empty selection from `classification`, `semanticInterpretation`, `financialCorrelation`, `embeddings`. Duplicates are removed and execution always follows the canonical order. Omit only with `mode: "queued"` to request all stages. |
+| `execution` | `coalesce` (default) reuses an active or already-completed equivalent request. `new` intentionally creates a fresh execution after a previous one completed. It never overrides an active execution. |
+| `idempotencyKey` | Optional caller key (8-200 characters). In `coalesce` mode, the same key and stage selection always return the same job. A different stage selection with the same key is a `409 reprocess_idempotency_key_conflict`. |
+| `mode` | `queued` requests the queue without listing stages (all stages); `legacy` explicitly asks for the synchronous path and therefore rejects `stages`. |
+
+#### Stage prerequisites
+
+| Stage | Job type | Prerequisite |
+| --- | --- | --- |
+| `classification` | `classification` | stored raw event, `processing_allowed = true`, `privacy_status <> 'hidden'` |
+| `semanticInterpretation` | `semantic_enrichment` | a classification record, or `classification` in the same request |
+| `financialCorrelation` | `financial_correlation` | a classification record, or `classification` in the same request |
+| `embeddings` | `embedding` | a classification record, or `classification` in the same request |
+
+A missing prerequisite rejects the request with `409 reprocess_prerequisites_missing` and is never auto-added, so a selective request does not trigger expensive stages the caller did not ask for:
+
+```json
+{
+  "error": "reprocess_prerequisites_missing",
+  "message": "The requested stages have unmet prerequisites; include the prerequisite stage or run it first",
+  "missing": [
+    { "stage": "semanticInterpretation", "requires": ["classification"], "reason": "classification_record_missing" }
+  ]
+}
+```
+
+If a prerequisite disappears between acceptance and execution, the worker treats it as a permanent `reprocess_prerequisite_missing` failure and dead-letters the job rather than silently running classification. Classification in the same job always runs first, so including it satisfies the dependency for later stages.
+
+`classification` already materializes the financial projection in its own transaction. When a request includes both `classification` and `financialCorrelation`, the correlation stage is reported as skipped (`satisfied_by_classification`) instead of duplicating that work.
+
+#### Accepted response (`202`)
+
+```json
+{
+  "accepted": true,
+  "eventId": "evt_123",
+  "requestedStages": ["semanticInterpretation", "embeddings"],
+  "executionStages": ["semanticInterpretation", "embeddings"],
+  "disposition": "queued",
+  "created": true,
+  "coalesced": false,
+  "revived": false,
+  "job": {
+    "id": "job_...",
+    "jobType": "event_reprocess",
+    "status": "queued",
+    "attemptCount": 0,
+    "maxAttempts": 5,
+    "runAfter": "2026-10-24T12:00:00.000Z",
+    "createdAt": "2026-10-24T12:00:00.000Z",
+    "idempotencyKey": "reprocess:evt_123:semanticInterpretation+embeddings"
+  },
+  "jobIds": ["job_..."],
+  "stages": [
+    { "stage": "semanticInterpretation", "jobId": "job_...", "status": "queued", "prerequisites": ["classification"] },
+    { "stage": "embeddings", "jobId": "job_...", "status": "queued", "prerequisites": ["classification"] }
+  ],
+  "links": {
+    "event": "/api/v1/events/evt_123",
+    "jobs": "/api/v1/events/evt_123/jobs"
+  }
+}
+```
+
+`disposition` is one of:
+
+| Value | Meaning |
+| --- | --- |
+| `queued` | A new job was created (`created: true`). |
+| `coalesced` | An active job covers the request, or the same coalesced request already exists; its identifiers are returned. |
+| `already_completed` | The equivalent coalesced request already succeeded; no new work was queued. Use `execution: "new"` to run it again. |
+| `revived` | A previous dead-lettered/cancelled equivalent job was re-queued with its attempt and fence history preserved. |
+
+`executionStages` can be a superset of `requestedStages` when an active job already covers a broader selection. An overlapping but non-covering selection while a job is active returns `409 reprocess_in_progress` with the active job id and its stages; it is never queued in parallel.
+
+#### Coalescing and duplicate prevention
+
+- At most one `event_reprocess` job can be active (`queued`, `running`, `retry_scheduled`) per event.
+- Repeated `coalesce` requests return the same job id, including after success. Effects therefore cannot be duplicated by a repeated button press.
+- `execution: "new"` is the explicit path for a later intentional execution. If a job is still active, the active job still wins.
+- A dead-lettered equivalent job is revived on the next `coalesce` request; attempt and fence history are preserved.
+- Job admission is serialized per event with a transaction-scoped advisory lock, so concurrent repeated requests produce one row.
+
+#### Querying jobs
+
+`GET /api/v1/events/:id/jobs` lists the event owner's job history (newest first, up to 50) with `id`, `jobType`, `status`, `attemptCount`, `maxAttempts`, `runAfter`, timestamps, and the requested `stages` for reprocess jobs. Raw job errors are not exposed. `GET /api/v1/events/:id` continues to return the additive `progress` projection for stage-level outcomes.
+
+#### Authorization and preservation
+
+- Both endpoints use the same owner scope and 404 behavior as `GET /api/v1/events/:id`; a caller cannot see or queue work for another owner's event.
+- Every stage writes under the job's current fence and live lease. A worker whose lease expired after a newer claim cannot commit classification, semantic, financial, or embedding writes, and its job result is reported as `stale`.
+- Classification and semantic stages preserve correction overlays before replacing projections. Financial correlation retains the canonical transaction identity and observation row; reprocessing does not create a second ledger transaction for the same event.
+
+#### Compatibility summary
+
+- `POST {}` / no body: unchanged synchronous `200` response (legacy).
+- `POST` with `stages` or `mode: "queued"`: new `202` queue contract.
+- `POST /events/:id/reconcile-financial`: unchanged narrow synchronous recovery operation.
 
 ## Knowledge queries
 

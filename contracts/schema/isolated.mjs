@@ -9,10 +9,14 @@ export async function isolated({ beforeRollForward = false } = {}) {
     create function public.rls_auto_enable() returns event_trigger language plpgsql as $$ begin end $$;`);
   const files = (await readdir(new URL('../../migrations/', import.meta.url))).filter(f => f.endsWith('.sql')).sort();
   const migrations = {};
+  let rollForwardPending = false;
   for (const file of files) {
     const sql = await readFile(new URL(`../../migrations/${file}`, import.meta.url), 'utf8');
     migrations[file] = checksum(sql);
-    if (beforeRollForward && file === '20261015000000_reconcile_runtime_schema.sql') continue;
+    // "Before roll-forward" means the database predates this migration and
+    // every later one, so migrate() applies the whole suffix in real order.
+    if (beforeRollForward && file === '20261015000000_reconcile_runtime_schema.sql') rollForwardPending = true;
+    if (rollForwardPending) continue;
     await engine.exec(sql);
     await engine.query('insert into schema_migrations(version) values($1)', [file]);
   }

@@ -56,7 +56,8 @@
     "20261017190000_deletion_run_read_eligibility.sql": "a8d71b3266b467a39c79f11fb8d8c2857703a2d1a9cc41fa22a630450af7bf9c",
     "20261017200000_finance_currency_safety.sql": "0bb473d1f84f4c7ef32598fc0b3250cefa7bc8486e50028b339d6eee4ed3e408",
     "20261017220000_fx_rate_governance.sql": "dbf0a623066489dc4247c892002e2ebe75d1c7495f9ba604da3a9629a52c86e9",
-    "20261019120000_v2_api.sql": "b7d463bb656ec4f2e242dd59c4ba2172ee230c3a1dd61dd94968789cdc85a4c3"
+    "20261019120000_v2_api.sql": "b7d463bb656ec4f2e242dd59c4ba2172ee230c3a1dd61dd94968789cdc85a4c3",
+    "20261024120000_event_reprocess_jobs.sql": "b74f156a164d8fcc8267b8dab32e97c709f5cb7e9e79b251e05c16db3cd7c6e7"
   },
   "objects": {
     "acl:function:brainia_block_deleted_derived_run():PUBLIC:EXECUTE": false,
@@ -5944,7 +5945,7 @@
     "constraint:background_jobs.background_jobs_fence_token_not_null": "NOT NULL fence_token",
     "constraint:background_jobs.background_jobs_id_not_null": "NOT NULL id",
     "constraint:background_jobs.background_jobs_idempotency_key_not_null": "NOT NULL idempotency_key",
-    "constraint:background_jobs.background_jobs_job_type_check": "CHECK (job_type = ANY (ARRAY['classification'::text, 'semantic_enrichment'::text, 'embedding'::text, 'financial_correlation'::text, 'insight_detection'::text, 'semantic_reconciliation'::text, 'retention'::text, 'backup_verification'::text, 'intelligence_generation'::text]))",
+    "constraint:background_jobs.background_jobs_job_type_check": "CHECK (job_type = ANY (ARRAY['classification'::text, 'semantic_enrichment'::text, 'embedding'::text, 'financial_correlation'::text, 'event_reprocess'::text, 'insight_detection'::text, 'semantic_reconciliation'::text, 'retention'::text, 'backup_verification'::text, 'intelligence_generation'::text]))",
     "constraint:background_jobs.background_jobs_job_type_idempotency_key_key": "UNIQUE (job_type, idempotency_key)",
     "constraint:background_jobs.background_jobs_job_type_not_null": "NOT NULL job_type",
     "constraint:background_jobs.background_jobs_max_attempts_check": "CHECK (max_attempts > 0)",
@@ -6754,6 +6755,11 @@
     },
     "index:background_jobs_event_idx": {
       "sql": "CREATE INDEX background_jobs_event_idx ON public.background_jobs USING btree (event_id, created_at DESC)",
+      "ready": true,
+      "valid": true
+    },
+    "index:background_jobs_event_reprocess_idx": {
+      "sql": "CREATE INDEX background_jobs_event_reprocess_idx ON public.background_jobs USING btree (event_id, created_at DESC) WHERE (job_type = 'event_reprocess'::text)",
       "ready": true,
       "valid": true
     },

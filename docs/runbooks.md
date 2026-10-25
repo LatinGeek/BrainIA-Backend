@@ -23,11 +23,14 @@ Use event reprocessing when the stored raw event is correct but the derived know
 Procedure:
 
 1. confirm the raw event still looks valid
-2. call `POST /api/v1/events/:id/reprocess`
-3. inspect the regenerated entities and relations
-4. compare the before and after output if the event was previously misclassified
+2. choose only the stages that are stale and call `POST /api/v1/events/:id/reprocess` with `{ "stages": [...] }`
+3. use the returned job id with `GET /api/v1/events/:id/jobs` (or the event's `progress`) to follow the execution
+4. inspect the regenerated entities and relations
+5. compare the before and after output if the event was previously misclassified
 
-Reprocessing is transactional and rebuilds the derived knowledge for a single stored event.
+Queued selective reprocessing is transactional at stage level and rebuilds only the requested derived knowledge for a single stored event. A bodyless call still runs the legacy synchronous full reprocess.
+
+Repeated requests with the same stage selection coalesce into the active or completed job. Send `execution: "new"` only when a later execution is intentionally required after the previous one completed.
 
 ## 3. Recovery
 

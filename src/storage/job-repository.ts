@@ -6,6 +6,7 @@ export type JobEffect = (db: Queryable) => Promise<void>;
 
 export const BACKGROUND_JOB_TYPES = [
   "classification", "semantic_enrichment", "embedding", "financial_correlation",
+  "event_reprocess",
   "insight_detection", "semantic_reconciliation", "retention", "backup_verification", "intelligence_generation",
 ] as const;
 export type BackgroundJobType = typeof BACKGROUND_JOB_TYPES[number];
@@ -217,6 +218,7 @@ async function recordClaim(db: Queryable, rows: BackgroundJobClaim[]) {
 
 export async function enqueueBackgroundJob(db: Queryable, input: {
   clientId?: string | null;
+  ownerId?: string | null;
   eventId?: string | null;
   jobType: BackgroundJobType;
   payload?: Record<string, unknown>;
@@ -229,37 +231,110 @@ export async function enqueueBackgroundJob(db: Queryable, input: {
 }) {
   const result = await db.query<BackgroundJob>(`
     insert into background_jobs (
-      id, client_id, event_id, job_type, payload, idempotency_key,
+      id, client_id, owner_id, event_id, job_type, payload, idempotency_key,
       max_attempts, run_after, provider, priority
-    ) values ($1,$2,$3,$4,$5::jsonb,$6,$7,$8,$9,$10)
+    ) values ($1,$2,$3,$4,$5,$6::jsonb,$7,$8,$9,$10,$11)
     on conflict (job_type, idempotency_key) do update set
       payload = excluded.payload,
-      status = case when $11::boolean and background_jobs.status in ('dead_letter','cancelled') then 'queued' else background_jobs.status end,
+      owner_id = coalesce(excluded.owner_id, background_jobs.owner_id),
+      status = case when $12::boolean and background_jobs.status in ('dead_letter','cancelled') then 'queued' else background_jobs.status end,
       -- A revive must never rewind attempt history: the next claim appends
       -- attempt_count + 1 and must not collide with an existing attempt row.
       -- It only extends the budget so the preserved attempt count can still run.
       attempt_count = background_jobs.attempt_count,
-      max_attempts = case when $11::boolean and background_jobs.status in ('dead_letter','cancelled')
+      max_attempts = case when $12::boolean and background_jobs.status in ('dead_letter','cancelled')
         then greatest(background_jobs.max_attempts, background_jobs.attempt_count + 1)
         else background_jobs.max_attempts end,
-      run_after = case when $11::boolean and background_jobs.status in ('dead_letter','cancelled') then excluded.run_after else background_jobs.run_after end,
-      last_error = case when $11::boolean and background_jobs.status in ('dead_letter','cancelled') then null else background_jobs.last_error end,
+      run_after = case when $12::boolean and background_jobs.status in ('dead_letter','cancelled') then excluded.run_after else background_jobs.run_after end,
+      last_error = case when $12::boolean and background_jobs.status in ('dead_letter','cancelled') then null else background_jobs.last_error end,
       -- A revived row keeps its historical fence but must not keep a lease that
       -- belonged to the dead lettered attempt.
-      lease_id = case when $11::boolean and background_jobs.status in ('dead_letter','cancelled') then null else background_jobs.lease_id end,
-      lease_expires_at = case when $11::boolean and background_jobs.status in ('dead_letter','cancelled') then null else background_jobs.lease_expires_at end,
-      heartbeat_at = case when $11::boolean and background_jobs.status in ('dead_letter','cancelled') then null else background_jobs.heartbeat_at end,
-      dead_lettered_at = case when $11::boolean and background_jobs.status in ('dead_letter','cancelled') then null else background_jobs.dead_lettered_at end,
-      completed_at = case when $11::boolean and background_jobs.status in ('dead_letter','cancelled') then null else background_jobs.completed_at end,
+      lease_id = case when $12::boolean and background_jobs.status in ('dead_letter','cancelled') then null else background_jobs.lease_id end,
+      lease_expires_at = case when $12::boolean and background_jobs.status in ('dead_letter','cancelled') then null else background_jobs.lease_expires_at end,
+      heartbeat_at = case when $12::boolean and background_jobs.status in ('dead_letter','cancelled') then null else background_jobs.heartbeat_at end,
+      dead_lettered_at = case when $12::boolean and background_jobs.status in ('dead_letter','cancelled') then null else background_jobs.dead_lettered_at end,
+      completed_at = case when $12::boolean and background_jobs.status in ('dead_letter','cancelled') then null else background_jobs.completed_at end,
       updated_at = now()
     returning ${jobProjection()}
   `, [
-    `job_${randomUUID()}`, input.clientId ?? null, input.eventId ?? null,
-    input.jobType, JSON.stringify(input.payload ?? {}), input.idempotencyKey,
-    input.maxAttempts ?? 5, input.runAfter ?? new Date().toISOString(),
-    input.provider ?? null, input.priority ?? 100, input.reviveFailed ?? false,
+    `job_${randomUUID()}`, input.clientId ?? null, input.ownerId ?? null,
+    input.eventId ?? null, input.jobType, JSON.stringify(input.payload ?? {}),
+    input.idempotencyKey, input.maxAttempts ?? 5,
+    input.runAfter ?? new Date().toISOString(), input.provider ?? null,
+    input.priority ?? 100, input.reviveFailed ?? false,
   ]);
   return result.rows[0]!;
+}
+
+/**
+ * Active reprocess executions for one event. A running row is included even
+ * when its lease expired: it is claimable again, and allowing a second queued
+ * execution would race the reclaim for the same event.
+ */
+export async function listActiveEventReprocessJobs(db: Queryable, eventId: string, clientId?: string | null) {
+  const result = await db.query<BackgroundJob>(`
+    select ${jobProjection()} from background_jobs
+    where event_id = $1 and job_type = 'event_reprocess'
+      and status in ('queued','running','retry_scheduled')
+      and ($2::text is null or client_id is not distinct from $2)
+    order by created_at desc
+  `, [eventId, clientId ?? null]);
+  return result.rows;
+}
+
+export async function findEventReprocessJobByKey(db: Queryable, idempotencyKey: string) {
+  const result = await db.query<BackgroundJob>(`
+    select ${jobProjection()} from background_jobs
+    where job_type = 'event_reprocess' and idempotency_key = $1
+    limit 1
+  `, [idempotencyKey]);
+  return result.rows[0] ?? null;
+}
+
+export type EventBackgroundJobSummary = {
+  id: string;
+  jobType: BackgroundJobType;
+  status: BackgroundJobStatus;
+  attemptCount: number;
+  maxAttempts: number;
+  runAfter: string;
+  createdAt: string;
+  updatedAt: string;
+  completedAt: string | null;
+  idempotencyKey: string;
+  stages: string[] | null;
+};
+
+/** Owner-queryable job list used by GET /events/:id/jobs. */
+export async function listEventBackgroundJobs(
+  db: Queryable,
+  eventId: string,
+  limit = 50,
+): Promise<EventBackgroundJobSummary[]> {
+  const result = await db.query<BackgroundJob>(`
+    select ${jobProjection()} from background_jobs
+    where event_id = $1
+    order by created_at desc
+    limit $2
+  `, [eventId, Math.min(100, Math.max(1, Math.trunc(limit)))]);
+  return result.rows.map((job) => {
+    const stages = Array.isArray(job.payload?.stages)
+      ? job.payload.stages.filter((stage): stage is string => typeof stage === "string")
+      : null;
+    return {
+      id: job.id,
+      jobType: job.jobType,
+      status: job.status,
+      attemptCount: job.attemptCount,
+      maxAttempts: job.maxAttempts,
+      runAfter: job.runAfter,
+      createdAt: job.createdAt,
+      updatedAt: job.updatedAt,
+      completedAt: job.completedAt,
+      idempotencyKey: job.idempotencyKey,
+      stages,
+    };
+  });
 }
 
 /**
@@ -474,7 +549,11 @@ export async function completeBackgroundJob(job: FencedJob, effect?: JobEffect) 
  */
 export async function failBackgroundJob(job: FencedJob, error: unknown) {
   const message = (error instanceof Error ? error.message : String(error)).slice(0, 4000);
-  const deadLetter = job.attemptCount >= job.maxAttempts;
+  // A caller (for example a missing reprocessing prerequisite discovered only
+  // at execution time) can mark the error permanent. Repeating the identical
+  // attempt cannot repair it, so dead-letter immediately instead of retrying.
+  const permanent = Boolean(error && typeof error === "object" && (error as { retryable?: unknown }).retryable === false);
+  const deadLetter = permanent || job.attemptCount >= job.maxAttempts;
   const retryAfterMs = boundedRetryAfterMs(error);
   const runAfter = new Date(Date.now() + retryDelayWithJitterMs(job.attemptCount, { retryAfterMs })).toISOString();
   return withTransaction(async (db) => {
