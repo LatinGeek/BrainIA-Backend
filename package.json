@@ -37,6 +37,8 @@
     "test:isolated": "node tests/run-isolated.mjs",
     "test:v2": "node --import tsx tests/v2-harness/run.mjs",
     "eval:v2": "node --import tsx tests/v2-harness/run.mjs --offline",
+    "eval:interpretation": "node --import tsx tests/v2-harness/compare.mjs",
+    "test:eval:interpretation": "node --test tests/v2-harness/comparison.test.mjs tests/v2-harness/harness.test.mjs",
     "contracts:verify": "node contracts/brain-ai/2.0.0/verify.mjs",
     "test:intelligence": "node --import ./tests/pglite-setup.mjs --import tsx --test tests/intelligence.test.ts",
     "evaluate:jev": "tsx src/scripts/evaluate-jev.ts",

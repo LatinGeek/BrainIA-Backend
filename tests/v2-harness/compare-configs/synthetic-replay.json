@@ -1,0 +1,28 @@
+{
+  "id": "synthetic-prompt-replay",
+  "mode": "replay",
+  "adapter": "tests/v2-harness/comparison-adapter.mjs",
+  "model": "synthetic-notification-model-v1",
+  "promptVersion": "classification-v3",
+  "description": "Synthetic response replay through the existing assistant; no claim about real model quality.",
+  "responses": {
+    "expense-uyu": "{\"inferredKind\": \"notification\", \"confidence\": 1, \"entities\": [], \"rationale\": \"Synthetic replay response; no external model was executed.\"}",
+    "expense-usd": "{\"inferredKind\": \"notification\", \"confidence\": 1, \"entities\": [], \"rationale\": \"Synthetic replay response; no external model was executed.\"}",
+    "expense-decimal": "{\"inferredKind\": \"notification\", \"confidence\": 1, \"entities\": [], \"rationale\": \"Synthetic replay response; no external model was executed.\"}",
+    "income-salary": "{\"inferredKind\": \"notification\", \"confidence\": 1, \"entities\": [], \"rationale\": \"Synthetic replay response; no external model was executed.\"}",
+    "income-refund": "{\"inferredKind\": \"notification\", \"confidence\": 1, \"entities\": [], \"rationale\": \"Synthetic replay response; no external model was executed.\"}",
+    "transfer-own": "{\"inferredKind\": \"notification\", \"confidence\": 1, \"entities\": [], \"rationale\": \"Synthetic replay response; no external model was executed.\"}",
+    "email-message": "{\"inferredKind\": \"notification\", \"confidence\": 1, \"entities\": [], \"rationale\": \"Synthetic replay response; no external model was executed.\"}",
+    "email-receipt": "{\"inferredKind\": \"notification\", \"confidence\": 1, \"entities\": [], \"rationale\": \"Synthetic replay response; no external model was executed.\"}",
+    "irrelevant-weather": "{\"inferredKind\": \"notification\", \"confidence\": 1, \"entities\": [], \"rationale\": \"Synthetic replay response; no external model was executed.\"}",
+    "rejected-card": "{\"inferredKind\": \"notification\", \"confidence\": 1, \"entities\": [], \"rationale\": \"Synthetic replay response; no external model was executed.\"}",
+    "balance-only": "{\"inferredKind\": \"notification\", \"confidence\": 1, \"entities\": [], \"rationale\": \"Synthetic replay response; no external model was executed.\"}",
+    "ambiguous-dollar": "{\"inferredKind\": \"notification\", \"confidence\": 1, \"entities\": [], \"rationale\": \"Synthetic replay response; no external model was executed.\"}",
+    "missing-merchant": "{\"inferredKind\": \"notification\", \"confidence\": 1, \"entities\": [], \"rationale\": \"Synthetic replay response; no external model was executed.\"}",
+    "capture-category": "{\"inferredKind\": \"notification\", \"confidence\": 1, \"entities\": [], \"rationale\": \"Synthetic replay response; no external model was executed.\"}",
+    "repeat-a": "{\"inferredKind\": \"notification\", \"confidence\": 1, \"entities\": [], \"rationale\": \"Synthetic replay response; no external model was executed.\"}",
+    "repeat-b": "{\"inferredKind\": \"notification\", \"confidence\": 1, \"entities\": [], \"rationale\": \"Synthetic replay response; no external model was executed.\"}",
+    "receipt-b": "{\"inferredKind\": \"notification\", \"confidence\": 1, \"entities\": [], \"rationale\": \"Synthetic replay response; no external model was executed.\"}",
+    "separate-b": "{\"inferredKind\": \"notification\", \"confidence\": 1, \"entities\": [], \"rationale\": \"Synthetic replay response; no external model was executed.\"}"
+  }
+}

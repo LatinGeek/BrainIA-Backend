@@ -1,0 +1,6014 @@
+{
+  "formatVersion": 1,
+  "mode": "offline",
+  "status": "FAIL",
+  "dataset": {
+    "version": "interpretation-comparison-synthetic-1",
+    "sha256": "6d6ad095a5c8dc71350658a20be9e609a543ad3c94bd8d08e0ed42d14eab3a18",
+    "provenance": "synthetic",
+    "labelStatus": "machine-authored expectations; independent review pending"
+  },
+  "runnerSha256": "bcab21be9fa5942e8ce3088e5e0e083b3ee4fe000ffb0b481c5c4a5d6602bc7b",
+  "node": "v22.23.3",
+  "source": {
+    "sha256": "fcc0efdeab5c53e2e487f7bdf32bc7904c6898f51285a0ef552bb511a445f90a",
+    "files": [
+      [
+        "package-lock.json",
+        "4f9658090d39bc824df3455426db407bdde3810f5b66c86d3b1d5bdadf1ed75a"
+      ],
+      [
+        "package.json",
+        "f1693a0b56e46ec733388aa77c5bfdd4fdd07ad17752f9e42aa2d49ac158e012"
+      ],
+      [
+        "src/app.ts",
+        "b4a73ec90cf95245c0854e3ab895400d65408e195db878f86efa2a093cc73229"
+      ],
+      [
+        "src/auth.ts",
+        "816256b01530614eb9d12be3e0c903fdbada7c0ee299f399848c2020f37e8dc7"
+      ],
+      [
+        "src/config.ts",
+        "86e77a77624216b7ea2a2969cf15a8d809bc548b9c2ee770f24e1383fddc0e9f"
+      ],
+      [
+        "src/domain/capture.ts",
+        "83e1cd6e47c3f5ccfd41729bcee85df63e75146698bfd03d7b23741ff4be523a"
+      ],
+      [
+        "src/domain/classification.ts",
+        "e59168638a00df2ed9e02f39ece943016b05512c253ae69ec67077e67441d77e"
+      ],
+      [
+        "src/domain/entities.ts",
+        "89cc0c77d98b00ec55577c376259523fb541b0faf75b9569e59a00ad6e4a40f6"
+      ],
+      [
+        "src/domain/event-explanation.ts",
+        "4dcfa0ad9f87d6bb96e72ad589656ca3b75c415540d8bb5ad7890dbaa251d084"
+      ],
+      [
+        "src/domain/event-history.ts",
+        "26de1f6a353504c35dbcf168454e98ac5698743ebf378d34f38a2004480678fa"
+      ],
+      [
+        "src/domain/event-interpretation.ts",
+        "8bfbe88a6c8fc2316d1a47af3e7d836f5938a1391957d2de494ae5a0104c404c"
+      ],
+      [
+        "src/domain/event-progress.ts",
+        "bd4034a605763b3dbbff922e7aa8da3be630ae9a1a121721e1ab5365196a9e72"
+      ],
+      [
+        "src/domain/event-reprocess.ts",
+        "a17940f4e2d395a143e87193ac62fa72adb4c2f64939c9373bf30842bd27653c"
+      ],
+      [
+        "src/domain/event.ts",
+        "9d4808769fa266bf6271bbed1214bc305d39f8e5b0c188429d12d5d54a54530e"
+      ],
+      [
+        "src/domain/financial-categories.ts",
+        "58c27c0a37c6f58031e2a12e8fa87c9e87a4846c5b255730c0296f6834daf979"
+      ],
+      [
+        "src/domain/financial-transactions.ts",
+        "246f30845fcd71ae987700f1990345a5221dbae5b601b49787bd9fbc62da8443"
+      ],
+      [
+        "src/domain/graph-options.ts",
+        "ae83d83cd4c1d331a4a8ffe3cbec9ebf8bdd5c8ab67b22c83aa4e3ae8305411b"
+      ],
+      [
+        "src/domain/intelligence.ts",
+        "2542d4b6c77001a0924589dd1ba797b3a0fd2858b4fe78ef1d57f3e759c85033"
+      ],
+      [
+        "src/domain/knowledge-fact.ts",
+        "7e70e8faf730b16c244b7dbc473db5788a6bb6091242e0cdf69d95894bf97ff2"
+      ],
+      [
+        "src/domain/money.ts",
+        "ab2c10c7f93796e8572f4035a6c3586e5af941bbdf232d3e5302d99fc97955e0"
+      ],
+      [
+        "src/domain/ontology.ts",
+        "ebe69f0c24ab0b453702ed00ce213306716fec13a5f4d37ef5472600675ff83f"
+      ],
+      [
+        "src/domain/relations.ts",
+        "f8de9485a35329af5a495cbadf89562eacef9851e61242c57f6a3a44f4b5d0cb"
+      ],
+      [
+        "src/domain/v2/contracts.ts",
+        "1f87c8b6e35420f632238cc865df8d34614df265792a4722d666470cefd07bd3"
+      ],
+      [
+        "src/routes/agent-inspect.ts",
+        "ed99aa0ad4ab27c22ffac83e2d610b6a1d8afaf0a52fc62218e9796906e30a4d"
+      ],
+      [
+        "src/routes/agent.ts",
+        "7443f7e4710a20bccefc10fa5722777c3e5b2b0ac016de5e8e79304b1e13ea7c"
+      ],
+      [
+        "src/routes/capture.ts",
+        "d0a8576800f585896189dad02e215f6598b678752d59817e22503c8fce40afa2"
+      ],
+      [
+        "src/routes/client-diagnostics.ts",
+        "aad5c7e0117dea4d9e9e1da0a9ebbf61fe02d118396ae30fc1977fde32369339"
+      ],
+      [
+        "src/routes/dashboard.ts",
+        "6008c2251c54c7a1d1aa49ddeef266ab67f6053cb736e01ebf5976d6c35a7f83"
+      ],
+      [
+        "src/routes/digests.ts",
+        "ec65fbd04e56431203b25ffaa9b69042304f0ecab0e58873962713fb170fd79e"
+      ],
+      [
+        "src/routes/entity-aliases.ts",
+        "e814e447ab1c7f418d88015f9486003db9433737e8127ac20110a4e87be0967e"
+      ],
+      [
+        "src/routes/entity-merge.ts",
+        "40050ce8498321583c21e3dd1f99ef4479016dcb7b3a0b23ea3c3fcee892ba68"
+      ],
+      [
+        "src/routes/entity-resolve.ts",
+        "e57525afa14ce90bda82ec839441d12041ab57460c97e2e7cc7474625bc3e73a"
+      ],
+      [
+        "src/routes/entity-semantic-profile.ts",
+        "30ffe28e1a81ab36767f9b42134ab6ff693844d86ccc78e9ffb631606f597a0c"
+      ],
+      [
+        "src/routes/events.ts",
+        "d5b904df02bfd5862dd063222c7ceb7ebe9d580fa9ecaeee48605423a24abf41"
+      ],
+      [
+        "src/routes/financial-transactions.ts",
+        "8e9219ebcc3f8bf581d172eeca5c763acf2b1f1b3c5e59caed18379724795197"
+      ],
+      [
+        "src/routes/graph.ts",
+        "360cf2b0b23878ddf0e8d6e7c4c451c490defe1032837b82d68a53ab4ceba772"
+      ],
+      [
+        "src/routes/insights.ts",
+        "949c7e0b93631039e19b88b15700028e889b8e76c29369890de5ee45cd0f6e4e"
+      ],
+      [
+        "src/routes/intelligence.ts",
+        "548d832e8e660e1352ec6d9ce40990aca0935883e6a3fc0c3592db0e667c09a1"
+      ],
+      [
+        "src/routes/knowledge.ts",
+        "844055bfc60e91894485d6eb21457836c92004b4942ccc5933e0644b0c5cc47a"
+      ],
+      [
+        "src/routes/metrics.ts",
+        "9b85262ae1c92a1809a0c2b7b29e2cfca67aaaa5043690803f7b5b5640bb7729"
+      ],
+      [
+        "src/routes/operations.ts",
+        "05b0ac9a99e44daeb79715c25be36da1aee0a5f9cdceb2ec026869828430f6d4"
+      ],
+      [
+        "src/routes/privacy.ts",
+        "24fcb5683ad7ae206fd246a9ceae45e486a90119b7f1d50bb6bca190b3a781d3"
+      ],
+      [
+        "src/routes/search.ts",
+        "dfc2dfce78522327bb9267c9a93a0ade76d2f861594fc653dc9638f5c979911f"
+      ],
+      [
+        "src/routes/semantic.ts",
+        "a3179bd87cb6374963f662b6e20468795086b928c8b62264f1b51b06293132a6"
+      ],
+      [
+        "src/routes/v2/index.ts",
+        "62cd5bd6662b901316f582593ae9dbfa4f6c9ed75f2704cb645295d8c12cefd7"
+      ],
+      [
+        "src/scripts/audit-rooted-semantics.ts",
+        "b839308c8bd77431987a1377b0952d6a22e1950011bf61c1f8037a1088838a0e"
+      ],
+      [
+        "src/scripts/audit-semantic-graph.ts",
+        "9d6c3d96d1352987c4d0dffeb0127d1a8990006ccc6d893c80cef34480812df1"
+      ],
+      [
+        "src/scripts/backfill-event-evidence-parents.ts",
+        "c18db6f67090a2ab593d789d4cbfe880faf6ee125b98415b5b5b78ab9e554486"
+      ],
+      [
+        "src/scripts/backfill-event-taxonomy.ts",
+        "a5e39a2a962e23a406190106f5dac7adbf19dd1cf30330299c1af912868ec4ae"
+      ],
+      [
+        "src/scripts/backfill-financial-merchant-links.ts",
+        "e7d2dceaa2715f2523ea0f47b7c3d607b0ab5ceae502db47bc8f6d365a752b6a"
+      ],
+      [
+        "src/scripts/backfill-missing-semantic-subjects.ts",
+        "9211cc32799ca05f5b21d38ebbc6e624588f2653528043b296bfb02a4645d861"
+      ],
+      [
+        "src/scripts/backfill-orphan-semantics.ts",
+        "76f9eb0e691cced68cfd51c25d6f26885a1f0e8c03e0c92c5dd4c552d1e68d76"
+      ],
+      [
+        "src/scripts/backfill-ownership.ts",
+        "bda75ed231f001c9cee2a8b5112d82c69c1c95d21a628ea3a735022c4494972c"
+      ],
+      [
+        "src/scripts/backfill-semantics.ts",
+        "242821ad8d9d4d7d988d8d813d0571b8e36f8c4474e8cd08e0091bb23fcdb9ad"
+      ],
+      [
+        "src/scripts/cleanup-test-data.ts",
+        "9a216c9b08e0b515b060de395bcfc90fcec0b0d9ecb6720e6e3c67602189ea3e"
+      ],
+      [
+        "src/scripts/evaluate-jev.ts",
+        "ace67b07e5cc6e675c5d81dc49df4d74a02d8793d87b6878e92cb0aed4ac5ca6"
+      ],
+      [
+        "src/scripts/evaluate-laya.ts",
+        "85d508c0a73c2579f52b5cb779d18c9fa77557f4de12a2652c6fcc35b5c5663e"
+      ],
+      [
+        "src/scripts/inspect-semantic-proposals.ts",
+        "8910071b6e2232fa53dc80902894dfc09f8b73be1ed96bcbf82b94c7efd9c7cb"
+      ],
+      [
+        "src/scripts/migrate.ts",
+        "1274fef43529148356f1ce389b287a5154ca90fd8cb58cfe1daa0e9b6439767a"
+      ],
+      [
+        "src/scripts/normalize-hierarchy-relations.ts",
+        "4bac3d60b6d2d01305ad98a0ec9727f884370782552cc8eff5a02535871f5b77"
+      ],
+      [
+        "src/scripts/normalize-provider-identities.ts",
+        "6c2166c5e09e4a6f12551ed130fe96b3ac33e6a2a2bfc00f774704e5ac363380"
+      ],
+      [
+        "src/scripts/probe-deepseek-semantic.ts",
+        "76f4b06fcad611c198cf8627139b26fda51c1ec6d764bc08e2d8b541c376ec7c"
+      ],
+      [
+        "src/scripts/process-jobs.ts",
+        "318a74c0ee0d1f86c67a456fda108cd5d580248d19062b548e13775b2b6fff8b"
+      ],
+      [
+        "src/scripts/reconcile-semantic-governance.ts",
+        "da1b3f45399440732a4d3af224cb54eea4f1ac6bf34424a46eebe94009969119"
+      ],
+      [
+        "src/scripts/remote-smoke.ts",
+        "b564cc663321c3dd1b87070b009d2edd9d537964afd948326c5854a53212ebb3"
+      ],
+      [
+        "src/scripts/reprocess-pending-semantics.ts",
+        "9146dd17e0dfe8f252417869f4e9fac65b069c42a0ead2f186498bb4135502ab"
+      ],
+      [
+        "src/scripts/semantic-harness.ts",
+        "dec4a12352cd8839888599f0594cf06ea7acb1c1319d1d742257f195289e6e94"
+      ],
+      [
+        "src/scripts/validate-live-intelligence.ts",
+        "2d8109f97d764411625b2aad7c2dec9bfd33a64ae2a944fb7db999a9ed6ddd96"
+      ],
+      [
+        "src/scripts/verify-backup.ts",
+        "55d9a57b8e4606e2f91d45b394befc878d639a799e67c8f7acacdcab039d098d"
+      ],
+      [
+        "src/server.ts",
+        "817cc0f4e0719b370bee39144c2984373f4ff9b746d0e87e4d8321df03d252fc"
+      ],
+      [
+        "src/storage/agent-inspect.ts",
+        "4f9a089c1cd79c6ee2b7cb09b05f5f1790b2c78e7a9e6b4a4ccac88abf14710d"
+      ],
+      [
+        "src/storage/backup-verification.ts",
+        "2247c58db029a18d8e47bd024933ab783e67371a4baa7e9d3f0341ad747a9de2"
+      ],
+      [
+        "src/storage/classification-assistant.ts",
+        "7ce39c440e5a163c854d2a18301dff5431d1358f90d8a44be6762c088037696a"
+      ],
+      [
+        "src/storage/classification-learning.ts",
+        "81ce8c0c9308fd9c6af38b179031118a3b3261b8546b268d4427ea5e23d6ea87"
+      ],
+      [
+        "src/storage/client-diagnostic-repository.ts",
+        "7f9733933a9f51c6cbcc4475c89755f6165c75eb6e7e068934c0f0f689e2ccb7"
+      ],
+      [
+        "src/storage/correction-memory.ts",
+        "71148b1c969eaeffcc67c3e41cc8bf03f796a62048fc532cb5552c1a880fe51a"
+      ],
+      [
+        "src/storage/correction-projection.ts",
+        "051157231aef04ddbd3fb819d45c3a3031b05a392901d25e7ec08c93e0bd7ba9"
+      ],
+      [
+        "src/storage/data-controls.ts",
+        "5ea1e56838ac82b30aa6affd3154a2e2ad0c8354745ae520fc05931d233104ec"
+      ],
+      [
+        "src/storage/database-url.ts",
+        "b5e37c0931dca7282adbf120a7de99a8304fa119e1cf9fa131caf09e934b5278"
+      ],
+      [
+        "src/storage/deepseek.ts",
+        "31ce0ff2102c86d85ae2fd1ede430ba05cdd859f289e862fe6734c016ff9391d"
+      ],
+      [
+        "src/storage/digest-repository.ts",
+        "1e9626d4fac4e54874a78c0887bf2c3507b74385e1149f354d9d64f4185505c3"
+      ],
+      [
+        "src/storage/digests.ts",
+        "cd8d1744b2e348817e9aa27168b4949a1b07ca61ca7fda50c1880928af37244d"
+      ],
+      [
+        "src/storage/embeddings.ts",
+        "290b617c0d04760ffc9f680d02e0e8884dfd0fec4b5d2df33962539d9f45accb"
+      ],
+      [
+        "src/storage/entity-alias-repository.ts",
+        "201bcdc874c33ba026752d2bafd423db74a50a73cb3b61c7f934312020fcb353"
+      ],
+      [
+        "src/storage/entity-repository.ts",
+        "bdc1d08e2b9d71138b61c8a7d41361aff233449f6b3177f244aae726cfb5e0ae"
+      ],
+      [
+        "src/storage/entity-semantic-profile.ts",
+        "96c59043087f2bdc21f514e4e401e3871518873e5a3e6f1d6ce0ce2d7865bcba"
+      ],
+      [
+        "src/storage/event-explanation.ts",
+        "337b7427095b2ead51e36b46cd1985ec708c1ffbd9092f7c80069e8a8f3ca8d3"
+      ],
+      [
+        "src/storage/event-progress.ts",
+        "83bc15964dfbd026469cea6acf8c9bdc0bff70f408757f174fae3b47d696b5c8"
+      ],
+      [
+        "src/storage/event-repository.ts",
+        "692cd8cdb02fe30b8ac7f4ddde7e7678456ef8af761ad8ed7cbbcfe692f6f02f"
+      ],
+      [
+        "src/storage/event-store.ts",
+        "b8ddb9f5c0671e75ae6e606f0bbdda4253f21330e9054ee9a481ef1d6bd346b4"
+      ],
+      [
+        "src/storage/financial-transaction-repository.ts",
+        "40a724c9273a71dddf9bfb48de55abffed58a5564db7afeb06a6014b2d3872d4"
+      ],
+      [
+        "src/storage/generated-content.ts",
+        "e465177d221e92c65eb40b28a587f41e1b70369ca217d63231b3d07207b1eaa1"
+      ],
+      [
+        "src/storage/graph-cache.ts",
+        "9f4d0b76da02828cec8a56abeee7cdf5b40a474192c7f002e62ec86f51bdf5ed"
+      ],
+      [
+        "src/storage/graph-repository.ts",
+        "57feb7ca19316b9be62bc178de0d6422cd260ad9d768f48509b2edde5d3bc6a3"
+      ],
+      [
+        "src/storage/hybrid-retrieval.ts",
+        "d0b70aa8510fc7856be9af9fd043329c89f41d1c38a337326f5aa2892e182808"
+      ],
+      [
+        "src/storage/insight-repository.ts",
+        "68431f0210d55260c0059462b55e969226b4c622d018e7470bf27adecb92d865"
+      ],
+      [
+        "src/storage/insights.ts",
+        "10a5b35cd1eaa67970afae8f17ec757814ac6a24a7d864f73dd4233474e557d3"
+      ],
+      [
+        "src/storage/intelligence-evidence.ts",
+        "18e75a1cf80ba6e331ca75e05803cd7daba0ac72692edeff17920dd1e1b2a440"
+      ],
+      [
+        "src/storage/intelligence-schema.ts",
+        "4415f5fc0b0a4bb0285c79f4db5b89f67a4a0b6aa8afea240913b1ad8fdb0ff2"
+      ],
+      [
+        "src/storage/intelligence.ts",
+        "c7da0bb392df6f886a971648cf99bf6240bf40d43e1e2b5e3330b2de4830c8f6"
+      ],
+      [
+        "src/storage/jev.ts",
+        "0068d7a46c04b95fc28cf77b72e4f1825271493c1575861bedef240682817f8a"
+      ],
+      [
+        "src/storage/job-repository.ts",
+        "2d947cb9d9c423d7c9fd16f69170fb04f41dfeee7e309019aa7e7bdd2e3ef627"
+      ],
+      [
+        "src/storage/job-worker.ts",
+        "2f9292999217fc492452f68b1d380a006cbe48cce936f192b5854cbe6e490e2b"
+      ],
+      [
+        "src/storage/knowledge-fact-repository.ts",
+        "221df4468d3c1f04ce1cdd8a8785f820f99e12fdd94d4453c347bd31e2d129a2"
+      ],
+      [
+        "src/storage/model-audit.ts",
+        "84139cb37bd819d642bbbf72c4de63ffb016130ac8eb38e2817b06821acd6efb"
+      ],
+      [
+        "src/storage/ownership.ts",
+        "17d3b1ab37b98cd0eec073c924d3db7f79b90fd2a1b4609c6bfad53ed5492c4f"
+      ],
+      [
+        "src/storage/pending-financial-schema.ts",
+        "0276f76d81fb2404cbcd96ba39d077f8dc4dbc6e602dc2f32696991564618251"
+      ],
+      [
+        "src/storage/postgres.ts",
+        "1b1f77d7c42447cd2be69bc6561fcf301370052b21961e3ee68b24f5b7e470f3"
+      ],
+      [
+        "src/storage/privacy.ts",
+        "c26fdef62d758a8568fec455e3c1d3ce0c16b0465d090ceb87963c572e2bef28"
+      ],
+      [
+        "src/storage/proactive-insights.ts",
+        "b8988b4acc9c07c1b14350b94ac210e7333d013a3cd5acdfcd74d4ddbc3e4bea"
+      ],
+      [
+        "src/storage/quality-metrics.ts",
+        "3b84c2f40efdc92604f013875d7c052685361e21988c2a827f0490d17d642e14"
+      ],
+      [
+        "src/storage/relation-repository.ts",
+        "a1f23d63bb6b95bf9ad905f571811e694286c6123a34323b2cceafafad298eab"
+      ],
+      [
+        "src/storage/search-repository.ts",
+        "4037599b18226ab8e18bc217d7a3c5c02aba22f24382ac0accb6ae448fe35362"
+      ],
+      [
+        "src/storage/semantic-enrichment.ts",
+        "4e8a5f56ff47398f92f447ae8ba9f0b8fd6d84bf207b43f1aa67eb05bf7dbb49"
+      ],
+      [
+        "src/storage/semantic-reconciler.ts",
+        "3af7c998cf7645cb586a93bcca9879e5aceb69c85a0451d678a2f0fea330c59a"
+      ],
+      [
+        "src/storage/semantic-repository.ts",
+        "4884e25b67bc21423181621d0a5a605e63c34a81779619cfe770cd32473e18fc"
+      ],
+      [
+        "src/storage/semantic-resolver.ts",
+        "3529f8dffacfc40627d1008df9ef41b0c394b1898c676657fde334e5cc6301b4"
+      ],
+      [
+        "src/storage/v2/controls.ts",
+        "e4a800e3355e207115571e3e259806361eff98b6ac4628a4ab0ed60cf379783e"
+      ],
+      [
+        "src/storage/v2/cursors.ts",
+        "e0b9130a60f65efc57323e115f189a408d7285658a7de391f5bd1777e965ab1f"
+      ],
+      [
+        "src/storage/v2/discovery.ts",
+        "29794504a951e3aed04c2793757e6f9c9c86d2acd28cb4927c64cc5da0c13e76"
+      ],
+      [
+        "src/storage/v2/observations.ts",
+        "22d7e04809a722f8cb96ee4022b1fbceaf7eeb40706315fd5449c8147261564a"
+      ],
+      [
+        "src/storage/v2/reads.ts",
+        "0bae85267ff9f104d9b5ec3d9c755b0e6ccbb2f107cb2988679876d8e0186a14"
+      ],
+      [
+        "tests/v2-harness/baseline.mjs",
+        "488e27852be985de97d6eb1c82804cef24c896bbe8fe4a3ac24d191f86e8b1f6"
+      ],
+      [
+        "tests/v2-harness/compare.mjs",
+        "bcab21be9fa5942e8ce3088e5e0e083b3ee4fe000ffb0b481c5c4a5d6602bc7b"
+      ],
+      [
+        "tests/v2-harness/comparison-adapter.mjs",
+        "31404676c7a9a0d2c3469a7e44d4c2945e599fd087621e9a1bee56300e5958c5"
+      ],
+      [
+        "tests/v2-harness/comparison.test.mjs",
+        "fbeeda7e0a37a88d3c67d5abd095c2afdaee3b03f47160c267fec7a9b8426fb6"
+      ],
+      [
+        "tests/v2-harness/corpus.mjs",
+        "8e4d076ce2c9a2562fd92acf5998bf02c2e2a934626f3662397b834494a9bb66"
+      ],
+      [
+        "tests/v2-harness/current-adapter.mjs",
+        "7dd95e4ce1139c4cd8094aaedaf269ff07307a799ddb9beca3a3703da03badf1"
+      ],
+      [
+        "tests/v2-harness/generate.mjs",
+        "d8ab32ceb944679581c14a497cb8cb63a5ff3414aed378b7cb7b5f5a64c135bc"
+      ],
+      [
+        "tests/v2-harness/harness.test.mjs",
+        "cccc96f969cf65eec91cf2edf9344537849e553e385d8f110f40ab128e6309c4"
+      ],
+      [
+        "tests/v2-harness/metrics.mjs",
+        "63521a452143b1a04cbebb2833fcd94ff5eabc632a90d3d49e8d00c38b03576b"
+      ],
+      [
+        "tests/v2-harness/regression-demo-adapter.mjs",
+        "7326127ef44e3090e82c882dcfdcc1363499406652bc36ff9d2dd263bae754bf"
+      ],
+      [
+        "tests/v2-harness/run.mjs",
+        "7818dee72f15855f5c9651ea76dfa95b500aae03bc8566de11877ec885eb6afd"
+      ],
+      [
+        "tests/v2-harness/safety.mjs",
+        "91ae4884162d286ae73290dfd37f823f8520856a527cce4f4b77fc75a421fb27"
+      ]
+    ],
+    "head": "9869611338d7c151f962ced06712054558581ca5",
+    "dirty": true
+  },
+  "configurations": {
+    "baseline": {
+      "id": "checkout-rules-baseline",
+      "mode": "rules",
+      "adapter": "tests/v2-harness/comparison-adapter.mjs",
+      "model": null,
+      "promptVersion": null,
+      "description": "Current checkout deterministic classification, entity, relation and financial projection functions.",
+      "adapterSha256": "31404676c7a9a0d2c3469a7e44d4c2945e599fd087621e9a1bee56300e5958c5",
+      "adapterRevision": "interpretation-comparison-1",
+      "classificationVersion": "heuristic-v3",
+      "sourceSha256": "fcc0efdeab5c53e2e487f7bdf32bc7904c6898f51285a0ef552bb511a445f90a",
+      "configFileSha256": "c03f863906e3c1cb08df206ade51a088c2e88bcc401acc2cf4a2ead660e58ec1",
+      "sha256": "78fa31036cd20d26f3529ff1d64511738e30793d28cbcfc1fcabed34b70f34d7"
+    },
+    "candidate": {
+      "id": "checkout-rules-candidate",
+      "mode": "rules",
+      "adapter": "tests/v2-harness/comparison-adapter.mjs",
+      "model": null,
+      "promptVersion": null,
+      "description": "Replace the adapter with reviewed candidate rules, or use mode replay with synthetic responses.",
+      "adapterSha256": "31404676c7a9a0d2c3469a7e44d4c2945e599fd087621e9a1bee56300e5958c5",
+      "adapterRevision": "interpretation-comparison-1",
+      "classificationVersion": "heuristic-v3",
+      "sourceSha256": "fcc0efdeab5c53e2e487f7bdf32bc7904c6898f51285a0ef552bb511a445f90a",
+      "configFileSha256": "6a74523d82614bc4a102eee133b1a2babd9f79057e2c8b7b8c8ef4ad99277c8d",
+      "sha256": "711e0eb08ac092860b1c3971fa0129e3294085e81cd4ca12a14a2d15a93a4cc3"
+    }
+  },
+  "criteria": {
+    "maxRegressedFields": 0,
+    "minimumExactCaseAccuracy": 1,
+    "minimumFieldAccuracy": {
+      "eventType": 1,
+      "amount": 1,
+      "currency": 1,
+      "merchant": 1,
+      "category": 1,
+      "relationships": 1,
+      "reviewRequired": 1
+    },
+    "maxCandidateP95Ms": null
+  },
+  "criteriaSha256": "3db307cdca84284b056d93decb7fa56c0c08abc57f88adf11e7561b9e005eb27",
+  "breaches": [
+    "Candidate exact-case accuracy below minimum",
+    "Candidate eventType accuracy below minimum",
+    "Candidate amount accuracy below minimum",
+    "Candidate currency accuracy below minimum",
+    "Candidate merchant accuracy below minimum",
+    "Candidate relationships accuracy below minimum",
+    "Candidate reviewRequired accuracy below minimum"
+  ],
+  "regressedFields": 0,
+  "regressedCases": [],
+  "network": {
+    "deniedAttempts": 0,
+    "providerCalls": 0
+  },
+  "metrics": {
+    "baseline": {
+      "exactCaseAccuracy": {
+        "numerator": 12,
+        "denominator": 17,
+        "value": 0.7058823529411765,
+        "confidence95": [
+          0.4686688993346016,
+          0.8672001038970478
+        ],
+        "zeroErrorUpper95": null
+      },
+      "fields": {
+        "eventType": {
+          "accuracy": {
+            "numerator": 18,
+            "denominator": 20,
+            "value": 0.9,
+            "confidence95": [
+              0.6989663547715128,
+              0.9721335187862319
+            ],
+            "zeroErrorUpper95": null
+          },
+          "nonEmptyExpectedAccuracy": {
+            "numerator": 18,
+            "denominator": 20,
+            "value": 0.9,
+            "confidence95": [
+              0.6989663547715128,
+              0.9721335187862319
+            ],
+            "zeroErrorUpper95": null
+          }
+        },
+        "amount": {
+          "accuracy": {
+            "numerator": 19,
+            "denominator": 20,
+            "value": 0.95,
+            "confidence95": [
+              0.763868806553258,
+              0.9911185511992047
+            ],
+            "zeroErrorUpper95": null
+          },
+          "nonEmptyExpectedAccuracy": {
+            "numerator": 15,
+            "denominator": 15,
+            "value": 1,
+            "confidence95": [
+              0.7961166989641515,
+              1
+            ],
+            "zeroErrorUpper95": 0.18103627252208465
+          }
+        },
+        "currency": {
+          "accuracy": {
+            "numerator": 19,
+            "denominator": 20,
+            "value": 0.95,
+            "confidence95": [
+              0.763868806553258,
+              0.9911185511992047
+            ],
+            "zeroErrorUpper95": null
+          },
+          "nonEmptyExpectedAccuracy": {
+            "numerator": 15,
+            "denominator": 15,
+            "value": 1,
+            "confidence95": [
+              0.7961166989641515,
+              1
+            ],
+            "zeroErrorUpper95": 0.18103627252208465
+          }
+        },
+        "merchant": {
+          "accuracy": {
+            "numerator": 19,
+            "denominator": 20,
+            "value": 0.95,
+            "confidence95": [
+              0.763868806553258,
+              0.9911185511992047
+            ],
+            "zeroErrorUpper95": null
+          },
+          "nonEmptyExpectedAccuracy": {
+            "numerator": 15,
+            "denominator": 15,
+            "value": 1,
+            "confidence95": [
+              0.7961166989641515,
+              1
+            ],
+            "zeroErrorUpper95": 0.18103627252208465
+          }
+        },
+        "category": {
+          "accuracy": {
+            "numerator": 20,
+            "denominator": 20,
+            "value": 1,
+            "confidence95": [
+              0.8388748419471806,
+              1
+            ],
+            "zeroErrorUpper95": 0.13910834066826516
+          },
+          "nonEmptyExpectedAccuracy": {
+            "numerator": 3,
+            "denominator": 3,
+            "value": 1,
+            "confidence95": [
+              0.4385029682449546,
+              1
+            ],
+            "zeroErrorUpper95": 0.6315968501359613
+          }
+        },
+        "relationships": {
+          "accuracy": {
+            "numerator": 33,
+            "denominator": 37,
+            "value": 0.8918918918918919,
+            "confidence95": [
+              0.7529146845587398,
+              0.9571481005958853
+            ],
+            "zeroErrorUpper95": null
+          },
+          "nonEmptyExpectedAccuracy": {
+            "numerator": 12,
+            "denominator": 15,
+            "value": 0.8,
+            "confidence95": [
+              0.5481455128483065,
+              0.9295245065301844
+            ],
+            "zeroErrorUpper95": null
+          }
+        },
+        "reviewRequired": {
+          "accuracy": {
+            "numerator": 19,
+            "denominator": 20,
+            "value": 0.95,
+            "confidence95": [
+              0.763868806553258,
+              0.9911185511992047
+            ],
+            "zeroErrorUpper95": null
+          },
+          "nonEmptyExpectedAccuracy": {
+            "numerator": 19,
+            "denominator": 20,
+            "value": 0.95,
+            "confidence95": [
+              0.763868806553258,
+              0.9911185511992047
+            ],
+            "zeroErrorUpper95": null
+          }
+        }
+      },
+      "adapterLatencyMs": {
+        "samples": [
+          15.236400000000003,
+          0.3879000000000019,
+          0.35990000000003874,
+          0.3574999999999591,
+          0.3650000000000091,
+          0.5374999999999659,
+          0.5515000000000327,
+          0.19420000000002346,
+          0.07740000000001146,
+          0.16899999999998272,
+          0.6510000000000105,
+          0.11509999999998399,
+          0.18549999999999045,
+          0.09759999999999991,
+          0.32200000000000273,
+          0.23140000000000782,
+          0.18999999999999773
+        ],
+        "p95": 15.236400000000003,
+        "scope": "adapter invocation including lazy imports; not production latency"
+      },
+      "usage": [
+        {
+          "caseId": "expense-uyu",
+          "value": null
+        },
+        {
+          "caseId": "expense-usd",
+          "value": null
+        },
+        {
+          "caseId": "expense-decimal",
+          "value": null
+        },
+        {
+          "caseId": "income-salary",
+          "value": null
+        },
+        {
+          "caseId": "income-refund",
+          "value": null
+        },
+        {
+          "caseId": "transfer-own",
+          "value": null
+        },
+        {
+          "caseId": "email-message",
+          "value": null
+        },
+        {
+          "caseId": "email-receipt",
+          "value": null
+        },
+        {
+          "caseId": "irrelevant-weather",
+          "value": null
+        },
+        {
+          "caseId": "rejected-card",
+          "value": null
+        },
+        {
+          "caseId": "balance-only",
+          "value": null
+        },
+        {
+          "caseId": "ambiguous-dollar",
+          "value": null
+        },
+        {
+          "caseId": "missing-merchant",
+          "value": null
+        },
+        {
+          "caseId": "capture-category",
+          "value": null
+        },
+        {
+          "caseId": "repeated-capture",
+          "value": null
+        },
+        {
+          "caseId": "multiple-source-evidence",
+          "value": null
+        },
+        {
+          "caseId": "same-value-distinct-purchases",
+          "value": null
+        }
+      ],
+      "cost": [
+        {
+          "caseId": "expense-uyu",
+          "value": null
+        },
+        {
+          "caseId": "expense-usd",
+          "value": null
+        },
+        {
+          "caseId": "expense-decimal",
+          "value": null
+        },
+        {
+          "caseId": "income-salary",
+          "value": null
+        },
+        {
+          "caseId": "income-refund",
+          "value": null
+        },
+        {
+          "caseId": "transfer-own",
+          "value": null
+        },
+        {
+          "caseId": "email-message",
+          "value": null
+        },
+        {
+          "caseId": "email-receipt",
+          "value": null
+        },
+        {
+          "caseId": "irrelevant-weather",
+          "value": null
+        },
+        {
+          "caseId": "rejected-card",
+          "value": null
+        },
+        {
+          "caseId": "balance-only",
+          "value": null
+        },
+        {
+          "caseId": "ambiguous-dollar",
+          "value": null
+        },
+        {
+          "caseId": "missing-merchant",
+          "value": null
+        },
+        {
+          "caseId": "capture-category",
+          "value": null
+        },
+        {
+          "caseId": "repeated-capture",
+          "value": null
+        },
+        {
+          "caseId": "multiple-source-evidence",
+          "value": null
+        },
+        {
+          "caseId": "same-value-distinct-purchases",
+          "value": null
+        }
+      ],
+      "costReason": "Only adapter-reported measurements retained; no token prices or production estimates inferred"
+    },
+    "candidate": {
+      "exactCaseAccuracy": {
+        "numerator": 12,
+        "denominator": 17,
+        "value": 0.7058823529411765,
+        "confidence95": [
+          0.4686688993346016,
+          0.8672001038970478
+        ],
+        "zeroErrorUpper95": null
+      },
+      "fields": {
+        "eventType": {
+          "accuracy": {
+            "numerator": 18,
+            "denominator": 20,
+            "value": 0.9,
+            "confidence95": [
+              0.6989663547715128,
+              0.9721335187862319
+            ],
+            "zeroErrorUpper95": null
+          },
+          "nonEmptyExpectedAccuracy": {
+            "numerator": 18,
+            "denominator": 20,
+            "value": 0.9,
+            "confidence95": [
+              0.6989663547715128,
+              0.9721335187862319
+            ],
+            "zeroErrorUpper95": null
+          }
+        },
+        "amount": {
+          "accuracy": {
+            "numerator": 19,
+            "denominator": 20,
+            "value": 0.95,
+            "confidence95": [
+              0.763868806553258,
+              0.9911185511992047
+            ],
+            "zeroErrorUpper95": null
+          },
+          "nonEmptyExpectedAccuracy": {
+            "numerator": 15,
+            "denominator": 15,
+            "value": 1,
+            "confidence95": [
+              0.7961166989641515,
+              1
+            ],
+            "zeroErrorUpper95": 0.18103627252208465
+          }
+        },
+        "currency": {
+          "accuracy": {
+            "numerator": 19,
+            "denominator": 20,
+            "value": 0.95,
+            "confidence95": [
+              0.763868806553258,
+              0.9911185511992047
+            ],
+            "zeroErrorUpper95": null
+          },
+          "nonEmptyExpectedAccuracy": {
+            "numerator": 15,
+            "denominator": 15,
+            "value": 1,
+            "confidence95": [
+              0.7961166989641515,
+              1
+            ],
+            "zeroErrorUpper95": 0.18103627252208465
+          }
+        },
+        "merchant": {
+          "accuracy": {
+            "numerator": 19,
+            "denominator": 20,
+            "value": 0.95,
+            "confidence95": [
+              0.763868806553258,
+              0.9911185511992047
+            ],
+            "zeroErrorUpper95": null
+          },
+          "nonEmptyExpectedAccuracy": {
+            "numerator": 15,
+            "denominator": 15,
+            "value": 1,
+            "confidence95": [
+              0.7961166989641515,
+              1
+            ],
+            "zeroErrorUpper95": 0.18103627252208465
+          }
+        },
+        "category": {
+          "accuracy": {
+            "numerator": 20,
+            "denominator": 20,
+            "value": 1,
+            "confidence95": [
+              0.8388748419471806,
+              1
+            ],
+            "zeroErrorUpper95": 0.13910834066826516
+          },
+          "nonEmptyExpectedAccuracy": {
+            "numerator": 3,
+            "denominator": 3,
+            "value": 1,
+            "confidence95": [
+              0.4385029682449546,
+              1
+            ],
+            "zeroErrorUpper95": 0.6315968501359613
+          }
+        },
+        "relationships": {
+          "accuracy": {
+            "numerator": 33,
+            "denominator": 37,
+            "value": 0.8918918918918919,
+            "confidence95": [
+              0.7529146845587398,
+              0.9571481005958853
+            ],
+            "zeroErrorUpper95": null
+          },
+          "nonEmptyExpectedAccuracy": {
+            "numerator": 12,
+            "denominator": 15,
+            "value": 0.8,
+            "confidence95": [
+              0.5481455128483065,
+              0.9295245065301844
+            ],
+            "zeroErrorUpper95": null
+          }
+        },
+        "reviewRequired": {
+          "accuracy": {
+            "numerator": 19,
+            "denominator": 20,
+            "value": 0.95,
+            "confidence95": [
+              0.763868806553258,
+              0.9911185511992047
+            ],
+            "zeroErrorUpper95": null
+          },
+          "nonEmptyExpectedAccuracy": {
+            "numerator": 19,
+            "denominator": 20,
+            "value": 0.95,
+            "confidence95": [
+              0.763868806553258,
+              0.9911185511992047
+            ],
+            "zeroErrorUpper95": null
+          }
+        }
+      },
+      "adapterLatencyMs": {
+        "samples": [
+          5.134900000000016,
+          0.2844000000000051,
+          0.20980000000002974,
+          0.15109999999998536,
+          0.30160000000000764,
+          0.2306000000000381,
+          0.2681999999999789,
+          0.13189999999997326,
+          0.04939999999999145,
+          0.06799999999998363,
+          0.3535999999999717,
+          0.080600000000004,
+          0.11960000000004811,
+          0.08019999999999072,
+          0.17880000000002383,
+          0.24249999999994998,
+          0.1664000000000101
+        ],
+        "p95": 5.134900000000016,
+        "scope": "adapter invocation including lazy imports; not production latency"
+      },
+      "usage": [
+        {
+          "caseId": "expense-uyu",
+          "value": null
+        },
+        {
+          "caseId": "expense-usd",
+          "value": null
+        },
+        {
+          "caseId": "expense-decimal",
+          "value": null
+        },
+        {
+          "caseId": "income-salary",
+          "value": null
+        },
+        {
+          "caseId": "income-refund",
+          "value": null
+        },
+        {
+          "caseId": "transfer-own",
+          "value": null
+        },
+        {
+          "caseId": "email-message",
+          "value": null
+        },
+        {
+          "caseId": "email-receipt",
+          "value": null
+        },
+        {
+          "caseId": "irrelevant-weather",
+          "value": null
+        },
+        {
+          "caseId": "rejected-card",
+          "value": null
+        },
+        {
+          "caseId": "balance-only",
+          "value": null
+        },
+        {
+          "caseId": "ambiguous-dollar",
+          "value": null
+        },
+        {
+          "caseId": "missing-merchant",
+          "value": null
+        },
+        {
+          "caseId": "capture-category",
+          "value": null
+        },
+        {
+          "caseId": "repeated-capture",
+          "value": null
+        },
+        {
+          "caseId": "multiple-source-evidence",
+          "value": null
+        },
+        {
+          "caseId": "same-value-distinct-purchases",
+          "value": null
+        }
+      ],
+      "cost": [
+        {
+          "caseId": "expense-uyu",
+          "value": null
+        },
+        {
+          "caseId": "expense-usd",
+          "value": null
+        },
+        {
+          "caseId": "expense-decimal",
+          "value": null
+        },
+        {
+          "caseId": "income-salary",
+          "value": null
+        },
+        {
+          "caseId": "income-refund",
+          "value": null
+        },
+        {
+          "caseId": "transfer-own",
+          "value": null
+        },
+        {
+          "caseId": "email-message",
+          "value": null
+        },
+        {
+          "caseId": "email-receipt",
+          "value": null
+        },
+        {
+          "caseId": "irrelevant-weather",
+          "value": null
+        },
+        {
+          "caseId": "rejected-card",
+          "value": null
+        },
+        {
+          "caseId": "balance-only",
+          "value": null
+        },
+        {
+          "caseId": "ambiguous-dollar",
+          "value": null
+        },
+        {
+          "caseId": "missing-merchant",
+          "value": null
+        },
+        {
+          "caseId": "capture-category",
+          "value": null
+        },
+        {
+          "caseId": "repeated-capture",
+          "value": null
+        },
+        {
+          "caseId": "multiple-source-evidence",
+          "value": null
+        },
+        {
+          "caseId": "same-value-distinct-purchases",
+          "value": null
+        }
+      ],
+      "costReason": "Only adapter-reported measurements retained; no token prices or production estimates inferred"
+    }
+  },
+  "results": [
+    {
+      "id": "expense-uyu",
+      "scenario": "expense",
+      "expected": {
+        "observations": [
+          {
+            "id": "expense-uyu",
+            "eventType": "expense",
+            "amount": "1733.00",
+            "currency": "UYU",
+            "merchant": "FERRETERIA LUNA",
+            "category": null,
+            "relationships": [
+              {
+                "type": "spent_at",
+                "from": "amount:uyu 1.733,00",
+                "to": "merchant:ferreteria luna"
+              }
+            ],
+            "reviewRequired": false
+          }
+        ],
+        "crossRelationships": []
+      },
+      "baseline": {
+        "configuration": {
+          "id": "checkout-rules-baseline",
+          "sha256": "78fa31036cd20d26f3529ff1d64511738e30793d28cbcfc1fcabed34b70f34d7"
+        },
+        "latencyMs": 15.236400000000003,
+        "usage": null,
+        "cost": null,
+        "promptHashes": [],
+        "limitations": [
+          "Cross-capture consolidation and semantic-governor/UI review are not executed by this read-only domain adapter."
+        ],
+        "observed": [
+          {
+            "id": "expense-uyu",
+            "eventType": "expense",
+            "amount": "1733.00",
+            "currency": "UYU",
+            "merchant": "FERRETERIA LUNA",
+            "category": null,
+            "relationships": [
+              {
+                "type": "spent_at",
+                "from": "amount:uyu 1.733,00",
+                "to": "merchant:ferreteria luna"
+              }
+            ],
+            "reviewRequired": false,
+            "reviewReasons": []
+          }
+        ],
+        "crossRelationships": [],
+        "score": {
+          "units": [
+            {
+              "key": "expense-uyu.eventType",
+              "field": "eventType",
+              "expected": "expense",
+              "observed": "expense",
+              "correct": true
+            },
+            {
+              "key": "expense-uyu.amount",
+              "field": "amount",
+              "expected": "1733.00",
+              "observed": "1733.00",
+              "correct": true
+            },
+            {
+              "key": "expense-uyu.currency",
+              "field": "currency",
+              "expected": "UYU",
+              "observed": "UYU",
+              "correct": true
+            },
+            {
+              "key": "expense-uyu.merchant",
+              "field": "merchant",
+              "expected": "FERRETERIA LUNA",
+              "observed": "FERRETERIA LUNA",
+              "correct": true
+            },
+            {
+              "key": "expense-uyu.category",
+              "field": "category",
+              "expected": null,
+              "observed": null,
+              "correct": true
+            },
+            {
+              "key": "expense-uyu.relationships",
+              "field": "relationships",
+              "expected": [
+                {
+                  "type": "spent_at",
+                  "from": "amount:uyu 1.733,00",
+                  "to": "merchant:ferreteria luna"
+                }
+              ],
+              "observed": [
+                {
+                  "type": "spent_at",
+                  "from": "amount:uyu 1.733,00",
+                  "to": "merchant:ferreteria luna"
+                }
+              ],
+              "correct": true
+            },
+            {
+              "key": "expense-uyu.reviewRequired",
+              "field": "reviewRequired",
+              "expected": false,
+              "observed": false,
+              "correct": true
+            },
+            {
+              "key": "crossRelationships",
+              "field": "relationships",
+              "expected": [],
+              "observed": [],
+              "correct": true
+            }
+          ],
+          "exact": true,
+          "error": null,
+          "unexpectedEvents": [],
+          "duplicateEvents": false,
+          "failures": []
+        }
+      },
+      "candidate": {
+        "configuration": {
+          "id": "checkout-rules-candidate",
+          "sha256": "711e0eb08ac092860b1c3971fa0129e3294085e81cd4ca12a14a2d15a93a4cc3"
+        },
+        "latencyMs": 5.134900000000016,
+        "usage": null,
+        "cost": null,
+        "promptHashes": [],
+        "limitations": [
+          "Cross-capture consolidation and semantic-governor/UI review are not executed by this read-only domain adapter."
+        ],
+        "observed": [
+          {
+            "id": "expense-uyu",
+            "eventType": "expense",
+            "amount": "1733.00",
+            "currency": "UYU",
+            "merchant": "FERRETERIA LUNA",
+            "category": null,
+            "relationships": [
+              {
+                "type": "spent_at",
+                "from": "amount:uyu 1.733,00",
+                "to": "merchant:ferreteria luna"
+              }
+            ],
+            "reviewRequired": false,
+            "reviewReasons": []
+          }
+        ],
+        "crossRelationships": [],
+        "score": {
+          "units": [
+            {
+              "key": "expense-uyu.eventType",
+              "field": "eventType",
+              "expected": "expense",
+              "observed": "expense",
+              "correct": true
+            },
+            {
+              "key": "expense-uyu.amount",
+              "field": "amount",
+              "expected": "1733.00",
+              "observed": "1733.00",
+              "correct": true
+            },
+            {
+              "key": "expense-uyu.currency",
+              "field": "currency",
+              "expected": "UYU",
+              "observed": "UYU",
+              "correct": true
+            },
+            {
+              "key": "expense-uyu.merchant",
+              "field": "merchant",
+              "expected": "FERRETERIA LUNA",
+              "observed": "FERRETERIA LUNA",
+              "correct": true
+            },
+            {
+              "key": "expense-uyu.category",
+              "field": "category",
+              "expected": null,
+              "observed": null,
+              "correct": true
+            },
+            {
+              "key": "expense-uyu.relationships",
+              "field": "relationships",
+              "expected": [
+                {
+                  "type": "spent_at",
+                  "from": "amount:uyu 1.733,00",
+                  "to": "merchant:ferreteria luna"
+                }
+              ],
+              "observed": [
+                {
+                  "type": "spent_at",
+                  "from": "amount:uyu 1.733,00",
+                  "to": "merchant:ferreteria luna"
+                }
+              ],
+              "correct": true
+            },
+            {
+              "key": "expense-uyu.reviewRequired",
+              "field": "reviewRequired",
+              "expected": false,
+              "observed": false,
+              "correct": true
+            },
+            {
+              "key": "crossRelationships",
+              "field": "relationships",
+              "expected": [],
+              "observed": [],
+              "correct": true
+            }
+          ],
+          "exact": true,
+          "error": null,
+          "unexpectedEvents": [],
+          "duplicateEvents": false,
+          "failures": []
+        }
+      },
+      "regressions": [],
+      "improvements": []
+    },
+    {
+      "id": "expense-usd",
+      "scenario": "expense",
+      "expected": {
+        "observations": [
+          {
+            "id": "expense-usd",
+            "eventType": "expense",
+            "amount": "1733.00",
+            "currency": "USD",
+            "merchant": "TIENDA SOL",
+            "category": null,
+            "relationships": [
+              {
+                "type": "spent_at",
+                "from": "amount:usd 1,733.00",
+                "to": "merchant:tienda sol"
+              }
+            ],
+            "reviewRequired": false
+          }
+        ],
+        "crossRelationships": []
+      },
+      "baseline": {
+        "configuration": {
+          "id": "checkout-rules-baseline",
+          "sha256": "78fa31036cd20d26f3529ff1d64511738e30793d28cbcfc1fcabed34b70f34d7"
+        },
+        "latencyMs": 0.3879000000000019,
+        "usage": null,
+        "cost": null,
+        "promptHashes": [],
+        "limitations": [
+          "Cross-capture consolidation and semantic-governor/UI review are not executed by this read-only domain adapter."
+        ],
+        "observed": [
+          {
+            "id": "expense-usd",
+            "eventType": "expense",
+            "amount": "1733.00",
+            "currency": "USD",
+            "merchant": "TIENDA SOL",
+            "category": null,
+            "relationships": [
+              {
+                "type": "spent_at",
+                "from": "amount:usd 1,733.00",
+                "to": "merchant:tienda sol"
+              }
+            ],
+            "reviewRequired": false,
+            "reviewReasons": []
+          }
+        ],
+        "crossRelationships": [],
+        "score": {
+          "units": [
+            {
+              "key": "expense-usd.eventType",
+              "field": "eventType",
+              "expected": "expense",
+              "observed": "expense",
+              "correct": true
+            },
+            {
+              "key": "expense-usd.amount",
+              "field": "amount",
+              "expected": "1733.00",
+              "observed": "1733.00",
+              "correct": true
+            },
+            {
+              "key": "expense-usd.currency",
+              "field": "currency",
+              "expected": "USD",
+              "observed": "USD",
+              "correct": true
+            },
+            {
+              "key": "expense-usd.merchant",
+              "field": "merchant",
+              "expected": "TIENDA SOL",
+              "observed": "TIENDA SOL",
+              "correct": true
+            },
+            {
+              "key": "expense-usd.category",
+              "field": "category",
+              "expected": null,
+              "observed": null,
+              "correct": true
+            },
+            {
+              "key": "expense-usd.relationships",
+              "field": "relationships",
+              "expected": [
+                {
+                  "type": "spent_at",
+                  "from": "amount:usd 1,733.00",
+                  "to": "merchant:tienda sol"
+                }
+              ],
+              "observed": [
+                {
+                  "type": "spent_at",
+                  "from": "amount:usd 1,733.00",
+                  "to": "merchant:tienda sol"
+                }
+              ],
+              "correct": true
+            },
+            {
+              "key": "expense-usd.reviewRequired",
+              "field": "reviewRequired",
+              "expected": false,
+              "observed": false,
+              "correct": true
+            },
+            {
+              "key": "crossRelationships",
+              "field": "relationships",
+              "expected": [],
+              "observed": [],
+              "correct": true
+            }
+          ],
+          "exact": true,
+          "error": null,
+          "unexpectedEvents": [],
+          "duplicateEvents": false,
+          "failures": []
+        }
+      },
+      "candidate": {
+        "configuration": {
+          "id": "checkout-rules-candidate",
+          "sha256": "711e0eb08ac092860b1c3971fa0129e3294085e81cd4ca12a14a2d15a93a4cc3"
+        },
+        "latencyMs": 0.2844000000000051,
+        "usage": null,
+        "cost": null,
+        "promptHashes": [],
+        "limitations": [
+          "Cross-capture consolidation and semantic-governor/UI review are not executed by this read-only domain adapter."
+        ],
+        "observed": [
+          {
+            "id": "expense-usd",
+            "eventType": "expense",
+            "amount": "1733.00",
+            "currency": "USD",
+            "merchant": "TIENDA SOL",
+            "category": null,
+            "relationships": [
+              {
+                "type": "spent_at",
+                "from": "amount:usd 1,733.00",
+                "to": "merchant:tienda sol"
+              }
+            ],
+            "reviewRequired": false,
+            "reviewReasons": []
+          }
+        ],
+        "crossRelationships": [],
+        "score": {
+          "units": [
+            {
+              "key": "expense-usd.eventType",
+              "field": "eventType",
+              "expected": "expense",
+              "observed": "expense",
+              "correct": true
+            },
+            {
+              "key": "expense-usd.amount",
+              "field": "amount",
+              "expected": "1733.00",
+              "observed": "1733.00",
+              "correct": true
+            },
+            {
+              "key": "expense-usd.currency",
+              "field": "currency",
+              "expected": "USD",
+              "observed": "USD",
+              "correct": true
+            },
+            {
+              "key": "expense-usd.merchant",
+              "field": "merchant",
+              "expected": "TIENDA SOL",
+              "observed": "TIENDA SOL",
+              "correct": true
+            },
+            {
+              "key": "expense-usd.category",
+              "field": "category",
+              "expected": null,
+              "observed": null,
+              "correct": true
+            },
+            {
+              "key": "expense-usd.relationships",
+              "field": "relationships",
+              "expected": [
+                {
+                  "type": "spent_at",
+                  "from": "amount:usd 1,733.00",
+                  "to": "merchant:tienda sol"
+                }
+              ],
+              "observed": [
+                {
+                  "type": "spent_at",
+                  "from": "amount:usd 1,733.00",
+                  "to": "merchant:tienda sol"
+                }
+              ],
+              "correct": true
+            },
+            {
+              "key": "expense-usd.reviewRequired",
+              "field": "reviewRequired",
+              "expected": false,
+              "observed": false,
+              "correct": true
+            },
+            {
+              "key": "crossRelationships",
+              "field": "relationships",
+              "expected": [],
+              "observed": [],
+              "correct": true
+            }
+          ],
+          "exact": true,
+          "error": null,
+          "unexpectedEvents": [],
+          "duplicateEvents": false,
+          "failures": []
+        }
+      },
+      "regressions": [],
+      "improvements": []
+    },
+    {
+      "id": "expense-decimal",
+      "scenario": "expense",
+      "expected": {
+        "observations": [
+          {
+            "id": "expense-decimal",
+            "eventType": "expense",
+            "amount": "99.50",
+            "currency": "UYU",
+            "merchant": "CAFE NORTE",
+            "category": null,
+            "relationships": [
+              {
+                "type": "spent_at",
+                "from": "amount:uyu 99,50",
+                "to": "merchant:cafe norte"
+              }
+            ],
+            "reviewRequired": false
+          }
+        ],
+        "crossRelationships": []
+      },
+      "baseline": {
+        "configuration": {
+          "id": "checkout-rules-baseline",
+          "sha256": "78fa31036cd20d26f3529ff1d64511738e30793d28cbcfc1fcabed34b70f34d7"
+        },
+        "latencyMs": 0.35990000000003874,
+        "usage": null,
+        "cost": null,
+        "promptHashes": [],
+        "limitations": [
+          "Cross-capture consolidation and semantic-governor/UI review are not executed by this read-only domain adapter."
+        ],
+        "observed": [
+          {
+            "id": "expense-decimal",
+            "eventType": "expense",
+            "amount": "99.50",
+            "currency": "UYU",
+            "merchant": "CAFE NORTE",
+            "category": null,
+            "relationships": [
+              {
+                "type": "spent_at",
+                "from": "amount:uyu 99,50",
+                "to": "merchant:cafe norte"
+              }
+            ],
+            "reviewRequired": false,
+            "reviewReasons": []
+          }
+        ],
+        "crossRelationships": [],
+        "score": {
+          "units": [
+            {
+              "key": "expense-decimal.eventType",
+              "field": "eventType",
+              "expected": "expense",
+              "observed": "expense",
+              "correct": true
+            },
+            {
+              "key": "expense-decimal.amount",
+              "field": "amount",
+              "expected": "99.50",
+              "observed": "99.50",
+              "correct": true
+            },
+            {
+              "key": "expense-decimal.currency",
+              "field": "currency",
+              "expected": "UYU",
+              "observed": "UYU",
+              "correct": true
+            },
+            {
+              "key": "expense-decimal.merchant",
+              "field": "merchant",
+              "expected": "CAFE NORTE",
+              "observed": "CAFE NORTE",
+              "correct": true
+            },
+            {
+              "key": "expense-decimal.category",
+              "field": "category",
+              "expected": null,
+              "observed": null,
+              "correct": true
+            },
+            {
+              "key": "expense-decimal.relationships",
+              "field": "relationships",
+              "expected": [
+                {
+                  "type": "spent_at",
+                  "from": "amount:uyu 99,50",
+                  "to": "merchant:cafe norte"
+                }
+              ],
+              "observed": [
+                {
+                  "type": "spent_at",
+                  "from": "amount:uyu 99,50",
+                  "to": "merchant:cafe norte"
+                }
+              ],
+              "correct": true
+            },
+            {
+              "key": "expense-decimal.reviewRequired",
+              "field": "reviewRequired",
+              "expected": false,
+              "observed": false,
+              "correct": true
+            },
+            {
+              "key": "crossRelationships",
+              "field": "relationships",
+              "expected": [],
+              "observed": [],
+              "correct": true
+            }
+          ],
+          "exact": true,
+          "error": null,
+          "unexpectedEvents": [],
+          "duplicateEvents": false,
+          "failures": []
+        }
+      },
+      "candidate": {
+        "configuration": {
+          "id": "checkout-rules-candidate",
+          "sha256": "711e0eb08ac092860b1c3971fa0129e3294085e81cd4ca12a14a2d15a93a4cc3"
+        },
+        "latencyMs": 0.20980000000002974,
+        "usage": null,
+        "cost": null,
+        "promptHashes": [],
+        "limitations": [
+          "Cross-capture consolidation and semantic-governor/UI review are not executed by this read-only domain adapter."
+        ],
+        "observed": [
+          {
+            "id": "expense-decimal",
+            "eventType": "expense",
+            "amount": "99.50",
+            "currency": "UYU",
+            "merchant": "CAFE NORTE",
+            "category": null,
+            "relationships": [
+              {
+                "type": "spent_at",
+                "from": "amount:uyu 99,50",
+                "to": "merchant:cafe norte"
+              }
+            ],
+            "reviewRequired": false,
+            "reviewReasons": []
+          }
+        ],
+        "crossRelationships": [],
+        "score": {
+          "units": [
+            {
+              "key": "expense-decimal.eventType",
+              "field": "eventType",
+              "expected": "expense",
+              "observed": "expense",
+              "correct": true
+            },
+            {
+              "key": "expense-decimal.amount",
+              "field": "amount",
+              "expected": "99.50",
+              "observed": "99.50",
+              "correct": true
+            },
+            {
+              "key": "expense-decimal.currency",
+              "field": "currency",
+              "expected": "UYU",
+              "observed": "UYU",
+              "correct": true
+            },
+            {
+              "key": "expense-decimal.merchant",
+              "field": "merchant",
+              "expected": "CAFE NORTE",
+              "observed": "CAFE NORTE",
+              "correct": true
+            },
+            {
+              "key": "expense-decimal.category",
+              "field": "category",
+              "expected": null,
+              "observed": null,
+              "correct": true
+            },
+            {
+              "key": "expense-decimal.relationships",
+              "field": "relationships",
+              "expected": [
+                {
+                  "type": "spent_at",
+                  "from": "amount:uyu 99,50",
+                  "to": "merchant:cafe norte"
+                }
+              ],
+              "observed": [
+                {
+                  "type": "spent_at",
+                  "from": "amount:uyu 99,50",
+                  "to": "merchant:cafe norte"
+                }
+              ],
+              "correct": true
+            },
+            {
+              "key": "expense-decimal.reviewRequired",
+              "field": "reviewRequired",
+              "expected": false,
+              "observed": false,
+              "correct": true
+            },
+            {
+              "key": "crossRelationships",
+              "field": "relationships",
+              "expected": [],
+              "observed": [],
+              "correct": true
+            }
+          ],
+          "exact": true,
+          "error": null,
+          "unexpectedEvents": [],
+          "duplicateEvents": false,
+          "failures": []
+        }
+      },
+      "regressions": [],
+      "improvements": []
+    },
+    {
+      "id": "income-salary",
+      "scenario": "income",
+      "expected": {
+        "observations": [
+          {
+            "id": "income-salary",
+            "eventType": "income",
+            "amount": "50000.00",
+            "currency": "UYU",
+            "merchant": "Empresa Sintética",
+            "category": "Salary",
+            "relationships": [],
+            "reviewRequired": false
+          }
+        ],
+        "crossRelationships": []
+      },
+      "baseline": {
+        "configuration": {
+          "id": "checkout-rules-baseline",
+          "sha256": "78fa31036cd20d26f3529ff1d64511738e30793d28cbcfc1fcabed34b70f34d7"
+        },
+        "latencyMs": 0.3574999999999591,
+        "usage": null,
+        "cost": null,
+        "promptHashes": [],
+        "limitations": [
+          "Cross-capture consolidation and semantic-governor/UI review are not executed by this read-only domain adapter."
+        ],
+        "observed": [
+          {
+            "id": "income-salary",
+            "eventType": "income",
+            "amount": "50000.00",
+            "currency": "UYU",
+            "merchant": "Empresa Sintética",
+            "category": "Salary",
+            "relationships": [],
+            "reviewRequired": false,
+            "reviewReasons": []
+          }
+        ],
+        "crossRelationships": [],
+        "score": {
+          "units": [
+            {
+              "key": "income-salary.eventType",
+              "field": "eventType",
+              "expected": "income",
+              "observed": "income",
+              "correct": true
+            },
+            {
+              "key": "income-salary.amount",
+              "field": "amount",
+              "expected": "50000.00",
+              "observed": "50000.00",
+              "correct": true
+            },
+            {
+              "key": "income-salary.currency",
+              "field": "currency",
+              "expected": "UYU",
+              "observed": "UYU",
+              "correct": true
+            },
+            {
+              "key": "income-salary.merchant",
+              "field": "merchant",
+              "expected": "Empresa Sintética",
+              "observed": "Empresa Sintética",
+              "correct": true
+            },
+            {
+              "key": "income-salary.category",
+              "field": "category",
+              "expected": "Salary",
+              "observed": "Salary",
+              "correct": true
+            },
+            {
+              "key": "income-salary.relationships",
+              "field": "relationships",
+              "expected": [],
+              "observed": [],
+              "correct": true
+            },
+            {
+              "key": "income-salary.reviewRequired",
+              "field": "reviewRequired",
+              "expected": false,
+              "observed": false,
+              "correct": true
+            },
+            {
+              "key": "crossRelationships",
+              "field": "relationships",
+              "expected": [],
+              "observed": [],
+              "correct": true
+            }
+          ],
+          "exact": true,
+          "error": null,
+          "unexpectedEvents": [],
+          "duplicateEvents": false,
+          "failures": []
+        }
+      },
+      "candidate": {
+        "configuration": {
+          "id": "checkout-rules-candidate",
+          "sha256": "711e0eb08ac092860b1c3971fa0129e3294085e81cd4ca12a14a2d15a93a4cc3"
+        },
+        "latencyMs": 0.15109999999998536,
+        "usage": null,
+        "cost": null,
+        "promptHashes": [],
+        "limitations": [
+          "Cross-capture consolidation and semantic-governor/UI review are not executed by this read-only domain adapter."
+        ],
+        "observed": [
+          {
+            "id": "income-salary",
+            "eventType": "income",
+            "amount": "50000.00",
+            "currency": "UYU",
+            "merchant": "Empresa Sintética",
+            "category": "Salary",
+            "relationships": [],
+            "reviewRequired": false,
+            "reviewReasons": []
+          }
+        ],
+        "crossRelationships": [],
+        "score": {
+          "units": [
+            {
+              "key": "income-salary.eventType",
+              "field": "eventType",
+              "expected": "income",
+              "observed": "income",
+              "correct": true
+            },
+            {
+              "key": "income-salary.amount",
+              "field": "amount",
+              "expected": "50000.00",
+              "observed": "50000.00",
+              "correct": true
+            },
+            {
+              "key": "income-salary.currency",
+              "field": "currency",
+              "expected": "UYU",
+              "observed": "UYU",
+              "correct": true
+            },
+            {
+              "key": "income-salary.merchant",
+              "field": "merchant",
+              "expected": "Empresa Sintética",
+              "observed": "Empresa Sintética",
+              "correct": true
+            },
+            {
+              "key": "income-salary.category",
+              "field": "category",
+              "expected": "Salary",
+              "observed": "Salary",
+              "correct": true
+            },
+            {
+              "key": "income-salary.relationships",
+              "field": "relationships",
+              "expected": [],
+              "observed": [],
+              "correct": true
+            },
+            {
+              "key": "income-salary.reviewRequired",
+              "field": "reviewRequired",
+              "expected": false,
+              "observed": false,
+              "correct": true
+            },
+            {
+              "key": "crossRelationships",
+              "field": "relationships",
+              "expected": [],
+              "observed": [],
+              "correct": true
+            }
+          ],
+          "exact": true,
+          "error": null,
+          "unexpectedEvents": [],
+          "duplicateEvents": false,
+          "failures": []
+        }
+      },
+      "regressions": [],
+      "improvements": []
+    },
+    {
+      "id": "income-refund",
+      "scenario": "income",
+      "expected": {
+        "observations": [
+          {
+            "id": "income-refund",
+            "eventType": "income",
+            "amount": "20.00",
+            "currency": "USD",
+            "merchant": "Tienda Sintética",
+            "category": "Refund",
+            "relationships": [],
+            "reviewRequired": false
+          }
+        ],
+        "crossRelationships": []
+      },
+      "baseline": {
+        "configuration": {
+          "id": "checkout-rules-baseline",
+          "sha256": "78fa31036cd20d26f3529ff1d64511738e30793d28cbcfc1fcabed34b70f34d7"
+        },
+        "latencyMs": 0.3650000000000091,
+        "usage": null,
+        "cost": null,
+        "promptHashes": [],
+        "limitations": [
+          "Cross-capture consolidation and semantic-governor/UI review are not executed by this read-only domain adapter."
+        ],
+        "observed": [
+          {
+            "id": "income-refund",
+            "eventType": "income",
+            "amount": "20.00",
+            "currency": "USD",
+            "merchant": "Tienda Sintética",
+            "category": "Refund",
+            "relationships": [],
+            "reviewRequired": false,
+            "reviewReasons": []
+          }
+        ],
+        "crossRelationships": [],
+        "score": {
+          "units": [
+            {
+              "key": "income-refund.eventType",
+              "field": "eventType",
+              "expected": "income",
+              "observed": "income",
+              "correct": true
+            },
+            {
+              "key": "income-refund.amount",
+              "field": "amount",
+              "expected": "20.00",
+              "observed": "20.00",
+              "correct": true
+            },
+            {
+              "key": "income-refund.currency",
+              "field": "currency",
+              "expected": "USD",
+              "observed": "USD",
+              "correct": true
+            },
+            {
+              "key": "income-refund.merchant",
+              "field": "merchant",
+              "expected": "Tienda Sintética",
+              "observed": "Tienda Sintética",
+              "correct": true
+            },
+            {
+              "key": "income-refund.category",
+              "field": "category",
+              "expected": "Refund",
+              "observed": "Refund",
+              "correct": true
+            },
+            {
+              "key": "income-refund.relationships",
+              "field": "relationships",
+              "expected": [],
+              "observed": [],
+              "correct": true
+            },
+            {
+              "key": "income-refund.reviewRequired",
+              "field": "reviewRequired",
+              "expected": false,
+              "observed": false,
+              "correct": true
+            },
+            {
+              "key": "crossRelationships",
+              "field": "relationships",
+              "expected": [],
+              "observed": [],
+              "correct": true
+            }
+          ],
+          "exact": true,
+          "error": null,
+          "unexpectedEvents": [],
+          "duplicateEvents": false,
+          "failures": []
+        }
+      },
+      "candidate": {
+        "configuration": {
+          "id": "checkout-rules-candidate",
+          "sha256": "711e0eb08ac092860b1c3971fa0129e3294085e81cd4ca12a14a2d15a93a4cc3"
+        },
+        "latencyMs": 0.30160000000000764,
+        "usage": null,
+        "cost": null,
+        "promptHashes": [],
+        "limitations": [
+          "Cross-capture consolidation and semantic-governor/UI review are not executed by this read-only domain adapter."
+        ],
+        "observed": [
+          {
+            "id": "income-refund",
+            "eventType": "income",
+            "amount": "20.00",
+            "currency": "USD",
+            "merchant": "Tienda Sintética",
+            "category": "Refund",
+            "relationships": [],
+            "reviewRequired": false,
+            "reviewReasons": []
+          }
+        ],
+        "crossRelationships": [],
+        "score": {
+          "units": [
+            {
+              "key": "income-refund.eventType",
+              "field": "eventType",
+              "expected": "income",
+              "observed": "income",
+              "correct": true
+            },
+            {
+              "key": "income-refund.amount",
+              "field": "amount",
+              "expected": "20.00",
+              "observed": "20.00",
+              "correct": true
+            },
+            {
+              "key": "income-refund.currency",
+              "field": "currency",
+              "expected": "USD",
+              "observed": "USD",
+              "correct": true
+            },
+            {
+              "key": "income-refund.merchant",
+              "field": "merchant",
+              "expected": "Tienda Sintética",
+              "observed": "Tienda Sintética",
+              "correct": true
+            },
+            {
+              "key": "income-refund.category",
+              "field": "category",
+              "expected": "Refund",
+              "observed": "Refund",
+              "correct": true
+            },
+            {
+              "key": "income-refund.relationships",
+              "field": "relationships",
+              "expected": [],
+              "observed": [],
+              "correct": true
+            },
+            {
+              "key": "income-refund.reviewRequired",
+              "field": "reviewRequired",
+              "expected": false,
+              "observed": false,
+              "correct": true
+            },
+            {
+              "key": "crossRelationships",
+              "field": "relationships",
+              "expected": [],
+              "observed": [],
+              "correct": true
+            }
+          ],
+          "exact": true,
+          "error": null,
+          "unexpectedEvents": [],
+          "duplicateEvents": false,
+          "failures": []
+        }
+      },
+      "regressions": [],
+      "improvements": []
+    },
+    {
+      "id": "transfer-own",
+      "scenario": "transfer",
+      "expected": {
+        "observations": [
+          {
+            "id": "transfer-own",
+            "eventType": "transfer",
+            "amount": "2500.00",
+            "currency": "UYU",
+            "merchant": "Transfer between accounts",
+            "category": null,
+            "relationships": [],
+            "reviewRequired": false
+          }
+        ],
+        "crossRelationships": []
+      },
+      "baseline": {
+        "configuration": {
+          "id": "checkout-rules-baseline",
+          "sha256": "78fa31036cd20d26f3529ff1d64511738e30793d28cbcfc1fcabed34b70f34d7"
+        },
+        "latencyMs": 0.5374999999999659,
+        "usage": null,
+        "cost": null,
+        "promptHashes": [],
+        "limitations": [
+          "Cross-capture consolidation and semantic-governor/UI review are not executed by this read-only domain adapter."
+        ],
+        "observed": [
+          {
+            "id": "transfer-own",
+            "eventType": "transfer",
+            "amount": "2500.00",
+            "currency": "UYU",
+            "merchant": "Transfer between accounts",
+            "category": null,
+            "relationships": [],
+            "reviewRequired": false,
+            "reviewReasons": []
+          }
+        ],
+        "crossRelationships": [],
+        "score": {
+          "units": [
+            {
+              "key": "transfer-own.eventType",
+              "field": "eventType",
+              "expected": "transfer",
+              "observed": "transfer",
+              "correct": true
+            },
+            {
+              "key": "transfer-own.amount",
+              "field": "amount",
+              "expected": "2500.00",
+              "observed": "2500.00",
+              "correct": true
+            },
+            {
+              "key": "transfer-own.currency",
+              "field": "currency",
+              "expected": "UYU",
+              "observed": "UYU",
+              "correct": true
+            },
+            {
+              "key": "transfer-own.merchant",
+              "field": "merchant",
+              "expected": "Transfer between accounts",
+              "observed": "Transfer between accounts",
+              "correct": true
+            },
+            {
+              "key": "transfer-own.category",
+              "field": "category",
+              "expected": null,
+              "observed": null,
+              "correct": true
+            },
+            {
+              "key": "transfer-own.relationships",
+              "field": "relationships",
+              "expected": [],
+              "observed": [],
+              "correct": true
+            },
+            {
+              "key": "transfer-own.reviewRequired",
+              "field": "reviewRequired",
+              "expected": false,
+              "observed": false,
+              "correct": true
+            },
+            {
+              "key": "crossRelationships",
+              "field": "relationships",
+              "expected": [],
+              "observed": [],
+              "correct": true
+            }
+          ],
+          "exact": true,
+          "error": null,
+          "unexpectedEvents": [],
+          "duplicateEvents": false,
+          "failures": []
+        }
+      },
+      "candidate": {
+        "configuration": {
+          "id": "checkout-rules-candidate",
+          "sha256": "711e0eb08ac092860b1c3971fa0129e3294085e81cd4ca12a14a2d15a93a4cc3"
+        },
+        "latencyMs": 0.2306000000000381,
+        "usage": null,
+        "cost": null,
+        "promptHashes": [],
+        "limitations": [
+          "Cross-capture consolidation and semantic-governor/UI review are not executed by this read-only domain adapter."
+        ],
+        "observed": [
+          {
+            "id": "transfer-own",
+            "eventType": "transfer",
+            "amount": "2500.00",
+            "currency": "UYU",
+            "merchant": "Transfer between accounts",
+            "category": null,
+            "relationships": [],
+            "reviewRequired": false,
+            "reviewReasons": []
+          }
+        ],
+        "crossRelationships": [],
+        "score": {
+          "units": [
+            {
+              "key": "transfer-own.eventType",
+              "field": "eventType",
+              "expected": "transfer",
+              "observed": "transfer",
+              "correct": true
+            },
+            {
+              "key": "transfer-own.amount",
+              "field": "amount",
+              "expected": "2500.00",
+              "observed": "2500.00",
+              "correct": true
+            },
+            {
+              "key": "transfer-own.currency",
+              "field": "currency",
+              "expected": "UYU",
+              "observed": "UYU",
+              "correct": true
+            },
+            {
+              "key": "transfer-own.merchant",
+              "field": "merchant",
+              "expected": "Transfer between accounts",
+              "observed": "Transfer between accounts",
+              "correct": true
+            },
+            {
+              "key": "transfer-own.category",
+              "field": "category",
+              "expected": null,
+              "observed": null,
+              "correct": true
+            },
+            {
+              "key": "transfer-own.relationships",
+              "field": "relationships",
+              "expected": [],
+              "observed": [],
+              "correct": true
+            },
+            {
+              "key": "transfer-own.reviewRequired",
+              "field": "reviewRequired",
+              "expected": false,
+              "observed": false,
+              "correct": true
+            },
+            {
+              "key": "crossRelationships",
+              "field": "relationships",
+              "expected": [],
+              "observed": [],
+              "correct": true
+            }
+          ],
+          "exact": true,
+          "error": null,
+          "unexpectedEvents": [],
+          "duplicateEvents": false,
+          "failures": []
+        }
+      },
+      "regressions": [],
+      "improvements": []
+    },
+    {
+      "id": "email-message",
+      "scenario": "email",
+      "expected": {
+        "observations": [
+          {
+            "id": "email-message",
+            "eventType": "email",
+            "amount": null,
+            "currency": null,
+            "merchant": null,
+            "category": null,
+            "relationships": [
+              {
+                "type": "sent_by",
+                "from": "message:reunión inbox",
+                "to": "sender:equipo@example.invalid"
+              },
+              {
+                "type": "sent_to",
+                "from": "message:reunión inbox",
+                "to": "recipient:persona@example.invalid"
+              }
+            ],
+            "reviewRequired": false
+          }
+        ],
+        "crossRelationships": []
+      },
+      "baseline": {
+        "configuration": {
+          "id": "checkout-rules-baseline",
+          "sha256": "78fa31036cd20d26f3529ff1d64511738e30793d28cbcfc1fcabed34b70f34d7"
+        },
+        "latencyMs": 0.5515000000000327,
+        "usage": null,
+        "cost": null,
+        "promptHashes": [],
+        "limitations": [
+          "Cross-capture consolidation and semantic-governor/UI review are not executed by this read-only domain adapter."
+        ],
+        "observed": [
+          {
+            "id": "email-message",
+            "eventType": "email",
+            "amount": null,
+            "currency": null,
+            "merchant": null,
+            "category": null,
+            "relationships": [
+              {
+                "type": "sent_by",
+                "from": "message:reunión inbox",
+                "to": "sender:equipo@example.invalid"
+              },
+              {
+                "type": "sent_to",
+                "from": "message:reunión inbox",
+                "to": "recipient:persona@example.invalid"
+              }
+            ],
+            "reviewRequired": false,
+            "reviewReasons": []
+          }
+        ],
+        "crossRelationships": [],
+        "score": {
+          "units": [
+            {
+              "key": "email-message.eventType",
+              "field": "eventType",
+              "expected": "email",
+              "observed": "email",
+              "correct": true
+            },
+            {
+              "key": "email-message.amount",
+              "field": "amount",
+              "expected": null,
+              "observed": null,
+              "correct": true
+            },
+            {
+              "key": "email-message.currency",
+              "field": "currency",
+              "expected": null,
+              "observed": null,
+              "correct": true
+            },
+            {
+              "key": "email-message.merchant",
+              "field": "merchant",
+              "expected": null,
+              "observed": null,
+              "correct": true
+            },
+            {
+              "key": "email-message.category",
+              "field": "category",
+              "expected": null,
+              "observed": null,
+              "correct": true
+            },
+            {
+              "key": "email-message.relationships",
+              "field": "relationships",
+              "expected": [
+                {
+                  "type": "sent_by",
+                  "from": "message:reunión inbox",
+                  "to": "sender:equipo@example.invalid"
+                },
+                {
+                  "type": "sent_to",
+                  "from": "message:reunión inbox",
+                  "to": "recipient:persona@example.invalid"
+                }
+              ],
+              "observed": [
+                {
+                  "type": "sent_by",
+                  "from": "message:reunión inbox",
+                  "to": "sender:equipo@example.invalid"
+                },
+                {
+                  "type": "sent_to",
+                  "from": "message:reunión inbox",
+                  "to": "recipient:persona@example.invalid"
+                }
+              ],
+              "correct": true
+            },
+            {
+              "key": "email-message.reviewRequired",
+              "field": "reviewRequired",
+              "expected": false,
+              "observed": false,
+              "correct": true
+            },
+            {
+              "key": "crossRelationships",
+              "field": "relationships",
+              "expected": [],
+              "observed": [],
+              "correct": true
+            }
+          ],
+          "exact": true,
+          "error": null,
+          "unexpectedEvents": [],
+          "duplicateEvents": false,
+          "failures": []
+        }
+      },
+      "candidate": {
+        "configuration": {
+          "id": "checkout-rules-candidate",
+          "sha256": "711e0eb08ac092860b1c3971fa0129e3294085e81cd4ca12a14a2d15a93a4cc3"
+        },
+        "latencyMs": 0.2681999999999789,
+        "usage": null,
+        "cost": null,
+        "promptHashes": [],
+        "limitations": [
+          "Cross-capture consolidation and semantic-governor/UI review are not executed by this read-only domain adapter."
+        ],
+        "observed": [
+          {
+            "id": "email-message",
+            "eventType": "email",
+            "amount": null,
+            "currency": null,
+            "merchant": null,
+            "category": null,
+            "relationships": [
+              {
+                "type": "sent_by",
+                "from": "message:reunión inbox",
+                "to": "sender:equipo@example.invalid"
+              },
+              {
+                "type": "sent_to",
+                "from": "message:reunión inbox",
+                "to": "recipient:persona@example.invalid"
+              }
+            ],
+            "reviewRequired": false,
+            "reviewReasons": []
+          }
+        ],
+        "crossRelationships": [],
+        "score": {
+          "units": [
+            {
+              "key": "email-message.eventType",
+              "field": "eventType",
+              "expected": "email",
+              "observed": "email",
+              "correct": true
+            },
+            {
+              "key": "email-message.amount",
+              "field": "amount",
+              "expected": null,
+              "observed": null,
+              "correct": true
+            },
+            {
+              "key": "email-message.currency",
+              "field": "currency",
+              "expected": null,
+              "observed": null,
+              "correct": true
+            },
+            {
+              "key": "email-message.merchant",
+              "field": "merchant",
+              "expected": null,
+              "observed": null,
+              "correct": true
+            },
+            {
+              "key": "email-message.category",
+              "field": "category",
+              "expected": null,
+              "observed": null,
+              "correct": true
+            },
+            {
+              "key": "email-message.relationships",
+              "field": "relationships",
+              "expected": [
+                {
+                  "type": "sent_by",
+                  "from": "message:reunión inbox",
+                  "to": "sender:equipo@example.invalid"
+                },
+                {
+                  "type": "sent_to",
+                  "from": "message:reunión inbox",
+                  "to": "recipient:persona@example.invalid"
+                }
+              ],
+              "observed": [
+                {
+                  "type": "sent_by",
+                  "from": "message:reunión inbox",
+                  "to": "sender:equipo@example.invalid"
+                },
+                {
+                  "type": "sent_to",
+                  "from": "message:reunión inbox",
+                  "to": "recipient:persona@example.invalid"
+                }
+              ],
+              "correct": true
+            },
+            {
+              "key": "email-message.reviewRequired",
+              "field": "reviewRequired",
+              "expected": false,
+              "observed": false,
+              "correct": true
+            },
+            {
+              "key": "crossRelationships",
+              "field": "relationships",
+              "expected": [],
+              "observed": [],
+              "correct": true
+            }
+          ],
+          "exact": true,
+          "error": null,
+          "unexpectedEvents": [],
+          "duplicateEvents": false,
+          "failures": []
+        }
+      },
+      "regressions": [],
+      "improvements": []
+    },
+    {
+      "id": "email-receipt",
+      "scenario": "email",
+      "expected": {
+        "observations": [
+          {
+            "id": "email-receipt",
+            "eventType": "expense",
+            "amount": "800.00",
+            "currency": "UYU",
+            "merchant": "MERCADO LUNA",
+            "category": null,
+            "relationships": [
+              {
+                "type": "spent_at",
+                "from": "amount:uyu 800,00",
+                "to": "merchant:mercado luna"
+              }
+            ],
+            "reviewRequired": false
+          }
+        ],
+        "crossRelationships": []
+      },
+      "baseline": {
+        "configuration": {
+          "id": "checkout-rules-baseline",
+          "sha256": "78fa31036cd20d26f3529ff1d64511738e30793d28cbcfc1fcabed34b70f34d7"
+        },
+        "latencyMs": 0.19420000000002346,
+        "usage": null,
+        "cost": null,
+        "promptHashes": [],
+        "limitations": [
+          "Cross-capture consolidation and semantic-governor/UI review are not executed by this read-only domain adapter."
+        ],
+        "observed": [
+          {
+            "id": "email-receipt",
+            "eventType": "expense",
+            "amount": "800.00",
+            "currency": "UYU",
+            "merchant": "MERCADO LUNA",
+            "category": null,
+            "relationships": [
+              {
+                "type": "spent_at",
+                "from": "amount:uyu 800,00",
+                "to": "merchant:mercado luna"
+              }
+            ],
+            "reviewRequired": false,
+            "reviewReasons": []
+          }
+        ],
+        "crossRelationships": [],
+        "score": {
+          "units": [
+            {
+              "key": "email-receipt.eventType",
+              "field": "eventType",
+              "expected": "expense",
+              "observed": "expense",
+              "correct": true
+            },
+            {
+              "key": "email-receipt.amount",
+              "field": "amount",
+              "expected": "800.00",
+              "observed": "800.00",
+              "correct": true
+            },
+            {
+              "key": "email-receipt.currency",
+              "field": "currency",
+              "expected": "UYU",
+              "observed": "UYU",
+              "correct": true
+            },
+            {
+              "key": "email-receipt.merchant",
+              "field": "merchant",
+              "expected": "MERCADO LUNA",
+              "observed": "MERCADO LUNA",
+              "correct": true
+            },
+            {
+              "key": "email-receipt.category",
+              "field": "category",
+              "expected": null,
+              "observed": null,
+              "correct": true
+            },
+            {
+              "key": "email-receipt.relationships",
+              "field": "relationships",
+              "expected": [
+                {
+                  "type": "spent_at",
+                  "from": "amount:uyu 800,00",
+                  "to": "merchant:mercado luna"
+                }
+              ],
+              "observed": [
+                {
+                  "type": "spent_at",
+                  "from": "amount:uyu 800,00",
+                  "to": "merchant:mercado luna"
+                }
+              ],
+              "correct": true
+            },
+            {
+              "key": "email-receipt.reviewRequired",
+              "field": "reviewRequired",
+              "expected": false,
+              "observed": false,
+              "correct": true
+            },
+            {
+              "key": "crossRelationships",
+              "field": "relationships",
+              "expected": [],
+              "observed": [],
+              "correct": true
+            }
+          ],
+          "exact": true,
+          "error": null,
+          "unexpectedEvents": [],
+          "duplicateEvents": false,
+          "failures": []
+        }
+      },
+      "candidate": {
+        "configuration": {
+          "id": "checkout-rules-candidate",
+          "sha256": "711e0eb08ac092860b1c3971fa0129e3294085e81cd4ca12a14a2d15a93a4cc3"
+        },
+        "latencyMs": 0.13189999999997326,
+        "usage": null,
+        "cost": null,
+        "promptHashes": [],
+        "limitations": [
+          "Cross-capture consolidation and semantic-governor/UI review are not executed by this read-only domain adapter."
+        ],
+        "observed": [
+          {
+            "id": "email-receipt",
+            "eventType": "expense",
+            "amount": "800.00",
+            "currency": "UYU",
+            "merchant": "MERCADO LUNA",
+            "category": null,
+            "relationships": [
+              {
+                "type": "spent_at",
+                "from": "amount:uyu 800,00",
+                "to": "merchant:mercado luna"
+              }
+            ],
+            "reviewRequired": false,
+            "reviewReasons": []
+          }
+        ],
+        "crossRelationships": [],
+        "score": {
+          "units": [
+            {
+              "key": "email-receipt.eventType",
+              "field": "eventType",
+              "expected": "expense",
+              "observed": "expense",
+              "correct": true
+            },
+            {
+              "key": "email-receipt.amount",
+              "field": "amount",
+              "expected": "800.00",
+              "observed": "800.00",
+              "correct": true
+            },
+            {
+              "key": "email-receipt.currency",
+              "field": "currency",
+              "expected": "UYU",
+              "observed": "UYU",
+              "correct": true
+            },
+            {
+              "key": "email-receipt.merchant",
+              "field": "merchant",
+              "expected": "MERCADO LUNA",
+              "observed": "MERCADO LUNA",
+              "correct": true
+            },
+            {
+              "key": "email-receipt.category",
+              "field": "category",
+              "expected": null,
+              "observed": null,
+              "correct": true
+            },
+            {
+              "key": "email-receipt.relationships",
+              "field": "relationships",
+              "expected": [
+                {
+                  "type": "spent_at",
+                  "from": "amount:uyu 800,00",
+                  "to": "merchant:mercado luna"
+                }
+              ],
+              "observed": [
+                {
+                  "type": "spent_at",
+                  "from": "amount:uyu 800,00",
+                  "to": "merchant:mercado luna"
+                }
+              ],
+              "correct": true
+            },
+            {
+              "key": "email-receipt.reviewRequired",
+              "field": "reviewRequired",
+              "expected": false,
+              "observed": false,
+              "correct": true
+            },
+            {
+              "key": "crossRelationships",
+              "field": "relationships",
+              "expected": [],
+              "observed": [],
+              "correct": true
+            }
+          ],
+          "exact": true,
+          "error": null,
+          "unexpectedEvents": [],
+          "duplicateEvents": false,
+          "failures": []
+        }
+      },
+      "regressions": [],
+      "improvements": []
+    },
+    {
+      "id": "irrelevant-weather",
+      "scenario": "irrelevant",
+      "expected": {
+        "observations": [
+          {
+            "id": "irrelevant-weather",
+            "eventType": "notification",
+            "amount": null,
+            "currency": null,
+            "merchant": null,
+            "category": null,
+            "relationships": [],
+            "reviewRequired": false
+          }
+        ],
+        "crossRelationships": []
+      },
+      "baseline": {
+        "configuration": {
+          "id": "checkout-rules-baseline",
+          "sha256": "78fa31036cd20d26f3529ff1d64511738e30793d28cbcfc1fcabed34b70f34d7"
+        },
+        "latencyMs": 0.07740000000001146,
+        "usage": null,
+        "cost": null,
+        "promptHashes": [],
+        "limitations": [
+          "Cross-capture consolidation and semantic-governor/UI review are not executed by this read-only domain adapter."
+        ],
+        "observed": [
+          {
+            "id": "irrelevant-weather",
+            "eventType": "other",
+            "amount": null,
+            "currency": null,
+            "merchant": null,
+            "category": null,
+            "relationships": [],
+            "reviewRequired": true,
+            "reviewReasons": []
+          }
+        ],
+        "crossRelationships": [],
+        "score": {
+          "units": [
+            {
+              "key": "irrelevant-weather.eventType",
+              "field": "eventType",
+              "expected": "notification",
+              "observed": "other",
+              "correct": false
+            },
+            {
+              "key": "irrelevant-weather.amount",
+              "field": "amount",
+              "expected": null,
+              "observed": null,
+              "correct": true
+            },
+            {
+              "key": "irrelevant-weather.currency",
+              "field": "currency",
+              "expected": null,
+              "observed": null,
+              "correct": true
+            },
+            {
+              "key": "irrelevant-weather.merchant",
+              "field": "merchant",
+              "expected": null,
+              "observed": null,
+              "correct": true
+            },
+            {
+              "key": "irrelevant-weather.category",
+              "field": "category",
+              "expected": null,
+              "observed": null,
+              "correct": true
+            },
+            {
+              "key": "irrelevant-weather.relationships",
+              "field": "relationships",
+              "expected": [],
+              "observed": [],
+              "correct": true
+            },
+            {
+              "key": "irrelevant-weather.reviewRequired",
+              "field": "reviewRequired",
+              "expected": false,
+              "observed": true,
+              "correct": false
+            },
+            {
+              "key": "crossRelationships",
+              "field": "relationships",
+              "expected": [],
+              "observed": [],
+              "correct": true
+            }
+          ],
+          "exact": false,
+          "error": null,
+          "unexpectedEvents": [],
+          "duplicateEvents": false,
+          "failures": [
+            {
+              "key": "irrelevant-weather.eventType",
+              "field": "eventType",
+              "expected": "notification",
+              "observed": "other",
+              "correct": false
+            },
+            {
+              "key": "irrelevant-weather.reviewRequired",
+              "field": "reviewRequired",
+              "expected": false,
+              "observed": true,
+              "correct": false
+            }
+          ]
+        }
+      },
+      "candidate": {
+        "configuration": {
+          "id": "checkout-rules-candidate",
+          "sha256": "711e0eb08ac092860b1c3971fa0129e3294085e81cd4ca12a14a2d15a93a4cc3"
+        },
+        "latencyMs": 0.04939999999999145,
+        "usage": null,
+        "cost": null,
+        "promptHashes": [],
+        "limitations": [
+          "Cross-capture consolidation and semantic-governor/UI review are not executed by this read-only domain adapter."
+        ],
+        "observed": [
+          {
+            "id": "irrelevant-weather",
+            "eventType": "other",
+            "amount": null,
+            "currency": null,
+            "merchant": null,
+            "category": null,
+            "relationships": [],
+            "reviewRequired": true,
+            "reviewReasons": []
+          }
+        ],
+        "crossRelationships": [],
+        "score": {
+          "units": [
+            {
+              "key": "irrelevant-weather.eventType",
+              "field": "eventType",
+              "expected": "notification",
+              "observed": "other",
+              "correct": false
+            },
+            {
+              "key": "irrelevant-weather.amount",
+              "field": "amount",
+              "expected": null,
+              "observed": null,
+              "correct": true
+            },
+            {
+              "key": "irrelevant-weather.currency",
+              "field": "currency",
+              "expected": null,
+              "observed": null,
+              "correct": true
+            },
+            {
+              "key": "irrelevant-weather.merchant",
+              "field": "merchant",
+              "expected": null,
+              "observed": null,
+              "correct": true
+            },
+            {
+              "key": "irrelevant-weather.category",
+              "field": "category",
+              "expected": null,
+              "observed": null,
+              "correct": true
+            },
+            {
+              "key": "irrelevant-weather.relationships",
+              "field": "relationships",
+              "expected": [],
+              "observed": [],
+              "correct": true
+            },
+            {
+              "key": "irrelevant-weather.reviewRequired",
+              "field": "reviewRequired",
+              "expected": false,
+              "observed": true,
+              "correct": false
+            },
+            {
+              "key": "crossRelationships",
+              "field": "relationships",
+              "expected": [],
+              "observed": [],
+              "correct": true
+            }
+          ],
+          "exact": false,
+          "error": null,
+          "unexpectedEvents": [],
+          "duplicateEvents": false,
+          "failures": [
+            {
+              "key": "irrelevant-weather.eventType",
+              "field": "eventType",
+              "expected": "notification",
+              "observed": "other",
+              "correct": false
+            },
+            {
+              "key": "irrelevant-weather.reviewRequired",
+              "field": "reviewRequired",
+              "expected": false,
+              "observed": true,
+              "correct": false
+            }
+          ]
+        }
+      },
+      "regressions": [],
+      "improvements": []
+    },
+    {
+      "id": "rejected-card",
+      "scenario": "irrelevant",
+      "expected": {
+        "observations": [
+          {
+            "id": "rejected-card",
+            "eventType": "notification",
+            "amount": null,
+            "currency": null,
+            "merchant": null,
+            "category": null,
+            "relationships": [],
+            "reviewRequired": false
+          }
+        ],
+        "crossRelationships": []
+      },
+      "baseline": {
+        "configuration": {
+          "id": "checkout-rules-baseline",
+          "sha256": "78fa31036cd20d26f3529ff1d64511738e30793d28cbcfc1fcabed34b70f34d7"
+        },
+        "latencyMs": 0.16899999999998272,
+        "usage": null,
+        "cost": null,
+        "promptHashes": [],
+        "limitations": [
+          "Cross-capture consolidation and semantic-governor/UI review are not executed by this read-only domain adapter."
+        ],
+        "observed": [
+          {
+            "id": "rejected-card",
+            "eventType": "notification",
+            "amount": null,
+            "currency": null,
+            "merchant": null,
+            "category": null,
+            "relationships": [],
+            "reviewRequired": false,
+            "reviewReasons": []
+          }
+        ],
+        "crossRelationships": [],
+        "score": {
+          "units": [
+            {
+              "key": "rejected-card.eventType",
+              "field": "eventType",
+              "expected": "notification",
+              "observed": "notification",
+              "correct": true
+            },
+            {
+              "key": "rejected-card.amount",
+              "field": "amount",
+              "expected": null,
+              "observed": null,
+              "correct": true
+            },
+            {
+              "key": "rejected-card.currency",
+              "field": "currency",
+              "expected": null,
+              "observed": null,
+              "correct": true
+            },
+            {
+              "key": "rejected-card.merchant",
+              "field": "merchant",
+              "expected": null,
+              "observed": null,
+              "correct": true
+            },
+            {
+              "key": "rejected-card.category",
+              "field": "category",
+              "expected": null,
+              "observed": null,
+              "correct": true
+            },
+            {
+              "key": "rejected-card.relationships",
+              "field": "relationships",
+              "expected": [],
+              "observed": [],
+              "correct": true
+            },
+            {
+              "key": "rejected-card.reviewRequired",
+              "field": "reviewRequired",
+              "expected": false,
+              "observed": false,
+              "correct": true
+            },
+            {
+              "key": "crossRelationships",
+              "field": "relationships",
+              "expected": [],
+              "observed": [],
+              "correct": true
+            }
+          ],
+          "exact": true,
+          "error": null,
+          "unexpectedEvents": [],
+          "duplicateEvents": false,
+          "failures": []
+        }
+      },
+      "candidate": {
+        "configuration": {
+          "id": "checkout-rules-candidate",
+          "sha256": "711e0eb08ac092860b1c3971fa0129e3294085e81cd4ca12a14a2d15a93a4cc3"
+        },
+        "latencyMs": 0.06799999999998363,
+        "usage": null,
+        "cost": null,
+        "promptHashes": [],
+        "limitations": [
+          "Cross-capture consolidation and semantic-governor/UI review are not executed by this read-only domain adapter."
+        ],
+        "observed": [
+          {
+            "id": "rejected-card",
+            "eventType": "notification",
+            "amount": null,
+            "currency": null,
+            "merchant": null,
+            "category": null,
+            "relationships": [],
+            "reviewRequired": false,
+            "reviewReasons": []
+          }
+        ],
+        "crossRelationships": [],
+        "score": {
+          "units": [
+            {
+              "key": "rejected-card.eventType",
+              "field": "eventType",
+              "expected": "notification",
+              "observed": "notification",
+              "correct": true
+            },
+            {
+              "key": "rejected-card.amount",
+              "field": "amount",
+              "expected": null,
+              "observed": null,
+              "correct": true
+            },
+            {
+              "key": "rejected-card.currency",
+              "field": "currency",
+              "expected": null,
+              "observed": null,
+              "correct": true
+            },
+            {
+              "key": "rejected-card.merchant",
+              "field": "merchant",
+              "expected": null,
+              "observed": null,
+              "correct": true
+            },
+            {
+              "key": "rejected-card.category",
+              "field": "category",
+              "expected": null,
+              "observed": null,
+              "correct": true
+            },
+            {
+              "key": "rejected-card.relationships",
+              "field": "relationships",
+              "expected": [],
+              "observed": [],
+              "correct": true
+            },
+            {
+              "key": "rejected-card.reviewRequired",
+              "field": "reviewRequired",
+              "expected": false,
+              "observed": false,
+              "correct": true
+            },
+            {
+              "key": "crossRelationships",
+              "field": "relationships",
+              "expected": [],
+              "observed": [],
+              "correct": true
+            }
+          ],
+          "exact": true,
+          "error": null,
+          "unexpectedEvents": [],
+          "duplicateEvents": false,
+          "failures": []
+        }
+      },
+      "regressions": [],
+      "improvements": []
+    },
+    {
+      "id": "balance-only",
+      "scenario": "ambiguous",
+      "expected": {
+        "observations": [
+          {
+            "id": "balance-only",
+            "eventType": "notification",
+            "amount": null,
+            "currency": null,
+            "merchant": null,
+            "category": null,
+            "relationships": [],
+            "reviewRequired": false
+          }
+        ],
+        "crossRelationships": []
+      },
+      "baseline": {
+        "configuration": {
+          "id": "checkout-rules-baseline",
+          "sha256": "78fa31036cd20d26f3529ff1d64511738e30793d28cbcfc1fcabed34b70f34d7"
+        },
+        "latencyMs": 0.6510000000000105,
+        "usage": null,
+        "cost": null,
+        "promptHashes": [],
+        "limitations": [
+          "Cross-capture consolidation and semantic-governor/UI review are not executed by this read-only domain adapter."
+        ],
+        "observed": [
+          {
+            "id": "balance-only",
+            "eventType": "expense",
+            "amount": "8000.00",
+            "currency": "UYU",
+            "merchant": "Banco Sintético",
+            "category": null,
+            "relationships": [
+              {
+                "type": "spent_at",
+                "from": "amount:uyu 8.000,00",
+                "to": "merchant:saldo"
+              }
+            ],
+            "reviewRequired": false,
+            "reviewReasons": []
+          }
+        ],
+        "crossRelationships": [],
+        "score": {
+          "units": [
+            {
+              "key": "balance-only.eventType",
+              "field": "eventType",
+              "expected": "notification",
+              "observed": "expense",
+              "correct": false
+            },
+            {
+              "key": "balance-only.amount",
+              "field": "amount",
+              "expected": null,
+              "observed": "8000.00",
+              "correct": false
+            },
+            {
+              "key": "balance-only.currency",
+              "field": "currency",
+              "expected": null,
+              "observed": "UYU",
+              "correct": false
+            },
+            {
+              "key": "balance-only.merchant",
+              "field": "merchant",
+              "expected": null,
+              "observed": "Banco Sintético",
+              "correct": false
+            },
+            {
+              "key": "balance-only.category",
+              "field": "category",
+              "expected": null,
+              "observed": null,
+              "correct": true
+            },
+            {
+              "key": "balance-only.relationships",
+              "field": "relationships",
+              "expected": [],
+              "observed": [
+                {
+                  "type": "spent_at",
+                  "from": "amount:uyu 8.000,00",
+                  "to": "merchant:saldo"
+                }
+              ],
+              "correct": false
+            },
+            {
+              "key": "balance-only.reviewRequired",
+              "field": "reviewRequired",
+              "expected": false,
+              "observed": false,
+              "correct": true
+            },
+            {
+              "key": "crossRelationships",
+              "field": "relationships",
+              "expected": [],
+              "observed": [],
+              "correct": true
+            }
+          ],
+          "exact": false,
+          "error": null,
+          "unexpectedEvents": [],
+          "duplicateEvents": false,
+          "failures": [
+            {
+              "key": "balance-only.eventType",
+              "field": "eventType",
+              "expected": "notification",
+              "observed": "expense",
+              "correct": false
+            },
+            {
+              "key": "balance-only.amount",
+              "field": "amount",
+              "expected": null,
+              "observed": "8000.00",
+              "correct": false
+            },
+            {
+              "key": "balance-only.currency",
+              "field": "currency",
+              "expected": null,
+              "observed": "UYU",
+              "correct": false
+            },
+            {
+              "key": "balance-only.merchant",
+              "field": "merchant",
+              "expected": null,
+              "observed": "Banco Sintético",
+              "correct": false
+            },
+            {
+              "key": "balance-only.relationships",
+              "field": "relationships",
+              "expected": [],
+              "observed": [
+                {
+                  "type": "spent_at",
+                  "from": "amount:uyu 8.000,00",
+                  "to": "merchant:saldo"
+                }
+              ],
+              "correct": false
+            }
+          ]
+        }
+      },
+      "candidate": {
+        "configuration": {
+          "id": "checkout-rules-candidate",
+          "sha256": "711e0eb08ac092860b1c3971fa0129e3294085e81cd4ca12a14a2d15a93a4cc3"
+        },
+        "latencyMs": 0.3535999999999717,
+        "usage": null,
+        "cost": null,
+        "promptHashes": [],
+        "limitations": [
+          "Cross-capture consolidation and semantic-governor/UI review are not executed by this read-only domain adapter."
+        ],
+        "observed": [
+          {
+            "id": "balance-only",
+            "eventType": "expense",
+            "amount": "8000.00",
+            "currency": "UYU",
+            "merchant": "Banco Sintético",
+            "category": null,
+            "relationships": [
+              {
+                "type": "spent_at",
+                "from": "amount:uyu 8.000,00",
+                "to": "merchant:saldo"
+              }
+            ],
+            "reviewRequired": false,
+            "reviewReasons": []
+          }
+        ],
+        "crossRelationships": [],
+        "score": {
+          "units": [
+            {
+              "key": "balance-only.eventType",
+              "field": "eventType",
+              "expected": "notification",
+              "observed": "expense",
+              "correct": false
+            },
+            {
+              "key": "balance-only.amount",
+              "field": "amount",
+              "expected": null,
+              "observed": "8000.00",
+              "correct": false
+            },
+            {
+              "key": "balance-only.currency",
+              "field": "currency",
+              "expected": null,
+              "observed": "UYU",
+              "correct": false
+            },
+            {
+              "key": "balance-only.merchant",
+              "field": "merchant",
+              "expected": null,
+              "observed": "Banco Sintético",
+              "correct": false
+            },
+            {
+              "key": "balance-only.category",
+              "field": "category",
+              "expected": null,
+              "observed": null,
+              "correct": true
+            },
+            {
+              "key": "balance-only.relationships",
+              "field": "relationships",
+              "expected": [],
+              "observed": [
+                {
+                  "type": "spent_at",
+                  "from": "amount:uyu 8.000,00",
+                  "to": "merchant:saldo"
+                }
+              ],
+              "correct": false
+            },
+            {
+              "key": "balance-only.reviewRequired",
+              "field": "reviewRequired",
+              "expected": false,
+              "observed": false,
+              "correct": true
+            },
+            {
+              "key": "crossRelationships",
+              "field": "relationships",
+              "expected": [],
+              "observed": [],
+              "correct": true
+            }
+          ],
+          "exact": false,
+          "error": null,
+          "unexpectedEvents": [],
+          "duplicateEvents": false,
+          "failures": [
+            {
+              "key": "balance-only.eventType",
+              "field": "eventType",
+              "expected": "notification",
+              "observed": "expense",
+              "correct": false
+            },
+            {
+              "key": "balance-only.amount",
+              "field": "amount",
+              "expected": null,
+              "observed": "8000.00",
+              "correct": false
+            },
+            {
+              "key": "balance-only.currency",
+              "field": "currency",
+              "expected": null,
+              "observed": "UYU",
+              "correct": false
+            },
+            {
+              "key": "balance-only.merchant",
+              "field": "merchant",
+              "expected": null,
+              "observed": "Banco Sintético",
+              "correct": false
+            },
+            {
+              "key": "balance-only.relationships",
+              "field": "relationships",
+              "expected": [],
+              "observed": [
+                {
+                  "type": "spent_at",
+                  "from": "amount:uyu 8.000,00",
+                  "to": "merchant:saldo"
+                }
+              ],
+              "correct": false
+            }
+          ]
+        }
+      },
+      "regressions": [],
+      "improvements": []
+    },
+    {
+      "id": "ambiguous-dollar",
+      "scenario": "ambiguous",
+      "expected": {
+        "observations": [
+          {
+            "id": "ambiguous-dollar",
+            "eventType": "expense",
+            "amount": "350.00",
+            "currency": "UNKNOWN",
+            "merchant": "CAFE NORTE",
+            "category": null,
+            "relationships": [
+              {
+                "type": "spent_at",
+                "from": "amount:$ 350,00",
+                "to": "merchant:cafe norte"
+              }
+            ],
+            "reviewRequired": true
+          }
+        ],
+        "crossRelationships": []
+      },
+      "baseline": {
+        "configuration": {
+          "id": "checkout-rules-baseline",
+          "sha256": "78fa31036cd20d26f3529ff1d64511738e30793d28cbcfc1fcabed34b70f34d7"
+        },
+        "latencyMs": 0.11509999999998399,
+        "usage": null,
+        "cost": null,
+        "promptHashes": [],
+        "limitations": [
+          "Cross-capture consolidation and semantic-governor/UI review are not executed by this read-only domain adapter."
+        ],
+        "observed": [
+          {
+            "id": "ambiguous-dollar",
+            "eventType": "expense",
+            "amount": "350.00",
+            "currency": "UNKNOWN",
+            "merchant": "CAFE NORTE",
+            "category": null,
+            "relationships": [
+              {
+                "type": "spent_at",
+                "from": "amount:$ 350,00",
+                "to": "merchant:cafe norte"
+              }
+            ],
+            "reviewRequired": true,
+            "reviewReasons": [
+              "ambiguous_currency"
+            ]
+          }
+        ],
+        "crossRelationships": [],
+        "score": {
+          "units": [
+            {
+              "key": "ambiguous-dollar.eventType",
+              "field": "eventType",
+              "expected": "expense",
+              "observed": "expense",
+              "correct": true
+            },
+            {
+              "key": "ambiguous-dollar.amount",
+              "field": "amount",
+              "expected": "350.00",
+              "observed": "350.00",
+              "correct": true
+            },
+            {
+              "key": "ambiguous-dollar.currency",
+              "field": "currency",
+              "expected": "UNKNOWN",
+              "observed": "UNKNOWN",
+              "correct": true
+            },
+            {
+              "key": "ambiguous-dollar.merchant",
+              "field": "merchant",
+              "expected": "CAFE NORTE",
+              "observed": "CAFE NORTE",
+              "correct": true
+            },
+            {
+              "key": "ambiguous-dollar.category",
+              "field": "category",
+              "expected": null,
+              "observed": null,
+              "correct": true
+            },
+            {
+              "key": "ambiguous-dollar.relationships",
+              "field": "relationships",
+              "expected": [
+                {
+                  "type": "spent_at",
+                  "from": "amount:$ 350,00",
+                  "to": "merchant:cafe norte"
+                }
+              ],
+              "observed": [
+                {
+                  "type": "spent_at",
+                  "from": "amount:$ 350,00",
+                  "to": "merchant:cafe norte"
+                }
+              ],
+              "correct": true
+            },
+            {
+              "key": "ambiguous-dollar.reviewRequired",
+              "field": "reviewRequired",
+              "expected": true,
+              "observed": true,
+              "correct": true
+            },
+            {
+              "key": "crossRelationships",
+              "field": "relationships",
+              "expected": [],
+              "observed": [],
+              "correct": true
+            }
+          ],
+          "exact": true,
+          "error": null,
+          "unexpectedEvents": [],
+          "duplicateEvents": false,
+          "failures": []
+        }
+      },
+      "candidate": {
+        "configuration": {
+          "id": "checkout-rules-candidate",
+          "sha256": "711e0eb08ac092860b1c3971fa0129e3294085e81cd4ca12a14a2d15a93a4cc3"
+        },
+        "latencyMs": 0.080600000000004,
+        "usage": null,
+        "cost": null,
+        "promptHashes": [],
+        "limitations": [
+          "Cross-capture consolidation and semantic-governor/UI review are not executed by this read-only domain adapter."
+        ],
+        "observed": [
+          {
+            "id": "ambiguous-dollar",
+            "eventType": "expense",
+            "amount": "350.00",
+            "currency": "UNKNOWN",
+            "merchant": "CAFE NORTE",
+            "category": null,
+            "relationships": [
+              {
+                "type": "spent_at",
+                "from": "amount:$ 350,00",
+                "to": "merchant:cafe norte"
+              }
+            ],
+            "reviewRequired": true,
+            "reviewReasons": [
+              "ambiguous_currency"
+            ]
+          }
+        ],
+        "crossRelationships": [],
+        "score": {
+          "units": [
+            {
+              "key": "ambiguous-dollar.eventType",
+              "field": "eventType",
+              "expected": "expense",
+              "observed": "expense",
+              "correct": true
+            },
+            {
+              "key": "ambiguous-dollar.amount",
+              "field": "amount",
+              "expected": "350.00",
+              "observed": "350.00",
+              "correct": true
+            },
+            {
+              "key": "ambiguous-dollar.currency",
+              "field": "currency",
+              "expected": "UNKNOWN",
+              "observed": "UNKNOWN",
+              "correct": true
+            },
+            {
+              "key": "ambiguous-dollar.merchant",
+              "field": "merchant",
+              "expected": "CAFE NORTE",
+              "observed": "CAFE NORTE",
+              "correct": true
+            },
+            {
+              "key": "ambiguous-dollar.category",
+              "field": "category",
+              "expected": null,
+              "observed": null,
+              "correct": true
+            },
+            {
+              "key": "ambiguous-dollar.relationships",
+              "field": "relationships",
+              "expected": [
+                {
+                  "type": "spent_at",
+                  "from": "amount:$ 350,00",
+                  "to": "merchant:cafe norte"
+                }
+              ],
+              "observed": [
+                {
+                  "type": "spent_at",
+                  "from": "amount:$ 350,00",
+                  "to": "merchant:cafe norte"
+                }
+              ],
+              "correct": true
+            },
+            {
+              "key": "ambiguous-dollar.reviewRequired",
+              "field": "reviewRequired",
+              "expected": true,
+              "observed": true,
+              "correct": true
+            },
+            {
+              "key": "crossRelationships",
+              "field": "relationships",
+              "expected": [],
+              "observed": [],
+              "correct": true
+            }
+          ],
+          "exact": true,
+          "error": null,
+          "unexpectedEvents": [],
+          "duplicateEvents": false,
+          "failures": []
+        }
+      },
+      "regressions": [],
+      "improvements": []
+    },
+    {
+      "id": "missing-merchant",
+      "scenario": "ambiguous",
+      "expected": {
+        "observations": [
+          {
+            "id": "missing-merchant",
+            "eventType": "expense",
+            "amount": null,
+            "currency": null,
+            "merchant": null,
+            "category": null,
+            "relationships": [],
+            "reviewRequired": true
+          }
+        ],
+        "crossRelationships": []
+      },
+      "baseline": {
+        "configuration": {
+          "id": "checkout-rules-baseline",
+          "sha256": "78fa31036cd20d26f3529ff1d64511738e30793d28cbcfc1fcabed34b70f34d7"
+        },
+        "latencyMs": 0.18549999999999045,
+        "usage": null,
+        "cost": null,
+        "promptHashes": [],
+        "limitations": [
+          "Cross-capture consolidation and semantic-governor/UI review are not executed by this read-only domain adapter."
+        ],
+        "observed": [
+          {
+            "id": "missing-merchant",
+            "eventType": "expense",
+            "amount": null,
+            "currency": null,
+            "merchant": null,
+            "category": null,
+            "relationships": [],
+            "reviewRequired": true,
+            "reviewReasons": []
+          }
+        ],
+        "crossRelationships": [],
+        "score": {
+          "units": [
+            {
+              "key": "missing-merchant.eventType",
+              "field": "eventType",
+              "expected": "expense",
+              "observed": "expense",
+              "correct": true
+            },
+            {
+              "key": "missing-merchant.amount",
+              "field": "amount",
+              "expected": null,
+              "observed": null,
+              "correct": true
+            },
+            {
+              "key": "missing-merchant.currency",
+              "field": "currency",
+              "expected": null,
+              "observed": null,
+              "correct": true
+            },
+            {
+              "key": "missing-merchant.merchant",
+              "field": "merchant",
+              "expected": null,
+              "observed": null,
+              "correct": true
+            },
+            {
+              "key": "missing-merchant.category",
+              "field": "category",
+              "expected": null,
+              "observed": null,
+              "correct": true
+            },
+            {
+              "key": "missing-merchant.relationships",
+              "field": "relationships",
+              "expected": [],
+              "observed": [],
+              "correct": true
+            },
+            {
+              "key": "missing-merchant.reviewRequired",
+              "field": "reviewRequired",
+              "expected": true,
+              "observed": true,
+              "correct": true
+            },
+            {
+              "key": "crossRelationships",
+              "field": "relationships",
+              "expected": [],
+              "observed": [],
+              "correct": true
+            }
+          ],
+          "exact": true,
+          "error": null,
+          "unexpectedEvents": [],
+          "duplicateEvents": false,
+          "failures": []
+        }
+      },
+      "candidate": {
+        "configuration": {
+          "id": "checkout-rules-candidate",
+          "sha256": "711e0eb08ac092860b1c3971fa0129e3294085e81cd4ca12a14a2d15a93a4cc3"
+        },
+        "latencyMs": 0.11960000000004811,
+        "usage": null,
+        "cost": null,
+        "promptHashes": [],
+        "limitations": [
+          "Cross-capture consolidation and semantic-governor/UI review are not executed by this read-only domain adapter."
+        ],
+        "observed": [
+          {
+            "id": "missing-merchant",
+            "eventType": "expense",
+            "amount": null,
+            "currency": null,
+            "merchant": null,
+            "category": null,
+            "relationships": [],
+            "reviewRequired": true,
+            "reviewReasons": []
+          }
+        ],
+        "crossRelationships": [],
+        "score": {
+          "units": [
+            {
+              "key": "missing-merchant.eventType",
+              "field": "eventType",
+              "expected": "expense",
+              "observed": "expense",
+              "correct": true
+            },
+            {
+              "key": "missing-merchant.amount",
+              "field": "amount",
+              "expected": null,
+              "observed": null,
+              "correct": true
+            },
+            {
+              "key": "missing-merchant.currency",
+              "field": "currency",
+              "expected": null,
+              "observed": null,
+              "correct": true
+            },
+            {
+              "key": "missing-merchant.merchant",
+              "field": "merchant",
+              "expected": null,
+              "observed": null,
+              "correct": true
+            },
+            {
+              "key": "missing-merchant.category",
+              "field": "category",
+              "expected": null,
+              "observed": null,
+              "correct": true
+            },
+            {
+              "key": "missing-merchant.relationships",
+              "field": "relationships",
+              "expected": [],
+              "observed": [],
+              "correct": true
+            },
+            {
+              "key": "missing-merchant.reviewRequired",
+              "field": "reviewRequired",
+              "expected": true,
+              "observed": true,
+              "correct": true
+            },
+            {
+              "key": "crossRelationships",
+              "field": "relationships",
+              "expected": [],
+              "observed": [],
+              "correct": true
+            }
+          ],
+          "exact": true,
+          "error": null,
+          "unexpectedEvents": [],
+          "duplicateEvents": false,
+          "failures": []
+        }
+      },
+      "regressions": [],
+      "improvements": []
+    },
+    {
+      "id": "capture-category",
+      "scenario": "expense",
+      "expected": {
+        "observations": [
+          {
+            "id": "capture-category",
+            "eventType": "expense",
+            "amount": "120.00",
+            "currency": "UYU",
+            "merchant": "CAFE NORTE",
+            "category": "Food / Delivery",
+            "relationships": [
+              {
+                "type": "spent_at",
+                "from": "amount:uyu 120,00",
+                "to": "merchant:cafe norte"
+              }
+            ],
+            "reviewRequired": false
+          }
+        ],
+        "crossRelationships": []
+      },
+      "baseline": {
+        "configuration": {
+          "id": "checkout-rules-baseline",
+          "sha256": "78fa31036cd20d26f3529ff1d64511738e30793d28cbcfc1fcabed34b70f34d7"
+        },
+        "latencyMs": 0.09759999999999991,
+        "usage": null,
+        "cost": null,
+        "promptHashes": [],
+        "limitations": [
+          "Cross-capture consolidation and semantic-governor/UI review are not executed by this read-only domain adapter."
+        ],
+        "observed": [
+          {
+            "id": "capture-category",
+            "eventType": "expense",
+            "amount": "120.00",
+            "currency": "UYU",
+            "merchant": "CAFE NORTE",
+            "category": "Food / Delivery",
+            "relationships": [
+              {
+                "type": "spent_at",
+                "from": "amount:uyu 120,00",
+                "to": "merchant:almuerzo"
+              }
+            ],
+            "reviewRequired": false,
+            "reviewReasons": []
+          }
+        ],
+        "crossRelationships": [],
+        "score": {
+          "units": [
+            {
+              "key": "capture-category.eventType",
+              "field": "eventType",
+              "expected": "expense",
+              "observed": "expense",
+              "correct": true
+            },
+            {
+              "key": "capture-category.amount",
+              "field": "amount",
+              "expected": "120.00",
+              "observed": "120.00",
+              "correct": true
+            },
+            {
+              "key": "capture-category.currency",
+              "field": "currency",
+              "expected": "UYU",
+              "observed": "UYU",
+              "correct": true
+            },
+            {
+              "key": "capture-category.merchant",
+              "field": "merchant",
+              "expected": "CAFE NORTE",
+              "observed": "CAFE NORTE",
+              "correct": true
+            },
+            {
+              "key": "capture-category.category",
+              "field": "category",
+              "expected": "Food / Delivery",
+              "observed": "Food / Delivery",
+              "correct": true
+            },
+            {
+              "key": "capture-category.relationships",
+              "field": "relationships",
+              "expected": [
+                {
+                  "type": "spent_at",
+                  "from": "amount:uyu 120,00",
+                  "to": "merchant:cafe norte"
+                }
+              ],
+              "observed": [
+                {
+                  "type": "spent_at",
+                  "from": "amount:uyu 120,00",
+                  "to": "merchant:almuerzo"
+                }
+              ],
+              "correct": false
+            },
+            {
+              "key": "capture-category.reviewRequired",
+              "field": "reviewRequired",
+              "expected": false,
+              "observed": false,
+              "correct": true
+            },
+            {
+              "key": "crossRelationships",
+              "field": "relationships",
+              "expected": [],
+              "observed": [],
+              "correct": true
+            }
+          ],
+          "exact": false,
+          "error": null,
+          "unexpectedEvents": [],
+          "duplicateEvents": false,
+          "failures": [
+            {
+              "key": "capture-category.relationships",
+              "field": "relationships",
+              "expected": [
+                {
+                  "type": "spent_at",
+                  "from": "amount:uyu 120,00",
+                  "to": "merchant:cafe norte"
+                }
+              ],
+              "observed": [
+                {
+                  "type": "spent_at",
+                  "from": "amount:uyu 120,00",
+                  "to": "merchant:almuerzo"
+                }
+              ],
+              "correct": false
+            }
+          ]
+        }
+      },
+      "candidate": {
+        "configuration": {
+          "id": "checkout-rules-candidate",
+          "sha256": "711e0eb08ac092860b1c3971fa0129e3294085e81cd4ca12a14a2d15a93a4cc3"
+        },
+        "latencyMs": 0.08019999999999072,
+        "usage": null,
+        "cost": null,
+        "promptHashes": [],
+        "limitations": [
+          "Cross-capture consolidation and semantic-governor/UI review are not executed by this read-only domain adapter."
+        ],
+        "observed": [
+          {
+            "id": "capture-category",
+            "eventType": "expense",
+            "amount": "120.00",
+            "currency": "UYU",
+            "merchant": "CAFE NORTE",
+            "category": "Food / Delivery",
+            "relationships": [
+              {
+                "type": "spent_at",
+                "from": "amount:uyu 120,00",
+                "to": "merchant:almuerzo"
+              }
+            ],
+            "reviewRequired": false,
+            "reviewReasons": []
+          }
+        ],
+        "crossRelationships": [],
+        "score": {
+          "units": [
+            {
+              "key": "capture-category.eventType",
+              "field": "eventType",
+              "expected": "expense",
+              "observed": "expense",
+              "correct": true
+            },
+            {
+              "key": "capture-category.amount",
+              "field": "amount",
+              "expected": "120.00",
+              "observed": "120.00",
+              "correct": true
+            },
+            {
+              "key": "capture-category.currency",
+              "field": "currency",
+              "expected": "UYU",
+              "observed": "UYU",
+              "correct": true
+            },
+            {
+              "key": "capture-category.merchant",
+              "field": "merchant",
+              "expected": "CAFE NORTE",
+              "observed": "CAFE NORTE",
+              "correct": true
+            },
+            {
+              "key": "capture-category.category",
+              "field": "category",
+              "expected": "Food / Delivery",
+              "observed": "Food / Delivery",
+              "correct": true
+            },
+            {
+              "key": "capture-category.relationships",
+              "field": "relationships",
+              "expected": [
+                {
+                  "type": "spent_at",
+                  "from": "amount:uyu 120,00",
+                  "to": "merchant:cafe norte"
+                }
+              ],
+              "observed": [
+                {
+                  "type": "spent_at",
+                  "from": "amount:uyu 120,00",
+                  "to": "merchant:almuerzo"
+                }
+              ],
+              "correct": false
+            },
+            {
+              "key": "capture-category.reviewRequired",
+              "field": "reviewRequired",
+              "expected": false,
+              "observed": false,
+              "correct": true
+            },
+            {
+              "key": "crossRelationships",
+              "field": "relationships",
+              "expected": [],
+              "observed": [],
+              "correct": true
+            }
+          ],
+          "exact": false,
+          "error": null,
+          "unexpectedEvents": [],
+          "duplicateEvents": false,
+          "failures": [
+            {
+              "key": "capture-category.relationships",
+              "field": "relationships",
+              "expected": [
+                {
+                  "type": "spent_at",
+                  "from": "amount:uyu 120,00",
+                  "to": "merchant:cafe norte"
+                }
+              ],
+              "observed": [
+                {
+                  "type": "spent_at",
+                  "from": "amount:uyu 120,00",
+                  "to": "merchant:almuerzo"
+                }
+              ],
+              "correct": false
+            }
+          ]
+        }
+      },
+      "regressions": [],
+      "improvements": []
+    },
+    {
+      "id": "repeated-capture",
+      "scenario": "repeated",
+      "expected": {
+        "observations": [
+          {
+            "id": "repeat-a",
+            "eventType": "expense",
+            "amount": "800.00",
+            "currency": "UYU",
+            "merchant": "MERCADO LUNA",
+            "category": null,
+            "relationships": [
+              {
+                "type": "spent_at",
+                "from": "amount:uyu 800,00",
+                "to": "merchant:mercado luna"
+              }
+            ],
+            "reviewRequired": false
+          },
+          {
+            "id": "repeat-b",
+            "eventType": "expense",
+            "amount": "800.00",
+            "currency": "UYU",
+            "merchant": "MERCADO LUNA",
+            "category": null,
+            "relationships": [
+              {
+                "type": "spent_at",
+                "from": "amount:uyu 800,00",
+                "to": "merchant:mercado luna"
+              }
+            ],
+            "reviewRequired": false
+          }
+        ],
+        "crossRelationships": [
+          {
+            "type": "same_as",
+            "from": "repeat-b",
+            "to": "repeat-a"
+          }
+        ]
+      },
+      "baseline": {
+        "configuration": {
+          "id": "checkout-rules-baseline",
+          "sha256": "78fa31036cd20d26f3529ff1d64511738e30793d28cbcfc1fcabed34b70f34d7"
+        },
+        "latencyMs": 0.32200000000000273,
+        "usage": null,
+        "cost": null,
+        "promptHashes": [],
+        "limitations": [
+          "Cross-capture consolidation and semantic-governor/UI review are not executed by this read-only domain adapter."
+        ],
+        "observed": [
+          {
+            "id": "repeat-a",
+            "eventType": "expense",
+            "amount": "800.00",
+            "currency": "UYU",
+            "merchant": "MERCADO LUNA",
+            "category": null,
+            "relationships": [
+              {
+                "type": "spent_at",
+                "from": "amount:uyu 800,00",
+                "to": "merchant:mercado luna"
+              }
+            ],
+            "reviewRequired": false,
+            "reviewReasons": []
+          },
+          {
+            "id": "repeat-b",
+            "eventType": "expense",
+            "amount": "800.00",
+            "currency": "UYU",
+            "merchant": "MERCADO LUNA",
+            "category": null,
+            "relationships": [
+              {
+                "type": "spent_at",
+                "from": "amount:uyu 800,00",
+                "to": "merchant:mercado luna"
+              }
+            ],
+            "reviewRequired": false,
+            "reviewReasons": []
+          }
+        ],
+        "crossRelationships": [],
+        "score": {
+          "units": [
+            {
+              "key": "repeat-a.eventType",
+              "field": "eventType",
+              "expected": "expense",
+              "observed": "expense",
+              "correct": true
+            },
+            {
+              "key": "repeat-a.amount",
+              "field": "amount",
+              "expected": "800.00",
+              "observed": "800.00",
+              "correct": true
+            },
+            {
+              "key": "repeat-a.currency",
+              "field": "currency",
+              "expected": "UYU",
+              "observed": "UYU",
+              "correct": true
+            },
+            {
+              "key": "repeat-a.merchant",
+              "field": "merchant",
+              "expected": "MERCADO LUNA",
+              "observed": "MERCADO LUNA",
+              "correct": true
+            },
+            {
+              "key": "repeat-a.category",
+              "field": "category",
+              "expected": null,
+              "observed": null,
+              "correct": true
+            },
+            {
+              "key": "repeat-a.relationships",
+              "field": "relationships",
+              "expected": [
+                {
+                  "type": "spent_at",
+                  "from": "amount:uyu 800,00",
+                  "to": "merchant:mercado luna"
+                }
+              ],
+              "observed": [
+                {
+                  "type": "spent_at",
+                  "from": "amount:uyu 800,00",
+                  "to": "merchant:mercado luna"
+                }
+              ],
+              "correct": true
+            },
+            {
+              "key": "repeat-a.reviewRequired",
+              "field": "reviewRequired",
+              "expected": false,
+              "observed": false,
+              "correct": true
+            },
+            {
+              "key": "repeat-b.eventType",
+              "field": "eventType",
+              "expected": "expense",
+              "observed": "expense",
+              "correct": true
+            },
+            {
+              "key": "repeat-b.amount",
+              "field": "amount",
+              "expected": "800.00",
+              "observed": "800.00",
+              "correct": true
+            },
+            {
+              "key": "repeat-b.currency",
+              "field": "currency",
+              "expected": "UYU",
+              "observed": "UYU",
+              "correct": true
+            },
+            {
+              "key": "repeat-b.merchant",
+              "field": "merchant",
+              "expected": "MERCADO LUNA",
+              "observed": "MERCADO LUNA",
+              "correct": true
+            },
+            {
+              "key": "repeat-b.category",
+              "field": "category",
+              "expected": null,
+              "observed": null,
+              "correct": true
+            },
+            {
+              "key": "repeat-b.relationships",
+              "field": "relationships",
+              "expected": [
+                {
+                  "type": "spent_at",
+                  "from": "amount:uyu 800,00",
+                  "to": "merchant:mercado luna"
+                }
+              ],
+              "observed": [
+                {
+                  "type": "spent_at",
+                  "from": "amount:uyu 800,00",
+                  "to": "merchant:mercado luna"
+                }
+              ],
+              "correct": true
+            },
+            {
+              "key": "repeat-b.reviewRequired",
+              "field": "reviewRequired",
+              "expected": false,
+              "observed": false,
+              "correct": true
+            },
+            {
+              "key": "crossRelationships",
+              "field": "relationships",
+              "expected": [
+                {
+                  "type": "same_as",
+                  "from": "repeat-b",
+                  "to": "repeat-a"
+                }
+              ],
+              "observed": [],
+              "correct": false
+            }
+          ],
+          "exact": false,
+          "error": null,
+          "unexpectedEvents": [],
+          "duplicateEvents": false,
+          "failures": [
+            {
+              "key": "crossRelationships",
+              "field": "relationships",
+              "expected": [
+                {
+                  "type": "same_as",
+                  "from": "repeat-b",
+                  "to": "repeat-a"
+                }
+              ],
+              "observed": [],
+              "correct": false
+            }
+          ]
+        }
+      },
+      "candidate": {
+        "configuration": {
+          "id": "checkout-rules-candidate",
+          "sha256": "711e0eb08ac092860b1c3971fa0129e3294085e81cd4ca12a14a2d15a93a4cc3"
+        },
+        "latencyMs": 0.17880000000002383,
+        "usage": null,
+        "cost": null,
+        "promptHashes": [],
+        "limitations": [
+          "Cross-capture consolidation and semantic-governor/UI review are not executed by this read-only domain adapter."
+        ],
+        "observed": [
+          {
+            "id": "repeat-a",
+            "eventType": "expense",
+            "amount": "800.00",
+            "currency": "UYU",
+            "merchant": "MERCADO LUNA",
+            "category": null,
+            "relationships": [
+              {
+                "type": "spent_at",
+                "from": "amount:uyu 800,00",
+                "to": "merchant:mercado luna"
+              }
+            ],
+            "reviewRequired": false,
+            "reviewReasons": []
+          },
+          {
+            "id": "repeat-b",
+            "eventType": "expense",
+            "amount": "800.00",
+            "currency": "UYU",
+            "merchant": "MERCADO LUNA",
+            "category": null,
+            "relationships": [
+              {
+                "type": "spent_at",
+                "from": "amount:uyu 800,00",
+                "to": "merchant:mercado luna"
+              }
+            ],
+            "reviewRequired": false,
+            "reviewReasons": []
+          }
+        ],
+        "crossRelationships": [],
+        "score": {
+          "units": [
+            {
+              "key": "repeat-a.eventType",
+              "field": "eventType",
+              "expected": "expense",
+              "observed": "expense",
+              "correct": true
+            },
+            {
+              "key": "repeat-a.amount",
+              "field": "amount",
+              "expected": "800.00",
+              "observed": "800.00",
+              "correct": true
+            },
+            {
+              "key": "repeat-a.currency",
+              "field": "currency",
+              "expected": "UYU",
+              "observed": "UYU",
+              "correct": true
+            },
+            {
+              "key": "repeat-a.merchant",
+              "field": "merchant",
+              "expected": "MERCADO LUNA",
+              "observed": "MERCADO LUNA",
+              "correct": true
+            },
+            {
+              "key": "repeat-a.category",
+              "field": "category",
+              "expected": null,
+              "observed": null,
+              "correct": true
+            },
+            {
+              "key": "repeat-a.relationships",
+              "field": "relationships",
+              "expected": [
+                {
+                  "type": "spent_at",
+                  "from": "amount:uyu 800,00",
+                  "to": "merchant:mercado luna"
+                }
+              ],
+              "observed": [
+                {
+                  "type": "spent_at",
+                  "from": "amount:uyu 800,00",
+                  "to": "merchant:mercado luna"
+                }
+              ],
+              "correct": true
+            },
+            {
+              "key": "repeat-a.reviewRequired",
+              "field": "reviewRequired",
+              "expected": false,
+              "observed": false,
+              "correct": true
+            },
+            {
+              "key": "repeat-b.eventType",
+              "field": "eventType",
+              "expected": "expense",
+              "observed": "expense",
+              "correct": true
+            },
+            {
+              "key": "repeat-b.amount",
+              "field": "amount",
+              "expected": "800.00",
+              "observed": "800.00",
+              "correct": true
+            },
+            {
+              "key": "repeat-b.currency",
+              "field": "currency",
+              "expected": "UYU",
+              "observed": "UYU",
+              "correct": true
+            },
+            {
+              "key": "repeat-b.merchant",
+              "field": "merchant",
+              "expected": "MERCADO LUNA",
+              "observed": "MERCADO LUNA",
+              "correct": true
+            },
+            {
+              "key": "repeat-b.category",
+              "field": "category",
+              "expected": null,
+              "observed": null,
+              "correct": true
+            },
+            {
+              "key": "repeat-b.relationships",
+              "field": "relationships",
+              "expected": [
+                {
+                  "type": "spent_at",
+                  "from": "amount:uyu 800,00",
+                  "to": "merchant:mercado luna"
+                }
+              ],
+              "observed": [
+                {
+                  "type": "spent_at",
+                  "from": "amount:uyu 800,00",
+                  "to": "merchant:mercado luna"
+                }
+              ],
+              "correct": true
+            },
+            {
+              "key": "repeat-b.reviewRequired",
+              "field": "reviewRequired",
+              "expected": false,
+              "observed": false,
+              "correct": true
+            },
+            {
+              "key": "crossRelationships",
+              "field": "relationships",
+              "expected": [
+                {
+                  "type": "same_as",
+                  "from": "repeat-b",
+                  "to": "repeat-a"
+                }
+              ],
+              "observed": [],
+              "correct": false
+            }
+          ],
+          "exact": false,
+          "error": null,
+          "unexpectedEvents": [],
+          "duplicateEvents": false,
+          "failures": [
+            {
+              "key": "crossRelationships",
+              "field": "relationships",
+              "expected": [
+                {
+                  "type": "same_as",
+                  "from": "repeat-b",
+                  "to": "repeat-a"
+                }
+              ],
+              "observed": [],
+              "correct": false
+            }
+          ]
+        }
+      },
+      "regressions": [],
+      "improvements": []
+    },
+    {
+      "id": "multiple-source-evidence",
+      "scenario": "multi-source",
+      "expected": {
+        "observations": [
+          {
+            "id": "repeat-a",
+            "eventType": "expense",
+            "amount": "800.00",
+            "currency": "UYU",
+            "merchant": "MERCADO LUNA",
+            "category": null,
+            "relationships": [
+              {
+                "type": "spent_at",
+                "from": "amount:uyu 800,00",
+                "to": "merchant:mercado luna"
+              }
+            ],
+            "reviewRequired": false
+          },
+          {
+            "id": "receipt-b",
+            "eventType": "expense",
+            "amount": "800.00",
+            "currency": "UYU",
+            "merchant": "MERCADO LUNA",
+            "category": null,
+            "relationships": [
+              {
+                "type": "spent_at",
+                "from": "amount:uyu 800,00",
+                "to": "merchant:mercado luna"
+              }
+            ],
+            "reviewRequired": false
+          }
+        ],
+        "crossRelationships": [
+          {
+            "type": "evidence_for",
+            "from": "receipt-b",
+            "to": "repeat-a"
+          }
+        ]
+      },
+      "baseline": {
+        "configuration": {
+          "id": "checkout-rules-baseline",
+          "sha256": "78fa31036cd20d26f3529ff1d64511738e30793d28cbcfc1fcabed34b70f34d7"
+        },
+        "latencyMs": 0.23140000000000782,
+        "usage": null,
+        "cost": null,
+        "promptHashes": [],
+        "limitations": [
+          "Cross-capture consolidation and semantic-governor/UI review are not executed by this read-only domain adapter."
+        ],
+        "observed": [
+          {
+            "id": "repeat-a",
+            "eventType": "expense",
+            "amount": "800.00",
+            "currency": "UYU",
+            "merchant": "MERCADO LUNA",
+            "category": null,
+            "relationships": [
+              {
+                "type": "spent_at",
+                "from": "amount:uyu 800,00",
+                "to": "merchant:mercado luna"
+              }
+            ],
+            "reviewRequired": false,
+            "reviewReasons": []
+          },
+          {
+            "id": "receipt-b",
+            "eventType": "expense",
+            "amount": "800.00",
+            "currency": "UYU",
+            "merchant": "MERCADO LUNA",
+            "category": null,
+            "relationships": [
+              {
+                "type": "spent_at",
+                "from": "amount:uyu 800,00",
+                "to": "merchant:mercado luna"
+              }
+            ],
+            "reviewRequired": false,
+            "reviewReasons": []
+          }
+        ],
+        "crossRelationships": [],
+        "score": {
+          "units": [
+            {
+              "key": "repeat-a.eventType",
+              "field": "eventType",
+              "expected": "expense",
+              "observed": "expense",
+              "correct": true
+            },
+            {
+              "key": "repeat-a.amount",
+              "field": "amount",
+              "expected": "800.00",
+              "observed": "800.00",
+              "correct": true
+            },
+            {
+              "key": "repeat-a.currency",
+              "field": "currency",
+              "expected": "UYU",
+              "observed": "UYU",
+              "correct": true
+            },
+            {
+              "key": "repeat-a.merchant",
+              "field": "merchant",
+              "expected": "MERCADO LUNA",
+              "observed": "MERCADO LUNA",
+              "correct": true
+            },
+            {
+              "key": "repeat-a.category",
+              "field": "category",
+              "expected": null,
+              "observed": null,
+              "correct": true
+            },
+            {
+              "key": "repeat-a.relationships",
+              "field": "relationships",
+              "expected": [
+                {
+                  "type": "spent_at",
+                  "from": "amount:uyu 800,00",
+                  "to": "merchant:mercado luna"
+                }
+              ],
+              "observed": [
+                {
+                  "type": "spent_at",
+                  "from": "amount:uyu 800,00",
+                  "to": "merchant:mercado luna"
+                }
+              ],
+              "correct": true
+            },
+            {
+              "key": "repeat-a.reviewRequired",
+              "field": "reviewRequired",
+              "expected": false,
+              "observed": false,
+              "correct": true
+            },
+            {
+              "key": "receipt-b.eventType",
+              "field": "eventType",
+              "expected": "expense",
+              "observed": "expense",
+              "correct": true
+            },
+            {
+              "key": "receipt-b.amount",
+              "field": "amount",
+              "expected": "800.00",
+              "observed": "800.00",
+              "correct": true
+            },
+            {
+              "key": "receipt-b.currency",
+              "field": "currency",
+              "expected": "UYU",
+              "observed": "UYU",
+              "correct": true
+            },
+            {
+              "key": "receipt-b.merchant",
+              "field": "merchant",
+              "expected": "MERCADO LUNA",
+              "observed": "MERCADO LUNA",
+              "correct": true
+            },
+            {
+              "key": "receipt-b.category",
+              "field": "category",
+              "expected": null,
+              "observed": null,
+              "correct": true
+            },
+            {
+              "key": "receipt-b.relationships",
+              "field": "relationships",
+              "expected": [
+                {
+                  "type": "spent_at",
+                  "from": "amount:uyu 800,00",
+                  "to": "merchant:mercado luna"
+                }
+              ],
+              "observed": [
+                {
+                  "type": "spent_at",
+                  "from": "amount:uyu 800,00",
+                  "to": "merchant:mercado luna"
+                }
+              ],
+              "correct": true
+            },
+            {
+              "key": "receipt-b.reviewRequired",
+              "field": "reviewRequired",
+              "expected": false,
+              "observed": false,
+              "correct": true
+            },
+            {
+              "key": "crossRelationships",
+              "field": "relationships",
+              "expected": [
+                {
+                  "type": "evidence_for",
+                  "from": "receipt-b",
+                  "to": "repeat-a"
+                }
+              ],
+              "observed": [],
+              "correct": false
+            }
+          ],
+          "exact": false,
+          "error": null,
+          "unexpectedEvents": [],
+          "duplicateEvents": false,
+          "failures": [
+            {
+              "key": "crossRelationships",
+              "field": "relationships",
+              "expected": [
+                {
+                  "type": "evidence_for",
+                  "from": "receipt-b",
+                  "to": "repeat-a"
+                }
+              ],
+              "observed": [],
+              "correct": false
+            }
+          ]
+        }
+      },
+      "candidate": {
+        "configuration": {
+          "id": "checkout-rules-candidate",
+          "sha256": "711e0eb08ac092860b1c3971fa0129e3294085e81cd4ca12a14a2d15a93a4cc3"
+        },
+        "latencyMs": 0.24249999999994998,
+        "usage": null,
+        "cost": null,
+        "promptHashes": [],
+        "limitations": [
+          "Cross-capture consolidation and semantic-governor/UI review are not executed by this read-only domain adapter."
+        ],
+        "observed": [
+          {
+            "id": "repeat-a",
+            "eventType": "expense",
+            "amount": "800.00",
+            "currency": "UYU",
+            "merchant": "MERCADO LUNA",
+            "category": null,
+            "relationships": [
+              {
+                "type": "spent_at",
+                "from": "amount:uyu 800,00",
+                "to": "merchant:mercado luna"
+              }
+            ],
+            "reviewRequired": false,
+            "reviewReasons": []
+          },
+          {
+            "id": "receipt-b",
+            "eventType": "expense",
+            "amount": "800.00",
+            "currency": "UYU",
+            "merchant": "MERCADO LUNA",
+            "category": null,
+            "relationships": [
+              {
+                "type": "spent_at",
+                "from": "amount:uyu 800,00",
+                "to": "merchant:mercado luna"
+              }
+            ],
+            "reviewRequired": false,
+            "reviewReasons": []
+          }
+        ],
+        "crossRelationships": [],
+        "score": {
+          "units": [
+            {
+              "key": "repeat-a.eventType",
+              "field": "eventType",
+              "expected": "expense",
+              "observed": "expense",
+              "correct": true
+            },
+            {
+              "key": "repeat-a.amount",
+              "field": "amount",
+              "expected": "800.00",
+              "observed": "800.00",
+              "correct": true
+            },
+            {
+              "key": "repeat-a.currency",
+              "field": "currency",
+              "expected": "UYU",
+              "observed": "UYU",
+              "correct": true
+            },
+            {
+              "key": "repeat-a.merchant",
+              "field": "merchant",
+              "expected": "MERCADO LUNA",
+              "observed": "MERCADO LUNA",
+              "correct": true
+            },
+            {
+              "key": "repeat-a.category",
+              "field": "category",
+              "expected": null,
+              "observed": null,
+              "correct": true
+            },
+            {
+              "key": "repeat-a.relationships",
+              "field": "relationships",
+              "expected": [
+                {
+                  "type": "spent_at",
+                  "from": "amount:uyu 800,00",
+                  "to": "merchant:mercado luna"
+                }
+              ],
+              "observed": [
+                {
+                  "type": "spent_at",
+                  "from": "amount:uyu 800,00",
+                  "to": "merchant:mercado luna"
+                }
+              ],
+              "correct": true
+            },
+            {
+              "key": "repeat-a.reviewRequired",
+              "field": "reviewRequired",
+              "expected": false,
+              "observed": false,
+              "correct": true
+            },
+            {
+              "key": "receipt-b.eventType",
+              "field": "eventType",
+              "expected": "expense",
+              "observed": "expense",
+              "correct": true
+            },
+            {
+              "key": "receipt-b.amount",
+              "field": "amount",
+              "expected": "800.00",
+              "observed": "800.00",
+              "correct": true
+            },
+            {
+              "key": "receipt-b.currency",
+              "field": "currency",
+              "expected": "UYU",
+              "observed": "UYU",
+              "correct": true
+            },
+            {
+              "key": "receipt-b.merchant",
+              "field": "merchant",
+              "expected": "MERCADO LUNA",
+              "observed": "MERCADO LUNA",
+              "correct": true
+            },
+            {
+              "key": "receipt-b.category",
+              "field": "category",
+              "expected": null,
+              "observed": null,
+              "correct": true
+            },
+            {
+              "key": "receipt-b.relationships",
+              "field": "relationships",
+              "expected": [
+                {
+                  "type": "spent_at",
+                  "from": "amount:uyu 800,00",
+                  "to": "merchant:mercado luna"
+                }
+              ],
+              "observed": [
+                {
+                  "type": "spent_at",
+                  "from": "amount:uyu 800,00",
+                  "to": "merchant:mercado luna"
+                }
+              ],
+              "correct": true
+            },
+            {
+              "key": "receipt-b.reviewRequired",
+              "field": "reviewRequired",
+              "expected": false,
+              "observed": false,
+              "correct": true
+            },
+            {
+              "key": "crossRelationships",
+              "field": "relationships",
+              "expected": [
+                {
+                  "type": "evidence_for",
+                  "from": "receipt-b",
+                  "to": "repeat-a"
+                }
+              ],
+              "observed": [],
+              "correct": false
+            }
+          ],
+          "exact": false,
+          "error": null,
+          "unexpectedEvents": [],
+          "duplicateEvents": false,
+          "failures": [
+            {
+              "key": "crossRelationships",
+              "field": "relationships",
+              "expected": [
+                {
+                  "type": "evidence_for",
+                  "from": "receipt-b",
+                  "to": "repeat-a"
+                }
+              ],
+              "observed": [],
+              "correct": false
+            }
+          ]
+        }
+      },
+      "regressions": [],
+      "improvements": []
+    },
+    {
+      "id": "same-value-distinct-purchases",
+      "scenario": "repeated",
+      "expected": {
+        "observations": [
+          {
+            "id": "repeat-a",
+            "eventType": "expense",
+            "amount": "800.00",
+            "currency": "UYU",
+            "merchant": "MERCADO LUNA",
+            "category": null,
+            "relationships": [
+              {
+                "type": "spent_at",
+                "from": "amount:uyu 800,00",
+                "to": "merchant:mercado luna"
+              }
+            ],
+            "reviewRequired": false
+          },
+          {
+            "id": "separate-b",
+            "eventType": "expense",
+            "amount": "800.00",
+            "currency": "UYU",
+            "merchant": "MERCADO LUNA",
+            "category": null,
+            "relationships": [
+              {
+                "type": "spent_at",
+                "from": "amount:uyu 800,00",
+                "to": "merchant:mercado luna"
+              }
+            ],
+            "reviewRequired": false
+          }
+        ],
+        "crossRelationships": []
+      },
+      "baseline": {
+        "configuration": {
+          "id": "checkout-rules-baseline",
+          "sha256": "78fa31036cd20d26f3529ff1d64511738e30793d28cbcfc1fcabed34b70f34d7"
+        },
+        "latencyMs": 0.18999999999999773,
+        "usage": null,
+        "cost": null,
+        "promptHashes": [],
+        "limitations": [
+          "Cross-capture consolidation and semantic-governor/UI review are not executed by this read-only domain adapter."
+        ],
+        "observed": [
+          {
+            "id": "repeat-a",
+            "eventType": "expense",
+            "amount": "800.00",
+            "currency": "UYU",
+            "merchant": "MERCADO LUNA",
+            "category": null,
+            "relationships": [
+              {
+                "type": "spent_at",
+                "from": "amount:uyu 800,00",
+                "to": "merchant:mercado luna"
+              }
+            ],
+            "reviewRequired": false,
+            "reviewReasons": []
+          },
+          {
+            "id": "separate-b",
+            "eventType": "expense",
+            "amount": "800.00",
+            "currency": "UYU",
+            "merchant": "MERCADO LUNA",
+            "category": null,
+            "relationships": [
+              {
+                "type": "spent_at",
+                "from": "amount:uyu 800,00",
+                "to": "merchant:mercado luna"
+              }
+            ],
+            "reviewRequired": false,
+            "reviewReasons": []
+          }
+        ],
+        "crossRelationships": [],
+        "score": {
+          "units": [
+            {
+              "key": "repeat-a.eventType",
+              "field": "eventType",
+              "expected": "expense",
+              "observed": "expense",
+              "correct": true
+            },
+            {
+              "key": "repeat-a.amount",
+              "field": "amount",
+              "expected": "800.00",
+              "observed": "800.00",
+              "correct": true
+            },
+            {
+              "key": "repeat-a.currency",
+              "field": "currency",
+              "expected": "UYU",
+              "observed": "UYU",
+              "correct": true
+            },
+            {
+              "key": "repeat-a.merchant",
+              "field": "merchant",
+              "expected": "MERCADO LUNA",
+              "observed": "MERCADO LUNA",
+              "correct": true
+            },
+            {
+              "key": "repeat-a.category",
+              "field": "category",
+              "expected": null,
+              "observed": null,
+              "correct": true
+            },
+            {
+              "key": "repeat-a.relationships",
+              "field": "relationships",
+              "expected": [
+                {
+                  "type": "spent_at",
+                  "from": "amount:uyu 800,00",
+                  "to": "merchant:mercado luna"
+                }
+              ],
+              "observed": [
+                {
+                  "type": "spent_at",
+                  "from": "amount:uyu 800,00",
+                  "to": "merchant:mercado luna"
+                }
+              ],
+              "correct": true
+            },
+            {
+              "key": "repeat-a.reviewRequired",
+              "field": "reviewRequired",
+              "expected": false,
+              "observed": false,
+              "correct": true
+            },
+            {
+              "key": "separate-b.eventType",
+              "field": "eventType",
+              "expected": "expense",
+              "observed": "expense",
+              "correct": true
+            },
+            {
+              "key": "separate-b.amount",
+              "field": "amount",
+              "expected": "800.00",
+              "observed": "800.00",
+              "correct": true
+            },
+            {
+              "key": "separate-b.currency",
+              "field": "currency",
+              "expected": "UYU",
+              "observed": "UYU",
+              "correct": true
+            },
+            {
+              "key": "separate-b.merchant",
+              "field": "merchant",
+              "expected": "MERCADO LUNA",
+              "observed": "MERCADO LUNA",
+              "correct": true
+            },
+            {
+              "key": "separate-b.category",
+              "field": "category",
+              "expected": null,
+              "observed": null,
+              "correct": true
+            },
+            {
+              "key": "separate-b.relationships",
+              "field": "relationships",
+              "expected": [
+                {
+                  "type": "spent_at",
+                  "from": "amount:uyu 800,00",
+                  "to": "merchant:mercado luna"
+                }
+              ],
+              "observed": [
+                {
+                  "type": "spent_at",
+                  "from": "amount:uyu 800,00",
+                  "to": "merchant:mercado luna"
+                }
+              ],
+              "correct": true
+            },
+            {
+              "key": "separate-b.reviewRequired",
+              "field": "reviewRequired",
+              "expected": false,
+              "observed": false,
+              "correct": true
+            },
+            {
+              "key": "crossRelationships",
+              "field": "relationships",
+              "expected": [],
+              "observed": [],
+              "correct": true
+            }
+          ],
+          "exact": true,
+          "error": null,
+          "unexpectedEvents": [],
+          "duplicateEvents": false,
+          "failures": []
+        }
+      },
+      "candidate": {
+        "configuration": {
+          "id": "checkout-rules-candidate",
+          "sha256": "711e0eb08ac092860b1c3971fa0129e3294085e81cd4ca12a14a2d15a93a4cc3"
+        },
+        "latencyMs": 0.1664000000000101,
+        "usage": null,
+        "cost": null,
+        "promptHashes": [],
+        "limitations": [
+          "Cross-capture consolidation and semantic-governor/UI review are not executed by this read-only domain adapter."
+        ],
+        "observed": [
+          {
+            "id": "repeat-a",
+            "eventType": "expense",
+            "amount": "800.00",
+            "currency": "UYU",
+            "merchant": "MERCADO LUNA",
+            "category": null,
+            "relationships": [
+              {
+                "type": "spent_at",
+                "from": "amount:uyu 800,00",
+                "to": "merchant:mercado luna"
+              }
+            ],
+            "reviewRequired": false,
+            "reviewReasons": []
+          },
+          {
+            "id": "separate-b",
+            "eventType": "expense",
+            "amount": "800.00",
+            "currency": "UYU",
+            "merchant": "MERCADO LUNA",
+            "category": null,
+            "relationships": [
+              {
+                "type": "spent_at",
+                "from": "amount:uyu 800,00",
+                "to": "merchant:mercado luna"
+              }
+            ],
+            "reviewRequired": false,
+            "reviewReasons": []
+          }
+        ],
+        "crossRelationships": [],
+        "score": {
+          "units": [
+            {
+              "key": "repeat-a.eventType",
+              "field": "eventType",
+              "expected": "expense",
+              "observed": "expense",
+              "correct": true
+            },
+            {
+              "key": "repeat-a.amount",
+              "field": "amount",
+              "expected": "800.00",
+              "observed": "800.00",
+              "correct": true
+            },
+            {
+              "key": "repeat-a.currency",
+              "field": "currency",
+              "expected": "UYU",
+              "observed": "UYU",
+              "correct": true
+            },
+            {
+              "key": "repeat-a.merchant",
+              "field": "merchant",
+              "expected": "MERCADO LUNA",
+              "observed": "MERCADO LUNA",
+              "correct": true
+            },
+            {
+              "key": "repeat-a.category",
+              "field": "category",
+              "expected": null,
+              "observed": null,
+              "correct": true
+            },
+            {
+              "key": "repeat-a.relationships",
+              "field": "relationships",
+              "expected": [
+                {
+                  "type": "spent_at",
+                  "from": "amount:uyu 800,00",
+                  "to": "merchant:mercado luna"
+                }
+              ],
+              "observed": [
+                {
+                  "type": "spent_at",
+                  "from": "amount:uyu 800,00",
+                  "to": "merchant:mercado luna"
+                }
+              ],
+              "correct": true
+            },
+            {
+              "key": "repeat-a.reviewRequired",
+              "field": "reviewRequired",
+              "expected": false,
+              "observed": false,
+              "correct": true
+            },
+            {
+              "key": "separate-b.eventType",
+              "field": "eventType",
+              "expected": "expense",
+              "observed": "expense",
+              "correct": true
+            },
+            {
+              "key": "separate-b.amount",
+              "field": "amount",
+              "expected": "800.00",
+              "observed": "800.00",
+              "correct": true
+            },
+            {
+              "key": "separate-b.currency",
+              "field": "currency",
+              "expected": "UYU",
+              "observed": "UYU",
+              "correct": true
+            },
+            {
+              "key": "separate-b.merchant",
+              "field": "merchant",
+              "expected": "MERCADO LUNA",
+              "observed": "MERCADO LUNA",
+              "correct": true
+            },
+            {
+              "key": "separate-b.category",
+              "field": "category",
+              "expected": null,
+              "observed": null,
+              "correct": true
+            },
+            {
+              "key": "separate-b.relationships",
+              "field": "relationships",
+              "expected": [
+                {
+                  "type": "spent_at",
+                  "from": "amount:uyu 800,00",
+                  "to": "merchant:mercado luna"
+                }
+              ],
+              "observed": [
+                {
+                  "type": "spent_at",
+                  "from": "amount:uyu 800,00",
+                  "to": "merchant:mercado luna"
+                }
+              ],
+              "correct": true
+            },
+            {
+              "key": "separate-b.reviewRequired",
+              "field": "reviewRequired",
+              "expected": false,
+              "observed": false,
+              "correct": true
+            },
+            {
+              "key": "crossRelationships",
+              "field": "relationships",
+              "expected": [],
+              "observed": [],
+              "correct": true
+            }
+          ],
+          "exact": true,
+          "error": null,
+          "unexpectedEvents": [],
+          "duplicateEvents": false,
+          "failures": []
+        }
+      },
+      "regressions": [],
+      "improvements": []
+    }
+  ]
+}

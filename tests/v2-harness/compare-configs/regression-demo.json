@@ -1,0 +1,8 @@
+{
+  "id": "deliberate-amount-regression",
+  "mode": "rules",
+  "adapter": "tests/v2-harness/regression-demo-adapter.mjs",
+  "model": null,
+  "promptVersion": null,
+  "description": "TEST ONLY: deliberately changes expense-uyu from 1733.00 to 1.73 to verify the regression gate."
+}

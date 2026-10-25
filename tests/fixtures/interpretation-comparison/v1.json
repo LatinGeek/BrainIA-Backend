@@ -1,0 +1,780 @@
+{
+  "version": "interpretation-comparison-synthetic-1",
+  "provenance": "synthetic",
+  "labelStatus": "machine-authored expectations; independent review pending",
+  "cases": [
+    {
+      "id": "expense-uyu",
+      "scenario": "expense",
+      "rationale": "Posted card purchase; preserve exact magnitude and explicit currency.",
+      "input": {
+        "events": [
+          {
+            "id": "expense-uyu",
+            "kind": "notification",
+            "title": "Aviso",
+            "body": "Se realizó una transacción con la tarjeta VISA por un monto de UYU 1.733,00 en FERRETERIA LUNA.",
+            "source": "Banco Sintético",
+            "timestamp": "2026-01-15T12:00:00.000Z",
+            "raw": {},
+            "tags": []
+          }
+        ]
+      },
+      "expected": {
+        "observations": [
+          {
+            "id": "expense-uyu",
+            "eventType": "expense",
+            "amount": "1733.00",
+            "currency": "UYU",
+            "merchant": "FERRETERIA LUNA",
+            "category": null,
+            "relationships": [
+              {
+                "type": "spent_at",
+                "from": "amount:uyu 1.733,00",
+                "to": "merchant:ferreteria luna"
+              }
+            ],
+            "reviewRequired": false
+          }
+        ],
+        "crossRelationships": []
+      }
+    },
+    {
+      "id": "expense-usd",
+      "scenario": "expense",
+      "rationale": "Posted card purchase; preserve exact magnitude and explicit currency.",
+      "input": {
+        "events": [
+          {
+            "id": "expense-usd",
+            "kind": "notification",
+            "title": "Aviso",
+            "body": "Se realizó una transacción con la tarjeta VISA por un monto de USD 1,733.00 en TIENDA SOL.",
+            "source": "Banco Sintético",
+            "timestamp": "2026-01-15T12:00:00.000Z",
+            "raw": {},
+            "tags": []
+          }
+        ]
+      },
+      "expected": {
+        "observations": [
+          {
+            "id": "expense-usd",
+            "eventType": "expense",
+            "amount": "1733.00",
+            "currency": "USD",
+            "merchant": "TIENDA SOL",
+            "category": null,
+            "relationships": [
+              {
+                "type": "spent_at",
+                "from": "amount:usd 1,733.00",
+                "to": "merchant:tienda sol"
+              }
+            ],
+            "reviewRequired": false
+          }
+        ],
+        "crossRelationships": []
+      }
+    },
+    {
+      "id": "expense-decimal",
+      "scenario": "expense",
+      "rationale": "Posted card purchase; preserve exact magnitude and explicit currency.",
+      "input": {
+        "events": [
+          {
+            "id": "expense-decimal",
+            "kind": "notification",
+            "title": "Aviso",
+            "body": "Se realizó una transacción con la tarjeta VISA por un monto de UYU 99,50 en CAFE NORTE.",
+            "source": "Banco Sintético",
+            "timestamp": "2026-01-15T12:00:00.000Z",
+            "raw": {},
+            "tags": []
+          }
+        ]
+      },
+      "expected": {
+        "observations": [
+          {
+            "id": "expense-decimal",
+            "eventType": "expense",
+            "amount": "99.50",
+            "currency": "UYU",
+            "merchant": "CAFE NORTE",
+            "category": null,
+            "relationships": [
+              {
+                "type": "spent_at",
+                "from": "amount:uyu 99,50",
+                "to": "merchant:cafe norte"
+              }
+            ],
+            "reviewRequired": false
+          }
+        ],
+        "crossRelationships": []
+      }
+    },
+    {
+      "id": "income-salary",
+      "scenario": "income",
+      "rationale": "User-confirmed income category and direction.",
+      "input": {
+        "events": [
+          {
+            "id": "income-salary",
+            "kind": "income",
+            "title": "Salario",
+            "body": "Ingreso UYU 50.000,00",
+            "source": "Captura manual",
+            "timestamp": "2026-01-15T12:00:00.000Z",
+            "raw": {
+              "transactionType": "income",
+              "merchant": "Empresa Sintética",
+              "category": "Salary"
+            },
+            "tags": []
+          }
+        ]
+      },
+      "expected": {
+        "observations": [
+          {
+            "id": "income-salary",
+            "eventType": "income",
+            "amount": "50000.00",
+            "currency": "UYU",
+            "merchant": "Empresa Sintética",
+            "category": "Salary",
+            "relationships": [],
+            "reviewRequired": false
+          }
+        ],
+        "crossRelationships": []
+      }
+    },
+    {
+      "id": "income-refund",
+      "scenario": "income",
+      "rationale": "Refund is income rather than an expense.",
+      "input": {
+        "events": [
+          {
+            "id": "income-refund",
+            "kind": "income",
+            "title": "Aviso",
+            "body": "Reintegro USD 20.00",
+            "source": "Banco Sintético",
+            "timestamp": "2026-01-15T12:00:00.000Z",
+            "raw": {
+              "transactionType": "income",
+              "merchant": "Tienda Sintética",
+              "category": "Refund"
+            },
+            "tags": []
+          }
+        ]
+      },
+      "expected": {
+        "observations": [
+          {
+            "id": "income-refund",
+            "eventType": "income",
+            "amount": "20.00",
+            "currency": "USD",
+            "merchant": "Tienda Sintética",
+            "category": "Refund",
+            "relationships": [],
+            "reviewRequired": false
+          }
+        ],
+        "crossRelationships": []
+      }
+    },
+    {
+      "id": "transfer-own",
+      "scenario": "transfer",
+      "rationale": "Internal transfer must not count as spending.",
+      "input": {
+        "events": [
+          {
+            "id": "transfer-own",
+            "kind": "notification",
+            "title": "Aviso",
+            "body": "Transferencia realizada entre cuentas por UYU 2.500,00",
+            "source": "Banco Sintético",
+            "timestamp": "2026-01-15T12:00:00.000Z",
+            "raw": {
+              "accountId": "SYN-A",
+              "destinationAccountId": "SYN-B"
+            },
+            "tags": []
+          }
+        ]
+      },
+      "expected": {
+        "observations": [
+          {
+            "id": "transfer-own",
+            "eventType": "transfer",
+            "amount": "2500.00",
+            "currency": "UYU",
+            "merchant": "Transfer between accounts",
+            "category": null,
+            "relationships": [],
+            "reviewRequired": false
+          }
+        ],
+        "crossRelationships": []
+      }
+    },
+    {
+      "id": "email-message",
+      "scenario": "email",
+      "rationale": "Email envelope should produce sender and recipient relationships, with no money.",
+      "input": {
+        "events": [
+          {
+            "id": "email-message",
+            "kind": "email",
+            "title": "Reunión inbox",
+            "body": "Mensaje de coordinación de la reunión.",
+            "source": "Correo Sintético",
+            "timestamp": "2026-01-15T12:00:00.000Z",
+            "raw": {
+              "from": "equipo@example.invalid",
+              "to": "persona@example.invalid"
+            },
+            "tags": []
+          }
+        ]
+      },
+      "expected": {
+        "observations": [
+          {
+            "id": "email-message",
+            "eventType": "email",
+            "amount": null,
+            "currency": null,
+            "merchant": null,
+            "category": null,
+            "relationships": [
+              {
+                "type": "sent_by",
+                "from": "message:reunión inbox",
+                "to": "sender:equipo@example.invalid"
+              },
+              {
+                "type": "sent_to",
+                "from": "message:reunión inbox",
+                "to": "recipient:persona@example.invalid"
+              }
+            ],
+            "reviewRequired": false
+          }
+        ],
+        "crossRelationships": []
+      }
+    },
+    {
+      "id": "email-receipt",
+      "scenario": "email",
+      "rationale": "Receipt transport is email, real-world event is a purchase.",
+      "input": {
+        "events": [
+          {
+            "id": "email-receipt",
+            "kind": "email",
+            "title": "Recibo",
+            "body": "Se realizó una transacción con la tarjeta VISA por un monto de UYU 800,00 en MERCADO LUNA.",
+            "source": "Correo Sintético",
+            "timestamp": "2026-01-15T12:00:00.000Z",
+            "raw": {},
+            "tags": []
+          }
+        ]
+      },
+      "expected": {
+        "observations": [
+          {
+            "id": "email-receipt",
+            "eventType": "expense",
+            "amount": "800.00",
+            "currency": "UYU",
+            "merchant": "MERCADO LUNA",
+            "category": null,
+            "relationships": [
+              {
+                "type": "spent_at",
+                "from": "amount:uyu 800,00",
+                "to": "merchant:mercado luna"
+              }
+            ],
+            "reviewRequired": false
+          }
+        ],
+        "crossRelationships": []
+      }
+    },
+    {
+      "id": "irrelevant-weather",
+      "scenario": "irrelevant",
+      "rationale": "Irrelevant notification must not become spending or require financial review.",
+      "input": {
+        "events": [
+          {
+            "id": "irrelevant-weather",
+            "kind": "notification",
+            "title": "Clima",
+            "body": "Hoy estará soleado.",
+            "source": "Clima Sintético",
+            "timestamp": "2026-01-15T12:00:00.000Z",
+            "raw": {},
+            "tags": []
+          }
+        ]
+      },
+      "expected": {
+        "observations": [
+          {
+            "id": "irrelevant-weather",
+            "eventType": "notification",
+            "amount": null,
+            "currency": null,
+            "merchant": null,
+            "category": null,
+            "relationships": [],
+            "reviewRequired": false
+          }
+        ],
+        "crossRelationships": []
+      }
+    },
+    {
+      "id": "rejected-card",
+      "scenario": "irrelevant",
+      "rationale": "Declined attempts must not produce a financial candidate.",
+      "input": {
+        "events": [
+          {
+            "id": "rejected-card",
+            "kind": "notification",
+            "title": "Aviso",
+            "body": "Se rechazó la transacción con la tarjeta VISA por UYU 1.733,00 en TIENDA SOL.",
+            "source": "Banco Sintético",
+            "timestamp": "2026-01-15T12:00:00.000Z",
+            "raw": {},
+            "tags": []
+          }
+        ]
+      },
+      "expected": {
+        "observations": [
+          {
+            "id": "rejected-card",
+            "eventType": "notification",
+            "amount": null,
+            "currency": null,
+            "merchant": null,
+            "category": null,
+            "relationships": [],
+            "reviewRequired": false
+          }
+        ],
+        "crossRelationships": []
+      }
+    },
+    {
+      "id": "balance-only",
+      "scenario": "ambiguous",
+      "rationale": "A balance is not a posted expense, despite an explicit amount.",
+      "input": {
+        "events": [
+          {
+            "id": "balance-only",
+            "kind": "notification",
+            "title": "Saldo",
+            "body": "Saldo disponible UYU 8.000,00",
+            "source": "Banco Sintético",
+            "timestamp": "2026-01-15T12:00:00.000Z",
+            "raw": {
+              "merchant": "Banco Sintético"
+            },
+            "tags": []
+          }
+        ]
+      },
+      "expected": {
+        "observations": [
+          {
+            "id": "balance-only",
+            "eventType": "notification",
+            "amount": null,
+            "currency": null,
+            "merchant": null,
+            "category": null,
+            "relationships": [],
+            "reviewRequired": false
+          }
+        ],
+        "crossRelationships": []
+      }
+    },
+    {
+      "id": "ambiguous-dollar",
+      "scenario": "ambiguous",
+      "rationale": "Bare dollar does not establish UYU or USD; require review.",
+      "input": {
+        "events": [
+          {
+            "id": "ambiguous-dollar",
+            "kind": "expense",
+            "title": "Aviso",
+            "body": "Gastaste $ 350,00 en CAFE NORTE",
+            "source": "Banco Sintético",
+            "timestamp": "2026-01-15T12:00:00.000Z",
+            "raw": {
+              "merchant": "CAFE NORTE"
+            },
+            "tags": []
+          }
+        ]
+      },
+      "expected": {
+        "observations": [
+          {
+            "id": "ambiguous-dollar",
+            "eventType": "expense",
+            "amount": "350.00",
+            "currency": "UNKNOWN",
+            "merchant": "CAFE NORTE",
+            "category": null,
+            "relationships": [
+              {
+                "type": "spent_at",
+                "from": "amount:$ 350,00",
+                "to": "merchant:cafe norte"
+              }
+            ],
+            "reviewRequired": true
+          }
+        ],
+        "crossRelationships": []
+      }
+    },
+    {
+      "id": "missing-merchant",
+      "scenario": "ambiguous",
+      "rationale": "Financial evidence without an identifiable merchant needs review; no projected amount.",
+      "input": {
+        "events": [
+          {
+            "id": "missing-merchant",
+            "kind": "expense",
+            "title": "Aviso",
+            "body": "Compra UYU 300,00",
+            "source": "Banco Sintético",
+            "timestamp": "2026-01-15T12:00:00.000Z",
+            "raw": {},
+            "tags": []
+          }
+        ]
+      },
+      "expected": {
+        "observations": [
+          {
+            "id": "missing-merchant",
+            "eventType": "expense",
+            "amount": null,
+            "currency": null,
+            "merchant": null,
+            "category": null,
+            "relationships": [],
+            "reviewRequired": true
+          }
+        ],
+        "crossRelationships": []
+      }
+    },
+    {
+      "id": "capture-category",
+      "scenario": "expense",
+      "rationale": "Preserve explicitly captured category; do not infer it from merchant names.",
+      "input": {
+        "events": [
+          {
+            "id": "capture-category",
+            "kind": "expense",
+            "title": "Almuerzo",
+            "body": "UYU 120,00",
+            "source": "Captura manual",
+            "timestamp": "2026-01-15T12:00:00.000Z",
+            "raw": {
+              "transactionType": "expense",
+              "merchant": "CAFE NORTE",
+              "category": "Food / Delivery"
+            },
+            "tags": []
+          }
+        ]
+      },
+      "expected": {
+        "observations": [
+          {
+            "id": "capture-category",
+            "eventType": "expense",
+            "amount": "120.00",
+            "currency": "UYU",
+            "merchant": "CAFE NORTE",
+            "category": "Food / Delivery",
+            "relationships": [
+              {
+                "type": "spent_at",
+                "from": "amount:uyu 120,00",
+                "to": "merchant:cafe norte"
+              }
+            ],
+            "reviewRequired": false
+          }
+        ],
+        "crossRelationships": []
+      }
+    },
+    {
+      "id": "repeated-capture",
+      "scenario": "repeated",
+      "rationale": "Repeated capture of identical native reference should refer to one movement.",
+      "input": {
+        "events": [
+          {
+            "id": "repeat-a",
+            "kind": "notification",
+            "title": "Aviso",
+            "body": "Se realizó una transacción con la tarjeta VISA por un monto de UYU 800,00 en MERCADO LUNA.",
+            "source": "Banco Sintético",
+            "timestamp": "2026-01-15T12:00:00.000Z",
+            "raw": {
+              "nativeReference": "SYN-ORDER-1",
+              "referenceNamespace": "synthetic-bank"
+            },
+            "tags": []
+          },
+          {
+            "id": "repeat-b",
+            "kind": "notification",
+            "title": "Aviso",
+            "body": "Se realizó una transacción con la tarjeta VISA por un monto de UYU 800,00 en MERCADO LUNA.",
+            "source": "Banco Sintético",
+            "timestamp": "2026-01-15T12:00:00.000Z",
+            "raw": {
+              "nativeReference": "SYN-ORDER-1",
+              "referenceNamespace": "synthetic-bank"
+            },
+            "tags": []
+          }
+        ]
+      },
+      "expected": {
+        "observations": [
+          {
+            "id": "repeat-a",
+            "eventType": "expense",
+            "amount": "800.00",
+            "currency": "UYU",
+            "merchant": "MERCADO LUNA",
+            "category": null,
+            "relationships": [
+              {
+                "type": "spent_at",
+                "from": "amount:uyu 800,00",
+                "to": "merchant:mercado luna"
+              }
+            ],
+            "reviewRequired": false
+          },
+          {
+            "id": "repeat-b",
+            "eventType": "expense",
+            "amount": "800.00",
+            "currency": "UYU",
+            "merchant": "MERCADO LUNA",
+            "category": null,
+            "relationships": [
+              {
+                "type": "spent_at",
+                "from": "amount:uyu 800,00",
+                "to": "merchant:mercado luna"
+              }
+            ],
+            "reviewRequired": false
+          }
+        ],
+        "crossRelationships": [
+          {
+            "type": "same_as",
+            "from": "repeat-b",
+            "to": "repeat-a"
+          }
+        ]
+      }
+    },
+    {
+      "id": "multiple-source-evidence",
+      "scenario": "multi-source",
+      "rationale": "Bank notification and email with the same explicit reference support one movement.",
+      "input": {
+        "events": [
+          {
+            "id": "repeat-a",
+            "kind": "notification",
+            "title": "Aviso",
+            "body": "Se realizó una transacción con la tarjeta VISA por un monto de UYU 800,00 en MERCADO LUNA.",
+            "source": "Banco Sintético",
+            "timestamp": "2026-01-15T12:00:00.000Z",
+            "raw": {
+              "nativeReference": "SYN-ORDER-1",
+              "referenceNamespace": "synthetic-bank"
+            },
+            "tags": []
+          },
+          {
+            "id": "receipt-b",
+            "kind": "email",
+            "title": "Aviso",
+            "body": "Se realizó una transacción con la tarjeta VISA por un monto de UYU 800,00 en MERCADO LUNA.",
+            "source": "Correo Sintético",
+            "timestamp": "2026-01-15T12:00:00.000Z",
+            "raw": {
+              "nativeReference": "SYN-ORDER-1",
+              "referenceNamespace": "synthetic-bank"
+            },
+            "tags": []
+          }
+        ]
+      },
+      "expected": {
+        "observations": [
+          {
+            "id": "repeat-a",
+            "eventType": "expense",
+            "amount": "800.00",
+            "currency": "UYU",
+            "merchant": "MERCADO LUNA",
+            "category": null,
+            "relationships": [
+              {
+                "type": "spent_at",
+                "from": "amount:uyu 800,00",
+                "to": "merchant:mercado luna"
+              }
+            ],
+            "reviewRequired": false
+          },
+          {
+            "id": "receipt-b",
+            "eventType": "expense",
+            "amount": "800.00",
+            "currency": "UYU",
+            "merchant": "MERCADO LUNA",
+            "category": null,
+            "relationships": [
+              {
+                "type": "spent_at",
+                "from": "amount:uyu 800,00",
+                "to": "merchant:mercado luna"
+              }
+            ],
+            "reviewRequired": false
+          }
+        ],
+        "crossRelationships": [
+          {
+            "type": "evidence_for",
+            "from": "receipt-b",
+            "to": "repeat-a"
+          }
+        ]
+      }
+    },
+    {
+      "id": "same-value-distinct-purchases",
+      "scenario": "repeated",
+      "rationale": "Same merchant and amount with different references are not duplicates.",
+      "input": {
+        "events": [
+          {
+            "id": "repeat-a",
+            "kind": "notification",
+            "title": "Aviso",
+            "body": "Se realizó una transacción con la tarjeta VISA por un monto de UYU 800,00 en MERCADO LUNA.",
+            "source": "Banco Sintético",
+            "timestamp": "2026-01-15T12:00:00.000Z",
+            "raw": {
+              "nativeReference": "SYN-ORDER-1",
+              "referenceNamespace": "synthetic-bank"
+            },
+            "tags": []
+          },
+          {
+            "id": "separate-b",
+            "kind": "notification",
+            "title": "Aviso",
+            "body": "Se realizó una transacción con la tarjeta VISA por un monto de UYU 800,00 en MERCADO LUNA.",
+            "source": "Banco Sintético",
+            "timestamp": "2026-01-15T12:00:00.000Z",
+            "raw": {
+              "nativeReference": "SYN-ORDER-2",
+              "referenceNamespace": "synthetic-bank"
+            },
+            "tags": []
+          }
+        ]
+      },
+      "expected": {
+        "observations": [
+          {
+            "id": "repeat-a",
+            "eventType": "expense",
+            "amount": "800.00",
+            "currency": "UYU",
+            "merchant": "MERCADO LUNA",
+            "category": null,
+            "relationships": [
+              {
+                "type": "spent_at",
+                "from": "amount:uyu 800,00",
+                "to": "merchant:mercado luna"
+              }
+            ],
+            "reviewRequired": false
+          },
+          {
+            "id": "separate-b",
+            "eventType": "expense",
+            "amount": "800.00",
+            "currency": "UYU",
+            "merchant": "MERCADO LUNA",
+            "category": null,
+            "relationships": [
+              {
+                "type": "spent_at",
+                "from": "amount:uyu 800,00",
+                "to": "merchant:mercado luna"
+              }
+            ],
+            "reviewRequired": false
+          }
+        ],
+        "crossRelationships": []
+      }
+    }
+  ]
+}

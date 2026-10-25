@@ -1,0 +1,14 @@
+{
+  "maxRegressedFields": 0,
+  "minimumExactCaseAccuracy": 1,
+  "minimumFieldAccuracy": {
+    "eventType": 1,
+    "amount": 1,
+    "currency": 1,
+    "merchant": 1,
+    "category": 1,
+    "relationships": 1,
+    "reviewRequired": 1
+  },
+  "maxCandidateP95Ms": null
+}

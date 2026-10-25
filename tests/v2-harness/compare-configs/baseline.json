@@ -1,0 +1,8 @@
+{
+  "id": "checkout-rules-baseline",
+  "mode": "rules",
+  "adapter": "tests/v2-harness/comparison-adapter.mjs",
+  "model": null,
+  "promptVersion": null,
+  "description": "Current checkout deterministic classification, entity, relation and financial projection functions."
+}

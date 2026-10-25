@@ -1,0 +1,8 @@
+{
+  "id": "checkout-rules-candidate",
+  "mode": "rules",
+  "adapter": "tests/v2-harness/comparison-adapter.mjs",
+  "model": null,
+  "promptVersion": null,
+  "description": "Replace the adapter with reviewed candidate rules, or use mode replay with synthetic responses."
+}

@@ -1,5 +1,7 @@
 # Brain AI v2 offline evaluation
 
+For paired model/prompt/rule configuration comparisons, see [the comparison workflow](COMPARISON.md). It reuses this harness's network boundary and metrics helpers, and adds a small synthetic interpretation corpus, acceptance policy, and case-level regression reports without changing E01–E12 release gates.
+
 This is an offline gate runner, a synthetic corpus, and a read-only adapter for the current extraction code. It does not claim that the v2 product or the later phase gates pass. The initial extraction oracle is machine-authored and all labels explicitly await independent adjudication. E02–E12 currently report missing application instrumentation rather than passing a simulator.
 
 ```powershell
