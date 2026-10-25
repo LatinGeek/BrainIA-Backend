@@ -24,6 +24,7 @@ import {
 import { listEventBackgroundJobs } from "../storage/job-repository.js";
 import { listEventHistoryPage, listStoredEvents, loadStoredEventById } from "../storage/event-repository.js";
 import { withEventProgress } from "../storage/event-progress.js";
+import { loadEventExplanation } from "../storage/event-explanation.js";
 
 type EventRoutesOptions = {
   authConfig: AuthConfig;
@@ -103,6 +104,17 @@ export const registerEventRoutes = (options: EventRoutesOptions): FastifyPluginA
         error: "event_not_found",
         message: "No stored event matches the provided id",
       });
+    });
+
+    app.get("/events/:id/explanation", async (request, reply) => {
+      const eventId = (request.params as { id: string }).id;
+      const ownerId = ownerScope(request);
+      reply.header('Cache-Control', 'no-store');
+      const explanation = await withOwnerRead(ownerId, async (db) => {
+        const event = await loadStoredEventById(db, eventId, ownerId);
+        return event ? loadEventExplanation(db, event) : null;
+      });
+      return explanation ?? reply.status(404).send({ error: 'event_not_found' });
     });
 
     app.post("/events", async (request, reply) => {
