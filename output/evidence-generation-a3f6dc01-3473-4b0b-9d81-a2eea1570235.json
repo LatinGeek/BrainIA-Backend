@@ -1,0 +1,412 @@
+{
+  "generationId": "a3f6dc01-3473-4b0b-9d81-a2eea1570235",
+  "generatedAt": "2026-10-26T04:57:28.642Z",
+  "policyVersion": "evidence-grounded-v1",
+  "governanceVersion": "semantic-governance-v5",
+  "promptVersion": "semantic-meaning-v5",
+  "counts": {
+    "requested": 2022,
+    "snapshots": 2022,
+    "staged": 1687,
+    "applied": 1687,
+    "blocked": 335,
+    "failed": 0,
+    "abstentions": 299,
+    "verification": {
+      "verified": 73,
+      "rejected": 38,
+      "unavailable": 0,
+      "not_required": 1911
+    },
+    "changedClassifications": 0,
+    "changedPrimaryCategories": 53,
+    "proposedConcepts": 9,
+    "proposedAssociations": 80,
+    "removedMachineProposals": 10,
+    "revalidationDroppedPaths": 3,
+    "latencyMs": 5282665,
+    "inputTokens": 496126,
+    "outputTokens": 44301
+  },
+  "samples": [
+    {
+      "eventId": "gmail:germanlamela98@gmail.com:<40324b74-a2ca-45cf-bfe4-06f8412b3455@priority.instagram.com>",
+      "before": {
+        "inferredKind": "email",
+        "primaryCategoryKey": null,
+        "processingStatus": "classified"
+      },
+      "after": {
+        "inferredKind": "email",
+        "primaryCategoryKey": "communication.email.activity",
+        "abstained": false,
+        "verificationStatus": "not_required"
+      },
+      "blockedReason": "human_semantic_decision_preserved"
+    },
+    {
+      "eventId": "gmail:germanlamela98@gmail.com:<818b32f0-f30e-4ccf-997d-8484a5556d41@us2.make.com>",
+      "before": {
+        "inferredKind": "notification",
+        "primaryCategoryKey": null,
+        "processingStatus": "classified"
+      },
+      "after": {
+        "inferredKind": "notification",
+        "primaryCategoryKey": null,
+        "abstained": true,
+        "verificationStatus": "not_required"
+      },
+      "blockedReason": "human_semantic_decision_preserved"
+    },
+    {
+      "eventId": "gmail:germanlamela98@gmail.com:<18540acb-4452-4aba-bfba-00359f6685c1@us2.make.com>",
+      "before": {
+        "inferredKind": "notification",
+        "primaryCategoryKey": null,
+        "processingStatus": "classified"
+      },
+      "after": {
+        "inferredKind": "notification",
+        "primaryCategoryKey": null,
+        "abstained": true,
+        "verificationStatus": "not_required"
+      },
+      "blockedReason": "activation_revalidation_abstained"
+    },
+    {
+      "eventId": "gmail:germanlamela98@gmail.com:",
+      "before": {
+        "inferredKind": "email",
+        "primaryCategoryKey": null,
+        "processingStatus": "classified"
+      },
+      "after": {
+        "inferredKind": "email",
+        "primaryCategoryKey": "communication.email.activity",
+        "abstained": false,
+        "verificationStatus": "not_required"
+      },
+      "blockedReason": "human_semantic_decision_preserved"
+    },
+    {
+      "eventId": "md_1784134187686",
+      "before": {
+        "inferredKind": "expense",
+        "primaryCategoryKey": null,
+        "processingStatus": "classified"
+      },
+      "after": {
+        "inferredKind": "expense",
+        "primaryCategoryKey": "finances.spending.card_purchase",
+        "abstained": false,
+        "verificationStatus": "not_required"
+      },
+      "blockedReason": "human_semantic_decision_preserved"
+    },
+    {
+      "eventId": "0|com.xiaomi.smarthome|0|0|com.xiaomi.smarthome|g:Aggregate_AlertingSection|10310|0|com.xiaomi.smarthome|g:Aggregate_AlertingSection",
+      "before": {
+        "inferredKind": "other",
+        "primaryCategoryKey": null,
+        "processingStatus": "classified"
+      },
+      "after": {
+        "inferredKind": "other",
+        "primaryCategoryKey": null,
+        "abstained": true,
+        "verificationStatus": "not_required"
+      },
+      "blockedReason": "activation_revalidation_abstained"
+    },
+    {
+      "eventId": "gmail:germanlamela98@gmail.com:19f6756653f113c9",
+      "before": {
+        "inferredKind": "notification",
+        "primaryCategoryKey": null,
+        "processingStatus": "classified"
+      },
+      "after": {
+        "inferredKind": "notification",
+        "primaryCategoryKey": null,
+        "abstained": true,
+        "verificationStatus": "not_required"
+      },
+      "blockedReason": "human_semantic_decision_preserved"
+    },
+    {
+      "eventId": "gmail:germanlamela98@gmail.com:19f6718ce2411927",
+      "before": {
+        "inferredKind": "other",
+        "primaryCategoryKey": null,
+        "processingStatus": "classified"
+      },
+      "after": {
+        "inferredKind": "other",
+        "primaryCategoryKey": null,
+        "abstained": true,
+        "verificationStatus": "not_required"
+      },
+      "blockedReason": "activation_revalidation_abstained"
+    },
+    {
+      "eventId": "md_1784163736234",
+      "before": {
+        "inferredKind": "expense",
+        "primaryCategoryKey": null,
+        "processingStatus": "classified"
+      },
+      "after": {
+        "inferredKind": "expense",
+        "primaryCategoryKey": "finances.spending.card_purchase",
+        "abstained": false,
+        "verificationStatus": "not_required"
+      },
+      "blockedReason": "human_semantic_decision_preserved"
+    },
+    {
+      "eventId": "md_1784167734053",
+      "before": {
+        "inferredKind": "notification",
+        "primaryCategoryKey": null,
+        "processingStatus": "classified"
+      },
+      "after": {
+        "inferredKind": "notification",
+        "primaryCategoryKey": null,
+        "abstained": true,
+        "verificationStatus": "verified"
+      },
+      "blockedReason": "human_semantic_decision_preserved"
+    },
+    {
+      "eventId": "md_1784163799335",
+      "before": {
+        "inferredKind": "notification",
+        "primaryCategoryKey": null,
+        "processingStatus": "classified"
+      },
+      "after": {
+        "inferredKind": "notification",
+        "primaryCategoryKey": null,
+        "abstained": true,
+        "verificationStatus": "rejected"
+      },
+      "blockedReason": "human_semantic_decision_preserved"
+    },
+    {
+      "eventId": "0|com.xiaomi.smarthome|1064701965|null|10310",
+      "before": {
+        "inferredKind": "other",
+        "primaryCategoryKey": null,
+        "processingStatus": "classified"
+      },
+      "after": {
+        "inferredKind": "other",
+        "primaryCategoryKey": null,
+        "abstained": true,
+        "verificationStatus": "not_required"
+      },
+      "blockedReason": "activation_revalidation_abstained"
+    },
+    {
+      "eventId": "0|uy.com.Santander|0|FCM-Notification:143278169|10328",
+      "before": {
+        "inferredKind": "notification",
+        "primaryCategoryKey": null,
+        "processingStatus": "classified"
+      },
+      "after": {
+        "inferredKind": "notification",
+        "primaryCategoryKey": null,
+        "abstained": true,
+        "verificationStatus": "rejected"
+      },
+      "blockedReason": "human_semantic_decision_preserved"
+    },
+    {
+      "eventId": "0|com.xiaomi.smarthome|0|FCM-Notification:145070961|10310",
+      "before": {
+        "inferredKind": "notification",
+        "primaryCategoryKey": null,
+        "processingStatus": "classified"
+      },
+      "after": {
+        "inferredKind": "notification",
+        "primaryCategoryKey": "home.automation.device_alert",
+        "abstained": false,
+        "verificationStatus": "not_required"
+      },
+      "blockedReason": "human_semantic_decision_preserved"
+    },
+    {
+      "eventId": "0|com.mercadolibre|-1404125593|null|10325",
+      "before": {
+        "inferredKind": "notification",
+        "primaryCategoryKey": null,
+        "processingStatus": "classified"
+      },
+      "after": {
+        "inferredKind": "notification",
+        "primaryCategoryKey": null,
+        "abstained": true,
+        "verificationStatus": "not_required"
+      },
+      "blockedReason": "activation_revalidation_abstained"
+    },
+    {
+      "eventId": "0|com.ubercab|5|191955c1bde63e55cf4362533d5b7b15|10326",
+      "before": {
+        "inferredKind": "notification",
+        "primaryCategoryKey": null,
+        "processingStatus": "classified"
+      },
+      "after": {
+        "inferredKind": "notification",
+        "primaryCategoryKey": null,
+        "abstained": true,
+        "verificationStatus": "not_required"
+      },
+      "blockedReason": "activation_revalidation_abstained"
+    },
+    {
+      "eventId": "0|com.mercadolibre|-1120933960|null|10325",
+      "before": {
+        "inferredKind": "notification",
+        "primaryCategoryKey": null,
+        "processingStatus": "classified"
+      },
+      "after": {
+        "inferredKind": "notification",
+        "primaryCategoryKey": null,
+        "abstained": true,
+        "verificationStatus": "rejected"
+      },
+      "blockedReason": "activation_revalidation_abstained"
+    },
+    {
+      "eventId": "0|com.xiaomi.smarthome|0|FCM-Notification:219370886|10310",
+      "before": {
+        "inferredKind": "notification",
+        "primaryCategoryKey": null,
+        "processingStatus": "classified"
+      },
+      "after": {
+        "inferredKind": "notification",
+        "primaryCategoryKey": null,
+        "abstained": true,
+        "verificationStatus": "verified"
+      },
+      "blockedReason": "activation_revalidation_abstained"
+    },
+    {
+      "eventId": "0|com.xiaomi.smarthome|0|FCM-Notification:219999247|10310",
+      "before": {
+        "inferredKind": "notification",
+        "primaryCategoryKey": null,
+        "processingStatus": "classified"
+      },
+      "after": {
+        "inferredKind": "notification",
+        "primaryCategoryKey": "home.automation.device_alert",
+        "abstained": false,
+        "verificationStatus": "not_required"
+      },
+      "blockedReason": "human_semantic_decision_preserved"
+    },
+    {
+      "eventId": "0|com.xiaomi.smarthome|0|FCM-Notification:221641015|10310",
+      "before": {
+        "inferredKind": "notification",
+        "primaryCategoryKey": null,
+        "processingStatus": "classified"
+      },
+      "after": {
+        "inferredKind": "notification",
+        "primaryCategoryKey": "home.automation.device_alert",
+        "abstained": false,
+        "verificationStatus": "not_required"
+      },
+      "blockedReason": "human_semantic_decision_preserved"
+    },
+    {
+      "eventId": "0|com.mercadolibre|1674564424|null|10325",
+      "before": {
+        "inferredKind": "other",
+        "primaryCategoryKey": null,
+        "processingStatus": "classified"
+      },
+      "after": {
+        "inferredKind": "other",
+        "primaryCategoryKey": null,
+        "abstained": true,
+        "verificationStatus": "not_required"
+      },
+      "blockedReason": "activation_revalidation_abstained"
+    },
+    {
+      "eventId": "0|com.amazon.mShop.android.shopping|1|null|10367",
+      "before": {
+        "inferredKind": "notification",
+        "primaryCategoryKey": null,
+        "processingStatus": "classified"
+      },
+      "after": {
+        "inferredKind": "notification",
+        "primaryCategoryKey": null,
+        "abstained": true,
+        "verificationStatus": "not_required"
+      },
+      "blockedReason": "activation_revalidation_abstained"
+    },
+    {
+      "eventId": "0|com.instagram.android|64278|newstab|57161165992_new_follower&656d365e83694Hd4f122ca8H656d3af7e3966H65|10318",
+      "before": {
+        "inferredKind": "notification",
+        "primaryCategoryKey": null,
+        "processingStatus": "classified"
+      },
+      "after": {
+        "inferredKind": "notification",
+        "primaryCategoryKey": null,
+        "abstained": true,
+        "verificationStatus": "verified"
+      },
+      "blockedReason": "activation_revalidation_abstained"
+    },
+    {
+      "eventId": "0|com.xiaomi.smarthome|0|FCM-Notification:238823851|10310",
+      "before": {
+        "inferredKind": "notification",
+        "primaryCategoryKey": null,
+        "processingStatus": "classified"
+      },
+      "after": {
+        "inferredKind": "notification",
+        "primaryCategoryKey": "home.automation.device_alert",
+        "abstained": false,
+        "verificationStatus": "not_required"
+      },
+      "blockedReason": "human_semantic_decision_preserved"
+    },
+    {
+      "eventId": "0|com.instagram.android|64278|276413868-ig_new_followers-newstab|10318",
+      "before": {
+        "inferredKind": "notification",
+        "primaryCategoryKey": null,
+        "processingStatus": "classified"
+      },
+      "after": {
+        "inferredKind": "notification",
+        "primaryCategoryKey": null,
+        "abstained": true,
+        "verificationStatus": "not_required"
+      },
+      "blockedReason": "activation_revalidation_abstained"
+    }
+  ],
+  "limitations": [
+    "Staged snapshots are computed decisions, not yet published graph rows.",
+    "Latency and token totals include verifier calls recorded after generation creation; provider usage is estimated when unavailable."
+  ]
+}

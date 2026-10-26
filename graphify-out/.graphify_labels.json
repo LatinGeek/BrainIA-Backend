@@ -251,5 +251,19 @@
   "249": "Currency",
   "250": "PolicyResponse",
   "251": "Event",
-  "252": "Magnitude"
+  "252": "Magnitude",
+  "253": "tmp-update-function-manifest.mjs",
+  "254": "Count",
+  "255": "Cursor",
+  "256": "Envelope",
+  "257": "Version",
+  "258": "Evidence generation comparison",
+  "259": "tmp-capture-before.mjs",
+  "260": "tmp-fix-wrong-create.mjs",
+  "261": "tmp-wrong-create.mjs",
+  "262": "Hash",
+  "263": "ApiError",
+  "264": "decision-policy.test.ts",
+  "265": "notification-safety.test.ts",
+  "315": "event-explanation.md"
 }

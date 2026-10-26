@@ -255,6 +255,19 @@ export async function upsertEntity(
   // The owner applies only to a newly inserted personal identity. Public
   // taxonomy stays ownerless, and an existing row never changes owner here.
   const ownerId = draft.type === "domain" || draft.type === "concept" ? null : options.ownerId ?? null;
+  // During a historical activation many events share category and identity
+  // rows. A plain read avoids taking a row lock on every existing shared
+  // entity; inserts still use the unique index and a bounded conflict path.
+  if (process.env.BRAINIA_ACTIVATION_MODE === "true") {
+    const existing = await db.query<{ id: string }>(
+      `select id from entities where type = $1 and normalized_value = $2 limit 1`,
+      [draft.type, draft.normalizedValue],
+    );
+    if (existing.rows[0]) {
+      const record = await loadCanonicalEntityById(db, existing.rows[0].id);
+      if (record) return record;
+    }
+  }
   const result = await db.query<{ id: string }>(
     `
       insert into entities (

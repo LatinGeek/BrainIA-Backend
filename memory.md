@@ -85,6 +85,15 @@ Update this file when:
 - the knowledge-platform action plan is implemented through migration 0028
 - observable event lifecycle, KnowledgeFact, model-call audits, hybrid retrieval, versioned embeddings, proactive insights, transactional jobs, privacy controls, retention, and backup verification are active
 - Vercel runs a protected daily knowledge evaluation at 08:00 UTC
+- evidence-grounded decision policy v1 is active in code (`BRAINIA_EVIDENCE_POLICY` = off/shadow/enforce); semantic, classification and generated-content stages now carry evidence references and independent verifier metadata
+- semantic review candidates expose action kind, typed endpoints, evidence previews, verified event counts and Spanish change explanations; approvals are revalidated server-side and stale/invalid approvals return 409
+- historical interpretation generations stage snapshots without mutating the graph; activation is batched/resumable and the previous generation remains available for rollback
+- legacy pending semantic candidates from the pre-policy generation were superseded rather than silently approved
+- the mobile review card removes raw confidence/"Segura" and shows action-specific, evidence-backed copy; rule creation defaults off and is limited to eligible assignments
+- historical generation `a3f6dc01-3473-4b0b-9d81-a2eea1570235` is active: 2022 snapshots staged, 1687 applied, 335 blocked (260 revalidation abstentions, 75 human semantic decisions preserved), 0 failed; a pre-evidence baseline is available for rollback
+- production runs with `BRAINIA_EVIDENCE_POLICY=enforce`; the review queue was reduced to 10 high-utility proposals after verified existing-category assignments were applied automatically
+- Motorola `moto g04s` installed and exercised with the release APK, including evidence display, approval, rejection, and rule creation; the Xiaomi device was reachable but locked, so only install/launch could be verified
+- comparison report: `output/evidence-generation-a3f6dc01-3473-4b0b-9d81-a2eea1570235-pre-activation.md` (pre-activation) and `output/evidence-generation-a3f6dc01-3473-4b0b-9d81-a2eea1570235.md` (post-activation); production deployment `brain-eyc06jgca-latingeeks-projects.vercel.app`, alias `https://brain-ia-six.vercel.app`
 
 ## Active decisions
 

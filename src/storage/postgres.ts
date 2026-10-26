@@ -20,7 +20,7 @@ export const pool = new Pool({
   // Detail editors load accounts and categories alongside telemetry and
   // background work. Keep enough connections for that normal overlap while
   // still bounding serverless connection use.
-  max: 4,
+  max: Math.max(1, Number(process.env.BRAINIA_DB_POOL_MAX ?? 4)),
   connectionTimeoutMillis: 10_000,
   idleTimeoutMillis: 10_000,
   query_timeout: 10_000,

@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-10-26
+
+- added evidence-grounded decision policy v1 with evidence-reference resolution, deterministic checks, independent verifier calls and stored model/prompt provenance
+- routed classification, semantic placement, digests, proactive insights, inspect summaries, intelligence and graph reconciliation through the shared policy
+- added semantic candidate action kinds, typed endpoints, evidence previews, verified event counts, Spanish change explanations and server-side approval revalidation
+- added superseded status and scoped negative feedback for rejected semantic proposals
+- added historical interpretation generations, resumable staging, comparison reports, activation and rollback
+- updated the mobile review card to remove raw confidence and show action-specific evidence-backed copy; rule creation now defaults off
+
 ## 2026-07-13
 
 - created the BrainIA backend skeleton

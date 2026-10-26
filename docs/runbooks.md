@@ -98,3 +98,32 @@ npm run cleanup:test-data -- --tag test --source-prefix endpoint- --since 2026-0
 
 The script refuses to run without filters and stays in dry-run mode unless `--apply` is present.
 Audit rows in `insight_runs` and `digest_runs` are only touched when `--include-runs` is passed together with explicit run filters.
+
+## 7. Evidence-policy historical generations
+
+Use a separate versioned generation for a full historical reprocess. Staging is
+read-only with respect to the live graph; activation is the only mutating step.
+
+```bash
+export BRAINIA_EVIDENCE_POLICY=enforce
+npm run reprocess:generations -- create --label "evidence v1"
+npm run reprocess:generations -- stage --generation <id> --batch 100 --concurrency 8
+npm run reprocess:generations -- compare --generation <id>
+# Capture a rollback baseline immediately before activation.
+npm run reprocess:generations -- baseline --label "pre-evidence baseline"
+npm run reprocess:generations -- activate --generation <id> --batch 25
+npm run reprocess:generations -- rollback
+```
+
+Before activation:
+
+1. confirm every critical safety fixture passes;
+2. confirm held-out precision is at least 95% and assignment recall at least 90%;
+3. keep the financial regression suite green;
+4. review the comparison report in `output/evidence-generation-<id>.md`;
+5. confirm the active generation control is the one you intend to expose.
+
+Activation pauses on events with human-approved semantic decisions and marks
+them `human_semantic_decision_preserved` instead of overwriting them. The
+previous generation remains available for `rollback`.
+

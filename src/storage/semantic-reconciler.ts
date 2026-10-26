@@ -5,8 +5,11 @@ import { invalidateGraphTraversalCache } from "./graph-cache.js";
 import { pool, withSemanticMaterializationLock, withTransaction } from "./postgres.js";
 import { authorizeModelDispatch, listDeniedEgressSources, stillAuthorized, type PrivacyAuthorization } from "./privacy.js";
 import { rootEventEvidenceFromAnchors, semanticMergeSkipReason, settleSatisfiedSemanticCandidates } from "./semantic-repository.js";
+import { verifierModel } from "../domain/decision-policy.js";
 
 const AUTO_RECONCILE_CONFIDENCE = 0.95;
+const RECONCILIATION_PROMPT_VERSION = "semantic-reconciler-v1";
+const RECONCILIATION_VERIFIER_PROMPT_VERSION = "semantic-reconciler-verifier-v1";
 
 const reconciliationSchema = z.object({
   merges: z.array(z.object({
@@ -96,15 +99,25 @@ async function requestStructured<T>(input: {
   systemPrompt: string;
   userPrompt: string;
   privacy?: PrivacyAuthorization;
+  model: string;
+  operation: string;
+  promptVersion: string;
+  clientId?: string | null;
 }) {
   for (let attempt = 0; attempt < 2; attempt += 1) {
     const response = await generateNaturalLanguageSummary({
       apiKey: process.env.DEEPSEEK_API_KEY,
-      model: process.env.DEEPSEEK_MODEL ?? "deepseek-v4-flash",
+      model: input.model,
       jsonMode: true,
       systemPrompt: `${input.systemPrompt}${attempt ? "\nYour previous response failed validation. Return every required array and use the exact JSON shape." : ""}`,
       userPrompt: input.userPrompt,
       privacy: input.privacy,
+      audit: {
+        clientId: input.clientId ?? null,
+        operation: input.operation,
+        promptVersion: input.promptVersion,
+        attempt: attempt + 1,
+      },
     });
     if (!response) continue;
     try {
@@ -151,7 +164,15 @@ export async function reconcileSemanticGraph(input: { dryRun?: boolean; ownerId?
 }
 
 async function reconcileSemanticGraphUnlocked(input: { dryRun?: boolean; ownerId?: string | null }) {
-  if (!process.env.DEEPSEEK_API_KEY) return { status: "model_unavailable" as const, merged: 0, demoted: 0, review: 0 };
+  const generatorModel = process.env.DEEPSEEK_MODEL ?? "deepseek-v4-flash";
+  const verifierModelId = verifierModel(generatorModel);
+  const models = {
+    generatorModel,
+    verifierModel: verifierModelId,
+    promptVersion: RECONCILIATION_PROMPT_VERSION,
+    verifierPromptVersion: RECONCILIATION_VERIFIER_PROMPT_VERSION,
+  };
+  if (!process.env.DEEPSEEK_API_KEY) return { status: "model_unavailable" as const, merged: 0, demoted: 0, review: 0, ...models };
   const authorization = await authorizeModelDispatch(pool, {
     ownerId: input.ownerId,
     purpose: "semantic_reconciliation",
@@ -160,13 +181,17 @@ async function reconcileSemanticGraphUnlocked(input: { dryRun?: boolean; ownerId
     sources: input.ownerId ? await listDeniedEgressSources(pool, input.ownerId) : [],
   });
   if (!authorization.allowed) {
-    return { status: "privacy_denied" as const, reason: authorization.reason, merged: 0, demoted: 0, review: 0 };
+    return { status: "privacy_denied" as const, reason: authorization.reason, merged: 0, demoted: 0, review: 0, ...models };
   }
   const nodes = await loadReconciliationNodes(input.ownerId);
-  if (!nodes.length) return { status: "empty" as const, merged: 0, demoted: 0, review: 0 };
+  if (!nodes.length) return { status: "empty" as const, merged: 0, demoted: 0, review: 0, ...models };
   const parsed = await requestStructured<z.infer<typeof reconciliationSchema>>({
     schema: reconciliationSchema,
     privacy: authorization,
+    model: generatorModel,
+    operation: "semantic_reconciliation",
+    promptVersion: RECONCILIATION_PROMPT_VERSION,
+    clientId: input.ownerId,
     systemPrompt: `Return strict JSON only. Audit canonical durable nodes after a semantic ingestion batch.
 
 Merge only nodes with exactly the same entity type and owner, and the same real-world identity or exactly the same reusable meaning. Never propose a cross-type merge, even when names match. Related concepts are not duplicates. Concepts may auto-merge only when they share the same immediate parent. Apps, merchants, senders, and recipients may merge across parents when they are the same identity. Prefer user-owned identities, then the clearest concise name and description, then the node with more evidence.
@@ -176,11 +201,15 @@ Demote only AI concepts that cannot independently represent durable knowledge: r
 Return {"merges":[{"canonicalId","duplicateIds":[],"rationale","confidence"}],"demotions":[{"id","rationale","confidence"}]}. Use confidence >= ${AUTO_RECONCILE_CONFIDENCE} only when identity is certain; otherwise still propose it below the threshold for user review.`,
     userPrompt: JSON.stringify(nodes),
   });
-  if (!parsed) return { status: "retryable" as const, stage: "proposal" as const, merged: 0, demoted: 0, review: 0 };
+  if (!parsed) return { status: "retryable" as const, stage: "proposal" as const, merged: 0, demoted: 0, review: 0, ...models };
 
   const verification = await requestStructured<z.infer<typeof verificationSchema>>({
     schema: verificationSchema,
     privacy: authorization,
+    model: verifierModelId,
+    operation: "semantic_reconciliation_verification",
+    promptVersion: RECONCILIATION_VERIFIER_PROMPT_VERSION,
+    clientId: input.ownerId,
     systemPrompt: `Return strict JSON only. Independently challenge a proposed knowledge-graph reconciliation.
 
 For each merge pair, sameIdentity is true only when both nodes have exactly the same entity type and owner, and replacing either node everywhere loses no meaning. Cross-type pairs must receive sameIdentity false. A company is not its subscription, an app is not one connector or notification, a person is not their email address, and a platform is not one component. For concepts, differently worded reusable event classes may be identical only when their descriptions and parent context denote the same recurring event meaning.
@@ -190,10 +219,10 @@ For each demotion, shouldDemote is true only for a raw fragment, one-off occurre
 Return {"mergeVerdicts":[{"canonicalId","duplicateId","sameIdentity","rationale","confidence"}],"demotionVerdicts":[{"id","shouldDemote","rationale","confidence"}]}.`,
     userPrompt: JSON.stringify({ nodes, proposals: parsed }),
   });
-  if (!verification) return { status: "retryable" as const, stage: "verification" as const, merged: 0, demoted: 0, review: parsed.merges.length + parsed.demotions.length };
+  if (!verification) return { status: "retryable" as const, stage: "verification" as const, merged: 0, demoted: 0, review: parsed.merges.length + parsed.demotions.length, ...models };
 
   if (!(await stillAuthorized(authorization))) {
-    return { status: "privacy_denied" as const, reason: "policy_version_changed" as const, merged: 0, demoted: 0, review: 0 };
+    return { status: "privacy_denied" as const, reason: "policy_version_changed" as const, merged: 0, demoted: 0, review: 0, ...models };
   }
 
   const { acceptedMerges, acceptedDemotions } = selectVerifiedReconciliationActions(nodes, parsed, verification);
@@ -210,6 +239,7 @@ Return {"mergeVerdicts":[{"canonicalId","duplicateId","sameIdentity","rationale"
     accepted: { merges: acceptedMerges, demotions: acceptedDemotions },
     proposals: parsed,
     verification,
+    ...models,
   };
 
   let merged = 0;
@@ -244,5 +274,18 @@ Return {"mergeVerdicts":[{"canonicalId","duplicateId","sameIdentity","rationale"
         and not exists (select 1 from semantic_candidates candidate where candidate.event_id = decision.event_id and candidate.status = 'pending')`);
   });
   invalidateGraphTraversalCache();
-  return { status: "applied" as const, merged, demoted: acceptedDemotions.length, settledCandidates, rootedEvidence, review };
+  return {
+    status: "applied" as const,
+    merged,
+    demoted: acceptedDemotions.length,
+    settledCandidates,
+    rootedEvidence,
+    review,
+    ...models,
+    verification: {
+      status: "accepted" as const,
+      mergePairs: acceptedMerges.reduce((count, proposal) => count + proposal.duplicateIds.length, 0),
+      demotions: acceptedDemotions.length,
+    },
+  };
 }

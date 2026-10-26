@@ -4,11 +4,13 @@ import { createKnowledgeDigest } from "./digests.js";
 import { insertDigestRun } from "./digest-repository.js";
 import { generateNaturalLanguageSummary } from "./deepseek.js";
 import { authorizeModelDispatch, listDeniedEgressSources, stillAuthorized } from "./privacy.js";
-import { buildInsightContent, INSIGHT_JSON_PROMPT, parseInsightContent } from "./generated-content.js";
+import { buildInsightContent, INSIGHT_JSON_PROMPT, parseInsightContent, type StructuredInsightContent } from "./generated-content.js";
 import { upsertEmbedding } from "./embeddings.js";
 import { insertInsightRun } from "./insight-repository.js";
 import { pool, withTransaction } from "./postgres.js";
 import { TAXONOMY_VERSION, categoryByKey } from "../domain/ontology.js";
+import { verifyGeneratedContent } from "./decision-verification.js";
+import type { DecisionVerificationStatus, EvidenceItem, VerificationOutcome } from "../domain/decision-policy.js";
 
 type Queryable = Pick<typeof pool, "query">;
 
@@ -411,6 +413,100 @@ async function resolveCandidateEvidenceSources(
   return [...sources];
 }
 
+export type InsightVerificationMetadata = {
+  status: DecisionVerificationStatus;
+  verifierModel: string;
+  reason: string;
+  policyVersion: string;
+};
+
+/**
+ * Candidate title/explanation/evidence are the only facts the verifier may use.
+ * Detector scores, confidence and ranking are deliberately excluded: they are
+ * prioritization metadata, not evidence that a claim happened.
+ */
+export function buildInsightEvidence(
+  candidates: Array<Pick<StoredInsightCandidate, "id" | "detector" | "title" | "explanation" | "evidence" | "severity" | "windowFrom" | "windowTo">>,
+): EvidenceItem[] {
+  const items: EvidenceItem[] = [];
+  for (const candidate of candidates) {
+    const occurredAt = candidate.windowTo ?? null;
+    items.push({
+      ref: `candidate:${candidate.id}:title`,
+      kind: "canonical_context",
+      label: `Candidate ${candidate.detector} title`,
+      text: candidate.title.slice(0, 300),
+      source: candidate.detector,
+      occurredAt,
+    });
+    items.push({
+      ref: `candidate:${candidate.id}:explanation`,
+      kind: "canonical_context",
+      label: `Candidate ${candidate.detector} explanation`,
+      text: candidate.explanation.slice(0, 800),
+      source: candidate.detector,
+      occurredAt,
+    });
+    items.push({
+      ref: `candidate:${candidate.id}:evidence`,
+      kind: "aggregate",
+      label: `Candidate ${candidate.detector} deterministic evidence`,
+      text: JSON.stringify(candidate.evidence),
+      source: candidate.detector,
+      occurredAt,
+    });
+  }
+  return items;
+}
+
+/** Field text only: the schema version is not a factual claim. */
+export function insightContentText(content: StructuredInsightContent) {
+  return [
+    content.title,
+    content.summary,
+    content.whyItMatters,
+    content.recommendedAction ?? "",
+    ...content.takeaways,
+    ...content.cards.flatMap((card) => [card.title, card.summary, card.recommendedAction ?? ""]),
+  ].join("\n");
+}
+
+export function applyInsightVerification(input: {
+  baseContent: StructuredInsightContent;
+  candidateContent: StructuredInsightContent | null;
+  generatorModel: string | null;
+  outcome: VerificationOutcome | null;
+}): {
+  content: StructuredInsightContent;
+  summary: string;
+  model: string | null;
+  verification: InsightVerificationMetadata | null;
+} {
+  const verification = input.outcome
+    ? {
+        status: input.outcome.verification.status,
+        verifierModel: input.outcome.verification.verifierModel,
+        reason: input.outcome.verification.reason,
+        policyVersion: input.outcome.verification.policyVersion,
+      }
+    : null;
+  const applied = Boolean(input.candidateContent && input.outcome?.applies);
+  if (!applied) {
+    return {
+      content: input.baseContent,
+      summary: input.baseContent.summary,
+      model: null,
+      verification,
+    };
+  }
+  return {
+    content: input.candidateContent!,
+    summary: input.candidateContent!.summary,
+    model: input.generatorModel,
+    verification,
+  };
+}
+
 export async function synthesizeTopInsightCandidates(input: { clientId?: string | null; limit?: number } = {}) {
   const limit = Math.min(10, Math.max(1, Math.trunc(input.limit ?? 5)));
   const result = await pool.query<StoredInsightCandidate>(`
@@ -440,6 +536,7 @@ export async function synthesizeTopInsightCandidates(input: { clientId?: string 
   let content = buildInsightContent(candidates);
   let summary = content.summary;
   let model: string | null = null;
+  let verification: InsightVerificationMetadata | null = null;
   const insightAuthorization = await authorizeModelDispatch(pool, {
     ownerId: input.clientId ?? null,
     purpose: "proactive_insight_synthesis",
@@ -463,7 +560,40 @@ export async function synthesizeTopInsightCandidates(input: { clientId?: string 
       audit: { clientId: input.clientId ?? null, operation: "proactive_insight_synthesis", promptVersion: "proactive-insight-v3" },
     });
     const parsed = await stillAuthorized(insightAuthorization) ? parseInsightContent(generated) : null;
-    if (parsed) { content = parsed; summary = parsed.summary; model = config.deepseekModel; }
+    if (parsed) {
+      let outcome: VerificationOutcome | null = null;
+      try {
+        outcome = await verifyGeneratedContent({
+          operation: "proactive_insight_synthesis",
+          clientId: input.clientId ?? null,
+          generatorModel: config.deepseekModel,
+          generatorPromptVersion: "proactive-insight-v3",
+          evidence: buildInsightEvidence(candidates),
+          proposal: parsed,
+          responseText: insightContentText(parsed),
+          privacy: insightAuthorization.allowed ? insightAuthorization : null,
+          apiKey: config.deepseekApiKey,
+        });
+      } catch (error) {
+        // Never publish unverified generated content when the verifier itself
+        // is unreachable; the deterministic candidate brief remains available.
+        console.error("insight_verification_failed", error instanceof Error ? error.message : String(error));
+        outcome = null;
+      }
+      // The verifier is another external dispatch; re-check the same
+      // authorization before publishing the generated candidate.
+      const stillPublishable = await stillAuthorized(insightAuthorization);
+      const applied = applyInsightVerification({
+        baseContent: content,
+        candidateContent: stillPublishable ? parsed : null,
+        generatorModel: config.deepseekModel,
+        outcome: stillPublishable ? outcome : null,
+      });
+      content = applied.content;
+      summary = applied.summary;
+      model = applied.model;
+      verification = applied.verification;
+    }
   }
   const confidence = Math.min(...candidates.map((candidate) => candidate.confidence));
   const suggestedAction = candidates.find((candidate) => candidate.suggestedAction)?.suggestedAction ?? null;
@@ -471,7 +601,7 @@ export async function synthesizeTopInsightCandidates(input: { clientId?: string 
   const run = await insertInsightRun(pool, {
     toolName: "generate_proactive_insight", query: null,
     request: { schedule: "daily", candidateIds: candidates.map((candidate) => candidate.id) },
-    response: { content, summary, candidates: evidence }, summary, model,
+    response: { content, summary, candidates: evidence, verification }, summary, model,
     candidateIds: candidates.map((candidate) => candidate.id), evidence,
     confidence, suggestedAction, deliveryStatus: "delivered",
     deliveredAt: new Date().toISOString(), expiresAt, promptVersion: "proactive-insight-v3",

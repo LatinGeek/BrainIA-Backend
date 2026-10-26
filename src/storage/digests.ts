@@ -3,6 +3,8 @@ import { generateNaturalLanguageSummary } from "./deepseek.js";
 import { authorizeModelDispatch, listDeniedEgressSources, stillAuthorized } from "./privacy.js";
 import { buildDigestContent, DIGEST_JSON_PROMPT, parseDigestContent, type StructuredDigestContent } from "./generated-content.js";
 import { derivedRunReadEligibilitySql } from "./search-repository.js";
+import { verifyGeneratedContent } from "./decision-verification.js";
+import type { DecisionVerificationStatus, EvidenceItem, VerificationOutcome } from "../domain/decision-policy.js";
 
 type Queryable = Pick<typeof pool, "query">;
 
@@ -71,12 +73,24 @@ export type KnowledgeDigest = {
   summary: string | null;
   model: string | null;
   summaryAvailable: boolean;
+  /**
+   * Additive evidence-policy metadata. Present once a generated candidate was
+   * checked; it never weakens the deterministic fallback decision.
+   */
+  verification?: {
+    status: DecisionVerificationStatus;
+    verifierModel: string;
+    reason: string;
+    policyVersion: string;
+  };
   /** Exact persisted lineage used for deletion invalidation; stripped from routes. */
   lineage?: {
     eventIds: string[];
     sources: string[];
   };
 };
+
+export type DigestVerificationMetadata = NonNullable<KnowledgeDigest["verification"]>;
 
 export type DigestBuildContext = {
   window: DigestWindow;
@@ -202,6 +216,143 @@ export function buildKnowledgeDigest(context: DigestBuildContext): KnowledgeDige
     summary: context.summary ?? fallbackSummary,
     model: context.model,
     summaryAvailable: Boolean(context.summary ?? fallbackSummary),
+  };
+}
+
+/**
+ * Turn the deterministic digest into the exact evidence set the verifier may
+ * rely on. Refs are stable and derived only from persisted rows/aggregates, so
+ * an invented total cannot be presented as supported activity.
+ */
+export function buildDigestEvidence(input: {
+  window: DigestWindow;
+  metrics: KnowledgeDigest["metrics"];
+  events: Array<Pick<DigestEventRow, "id" | "source" | "kind" | "title" | "body" | "timestamp">>;
+}): EvidenceItem[] {
+  const items: EvidenceItem[] = [
+    {
+      ref: "aggregate:total-events",
+      kind: "aggregate",
+      label: "Total events",
+      text: `total_events=${input.metrics.totalEvents}`,
+    },
+    {
+      ref: "aggregate:window",
+      kind: "aggregate",
+      label: "Digest window",
+      text: `window_from=${input.window.from}\nwindow_to=${input.window.to}`,
+    },
+    {
+      ref: "aggregate:metrics",
+      kind: "aggregate",
+      label: "Deterministic metrics",
+      text: JSON.stringify(input.metrics),
+    },
+  ];
+
+  const topSource = input.metrics.eventsBySource[0];
+  if (topSource) {
+    items.push({
+      ref: "aggregate:top-source",
+      kind: "aggregate",
+      label: "Most active source",
+      text: `top_source=${topSource.source}\ntop_source_count=${topSource.count}`,
+    });
+  }
+
+  const topKind = input.metrics.eventsByKind[0];
+  if (topKind) {
+    items.push({
+      ref: "aggregate:top-kind",
+      kind: "aggregate",
+      label: "Most common kind",
+      text: `top_kind=${topKind.kind}\ntop_kind_count=${topKind.count}`,
+    });
+  }
+
+  for (const event of input.events.slice(0, 10)) {
+    const occurredAt = event.timestamp ?? null;
+    const title = event.title?.trim();
+    if (title) {
+      items.push({
+        ref: `event:${event.id}:title`,
+        kind: "event_title",
+        label: title.slice(0, 200),
+        text: title.slice(0, 300),
+        eventId: event.id,
+        source: event.source,
+        occurredAt,
+      });
+    }
+    const body = event.body?.trim();
+    if (body) {
+      items.push({
+        ref: `event:${event.id}:body`,
+        kind: "event_body",
+        label: title?.slice(0, 200) || event.source,
+        text: body.slice(0, 500),
+        eventId: event.id,
+        source: event.source,
+        occurredAt,
+      });
+    }
+  }
+
+  return items;
+}
+
+/** Field text only: the schema version is not a factual claim. */
+export function digestContentText(content: StructuredDigestContent) {
+  return [
+    content.title,
+    content.summary,
+    content.recommendedAction ?? "",
+    ...content.highlights,
+    ...content.cards.flatMap((card) => [card.title, card.summary, card.recommendedAction ?? ""]),
+  ].join("\n");
+}
+
+/**
+ * Publish the generated content only when the shared policy applies it.
+ * Rejected/unavailable candidates in enforce mode keep the deterministic
+ * digest; shadow mode records the verdict without blocking publication.
+ */
+export function applyDigestVerification(input: {
+  baseContent: StructuredDigestContent;
+  candidateContent: StructuredDigestContent | null;
+  generatorModel: string | null;
+  outcome: VerificationOutcome | null;
+}): {
+  content: StructuredDigestContent;
+  summary: string | null;
+  model: string | null;
+  summaryAvailable: boolean;
+  verification: DigestVerificationMetadata | null;
+} {
+  const verification = input.outcome
+    ? {
+        status: input.outcome.verification.status,
+        verifierModel: input.outcome.verification.verifierModel,
+        reason: input.outcome.verification.reason,
+        policyVersion: input.outcome.verification.policyVersion,
+      }
+    : null;
+  const applied = Boolean(input.candidateContent && input.outcome?.applies);
+  if (!applied) {
+    return {
+      content: input.baseContent,
+      summary: input.baseContent.summary,
+      model: null,
+      summaryAvailable: true,
+      verification,
+    };
+  }
+  return {
+    content: input.candidateContent!,
+    summary: input.candidateContent!.summary,
+    model: input.generatorModel,
+    summaryAvailable: true,
+    verification,
   };
 }
 
@@ -404,15 +555,52 @@ export async function createKnowledgeDigest(input: {
 
   const publishable = digestAuthorization.allowed ? await stillAuthorized(digestAuthorization) : false;
   const generatedContent = publishable ? parseDigestContent(generated) : null;
-  const content = generatedContent ?? baseDigest.content;
+  const generatorModel = input.model ?? "deepseek-v4-flash";
+  let outcome: VerificationOutcome | null = null;
+  if (generatedContent) {
+    try {
+      outcome = await verifyGeneratedContent({
+        operation: "knowledge_digest_synthesis",
+        clientId: input.ownerId ?? null,
+        generatorModel,
+        generatorPromptVersion: "knowledge-digest-v3",
+        evidence: buildDigestEvidence({
+          window: baseDigest.window,
+          metrics: baseDigest.metrics,
+          events: context.events,
+        }),
+        proposal: generatedContent,
+        responseText: digestContentText(generatedContent),
+        privacy: digestAuthorization.allowed ? digestAuthorization : null,
+        apiKey: input.apiKey,
+      });
+    } catch (error) {
+      // A verifier transport failure must not publish unverified prose or take
+      // down the deterministic digest.
+      console.error("digest_verification_failed", error instanceof Error ? error.message : String(error));
+      outcome = null;
+    }
+  }
+  // Verification is an external dispatch of its own: a revocation during it
+  // must invalidate the candidate exactly like any other policy change.
+  const stillPublishable = digestAuthorization.allowed
+    ? await stillAuthorized(digestAuthorization)
+    : false;
+  const applied = applyDigestVerification({
+    baseContent: baseDigest.content,
+    candidateContent: stillPublishable ? generatedContent : null,
+    generatorModel,
+    outcome: stillPublishable ? outcome : null,
+  });
 
   return {
     ...baseDigest,
-    content,
-    highlights: content.highlights,
-    summary: content.summary,
-    model: generatedContent ? input.model ?? "deepseek-v4-flash" : null,
-    summaryAvailable: true,
+    content: applied.content,
+    highlights: applied.content.highlights,
+    summary: applied.summary,
+    model: applied.model,
+    summaryAvailable: applied.summaryAvailable,
+    ...(applied.verification ? { verification: applied.verification } : {}),
     lineage: {
       eventIds: [...new Set(context.events.map((event) => event.id))],
       sources: [...new Set(context.events.map((event) => event.source).filter((source): source is string => Boolean(source)))],

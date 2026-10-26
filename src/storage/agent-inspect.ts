@@ -9,6 +9,8 @@ import {
   stillAuthorized,
   type PrivacyAuthorization,
 } from "./privacy.js";
+import { verifyGeneratedContent } from "./decision-verification.js";
+import { decisionPolicyMode, type EvidenceItem, type VerificationOutcome } from "../domain/decision-policy.js";
 
 type InspectLineageEvent = { id: string; source: string | null; ownerId: string | null };
 
@@ -138,11 +140,110 @@ export function restrictGraphForExternalDispatch(
   };
 }
 
+type InspectEvidenceEntity = {
+  id: string;
+  value: string;
+  type?: string | null;
+  description?: string | null;
+};
+
+type InspectEvidenceGraph = {
+  rootEntity: InspectEvidenceEntity;
+  nodes: InspectEvidenceEntity[];
+};
+
+/**
+ * Evidence is built from the already privacy-restricted payload: the query,
+ * resolution, root entity, authorized graph nodes and authorized search
+ * excerpts. No unlineaged neighbour or denied-source event can reach the
+ * verifier.
+ */
+export function buildInspectEvidence(input: {
+  query: string | null;
+  resolutionExplanation: string;
+  rootEntity: InspectEvidenceEntity | null;
+  graph: InspectEvidenceGraph | null;
+  graphSummary?: unknown;
+  searchEvents: Array<{
+    id: string;
+    source?: string | null;
+    title?: string | null;
+    body?: string | null;
+    timestamp?: string | null;
+  }>;
+}): EvidenceItem[] {
+  const items: EvidenceItem[] = [];
+  if (input.query) {
+    items.push({
+      ref: "inspect:query",
+      kind: "canonical_context",
+      label: "Requested query",
+      text: input.query.slice(0, 300),
+    });
+  }
+  items.push({
+    ref: "inspect:resolution",
+    kind: "canonical_context",
+    label: "Resolution",
+    text: input.resolutionExplanation.slice(0, 500),
+  });
+
+  if (input.graphSummary) {
+    items.push({
+      ref: "graph:summary",
+      kind: "aggregate",
+      label: "Graph summary",
+      text: JSON.stringify(input.graphSummary),
+    });
+  }
+
+  const root = input.graph?.rootEntity ?? input.rootEntity;
+  const seen = new Set<string>();
+  const pushEntity = (entity: InspectEvidenceEntity) => {
+    if (seen.has(entity.id)) return;
+    seen.add(entity.id);
+    items.push({
+      ref: `entity:${entity.id}:value`,
+      kind: "entity",
+      label: entity.value.slice(0, 200),
+      text: `${entity.value}${entity.type ? ` (${entity.type})` : ""}`.slice(0, 300),
+    });
+    const description = entity.description?.trim();
+    if (description) {
+      items.push({
+        ref: `entity:${entity.id}:description`,
+        kind: "entity",
+        label: entity.value.slice(0, 200),
+        text: description.slice(0, 1000),
+      });
+    }
+  };
+  if (root) pushEntity(root);
+  for (const node of input.graph?.nodes ?? []) pushEntity(node);
+
+  for (const event of input.searchEvents) {
+    const excerpt = [event.title ?? "", event.body ?? ""].filter((value) => value.trim()).join("\n").trim();
+    if (!excerpt) continue;
+    items.push({
+      ref: `search:event:${event.id}:excerpt`,
+      kind: "event_body",
+      label: event.title?.slice(0, 200) || event.id,
+      text: excerpt.slice(0, 800),
+      eventId: event.id,
+      source: event.source ?? null,
+      occurredAt: event.timestamp ?? null,
+    });
+  }
+  return items;
+}
+
 type InspectDeps = {
   listEntities: typeof listEntities;
   getEntityGraph: typeof getEntityGraph;
   searchKnowledge: typeof searchKnowledge;
   generateNaturalLanguageSummary: typeof generateNaturalLanguageSummary;
+  /** Test seam for the independent verifier; never reached in production. */
+  verifyCompletion?: typeof generateNaturalLanguageSummary;
   resolveEntityMatches?: (input: { q?: string; id?: string; ownerId?: string | null }) => Promise<Array<{
     id: string;
     canonicalEntityId: string;
@@ -308,6 +409,54 @@ export function createInspectKnowledge(deps: InspectDeps) {
       ? (await stillAuthorized(authorization) ? summary : null)
       : summary;
 
+    let verificationOutcome: VerificationOutcome | null = null;
+    let verifiedSummary = publishableSummary;
+    // Enforce mode always runs the independent verifier. Shadow keeps the
+    // legacy single-dispatch behaviour unless a test injects the seam; the
+    // structured inspection payload is unchanged either way.
+    if (publishableSummary && (decisionPolicyMode() === "enforce" || deps.verifyCompletion)) {
+      const externalRoot = externalGraph?.rootEntity ?? rootEntity;
+      try {
+        verificationOutcome = await verifyGeneratedContent({
+          operation: "agent_inspect",
+          clientId: input.clientId ?? null,
+          generatorModel: deps.model,
+          generatorPromptVersion: "agent-inspect-v1",
+          evidence: buildInspectEvidence({
+            query: requestedQuery,
+            resolutionExplanation: resolution.explanation,
+            rootEntity: externalRoot
+              ? {
+                  id: externalRoot.id,
+                  value: externalRoot.value,
+                  type: externalRoot.type ?? null,
+                  description: externalRoot.description ?? null,
+                }
+              : null,
+            graph: externalGraph
+              ? { rootEntity: externalGraph.rootEntity, nodes: externalGraph.nodes }
+              : null,
+            graphSummary,
+            searchEvents: externalSearchResult.events,
+          }),
+          proposal: { summary: publishableSummary },
+          responseText: publishableSummary,
+          privacy: authorization ?? null,
+          apiKey: deps.apiKey,
+          completion: deps.verifyCompletion,
+        });
+      } catch (error) {
+        // In enforce mode an unreachable verifier means no summary is published.
+        console.error("inspect_verification_failed", error instanceof Error ? error.message : String(error));
+        verificationOutcome = null;
+        verifiedSummary = null;
+      }
+      if (!verificationOutcome?.applies) verifiedSummary = null;
+    }
+    const finalSummary = verifiedSummary && authorization
+      ? (await stillAuthorized(authorization) ? verifiedSummary : null)
+      : verifiedSummary;
+
     return {
       query: requestedQuery ?? requestedEntityId,
       resolution,
@@ -315,9 +464,9 @@ export function createInspectKnowledge(deps: InspectDeps) {
       graph,
       graphSummary,
       searchResult,
-      summary: publishableSummary,
+      summary: finalSummary,
       model: deps.apiKey ? deps.model : null,
-      summaryAvailable: Boolean(publishableSummary),
+      summaryAvailable: Boolean(finalSummary),
     };
   };
 }

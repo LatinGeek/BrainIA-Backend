@@ -10,8 +10,14 @@ import {
 } from "../domain/ontology.js";
 import type { SemanticDecision, SemanticPathDecision } from "./semantic-enrichment.js";
 import { buildModelSemanticDecision, SEMANTIC_SUBJECT_TYPES } from "./semantic-enrichment.js";
+import {
+  DECISION_POLICY_VERSION,
+  semanticActionKind,
+  semanticDecisionFingerprint,
+  spanishChangeExplanation,
+} from "../domain/decision-policy.js";
 import { upsertEntity } from "./entity-repository.js";
-import { linkEventRelation, upsertRelation } from "./relation-repository.js";
+import { linkEventRelation } from "./relation-repository.js";
 import {
   applySemanticRules,
   enqueueSemanticCandidate,
@@ -89,34 +95,125 @@ export function isSemanticRestatement(value: string, parentValue: string) {
 async function recordDecision(db: Queryable, input: { eventId: string; clientId: string | null; decision: SemanticDecision }) {
   const primary = input.decision.paths.find((path) => path.role === "primary");
   await db.query(`
-    insert into semantic_event_decisions (event_id, client_id, status, primary_domain_value, decision, governance_version, prompt_version, model, taxonomy_version, primary_category_key, secondary_category_keys, facets)
-    values ($1,$2,$3,$4,$5::jsonb,$6,$7,$8,$9,$10,$11,$12::jsonb)
+    insert into semantic_event_decisions (event_id, client_id, status, primary_domain_value, decision, governance_version, prompt_version, model, taxonomy_version, primary_category_key, secondary_category_keys, facets, verification_status, verification, policy_version, abstained, abstention_reason, evidence_fingerprint, generation_id)
+    values ($1,$2,$3,$4,$5::jsonb,$6,$7,$8,$9,$10,$11,$12::jsonb,$13,$14::jsonb,$15,$16,$17,$18,$19)
     on conflict (event_id) do update set client_id = excluded.client_id, status = excluded.status,
       primary_domain_value = excluded.primary_domain_value, decision = excluded.decision,
       governance_version = excluded.governance_version, prompt_version = excluded.prompt_version,
       model = excluded.model, taxonomy_version = excluded.taxonomy_version,
       primary_category_key = excluded.primary_category_key, secondary_category_keys = excluded.secondary_category_keys,
-      facets = excluded.facets, updated_at = now()
-  `, [input.eventId, input.clientId, input.decision.status, primary?.domain ?? null, JSON.stringify(input.decision), input.decision.governanceVersion, input.decision.promptVersion, input.decision.model, input.decision.taxonomyVersion, input.decision.primaryCategoryKey, input.decision.secondaryCategoryKeys, JSON.stringify(input.decision.facets)]);
+      facets = excluded.facets, verification_status = excluded.verification_status,
+      verification = excluded.verification, policy_version = excluded.policy_version,
+      abstained = excluded.abstained, abstention_reason = excluded.abstention_reason,
+      evidence_fingerprint = excluded.evidence_fingerprint, generation_id = coalesce(excluded.generation_id, semantic_event_decisions.generation_id), updated_at = now()
+  `, [
+    input.eventId, input.clientId, input.decision.status, primary?.domain ?? null, JSON.stringify(input.decision),
+    input.decision.governanceVersion, input.decision.promptVersion, input.decision.model, input.decision.taxonomyVersion,
+    input.decision.primaryCategoryKey, input.decision.secondaryCategoryKeys, JSON.stringify(input.decision.facets),
+    input.decision.verificationStatus ?? "not_required", JSON.stringify(input.decision.verification ?? {}),
+    input.decision.policyVersion ?? DECISION_POLICY_VERSION,
+    Boolean(input.decision.abstained), input.decision.abstentionReason ?? null,
+    input.decision.evidenceFingerprint ?? null,
+    (input.decision as SemanticDecision & { generationId?: string | null }).generationId ?? null,
+  ]);
+}
+
+async function hasRejectedEquivalent(db: Queryable, input: {
+  clientId: string | null;
+  fingerprint: string;
+}) {
+  const result = await db.query(`select 1 from semantic_candidate_feedback
+    where coalesce(client_id, '') = coalesce($1, '') and decision_fingerprint = $2 and reason = 'user_rejected' limit 1`,
+  [input.clientId, input.fingerprint]);
+  return result.rows.length > 0;
 }
 
 function candidateAlternatives(path: SemanticPathDecision) {
   return path.steps.flatMap((step) => step.alternatives.map((alternative) => ({ parent: step.parent, ...alternative })));
 }
 
-async function enqueuePathCandidate(db: Queryable, input: { eventId: string; clientId: string | null; subject: StoredEntity; path: SemanticPathDecision; targetValue: string; targetType?: string; relationType?: string; parentTargetValue?: string; recurrenceCount?: number; decision: SemanticDecision }) {
+async function enqueuePathCandidate(db: Queryable, input: { eventId: string; clientId: string | null; subject: StoredEntity; path: SemanticPathDecision; targetValue: string; targetType?: string; relationType?: string; parentTargetValue?: string; recurrenceCount?: number; decision: SemanticDecision; forceReview?: boolean }) {
+  const targetType = input.targetType ?? (input.path.hierarchyPath.length === 1 ? "domain" : "concept");
+  const targetNormalizedValue = normalizeEntityValue(input.targetValue);
+  // True self-links and no-effect changes never enter the review queue.
+  if (input.subject.id && targetNormalizedValue === input.subject.normalizedValue && targetType === input.subject.type) return null;
+  const existingTarget = await findCanonicalEntity(db, targetNormalizedValue, [targetType]);
+  if (existingTarget?.id === input.subject.id) return null;
+  const relationType = input.relationType ?? (input.path.hierarchyPath.length === 1 ? "belongs_to_domain" : "part_of");
+  if (existingTarget && !input.forceReview) {
+    const existingRelation = ["part_of", "belongs_to_domain"].includes(relationType)
+      ? await db.query(`select 1 from relations where source_entity_id = $1 and target_entity_id = $2 and relation_type in ('part_of','belongs_to_domain') limit 1`, [input.subject.id, existingTarget.id])
+      : await db.query(`select 1 from relations where source_entity_id = $1 and target_entity_id = $2 and relation_type = $3 limit 1`, [input.subject.id, existingTarget.id, relationType]);
+    if (existingRelation.rows.length) return null;
+  }
+  const candidateEvidence = candidateEvidenceFor(input.decision, input.path);
+  const declined = await hasRejectedEquivalent(db, { clientId: input.clientId, fingerprint: candidateEvidence.fingerprint });
+  if (declined) return null;
+  const actionKind = semanticActionKind({ decisionKind: input.path.action, subjectType: input.path.subject.type, targetType });
+  const linkedEvents = await db.query<{ count: number }>(`
+    select count(distinct event_id)::int as count from event_entities where entity_id = $1
+  `, [input.subject.id]);
+  const verifiedEventCount = Math.max(
+    1,
+    linkedEvents.rows[0]?.count ?? 0,
+    candidateEvidence.verifiedEventIds.length,
+  );
+  const changeExplanation = spanishChangeExplanation({
+    actionKind,
+    subjectLabel: input.path.subject.value,
+    targetLabel: input.targetValue,
+    relationType,
+    hierarchyPath: input.path.hierarchyPath,
+    verifiedEventCount,
+    isFinancial: input.path.subject.type === "financial_event",
+  });
   return enqueueSemanticCandidate(db, {
     clientId: input.clientId, eventId: input.eventId, subjectEntityId: input.subject.id,
-    relationType: input.relationType ?? (input.path.hierarchyPath.length === 1 ? "belongs_to_domain" : "part_of"),
-    targetType: input.targetType ?? (input.path.hierarchyPath.length === 1 ? "domain" : "concept"),
-    targetValue: input.targetValue, targetNormalizedValue: normalizeEntityValue(input.targetValue),
+    relationType,
+    targetType,
+    targetValue: input.targetValue, targetNormalizedValue,
     parentTargetValue: input.parentTargetValue, confidence: input.path.confidence,
     rationale: input.path.rationale, extractor: "deepseek-v2", decisionKind: input.path.action,
     domainValue: input.path.domain, anchorRole: input.path.role, proposedPath: input.path.hierarchyPath,
     alternatives: candidateAlternatives(input.path), associations: input.decision.associations,
     recurrenceCount: input.recurrenceCount ?? 1, governanceVersion: input.decision.governanceVersion,
     promptVersion: input.decision.promptVersion, model: input.decision.model,
+    actionKind,
+    evidence: candidateEvidence.evidence,
+    evidenceEventIds: candidateEvidence.verifiedEventIds,
+    verifiedEventCount,
+    verificationStatus: input.decision.verificationStatus ?? "not_required",
+    verification: input.decision.verification ?? {},
+    policyVersion: input.decision.policyVersion ?? DECISION_POLICY_VERSION,
+    changeExplanation,
+    decisionFingerprint: candidateEvidence.fingerprint,
+    generationId: (input.decision as SemanticDecision & { generationId?: string | null }).generationId ?? null,
   });
+}
+
+function candidateEvidenceFor(decision: SemanticDecision, path: SemanticPathDecision) {
+  const refs = new Set((path.evidence ?? []).map((reference) => reference.ref));
+  const items = (decision.evidence ?? []).filter((item) => refs.has(item.ref));
+  const verifiedEventIds = [...new Set(items.map((item) => item.eventId).filter((id): id is string => Boolean(id)))];
+  return {
+    evidence: items.map((item) => ({
+      eventId: item.eventId ?? null,
+      source: item.source ?? null,
+      occurredAt: item.occurredAt ?? null,
+      field: item.field ?? null,
+      title: item.kind === "event_title" ? item.text.slice(0, 280) : null,
+      excerpt: item.text.slice(0, 700),
+      ref: item.ref,
+      kind: item.kind,
+    })),
+    verifiedEventIds,
+    fingerprint: semanticDecisionFingerprint({
+      actionKind: semanticActionKind({ decisionKind: path.action, subjectType: path.subject.type }),
+      subjectNormalizedValue: path.subject.normalizedValue,
+      targetNormalizedValue: path.proposedChild?.value ?? path.hierarchyPath.at(-1) ?? path.mergeTargetNormalizedValue ?? "",
+      evidenceRefs: [...refs],
+    }),
+  };
 }
 
 async function applyEventAnchor(
@@ -133,7 +230,7 @@ async function applyEventAnchor(
   if (!result.applied) {
     // Preserve the unrelated/cross-generation primary anchor and surface the
     // attempted transition as a review candidate instead of deleting evidence.
-    await enqueuePathCandidate(db, { ...input, subject, targetValue: reviewTargetValue });
+    await enqueuePathCandidate(db, { ...input, subject, targetValue: reviewTargetValue, forceReview: true });
   }
   return result;
 }
@@ -153,7 +250,16 @@ async function applyPath(db: Queryable, input: { eventId: string; clientId: stri
     input.path.hierarchyPath.length === 1 ? ["domain"] : ["concept", "app", "merchant", "sender", "recipient"],
   );
   if (!domain || !parent) {
-    await enqueuePathCandidate(db, { ...input, subject, targetValue: leafName });
+    const createTarget = input.path.action === "create" && input.path.proposedChild?.durable
+      ? input.path.proposedChild.value
+      : leafName;
+    await enqueuePathCandidate(db, {
+      ...input,
+      subject,
+      targetValue: createTarget,
+      targetType: input.path.action === "create" && input.path.proposedChild?.durable ? "concept" : undefined,
+      parentTargetValue: input.path.action === "create" ? input.path.proposedChild?.parent : undefined,
+    });
     return false;
   }
   if (subject.id === parent.id) {
@@ -201,22 +307,13 @@ async function applyPath(db: Queryable, input: { eventId: string; clientId: stri
 
   if (input.path.action === "merge") {
     const mergeTarget = input.path.mergeTargetNormalizedValue ? await findCanonicalEntity(db, input.path.mergeTargetNormalizedValue) : null;
-    const isEventInstance = input.path.subject.metadata?.instance === true;
-    if (isEventInstance && mergeTarget?.type === "concept" && input.path.confidence >= AUTO_APPLY_CONFIDENCE) {
-      const relation = await setImmediateHierarchyParent(db, { child: subject, parent: mergeTarget, confidence: input.path.confidence, metadata: { source: "semantic-event-meaning-reuse", governanceVersion: SEMANTIC_GOVERNANCE_VERSION } });
-      await linkEventRelation(db, input.eventId, relation.id, input.path.confidence);
-      if (input.path.eventAnchor === false) return true;
-      return (await applyEventAnchor(db, input, subject, { eventId: input.eventId, domainEntityId: domain.id, anchorEntityId: mergeTarget.id, role: input.path.role, confidence: input.path.confidence, rationale: input.path.rationale, governanceVersion: input.decision.governanceVersion }, mergeTarget.value)).applied;
-    }
+    // Merges change identity everywhere and are always a human decision.
     await enqueuePathCandidate(db, { ...input, subject, targetValue: mergeTarget?.value ?? input.path.mergeTargetNormalizedValue ?? leafName, targetType: mergeTarget?.type ?? subject.type, relationType: "same_as" });
     return false;
   }
 
   if (input.path.action === "create" && input.path.proposedChild?.durable) {
     const proposal = input.path.proposedChild;
-    // validatePath already proved that proposal.parent is the requested leaf.
-    // parent may now carry a different normalized value because that leaf was
-    // subsequently merged or renamed, so compare confidence here, not names.
     if (proposal.confidence < NEW_NODE_OBSERVATION_CONFIDENCE) {
       await enqueuePathCandidate(db, { ...input, subject, targetValue: proposal.value, parentTargetValue: proposal.parent });
       return false;
@@ -239,46 +336,9 @@ async function applyPath(db: Queryable, input: { eventId: string; clientId: stri
       if (input.path.eventAnchor === false) return true;
       return (await applyEventAnchor(db, input, subject, { eventId: input.eventId, domainEntityId: domain.id, anchorEntityId: parent.id, role: input.path.role, confidence: input.path.confidence, rationale: input.path.rationale, governanceVersion: input.decision.governanceVersion }, parent.value)).applied;
     }
-    if (isEventInstance) {
-      // The LLM has already compared this meaning against canonicalContext.
-      // Materialize one reusable concept hub at high confidence, then retain
-      // each captured event as distinct evidence beneath that hub.
-      const meaningRecord = await upsertEntity(db, {
-        type: "concept",
-        value: proposal.value,
-        normalizedValue: normalizeEntityValue(proposal.value),
-        description: proposal.description,
-        identitySource: "ai",
-        metadata: { source: "semantic-event-meaning", governanceVersion: SEMANTIC_GOVERNANCE_VERSION, aiIdentity: true },
-      });
-      const meaning: StoredEntity = { id: meaningRecord.id, type: meaningRecord.type, value: meaningRecord.value, normalizedValue: meaningRecord.normalizedValue };
-      const meaningRelation = await setImmediateHierarchyParent(db, { child: meaning, parent, confidence: proposal.confidence, metadata: { source: "semantic-event-meaning", governanceVersion: SEMANTIC_GOVERNANCE_VERSION } });
-      const evidenceRelation = await setImmediateHierarchyParent(db, { child: subject, parent: meaning, confidence: input.path.confidence, metadata: { source: "semantic-event-evidence", governanceVersion: SEMANTIC_GOVERNANCE_VERSION } });
-      await linkEventRelation(db, input.eventId, meaningRelation.id, proposal.confidence);
-      await linkEventRelation(db, input.eventId, evidenceRelation.id, input.path.confidence);
-      if (input.path.eventAnchor === false) return true;
-      return (await applyEventAnchor(db, input, subject, { eventId: input.eventId, domainEntityId: domain.id, anchorEntityId: meaning.id, role: input.path.role, confidence: input.path.confidence, rationale: input.path.rationale, governanceVersion: input.decision.governanceVersion }, meaning.value)).applied;
-    }
-    await db.query(`
-      insert into semantic_observations (id, client_id, event_id, subject_entity_id, proposed_value, proposed_normalized_value, parent_entity_id, confidence, governance_version)
-      values ($1,$2,$3,$4,$5,$6,$7,$8,$9) on conflict (event_id, subject_entity_id, proposed_normalized_value, parent_entity_id)
-      do update set confidence = greatest(semantic_observations.confidence, excluded.confidence)
-    `, [randomUUID(), input.clientId, input.eventId, subject.id, proposal.value, normalizeEntityValue(proposal.value), parent.id, proposal.confidence, SEMANTIC_GOVERNANCE_VERSION]);
-    const recurrence = await db.query<{ count: number; average: number }>(`
-      select count(distinct event_id)::int as count, avg(confidence)::float8 as average from semantic_observations
-      where client_id is not distinct from $1 and proposed_normalized_value = $2 and parent_entity_id = $3 and confidence >= $4
-    `, [input.clientId, normalizeEntityValue(proposal.value), parent.id, NEW_NODE_OBSERVATION_CONFIDENCE]);
-    const count = recurrence.rows[0]?.count ?? 0;
-    const average = recurrence.rows[0]?.average ?? 0;
-    if (count < 2 || average < AUTO_APPLY_CONFIDENCE) {
-      await enqueuePathCandidate(db, { ...input, subject, targetValue: proposal.value, parentTargetValue: proposal.parent, recurrenceCount: count });
-      return false;
-    }
-    const childRecord = await upsertEntity(db, { type: "concept", value: proposal.value, normalizedValue: normalizeEntityValue(proposal.value), description: proposal.description, identitySource: "ai", metadata: { source: "semantic-recurrence", governanceVersion: SEMANTIC_GOVERNANCE_VERSION, observations: count, aiIdentity: true } });
-    const child: StoredEntity = { id: childRecord.id, type: childRecord.type, value: childRecord.value, normalizedValue: childRecord.normalizedValue };
-    await setImmediateHierarchyParent(db, { child, parent, confidence: average, metadata: { source: "semantic-recurrence", governanceVersion: SEMANTIC_GOVERNANCE_VERSION } });
-    if (mayParentSubject) await setImmediateHierarchyParent(db, { child: subject, parent: child, confidence: input.path.confidence, metadata: { source: "semantic-deepseek", governanceVersion: SEMANTIC_GOVERNANCE_VERSION } });
-    else anchorEntityId = child.id;
+    // A new reusable concept changes the durable graph and is always reviewed.
+    await enqueuePathCandidate(db, { ...input, subject, targetValue: proposal.value, parentTargetValue: proposal.parent });
+    return false;
   } else if (input.path.action === "reuse"
     && input.path.confidence >= (input.path.subject.metadata?.instance === true ? PRIMARY_ROOT_CONFIDENCE : AUTO_APPLY_CONFIDENCE)
     && (input.path.subject.metadata?.instance === true || input.path.steps.every((step) => step.confidence >= AUTO_APPLY_CONFIDENCE))) {
@@ -292,10 +352,18 @@ async function applyPath(db: Queryable, input: { eventId: string; clientId: stri
         const relation = await setImmediateHierarchyParent(db, { child: subject, parent, confidence: input.path.confidence, metadata: { source: "semantic-deepseek", governanceVersion: SEMANTIC_GOVERNANCE_VERSION, path: input.path.hierarchyPath, refinement: true } });
         await linkEventRelation(db, input.eventId, relation.id, input.path.confidence);
       } else if (!await isHierarchyAncestor(db, parent.id, currentParent.id)) {
-        // Sibling reclassification is a user decision, not an automatic
-        // rewrite of established knowledge.
-        await enqueuePathCandidate(db, { ...input, subject, targetValue: leafName });
-        return false;
+        // Sibling reclassification is a user decision unless the assignment is
+        // a deterministic or independently verified reuse of an established
+        // category. Those are safe to apply automatically.
+        const automaticAssignment = input.path.subject.metadata?.instance === true
+          && (input.decision.source === "structural" || input.decision.verificationStatus === "verified");
+        if (automaticAssignment) {
+          const relation = await setImmediateHierarchyParent(db, { child: subject, parent, confidence: input.path.confidence, metadata: { source: "semantic-assignment", governanceVersion: SEMANTIC_GOVERNANCE_VERSION, previousParentId: currentParent.id } });
+          await linkEventRelation(db, input.eventId, relation.id, input.path.confidence);
+        } else {
+          await enqueuePathCandidate(db, { ...input, subject, targetValue: leafName });
+          return false;
+        }
       }
     }
   } else {
@@ -313,21 +381,50 @@ async function applyAssociations(db: Queryable, input: { eventId: string; client
     const target = await findCanonicalEntity(db, association.targetNormalizedValue);
     if (!source || !target || source.id === target.id) continue;
     if (["part_of", "belongs_to_domain"].includes(association.relationType)) continue;
-    // Associations must add meaning, not duplicate an existing hierarchy
-    // edge or connect a node again to one of its ancestors.
+    // Associations must add meaning, not duplicate an existing hierarchy edge
+    // or connect a node again to one of its ancestors.
     if (await isHierarchyAncestor(db, source.id, target.id) || await isHierarchyAncestor(db, target.id, source.id)) continue;
-    if (association.confidence < AUTO_APPLY_CONFIDENCE) {
-      await enqueueSemanticCandidate(db, {
-        clientId: input.clientId, eventId: input.eventId, subjectEntityId: source.id, relationType: association.relationType,
-        targetType: target.type, targetValue: target.value, targetNormalizedValue: target.normalizedValue,
-        confidence: association.confidence, rationale: association.rationale, extractor: "deepseek-v2",
-        decisionKind: "association", proposedPath: [], alternatives: [], associations: [association], recurrenceCount: 1,
-        governanceVersion: input.decision.governanceVersion, promptVersion: input.decision.promptVersion, model: input.decision.model,
-      });
-      continue;
-    }
-    const relation = await upsertRelation(db, { relationType: association.relationType, label: association.relationType.replace(/_/g, " "), description: association.rationale, sourceEntity: { type: source.type, value: source.value, normalizedValue: source.normalizedValue }, targetEntity: { type: target.type, value: target.value, normalizedValue: target.normalizedValue }, confidence: association.confidence, metadata: { source: "semantic-deepseek", governanceVersion: input.decision.governanceVersion } }, source.id, target.id);
-    await linkEventRelation(db, input.eventId, relation.id, association.confidence);
+    const existing = await db.query(`select 1 from relations where source_entity_id = $1 and target_entity_id = $2 and relation_type = $3 limit 1`, [source.id, target.id, association.relationType]);
+    if (existing.rows.length) continue;
+    const decision = input.decision;
+    const evidence = (decision.evidence ?? []).filter((item) =>
+      (association.evidence ?? []).some((reference) => reference.ref === item.ref));
+    const refs = (association.evidence ?? []).map((reference) => reference.ref);
+    const actionKind = "associate_entities" as const;
+    const fingerprint = semanticDecisionFingerprint({
+      actionKind,
+      subjectNormalizedValue: source.normalizedValue,
+      targetNormalizedValue: target.normalizedValue,
+      evidenceRefs: refs,
+    });
+    if (await hasRejectedEquivalent(db, { clientId: input.clientId, fingerprint })) continue;
+    const verifiedEventIds = [...new Set(evidence.map((item) => item.eventId).filter((id): id is string => Boolean(id)))];
+    const verifiedEventCount = Math.max(1, verifiedEventIds.length);
+    await enqueueSemanticCandidate(db, {
+      clientId: input.clientId, eventId: input.eventId, subjectEntityId: source.id, relationType: association.relationType,
+      targetType: target.type, targetValue: target.value, targetNormalizedValue: target.normalizedValue,
+      confidence: association.confidence, rationale: association.rationale, extractor: "deepseek-v2",
+      decisionKind: "association", proposedPath: [], alternatives: [], associations: [association], recurrenceCount: 1,
+      governanceVersion: decision.governanceVersion, promptVersion: decision.promptVersion, model: decision.model,
+      actionKind,
+      evidence: evidence.map((item) => ({
+        eventId: item.eventId ?? null, source: item.source ?? null, occurredAt: item.occurredAt ?? null,
+        field: item.field ?? null, title: item.kind === "event_title" ? item.text.slice(0, 280) : null,
+        excerpt: item.text.slice(0, 700), ref: item.ref, kind: item.kind,
+      })),
+      evidenceEventIds: verifiedEventIds,
+      verifiedEventCount,
+      verificationStatus: decision.verificationStatus ?? "not_required",
+      verification: decision.verification ?? {},
+      policyVersion: decision.policyVersion ?? DECISION_POLICY_VERSION,
+      changeExplanation: spanishChangeExplanation({
+        actionKind, subjectLabel: source.value, targetLabel: target.value,
+        relationType: association.relationType, verifiedEventCount,
+        isFinancial: source.type === "financial_event" || target.type === "financial_event",
+      }),
+      decisionFingerprint: fingerprint,
+      generationId: (decision as SemanticDecision & { generationId?: string | null }).generationId ?? null,
+    });
   }
 }
 
@@ -358,7 +455,9 @@ export async function persistSemanticDecision(db: Queryable, input: { eventId: s
   await rootEventEvidenceFromAnchors(db, input.eventId);
   const coveredSubjects = new Set(input.decision.paths.map((path) => path.subject.normalizedValue));
   const primary = input.decision.paths.find((path) => path.role === "primary") ?? input.decision.paths[0];
-  for (const draft of input.drafts) {
+  const mayProposeFromDrafts = !input.decision.abstained
+    && !["rejected", "unavailable"].includes(input.decision.verificationStatus ?? "not_required");
+  if (mayProposeFromDrafts) for (const draft of input.drafts) {
     if (!SEMANTIC_SUBJECT_TYPES.has(draft.type) || coveredSubjects.has(draft.normalizedValue)) continue;
     const subjectRecord = await upsertEntity(db, draft);
     if (await findHierarchyRoot(db, subjectRecord.id)) continue;

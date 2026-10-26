@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { ontologyDraft, LIFE_DOMAINS, ONTOLOGY_PARENT_RELATIONS, SEEDED_CONCEPTS, SEMANTIC_GOVERNANCE_VERSION, SEMANTIC_PROMPT_VERSION } from "../domain/ontology.js";
 import { normalizeEntityValue, type EntityDraft } from "../domain/entities.js";
 import { normalizeRelationType, type RelationDraft } from "../domain/relations.js";
+import { DECISION_POLICY_VERSION, isRuleEligibleAction, semanticActionKind, semanticDecisionFingerprint } from "../domain/decision-policy.js";
 import { loadCanonicalEntityById, resolveCanonicalEntityId, upsertEntity } from "./entity-repository.js";
 import { linkEventRelation, upsertRelation } from "./relation-repository.js";
 import { pool } from "./postgres.js";
@@ -30,7 +31,7 @@ export type SemanticCandidate = {
   id: string; clientId: string | null; eventId: string | null; subjectEntityId: string | null;
   subjectValue?: string | null; subjectType?: string | null;
   relationType: string; targetType: string; targetValue: string; targetNormalizedValue: string;
-  confidence: number; rationale: string | null; status: "pending" | "approved" | "rejected";
+  confidence: number; rationale: string | null; status: "pending" | "approved" | "rejected" | "superseded";
   resolvedTargetEntityId: string | null; createdAt: string;
   extractor?: string;
   parentTargetValue?: string | null;
@@ -44,6 +45,18 @@ export type SemanticCandidate = {
   governanceVersion?: string;
   promptVersion?: string;
   model?: string | null;
+  actionKind?: string | null;
+  evidence?: unknown[];
+  evidenceEventIds?: string[];
+  verifiedEventCount?: number;
+  verificationStatus?: string;
+  verification?: Record<string, unknown>;
+  policyVersion?: string | null;
+  changeExplanation?: string | null;
+  decisionFingerprint?: string | null;
+  supersededByCandidateId?: string | null;
+  generationId?: string | null;
+  targetEntityId?: string | null;
 };
 
 export async function ensureOntology(db: Queryable, clientId: string | null) {
@@ -172,15 +185,15 @@ export async function upsertEventSemanticAnchor(db: Queryable, input: {
   return { applied: true, preservedPrimary: false };
 }
 
-export async function enqueueSemanticCandidate(db: Queryable, input: Omit<SemanticCandidate, "id" | "status" | "createdAt" | "resolvedTargetEntityId">) {
+export async function enqueueSemanticCandidate(db: Queryable, input: Omit<SemanticCandidate, "id" | "status" | "createdAt" | "resolvedTargetEntityId" | "targetEntityId">) {
   const normalized = normalizeRelationType(input.relationType);
   const result = await db.query<SemanticCandidate>(`
-    insert into semantic_candidates (id, client_id, event_id, subject_entity_id, relation_type, target_type, target_value, target_normalized_value, confidence, rationale, extractor, parent_target_value, parent_target_normalized_value, decision_kind, domain_value, anchor_role, proposed_path, alternatives, associations, recurrence_count, governance_version, prompt_version, model)
-    values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17::jsonb,$18::jsonb,$19::jsonb,$20,$21,$22,$23)
+    insert into semantic_candidates (id, client_id, event_id, subject_entity_id, relation_type, target_type, target_value, target_normalized_value, confidence, rationale, extractor, parent_target_value, parent_target_normalized_value, decision_kind, domain_value, anchor_role, proposed_path, alternatives, associations, recurrence_count, governance_version, prompt_version, model, action_kind, evidence, evidence_event_ids, verified_event_count, verification_status, verification, policy_version, change_explanation, decision_fingerprint, generation_id)
+    values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17::jsonb,$18::jsonb,$19::jsonb,$20,$21,$22,$23,$24,$25::jsonb,$26::jsonb,$27,$28,$29::jsonb,$30,$31,$32,$33)
     on conflict (event_id, subject_entity_id, relation_type, target_type, target_normalized_value)
-    do update set confidence = greatest(semantic_candidates.confidence, excluded.confidence), rationale = excluded.rationale, extractor = excluded.extractor, decision_kind = excluded.decision_kind, domain_value = excluded.domain_value, anchor_role = excluded.anchor_role, proposed_path = excluded.proposed_path, alternatives = excluded.alternatives, associations = excluded.associations, recurrence_count = greatest(semantic_candidates.recurrence_count, excluded.recurrence_count), governance_version = excluded.governance_version, prompt_version = excluded.prompt_version, model = excluded.model, updated_at = now()
-    returning id, client_id as "clientId", event_id as "eventId", subject_entity_id as "subjectEntityId", relation_type as "relationType", target_type as "targetType", target_value as "targetValue", target_normalized_value as "targetNormalizedValue", parent_target_value as "parentTargetValue", confidence::float8, rationale, extractor, status, resolved_target_entity_id as "resolvedTargetEntityId", decision_kind as "decisionKind", domain_value as "domainValue", anchor_role as "anchorRole", proposed_path as "proposedPath", alternatives, associations, recurrence_count as "recurrenceCount", governance_version as "governanceVersion", prompt_version as "promptVersion", model, created_at as "createdAt"
-  `, [randomUUID(), input.clientId, input.eventId, input.subjectEntityId, normalized.relationType, input.targetType, input.targetValue, input.targetNormalizedValue, input.confidence, input.rationale, input.extractor ?? "semantic-v3", input.parentTargetValue ?? null, input.parentTargetValue ? normalizeEntityValue(input.parentTargetValue) : null, input.decisionKind ?? "reuse", input.domainValue ?? null, input.anchorRole ?? null, JSON.stringify(input.proposedPath ?? []), JSON.stringify(input.alternatives ?? []), JSON.stringify(input.associations ?? []), input.recurrenceCount ?? 1, input.governanceVersion ?? SEMANTIC_GOVERNANCE_VERSION, input.promptVersion ?? SEMANTIC_PROMPT_VERSION, input.model ?? null]);
+    do update set confidence = greatest(semantic_candidates.confidence, excluded.confidence), rationale = excluded.rationale, extractor = excluded.extractor, decision_kind = excluded.decision_kind, domain_value = excluded.domain_value, anchor_role = excluded.anchor_role, proposed_path = excluded.proposed_path, alternatives = excluded.alternatives, associations = excluded.associations, recurrence_count = greatest(semantic_candidates.recurrence_count, excluded.recurrence_count), governance_version = excluded.governance_version, prompt_version = excluded.prompt_version, model = excluded.model, action_kind = coalesce(excluded.action_kind, semantic_candidates.action_kind), evidence = case when jsonb_array_length(excluded.evidence) > 0 then excluded.evidence else semantic_candidates.evidence end, evidence_event_ids = case when jsonb_array_length(excluded.evidence_event_ids) > 0 then excluded.evidence_event_ids else semantic_candidates.evidence_event_ids end, verified_event_count = greatest(semantic_candidates.verified_event_count, excluded.verified_event_count), verification_status = excluded.verification_status, verification = excluded.verification, policy_version = excluded.policy_version, change_explanation = excluded.change_explanation, decision_fingerprint = excluded.decision_fingerprint, generation_id = coalesce(excluded.generation_id, semantic_candidates.generation_id), updated_at = now()
+    returning id, client_id as "clientId", event_id as "eventId", subject_entity_id as "subjectEntityId", relation_type as "relationType", target_type as "targetType", target_value as "targetValue", target_normalized_value as "targetNormalizedValue", parent_target_value as "parentTargetValue", confidence::float8, rationale, extractor, status, resolved_target_entity_id as "resolvedTargetEntityId", decision_kind as "decisionKind", domain_value as "domainValue", anchor_role as "anchorRole", proposed_path as "proposedPath", alternatives, associations, recurrence_count as "recurrenceCount", governance_version as "governanceVersion", prompt_version as "promptVersion", model, action_kind as "actionKind", evidence, evidence_event_ids as "evidenceEventIds", verified_event_count as "verifiedEventCount", verification_status as "verificationStatus", verification, policy_version as "policyVersion", change_explanation as "changeExplanation", decision_fingerprint as "decisionFingerprint", superseded_by_candidate_id as "supersededByCandidateId", generation_id as "generationId", created_at as "createdAt"
+  `, [randomUUID(), input.clientId, input.eventId, input.subjectEntityId, normalized.relationType, input.targetType, input.targetValue, input.targetNormalizedValue, input.confidence, input.rationale, input.extractor ?? "semantic-v3", input.parentTargetValue ?? null, input.parentTargetValue ? normalizeEntityValue(input.parentTargetValue) : null, input.decisionKind ?? "reuse", input.domainValue ?? null, input.anchorRole ?? null, JSON.stringify(input.proposedPath ?? []), JSON.stringify(input.alternatives ?? []), JSON.stringify(input.associations ?? []), input.recurrenceCount ?? 1, input.governanceVersion ?? SEMANTIC_GOVERNANCE_VERSION, input.promptVersion ?? SEMANTIC_PROMPT_VERSION, input.model ?? null, input.actionKind ?? null, JSON.stringify(input.evidence ?? []), JSON.stringify(input.evidenceEventIds ?? []), input.verifiedEventCount ?? 0, input.verificationStatus ?? "not_required", JSON.stringify(input.verification ?? {}), input.policyVersion ?? null, input.changeExplanation ?? null, input.decisionFingerprint ?? null, input.generationId ?? null]);
   return result.rows[0];
 }
 
@@ -194,6 +207,7 @@ export async function settleSatisfiedSemanticCandidates(db: Queryable, eventId?:
         and matched.type = candidate.target_type
       left join entity_merges merged on merged.alias_entity_id = matched.id
       where candidate.status = 'pending' and ($1::text is null or candidate.event_id = $1)
+        and candidate.verification_status in ('verified', 'not_required')
     ), satisfied as (
       select distinct candidate.id, target.canonical_target_id
       from semantic_candidates candidate
@@ -304,6 +318,21 @@ export async function applySemanticRules(db: Queryable, input: { clientId: strin
   }
 }
 
+export class SemanticCandidateConflictError extends Error {
+  readonly statusCode = 409;
+  readonly code: string;
+  readonly details: Record<string, unknown>;
+  constructor(code: string, message: string, details: Record<string, unknown> = {}) {
+    super(message);
+    this.name = "SemanticCandidateConflictError";
+    this.code = code;
+    this.details = details;
+  }
+  toResponse() {
+    return { error: this.code, message: this.message, conflict: this.details };
+  }
+}
+
 export async function listSemanticCandidates(db: Queryable, clientId: string | null, status: SemanticCandidate["status"] = "pending") {
   const result = await db.query<SemanticCandidate>(`
     select candidate.id, candidate.client_id as "clientId", candidate.event_id as "eventId",
@@ -316,66 +345,212 @@ export async function listSemanticCandidates(db: Queryable, clientId: string | n
       candidate.anchor_role as "anchorRole", candidate.proposed_path as "proposedPath", candidate.alternatives,
       candidate.associations, candidate.recurrence_count as "recurrenceCount",
       candidate.governance_version as "governanceVersion", candidate.prompt_version as "promptVersion",
-      candidate.model, candidate.created_at as "createdAt"
+      candidate.model, candidate.action_kind as "actionKind", candidate.evidence,
+      candidate.evidence_event_ids as "evidenceEventIds", candidate.verified_event_count as "verifiedEventCount",
+      candidate.verification_status as "verificationStatus", candidate.verification,
+      candidate.policy_version as "policyVersion", candidate.change_explanation as "changeExplanation",
+      candidate.decision_fingerprint as "decisionFingerprint",
+      candidate.superseded_by_candidate_id as "supersededByCandidateId",
+      candidate.generation_id as "generationId",
+      (select canonical.id from entities matched
+        left join entity_merges merged on merged.alias_entity_id = matched.id
+        join entities canonical on canonical.id = coalesce(merged.canonical_entity_id, matched.id)
+        where matched.normalized_value = candidate.target_normalized_value and matched.type = candidate.target_type
+        order by case canonical.type when 'domain' then 0 when 'concept' then 1 else 2 end, canonical.created_at asc
+        limit 1) as "targetEntityId",
+      candidate.created_at as "createdAt"
     from semantic_candidates candidate
     left join entities subject on subject.id = candidate.subject_entity_id
     where candidate.client_id is not distinct from $1 and candidate.status = $2
-    order by candidate.created_at desc
+    order by candidate.verified_event_count desc, candidate.created_at desc
   `, [clientId, status]);
   return result.rows;
 }
 
-export async function resolveSemanticCandidate(db: Queryable, candidateId: string, input: { action: "approve" | "reject"; targetEntityId?: string; createRule?: boolean }) {
-  const result = await db.query<SemanticCandidate>(`select id, client_id as "clientId", event_id as "eventId", subject_entity_id as "subjectEntityId", relation_type as "relationType", target_type as "targetType", target_value as "targetValue", target_normalized_value as "targetNormalizedValue", parent_target_value as "parentTargetValue", confidence::float8, rationale, extractor, status, resolved_target_entity_id as "resolvedTargetEntityId", decision_kind as "decisionKind", domain_value as "domainValue", anchor_role as "anchorRole", proposed_path as "proposedPath", alternatives, associations, recurrence_count as "recurrenceCount", governance_version as "governanceVersion", prompt_version as "promptVersion", model, created_at as "createdAt" from semantic_candidates where id = $1 for update`, [candidateId]);
-  const candidate = result.rows[0];
-  if (!candidate || candidate.status !== "pending") return null;
-  if (input.action === "reject") {
-    await db.query(`update semantic_candidates set status = 'rejected', resolved_at = now(), updated_at = now() where id = $1`, [candidateId]);
-    return { ...candidate, status: "rejected" as const };
+function candidateFingerprint(candidate: SemanticCandidate) {
+  if (candidate.decisionFingerprint) return candidate.decisionFingerprint;
+  const refs = Array.isArray(candidate.evidence)
+    ? candidate.evidence.flatMap((entry) => entry && typeof entry === "object" && "ref" in entry ? [String((entry as { ref: unknown }).ref)] : [])
+    : [];
+  return semanticDecisionFingerprint({
+    actionKind: candidate.actionKind ?? candidate.decisionKind ?? "unknown",
+    subjectNormalizedValue: candidate.subjectValue ?? candidate.subjectEntityId ?? "",
+    targetNormalizedValue: candidate.targetNormalizedValue,
+    evidenceRefs: refs.length ? refs : (candidate.evidenceEventIds ?? []),
+  });
+}
+
+async function assertCandidateStillValid(db: Queryable, candidate: SemanticCandidate, input: { clientId?: string | null; targetEntityId?: string }) {
+  if (candidate.policyVersion && candidate.policyVersion !== DECISION_POLICY_VERSION) {
+    throw new SemanticCandidateConflictError(
+      "semantic_candidate_stale_policy",
+      "This proposal was produced by an older decision policy and must be reviewed again.",
+      { candidatePolicyVersion: candidate.policyVersion, currentPolicyVersion: DECISION_POLICY_VERSION },
+    );
   }
-  const skipMerge = async (reason: string) => {
-    const marker = `[Merge skipped: ${reason}]`;
-    const rationale = candidate.rationale?.includes(marker) ? candidate.rationale : `${candidate.rationale ?? ""} ${marker}`.trim();
-    await db.query(`update semantic_candidates set rationale = $2, updated_at = now() where id = $1`, [candidateId, rationale]);
-    return { ...candidate, rationale, skipReason: reason };
-  };
-  // A default merge target is the subject's own identity, so a newly created
-  // target inherits the subject root's owner. Other decisions keep public targets.
-  let mergeTargetOwnerId: string | null = null;
-  if (candidate.decisionKind === "merge" && candidate.subjectEntityId && !input.targetEntityId) {
-    const subject = await loadCanonicalEntityById(db, candidate.subjectEntityId);
-    if (subject && subject.type !== candidate.targetType) return skipMerge("entity_type_mismatch");
-    if (subject) {
-      const owner = await db.query<{ ownerId: string | null }>(`select owner_id as "ownerId" from entities where id = $1`, [subject.id]);
-      mergeTargetOwnerId = owner.rows[0]?.ownerId ?? null;
-      // Check an existing identity before upsert would rewrite its description.
-      const existing = await db.query<{ id: string }>(`select id from entities where type = $1 and normalized_value = $2`, [candidate.targetType, candidate.targetNormalizedValue]);
-      const reason = existing.rows[0] ? await semanticMergeSkipReason(db, subject.id, existing.rows[0].id) : null;
-      if (reason) return skipMerge(reason);
+  if (!["verified", "not_required"].includes(candidate.verificationStatus ?? "not_required")) {
+    throw new SemanticCandidateConflictError(
+      "semantic_candidate_unverified",
+      "This proposal is not backed by verified evidence and cannot be applied.",
+      { verificationStatus: candidate.verificationStatus ?? "unknown" },
+    );
+  }
+  if (input.clientId !== undefined && candidate.clientId !== input.clientId) {
+    throw new SemanticCandidateConflictError("semantic_candidate_not_owned", "This proposal belongs to another owner.");
+  }
+  if (candidate.eventId) {
+    const event = await db.query<{ processingAllowed: boolean; privacyStatus: string; tombstoned: boolean; title: string | null; body: string | null; source: string; kind: string; inferredKind: string | null }>(`
+      select event.processing_allowed as "processingAllowed", event.privacy_status as "privacyStatus",
+        exists(select 1 from deletion_tombstones tombstone where tombstone.target_type = 'event' and tombstone.target_id = event.id) as tombstoned,
+        event.title, event.body, event.source, event.kind,
+        classified.inferred_kind as "inferredKind"
+      from raw_events event
+      left join classified_events classified on classified.raw_event_id = event.id
+      where event.id = $1
+    `, [candidate.eventId]);
+    const row = event.rows[0];
+    if (!row || !row.processingAllowed || row.privacyStatus === "hidden" || row.tombstoned) {
+      throw new SemanticCandidateConflictError(
+        "semantic_candidate_evidence_unavailable",
+        "The source evidence is no longer available under the current privacy policy.",
+        { eventId: candidate.eventId },
+      );
+    }
+    if (Array.isArray(candidate.evidence) && candidate.evidence.length) {
+      const linked = await db.query<{ id: string; type: string; value: string; normalizedValue: string; description: string }>(`
+        select entity.id, entity.type, entity.value, entity.normalized_value as "normalizedValue", entity.description
+        from event_entities link join entities entity on entity.id = link.entity_id
+        where link.event_id = $1
+      `, [candidate.eventId]);
+      const index = new Map<string, string>();
+      index.set("event.title", row.title ?? "");
+      index.set("event.body", row.body ?? "");
+      index.set("event.source", row.source ?? "");
+      index.set("event.kind", row.kind ?? "");
+      index.set("deterministic.classification", row.inferredKind ?? "");
+      for (const entity of linked.rows) {
+        index.set(`entity:${entity.type}:${entity.normalizedValue}`, [entity.value, entity.description].filter(Boolean).join(" — "));
+      }
+      const references = candidate.evidence.flatMap((entry) => {
+        if (!entry || typeof entry !== "object" || !("ref" in entry)) return [];
+        const record = entry as Record<string, unknown>;
+        return [{
+          ref: String(record.ref),
+          excerpt: typeof record.excerpt === "string" ? record.excerpt : undefined,
+        }];
+      });
+      const unresolved = references.filter((reference) => !index.has(reference.ref));
+      const mismatched = references.filter((reference) => {
+        const excerpt = reference.excerpt?.trim();
+        if (!excerpt) return false;
+        const text = index.get(reference.ref) ?? "";
+        return !text.replace(/\s+/gu, " ").toLowerCase().includes(excerpt.replace(/\s+/gu, " ").toLowerCase());
+      });
+      if (unresolved.length || mismatched.length) {
+        throw new SemanticCandidateConflictError(
+          "semantic_candidate_evidence_changed",
+          "The evidence that supported this proposal changed; review it again before applying.",
+          { unresolvedRefs: unresolved.map((reference) => reference.ref), mismatchedRefs: mismatched.map((reference) => reference.ref) },
+        );
+      }
     }
   }
-  const target = input.targetEntityId ? await db.query<{ id: string; type: string; value: string; normalizedValue: string }>(`select id, type, value, normalized_value as "normalizedValue" from entities where id = $1`, [input.targetEntityId]) : null;
-  const targetRecord = target?.rows[0] ?? await upsertEntity(db, { type: candidate.targetType, value: candidate.targetValue, normalizedValue: candidate.targetNormalizedValue, description: candidate.rationale ?? `A reviewed knowledge concept representing ${candidate.targetValue}.`, identitySource: "ai", metadata: { source: "semantic-review", governanceVersion: candidate.governanceVersion, aiIdentity: true } }, { ownerId: mergeTargetOwnerId });
+  if (!candidate.subjectEntityId) throw new SemanticCandidateConflictError("semantic_candidate_missing_subject", "This proposal has no subject.");
+  const subject = await loadCanonicalEntityById(db, candidate.subjectEntityId);
+  if (!subject) throw new SemanticCandidateConflictError("semantic_candidate_subject_missing", "The subject no longer exists.");
+  const subjectOwner = await db.query<{ ownerId: string | null }>(`select owner_id as "ownerId" from entities where id = $1`, [subject.id]);
+  const ownerId = subjectOwner.rows[0]?.ownerId ?? null;
+  if (candidate.clientId && ownerId && ownerId !== candidate.clientId) {
+    throw new SemanticCandidateConflictError("semantic_candidate_owner_mismatch", "The subject belongs to another owner.");
+  }
+  const target = input.targetEntityId
+    ? await loadCanonicalEntityById(db, input.targetEntityId)
+    : await db.query<{ id: string; type: string; value: string; normalizedValue: string; ownerId: string | null }>(`
+        select id, type, value, normalized_value as "normalizedValue", owner_id as "ownerId"
+        from entities where type = $1 and normalized_value = $2 limit 1
+      `, [candidate.targetType, candidate.targetNormalizedValue]).then((result) => result.rows[0] ?? null);
+  if (target) {
+    if (target.id === subject.id) {
+      throw new SemanticCandidateConflictError("semantic_candidate_self_link", "A concept cannot be linked to itself.", { subjectId: subject.id });
+    }
+    if (target.type !== candidate.targetType && candidate.decisionKind !== "merge") {
+      throw new SemanticCandidateConflictError("semantic_candidate_type_mismatch", "The target type changed since this proposal was created.", { targetType: target.type });
+    }
+    if ("ownerId" in target && candidate.clientId && target.ownerId && target.ownerId !== candidate.clientId) {
+      throw new SemanticCandidateConflictError("semantic_candidate_owner_mismatch", "The target belongs to another owner.");
+    }
+    const existing = ["part_of", "belongs_to_domain"].includes(candidate.relationType)
+      ? await db.query(`select 1 from relations where source_entity_id = $1 and target_entity_id = $2 and relation_type in ('part_of','belongs_to_domain') limit 1`, [subject.id, target.id])
+      : await db.query(`select 1 from relations where source_entity_id = $1 and target_entity_id = $2 and relation_type = $3 limit 1`, [subject.id, target.id, candidate.relationType]);
+    if (existing.rows.length) {
+      throw new SemanticCandidateConflictError("semantic_candidate_no_effect", "This change is already present in the graph.", { subjectId: subject.id, targetId: target.id });
+    }
+  }
+  return { subject, target, ownerId };
+}
+
+export async function resolveSemanticCandidate(db: Queryable, candidateId: string, input: { action: "approve" | "reject"; targetEntityId?: string; createRule?: boolean; clientId?: string | null; reason?: string }) {
+  const result = await db.query<SemanticCandidate>(`select id, client_id as "clientId", event_id as "eventId", subject_entity_id as "subjectEntityId", relation_type as "relationType", target_type as "targetType", target_value as "targetValue", target_normalized_value as "targetNormalizedValue", parent_target_value as "parentTargetValue", confidence::float8, rationale, extractor, status, resolved_target_entity_id as "resolvedTargetEntityId", decision_kind as "decisionKind", domain_value as "domainValue", anchor_role as "anchorRole", proposed_path as "proposedPath", alternatives, associations, recurrence_count as "recurrenceCount", governance_version as "governanceVersion", prompt_version as "promptVersion", model, action_kind as "actionKind", evidence, evidence_event_ids as "evidenceEventIds", verified_event_count as "verifiedEventCount", verification_status as "verificationStatus", verification, policy_version as "policyVersion", change_explanation as "changeExplanation", decision_fingerprint as "decisionFingerprint", superseded_by_candidate_id as "supersededByCandidateId", generation_id as "generationId", created_at as "createdAt" from semantic_candidates where id = $1 for update`, [candidateId]);
+  const candidate = result.rows[0];
+  if (!candidate) return null;
+  if (candidate.status !== "pending") {
+    throw new SemanticCandidateConflictError("semantic_candidate_not_pending", "This proposal was already resolved.", { status: candidate.status });
+  }
+  if (input.action === "reject") {
+    const fingerprint = candidateFingerprint(candidate);
+    await db.query(`insert into semantic_candidate_feedback (id, client_id, candidate_id, decision_fingerprint, action_kind, policy_version, reason, evidence_event_ids)
+      select $1,$2,$3,$4,$5,$6,'user_rejected',$7::jsonb
+      where not exists (
+        select 1 from semantic_candidate_feedback existing
+        where coalesce(existing.client_id, '') = coalesce($2, '')
+          and existing.decision_fingerprint = $4 and existing.reason = 'user_rejected'
+      )`,
+    [randomUUID(), candidate.clientId, candidateId, fingerprint, candidate.actionKind ?? candidate.decisionKind ?? null, candidate.policyVersion ?? null, JSON.stringify(candidate.evidenceEventIds ?? [])]);
+    const rationale = input.reason
+      ? `${candidate.rationale ?? ""} [Rechazo explícito: ${input.reason}]`.trim()
+      : candidate.rationale;
+    await db.query(`update semantic_candidates set status = 'rejected', rationale = $2, decision_fingerprint = coalesce(decision_fingerprint, $3), resolved_at = now(), updated_at = now() where id = $1 and status = 'pending'`, [candidateId, rationale, fingerprint]);
+    return { ...candidate, status: "rejected" as const, ruleEligible: false, ruleCreated: false };
+  }
+  const valid = await assertCandidateStillValid(db, candidate, { clientId: input.clientId, targetEntityId: input.targetEntityId });
+  const subject = valid.subject;
+  const subjectRecord = { id: subject.id, type: subject.type, value: subject.value, normalizedValue: subject.normalizedValue };
+  const targetRecord = valid.target ?? await upsertEntity(db, {
+    type: candidate.targetType,
+    value: candidate.targetValue,
+    normalizedValue: candidate.targetNormalizedValue,
+    description: candidate.rationale ?? `A reviewed knowledge concept representing ${candidate.targetValue}.`,
+    identitySource: "ai",
+    metadata: { source: "semantic-review", governanceVersion: candidate.governanceVersion, aiIdentity: true },
+  }, { ownerId: valid.ownerId ?? candidate.clientId ?? null });
   const targetEntity = { id: targetRecord.id, type: "type" in targetRecord ? targetRecord.type : candidate.targetType, value: targetRecord.value, normalizedValue: targetRecord.normalizedValue };
-  if (!candidate.subjectEntityId) throw new Error("Candidate is missing its subject entity");
-  const subject = await db.query<{ id: string; type: string; value: string; normalizedValue: string }>(`select id, type, value, normalized_value as "normalizedValue" from entities where id = $1`, [candidate.subjectEntityId]);
-  if (!subject.rows[0]) throw new Error("Candidate subject no longer exists");
   if (candidate.decisionKind === "merge") {
-    const skipReason = await semanticMergeSkipReason(db, candidate.subjectEntityId, targetEntity.id);
-    if (skipReason) return skipMerge(skipReason);
+    const skipReason = await semanticMergeSkipReason(db, subject.id, targetEntity.id);
+    if (skipReason) {
+      await db.query(`update semantic_candidates set rationale = $2, updated_at = now() where id = $1`, [candidateId, `${candidate.rationale ?? ""} [Merge skipped: ${skipReason}]`.trim()]);
+      return { ...candidate, rationale: `${candidate.rationale ?? ""} [Merge skipped: ${skipReason}]`.trim(), skipReason, ruleEligible: false, ruleCreated: false };
+    }
     const { mergeEntities } = await import("./entity-repository.js");
-    await mergeEntities(db, candidate.subjectEntityId, targetEntity.id, { reason: "semantic_review", confidence: candidate.confidence });
+    await mergeEntities(db, subject.id, targetEntity.id, { reason: "semantic_review", confidence: candidate.confidence });
   } else if (candidate.decisionKind === "association") {
-    const relation = await upsertRelation(db, { relationType: candidate.relationType, label: candidate.relationType.replace(/_/g, " "), description: candidate.rationale ?? `${subject.rows[0].value} ${candidate.relationType.replace(/_/g, " ")} ${targetEntity.value}`, sourceEntity: subject.rows[0], targetEntity, confidence: candidate.confidence, metadata: { source: "semantic-review", candidateId, governanceVersion: candidate.governanceVersion } }, candidate.subjectEntityId, targetEntity.id);
+    const relation = await upsertRelation(db, { relationType: candidate.relationType, label: candidate.relationType.replace(/_/g, " "), description: candidate.rationale ?? `${subjectRecord.value} ${candidate.relationType.replace(/_/g, " ")} ${targetEntity.value}`, sourceEntity: subjectRecord, targetEntity, confidence: candidate.confidence, metadata: { source: "semantic-review", candidateId, governanceVersion: candidate.governanceVersion, policyVersion: candidate.policyVersion } }, subject.id, targetEntity.id);
     if (candidate.eventId) await linkEventRelation(db, candidate.eventId, relation.id, candidate.confidence);
   } else {
     if (candidate.parentTargetValue) {
       const parentType = LIFE_DOMAINS.includes(candidate.parentTargetValue as typeof LIFE_DOMAINS[number]) ? "domain" : "concept";
-      const parentRecord = await upsertEntity(db, { type: parentType, value: candidate.parentTargetValue, normalizedValue: normalizeEntityValue(candidate.parentTargetValue), description: candidate.rationale ?? `A reviewed parent concept representing ${candidate.parentTargetValue}.`, identitySource: "ai", metadata: { source: "semantic-review", governanceVersion: candidate.governanceVersion, aiIdentity: true } });
+      const parentRecord = await upsertEntity(db, { type: parentType, value: candidate.parentTargetValue, normalizedValue: normalizeEntityValue(candidate.parentTargetValue), description: candidate.rationale ?? `A reviewed parent concept representing ${candidate.parentTargetValue}.`, identitySource: "ai", metadata: { source: "semantic-review", governanceVersion: candidate.governanceVersion, aiIdentity: true } }, { ownerId: valid.ownerId ?? candidate.clientId ?? null });
       await setImmediateHierarchyParent(db, { child: targetEntity, parent: { id: parentRecord.id, type: parentRecord.type, value: parentRecord.value, normalizedValue: parentRecord.normalizedValue }, confidence: candidate.confidence, metadata: { source: "semantic-review", candidateId, governanceVersion: candidate.governanceVersion } });
     }
-    const relation = await setImmediateHierarchyParent(db, { child: subject.rows[0], parent: targetEntity, confidence: candidate.confidence, metadata: { source: "semantic-review", candidateId, governanceVersion: candidate.governanceVersion } });
-    if (candidate.eventId) await linkEventRelation(db, candidate.eventId, relation.id, candidate.confidence);
+    try {
+      const relation = await setImmediateHierarchyParent(db, { child: subjectRecord, parent: targetEntity, confidence: candidate.confidence, metadata: { source: "semantic-review", candidateId, governanceVersion: candidate.governanceVersion, policyVersion: candidate.policyVersion } });
+      if (candidate.eventId) await linkEventRelation(db, candidate.eventId, relation.id, candidate.confidence);
+    } catch (error) {
+      throw new SemanticCandidateConflictError(
+        "semantic_candidate_graph_conflict",
+        error instanceof Error ? error.message : "The current graph cannot accept this change.",
+        { subjectId: subject.id, targetId: targetEntity.id },
+      );
+    }
     await db.query(`
       update entities set identity_source = 'ai'
       where id = $1 and identity_source = 'candidate'
@@ -384,21 +559,26 @@ export async function resolveSemanticCandidate(db: Queryable, candidateId: strin
     `, [candidate.subjectEntityId]);
     if (candidate.eventId && candidate.domainValue && candidate.anchorRole) {
       const domain = await db.query<{ id: string }>(`select id from entities where type = 'domain' and normalized_value = $1 limit 1`, [normalizeEntityValue(candidate.domainValue)]);
-      if (domain.rows[0]) await upsertEventSemanticAnchor(db, { eventId: candidate.eventId, domainEntityId: domain.rows[0].id, anchorEntityId: candidate.subjectEntityId, role: candidate.anchorRole, confidence: candidate.confidence, rationale: candidate.rationale ?? "Approved semantic path", governanceVersion: candidate.governanceVersion ?? SEMANTIC_GOVERNANCE_VERSION });
+      if (domain.rows[0]) await upsertEventSemanticAnchor(db, { eventId: candidate.eventId, domainEntityId: domain.rows[0].id, anchorEntityId: candidate.subjectEntityId!, role: candidate.anchorRole, confidence: candidate.confidence, rationale: candidate.rationale ?? "Approved semantic path", governanceVersion: candidate.governanceVersion ?? SEMANTIC_GOVERNANCE_VERSION });
     }
   }
-  if (input.createRule) {
-    if (["part_of", "belongs_to_domain"].includes(candidate.relationType)) {
-      await db.query(`delete from semantic_rules where client_id is not distinct from $1 and source_type = $2
-        and source_normalized_value = $3 and relation_type in ('part_of', 'belongs_to_domain')`,
-      [candidate.clientId, subject.rows[0].type, subject.rows[0].normalizedValue]);
-    }
-    await db.query(`insert into semantic_rules (id, client_id, source_type, source_normalized_value, relation_type, target_entity_id, created_from_candidate_id) values ($1,$2,$3,$4,$5,$6,$7) on conflict (client_id, source_type, source_normalized_value, relation_type) do update set target_entity_id = excluded.target_entity_id, created_from_candidate_id = excluded.created_from_candidate_id, updated_at = now()`, [randomUUID(), candidate.clientId, subject.rows[0].type, subject.rows[0].normalizedValue, candidate.relationType, targetEntity.id, candidateId]);
+  const ruleEligible = isRuleEligibleAction({
+    actionKind: semanticActionKind({ decisionKind: candidate.decisionKind, subjectType: subject.type, targetType: candidate.targetType }),
+    decisionKind: candidate.decisionKind,
+    relationType: candidate.relationType,
+    subjectType: subject.type,
+  });
+  const createRule = Boolean(input.createRule) && ruleEligible;
+  if (createRule) {
+    await db.query(`delete from semantic_rules where client_id is not distinct from $1 and source_type = $2
+      and source_normalized_value = $3 and relation_type = $4`,
+    [candidate.clientId, subject.type, subject.normalizedValue, candidate.relationType]);
+    await db.query(`insert into semantic_rules (id, client_id, source_type, source_normalized_value, relation_type, target_entity_id, created_from_candidate_id) values ($1,$2,$3,$4,$5,$6,$7) on conflict (client_id, source_type, source_normalized_value, relation_type) do update set target_entity_id = excluded.target_entity_id, created_from_candidate_id = excluded.created_from_candidate_id, updated_at = now()`, [randomUUID(), candidate.clientId, subject.type, subject.normalizedValue, candidate.relationType, targetEntity.id, candidateId]);
   }
   await db.query(`update semantic_candidates set status = 'approved', resolved_target_entity_id = $2, resolved_at = now(), updated_at = now() where id = $1`, [candidateId, targetEntity.id]);
   if (candidate.decisionKind !== "association" && candidate.subjectEntityId) {
     await db.query(`update semantic_candidates set status = 'rejected', resolved_at = now(), updated_at = now()
       where id <> $1 and subject_entity_id = $2 and status = 'pending' and relation_type in ('part_of', 'belongs_to_domain')`, [candidateId, candidate.subjectEntityId]);
   }
-  return { ...candidate, status: "approved" as const, resolvedTargetEntityId: targetEntity.id };
+  return { ...candidate, status: "approved" as const, resolvedTargetEntityId: targetEntity.id, ruleEligible, ruleCreated: createRule };
 }
