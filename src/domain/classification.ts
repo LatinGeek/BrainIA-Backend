@@ -1,7 +1,7 @@
 import type { ClassifiedEvent, EventInput } from "./event.js";
 import { findMoneyText, MONEY_NUMBER_SOURCE } from "./money.js";
 
-export const CLASSIFICATION_VERSION = "heuristic-v3";
+export const CLASSIFICATION_VERSION = "heuristic-v4";
 
 function normalizeForMatching(value: string) {
   return value
@@ -56,6 +56,24 @@ export function isThirdPartyTransferAlert(event: Pick<EventInput, "kind" | "titl
     && !/\b(?:a\s+la\s+cuenta|entre\s+cuentas)\b/u.test(text);
 }
 
+/** Explicit settlement wins over promotional footers in a genuine receipt. */
+export function isCompletedFinancialNotice(event: Pick<EventInput, "kind" | "title" | "body">) {
+  if (event.kind !== "notification" && event.kind !== "email") return false;
+  if (isRejectedCardTransactionAlert(event)) return false;
+  if (isCompletedCardTransactionAlert(event) || isAccountTransferAlert(event) || isThirdPartyTransferAlert(event)) return true;
+  const text = normalizeForMatching(`${event.title ?? ""} ${event.body ?? ""}`);
+  return /\b(?:gastaste|pagaste|descontamos|se pago|pago realizado|pago confirmado|pago aprobado|compra aprobada|compra realizada|compra confirmada|you paid|payment approved|payment completed|payment successful|purchase approved|purchase confirmed)\b/u.test(text);
+}
+
+/** Prices, balances and order follow-ups are evidence, not posted spending. */
+export function isNonTransactionalFinancialNotice(event: Pick<EventInput, "kind" | "title" | "body">) {
+  if (event.kind !== "notification" && event.kind !== "email") return false;
+  if (isRejectedCardTransactionAlert(event)) return true;
+  if (isCompletedFinancialNotice(event)) return false;
+  const text = normalizeForMatching(`${event.title ?? ""} ${event.body ?? ""}`);
+  return /\b(?:promocion|promocional|oferta|descuento|ahorra|gratis|suscribite|suscribete|sumate|pedi|hace tu pedido|haz tu pedido|compra ahora|compra con mas seguridad|crea un numero de tarjeta|prextamo|precio especial|super precio|feria de dolares|aprovecha la oportunidad|conocer tu experiencia|confirma si recibiste|saldo disponible|saldo actual|available balance|special offer|discount|subscribe now|order now)\b/u.test(text);
+}
+
 function extractCardAlertMerchant(value: string) {
   const directMatch = value.match(
     /\bestablecimiento\s+([\p{L}\p{N}][\p{L}\p{N}&*\/-]*(?:\s+[\p{L}\p{N}&*\/-]+){0,8})(?=\.?\s+(?:si|fecha|a\s+las|el)\b|[.!]|$)/iu,
@@ -107,6 +125,9 @@ export function classifyEvent(event: EventInput): ClassifiedEvent {
   } else if (rejectedCardTransaction) {
     inferredKind = "notification";
     confidence = 0.98;
+  } else if (isNonTransactionalFinancialNotice(event)) {
+    inferredKind = "notification";
+    confidence = 0.98;
   } else if (accountTransfer) {
     inferredKind = "transfer";
     confidence = 0.97;
@@ -140,8 +161,11 @@ export function classifyEvent(event: EventInput): ClassifiedEvent {
   }
 
   if ((event.kind === "notification" || event.kind === "email") && moneyText && inferredKind === "other") {
-    inferredKind = "expense";
-    confidence = 0.82;
+    // A standalone price or balance does not establish that money moved.
+    // Explicit settlement wording still handles terse wallet notifications.
+    const completed = isCompletedFinancialNotice(event);
+    inferredKind = completed ? "expense" : "notification";
+    confidence = completed ? 0.82 : 0.5;
   }
 
   if (moneyText) {

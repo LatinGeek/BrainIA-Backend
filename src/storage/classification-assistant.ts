@@ -7,6 +7,7 @@ import { pool } from "./postgres.js";
 import { loadClassificationLessons, type ClassificationLesson } from "./classification-learning.js";
 import { classifyWithJev } from './jev.js';
 import { applyConfirmedCorrections } from './correction-memory.js';
+import { isCompletedFinancialNotice, isNonTransactionalFinancialNotice } from '../domain/classification.js';
 
 type ClassificationAssistantDeps = {
   apiKey?: string;
@@ -231,25 +232,37 @@ export function createClassificationAssistant(deps: ClassificationAssistantDeps)
         && ["income", "expense", "transfer"].includes(input.event.raw.transactionType)
         ? input.event.raw.transactionType
         : null;
-      const protectedFinancialKind = (input.base.inferredKind === "expense" || input.base.inferredKind === "income" || input.base.inferredKind === "transfer")
-        && (input.base.confidence >= 0.95 || selectedTransactionType === input.base.inferredKind);
+      const financialKinds = new Set(["expense", "income", "transfer"]);
+      const protectedFinancialKind = financialKinds.has(input.base.inferredKind)
+        && (financialKinds.has(input.event.kind) || isCompletedFinancialNotice(input.event)
+          || selectedTransactionType === input.base.inferredKind);
       const lowInformationKinds = new Set(["notification", "other"]);
       const protectedSpecificKind = !lowInformationKinds.has(input.base.inferredKind)
+        && !financialKinds.has(input.base.inferredKind)
         && lowInformationKinds.has(suggestion.inferredKind);
-      const applySuggestedKind = improved && !protectedFinancialKind && !protectedSpecificKind;
+      const protectedNonTransaction = isNonTransactionalFinancialNotice(input.event)
+        && financialKinds.has(suggestion.inferredKind);
+      const sameKind = suggestion.inferredKind === input.base.inferredKind;
+      const correctingFinancialGuess = financialKinds.has(input.base.inferredKind)
+        && lowInformationKinds.has(suggestion.inferredKind) && suggestion.confidence >= input.base.confidence;
+      const applySuggestedKind = (improved || correctingFinancialGuess)
+        && !protectedFinancialKind && !protectedSpecificKind && !protectedNonTransaction;
+      const applied = sameKind ? improved : applySuggestedKind;
 
       return {
         ...input.base,
-        classificationVersion: improved
+        classificationVersion: applied
           ? `${input.base.classificationVersion}+llm`
           : input.base.classificationVersion,
         inferredKind: applySuggestedKind ? suggestion.inferredKind : input.base.inferredKind,
-        confidence: Math.max(input.base.confidence, suggestion.confidence),
+        // Confidence belongs to the retained kind, never to a rejected answer.
+        confidence: sameKind ? Math.max(input.base.confidence, suggestion.confidence)
+          : applySuggestedKind ? suggestion.confidence : input.base.confidence,
         entities: mergeEntities(input.base.entities, suggestion.entities),
         modelMetadata: {
           provider: "deepseek",
           model: deps.model,
-          applied: improved,
+          applied,
           prompt: {
             eventId: input.event.id,
             source: input.event.source,
