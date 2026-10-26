@@ -139,7 +139,7 @@ test("end-to-end capture, retrieval, insight, and digest flow stays coherent", a
               appName: "Wallet",
               packageName: "com.example.wallet",
               title: `${merchant} payment approved ${suffix}`,
-              body: `Approved for $12.40`,
+              body: `Approved for USD 12.40`,
               idempotencyKey: `${notificationId}-retry`,
               raw: { channel: "notification" },
               tags: ["finance", "mobile"],

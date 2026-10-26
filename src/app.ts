@@ -1,3 +1,4 @@
+import { EventCaptureConflictError } from "./domain/event-ingestion.js";
 import crypto from "node:crypto";
 import Fastify from "fastify";
 import { AuthzError, createApiAuthHook, loadAuthConfig } from "./auth.js";
@@ -71,7 +72,7 @@ export async function buildApp(options: { authConfig?: AuthConfig } = {}) {
 
   app.get("/health", async () => ({ ok: true }));
   app.setErrorHandler(async (error, request, reply) => {
-    if (error instanceof AuthzError) {
+    if (error instanceof AuthzError || error instanceof EventCaptureConflictError) {
       return reply.status(error.statusCode).send({ error: error.code, message: error.message });
     }
     request.log.error({ err: error }, "request_failed");

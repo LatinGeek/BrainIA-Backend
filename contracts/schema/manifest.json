@@ -57,7 +57,8 @@
     "20261017200000_finance_currency_safety.sql": "0bb473d1f84f4c7ef32598fc0b3250cefa7bc8486e50028b339d6eee4ed3e408",
     "20261017220000_fx_rate_governance.sql": "dbf0a623066489dc4247c892002e2ebe75d1c7495f9ba604da3a9629a52c86e9",
     "20261019120000_v2_api.sql": "b7d463bb656ec4f2e242dd59c4ba2172ee230c3a1dd61dd94968789cdc85a4c3",
-    "20261024120000_event_reprocess_jobs.sql": "b74f156a164d8fcc8267b8dab32e97c709f5cb7e9e79b251e05c16db3cd7c6e7"
+    "20261024120000_event_reprocess_jobs.sql": "b74f156a164d8fcc8267b8dab32e97c709f5cb7e9e79b251e05c16db3cd7c6e7",
+    "20261025120000_capture_identity_lookup.sql": "9f07c291f3843baf53ee09c39930c90d27749dd97974938cfa8ee2a6815789b9"
   },
   "objects": {
     "acl:function:brainia_block_deleted_derived_run():PUBLIC:EXECUTE": false,
@@ -7748,8 +7749,18 @@
       "ready": true,
       "valid": true
     },
+    "index:raw_events_source_external_identity_idx": {
+      "sql": "CREATE INDEX raw_events_source_external_identity_idx ON public.raw_events USING btree (source, external_id, client_id) WHERE (external_id IS NOT NULL)",
+      "ready": true,
+      "valid": true
+    },
     "index:raw_events_source_idx": {
       "sql": "CREATE INDEX raw_events_source_idx ON public.raw_events USING btree (source)",
+      "ready": true,
+      "valid": true
+    },
+    "index:raw_events_source_retry_identity_idx": {
+      "sql": "CREATE INDEX raw_events_source_retry_identity_idx ON public.raw_events USING btree (source, idempotency_key, client_id) WHERE (idempotency_key IS NOT NULL)",
       "ready": true,
       "valid": true
     },

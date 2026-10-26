@@ -1,3 +1,4 @@
+import { captureDedupeKey, EventCaptureConflictError } from "../domain/event-ingestion.js";
 import { randomUUID } from "node:crypto";
 import { classifyEvent } from "../domain/classification.js";
 import type { ClassifiedEvent, EventInput } from "../domain/event.js";
@@ -28,10 +29,9 @@ import {
   replaceClassificationFacts,
   insertClassifiedEvent,
   insertRawEvent,
-  findStoredRawEventId,
+  resolveRawEventCapture,
   linkEventEntity,
   loadRawEventById,
-  loadStoredEventByLookup,
   loadStoredEventById,
   listStoredEvents,
   updateClassifiedEventInterpretation,
@@ -69,9 +69,7 @@ function logCaptureStage(input: {
 }
 
 export function buildEventDedupeKey(event: EventInput, clientId: string | null | undefined) {
-  const stableInput = event.idempotencyKey?.trim() || event.externalId?.trim() || event.id.trim();
-  const clientScope = clientId?.trim() || "anonymous";
-  return `${clientScope}:${event.source}:${event.contractVersion}:${stableInput}`;
+  return captureDedupeKey(event, clientId);
 }
 
 function isFinancialInferredKind(kind: string) {
@@ -145,7 +143,8 @@ async function persistClassifiedEvent(
   return withTransaction(async (db) => {
     const inserted = await insertRawEvent(db, event, clientId, dedupeKey);
     if (!inserted) {
-      const existing = await loadStoredEventByLookup(db, event.id, dedupeKey);
+      const existingId = await resolveRawEventCapture(db, event, clientId);
+      const existing = existingId ? await loadStoredEventById(db, existingId) : null;
       if (!existing) {
         throw new Error("Duplicate event could not be resolved");
       }
@@ -281,7 +280,7 @@ async function persistClassifiedEvent(
       reason: `semantic_decision:${semanticDecision.status}`,
     });
 
-    const stored = await loadStoredEventByLookup(db, event.id, dedupeKey);
+    const stored = await loadStoredEventById(db, event.id);
     if (!stored) throw new Error("Stored event could not be loaded after ingestion");
 
     invalidateGraphTraversalCache();
@@ -309,7 +308,7 @@ export async function appendEvent(event: EventInput, context: EventIngestionCont
   logCaptureStage({ requestId: context.requestId, eventId: event.id, source: event.source, stage: "persistence_start" });
   const capture = await withTransaction(async (db) => {
     const inserted = await insertRawEvent(db, event, clientId, dedupeKey);
-    const storedId = inserted ? event.id : await findStoredRawEventId(db, event.id, dedupeKey);
+    const storedId = inserted ? event.id : await resolveRawEventCapture(db, event, clientId);
     if (!storedId) throw new Error("Captured event could not be resolved");
     if (inserted) {
       if (!policy.enabled) {
@@ -329,6 +328,13 @@ export async function appendEvent(event: EventInput, context: EventIngestionCont
     }
     return { inserted, storedId };
   });
+  const result = (stored: NonNullable<Awaited<ReturnType<typeof loadStoredEventById>>>) => {
+    // Recheck after processing/loading as deletion may race the capture response.
+    if (stored.clientId !== clientId || stored.source !== event.source) throw new EventCaptureConflictError();
+    return {
+      ...stored, ingestion: { outcome: capture.inserted ? "created" as const : "duplicate" as const, duplicate: !capture.inserted },
+    };
+  };
   logCaptureStage({
     requestId: context.requestId,
     eventId: event.id,
@@ -387,10 +393,10 @@ export async function appendEvent(event: EventInput, context: EventIngestionCont
 
   if (!capture.inserted || !policy.enabled || config.processingMode === "queued") {
     logCaptureStage({ requestId: context.requestId, eventId: event.id, source: event.source, stage: "response_loading" });
-    const stored = await loadStoredEventByLookup(pool, capture.storedId, dedupeKey);
+    const stored = await loadStoredEventById(pool, capture.storedId, clientId);
     if (!stored) throw new Error("Captured event could not be loaded");
     logCaptureStage({ requestId: context.requestId, eventId: event.id, source: event.source, stage: "response_ready" });
-    return stored;
+    return result(stored);
   }
 
   const inlineWorker = `inline_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
@@ -401,9 +407,9 @@ export async function appendEvent(event: EventInput, context: EventIngestionCont
   if (!inlineJob) {
     // A cron/operations worker already owns the live attempt. Inline capture
     // must not settle or duplicate it.
-    const stored = await loadStoredEventByLookup(pool, capture.storedId, dedupeKey);
+    const stored = await loadStoredEventById(pool, capture.storedId, clientId);
     if (!stored) throw new Error("Captured event could not be loaded");
-    return stored;
+    return result(stored);
   }
 
   try {
@@ -416,21 +422,21 @@ export async function appendEvent(event: EventInput, context: EventIngestionCont
         payload: { eventId: capture.storedId },
       });
     });
-    return stored;
+    return result(stored);
   } catch (error) {
     if (error instanceof StaleJobClaimError) {
-      const stored = await loadStoredEventByLookup(pool, capture.storedId, dedupeKey);
+      const stored = await loadStoredEventById(pool, capture.storedId, clientId);
       if (!stored) throw error;
-      return stored;
+      return result(stored);
     }
     await withTransaction((db) => transitionEventProcessingStatus(db, {
       eventId: capture.storedId, toStatus: "retryable",
       reason: error instanceof Error ? error.message.slice(0, 500) : "processing_failed",
     }));
     await failBackgroundJob(inlineJob, error).catch(() => undefined);
-    const stored = await loadStoredEventByLookup(pool, capture.storedId, dedupeKey);
+    const stored = await loadStoredEventById(pool, capture.storedId, clientId);
     if (!stored) throw error;
-    return stored;
+    return result(stored);
   }
 }
 
@@ -832,7 +838,7 @@ async function reprocessEventUnlocked(eventId: string, options: { ensureOntology
     });
 
     await reapplyCorrectionOverlay(db, eventId);
-    const stored = await loadStoredEventByLookup(db, rawEvent.id, rawEvent.dedupeKey);
+    const stored = await loadStoredEventById(db, rawEvent.id);
 
     invalidateGraphTraversalCache();
     return stored;

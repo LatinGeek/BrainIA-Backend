@@ -130,7 +130,7 @@ test("global fallback preserves explicit client authentication and rejection pat
   }
 });
 
-test("event dedupe keys scope retries by client and contract version", () => {
+test("event dedupe keys scope identities by client and source", () => {
   const dedupeKey = buildEventDedupeKey(
     {
       id: "evt_1",
@@ -144,7 +144,7 @@ test("event dedupe keys scope retries by client and contract version", () => {
     "mobile",
   );
 
-  assert.equal(dedupeKey, "mobile:tasker:2:mail-123");
+  assert.equal(dedupeKey, '["capture-v2","mobile","tasker","external","mail-123"]');
 });
 
 test("event dedupe keys prefer an explicit idempotency key", () => {
@@ -162,5 +162,5 @@ test("event dedupe keys prefer an explicit idempotency key", () => {
     null,
   );
 
-  assert.equal(dedupeKey, "anonymous:tasker:1:retry-abc");
+  assert.equal(dedupeKey, '["capture-v2",null,"tasker","idempotency","retry-abc"]');
 });

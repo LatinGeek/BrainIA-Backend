@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
-import { pool } from "./postgres.js";
+import { pool, withTransaction } from "./postgres.js";
+import { captureContent, EventCaptureConflictError } from "../domain/event-ingestion.js";
 import type { ClassifiedEvent, EventInput } from "../domain/event.js";
 import {
   decodeEventHistoryCursor,
@@ -125,12 +126,40 @@ export async function transitionEventProcessingStatus(
   return true;
 }
 
+/** Must share the insert transaction: every identity is checked, not only the preferred key. */
+export async function resolveRawEventCapture(db: Queryable, event: EventInput, clientId: string | null) {
+  const result = await db.query<{ id: string }>(`
+    select id from raw_events
+    where id = $1 or (client_id is not distinct from $2 and source = $3 and (
+      ($4::text is not null and external_id = $4) or
+      ($5::text is not null and idempotency_key = $5)
+    ))
+  `, [event.id, clientId, event.source, event.externalId ?? null, event.idempotencyKey ?? null]);
+  if (!result.rows.length) return null;
+  // Multiple matching rows are ambiguous even if their content happens to agree.
+  if (result.rows.length !== 1) throw new EventCaptureConflictError();
+  const stored = await loadRawEventById(db, result.rows[0]!.id);
+  if (!stored || stored.clientId !== clientId || stored.source !== event.source ||
+      captureContent(stored) !== captureContent(event)) throw new EventCaptureConflictError();
+  return stored.id;
+}
+
 export async function insertRawEvent(
   db: Queryable,
   event: EventInput,
   clientId: string | null,
   dedupeKey: string,
-) {
+): Promise<boolean> {
+  if (db === pool) return withTransaction(tx => insertRawEvent(tx, event, clientId, dedupeKey));
+  // Sorted transaction locks serialize any overlap, including different preferred
+  // keys sharing an external ID. Global IDs also lock across owners and sources.
+  const identities = [JSON.stringify(["id", event.id])];
+  if (event.externalId != null) identities.push(JSON.stringify(["external", clientId, event.source, event.externalId]));
+  if (event.idempotencyKey != null) identities.push(JSON.stringify(["idempotency", clientId, event.source, event.idempotencyKey]));
+  for (const identity of identities.sort()) {
+    await db.query("select pg_advisory_xact_lock(hashtextextended($1, 0))", [identity]);
+  }
+  if (await resolveRawEventCapture(db, event, clientId)) return false;
   const result = await db.query(
     `
       insert into raw_events (
@@ -170,7 +199,12 @@ export async function insertRawEvent(
     ],
   );
 
-  return (result.rowCount ?? 0) > 0;
+  if (!(result.rowCount ?? 0)) {
+    // Includes legacy dedupe-key collisions. Never resolve an arbitrary row or
+    // expose its identity when no scoped, content-equal match was found.
+    throw new EventCaptureConflictError();
+  }
+  return true;
 }
 
 export async function insertClassifiedEvent(
@@ -247,25 +281,6 @@ export async function loadRawEventById(db: Queryable, eventId: string): Promise<
   );
 
   return result.rows[0] ?? null;
-}
-
-export async function findStoredRawEventId(
-  db: Queryable,
-  eventId: string,
-  dedupeKey: string,
-) {
-  const result = await db.query<{ id: string }>(
-    `
-      select id
-      from raw_events
-      where id = $1 or dedupe_key = $2
-      order by case when id = $1 then 0 else 1 end
-      limit 1
-    `,
-    [eventId, dedupeKey],
-  );
-
-  return result.rows[0]?.id ?? null;
 }
 
 // Explicit user-requested knowledge deletion only (data-controls). Projection
@@ -375,7 +390,7 @@ export async function linkEventEntity(
 export async function loadStoredEventById(
   db: Queryable,
   eventId: string,
-  clientId?: string,
+  clientId?: string | null,
 ): Promise<StoredEventRecord | null> {
   const result = await db.query<StoredEventRecord>(
     `
@@ -457,37 +472,13 @@ export async function loadStoredEventById(
       from raw_events r
       left join classified_events c on c.raw_event_id = r.id
       left join semantic_event_decisions semantic on semantic.event_id = r.id
-      where r.id = $1 and ($2::text is null or r.client_id = $2)
+      where r.id = $1 and (not $3::boolean or r.client_id is not distinct from $2)
       limit 1
     `,
-    [eventId, clientId ?? null],
+    [eventId, clientId ?? null, clientId !== undefined],
   );
 
   return result.rows[0] ?? null;
-}
-
-export async function loadStoredEventByLookup(
-  db: Queryable,
-  eventId: string,
-  dedupeKey: string,
-): Promise<StoredEventRecord | null> {
-  const result = await db.query<{ id: string }>(
-    `
-      select id
-      from raw_events
-      where id = $1 or dedupe_key = $2
-      order by case when id = $1 then 0 else 1 end
-      limit 1
-    `,
-    [eventId, dedupeKey],
-  );
-
-  const rawEventId = result.rows[0]?.id ?? null;
-  if (!rawEventId) {
-    return null;
-  }
-
-  return loadStoredEventById(db, rawEventId);
 }
 
 export async function listStoredEvents(clientId?: string, db: Queryable = pool) {

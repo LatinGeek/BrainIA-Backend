@@ -10,3 +10,5 @@ dist/
 *.log
 coverage/
 data/
+
+.env*

@@ -71,6 +71,69 @@ The request body may contain:
 - `raw`: original unmodified payload or a structured representation of it
 - `tags`: free-form client tags
 
+### Capture creation, retries, and conflicts
+
+`POST /events` returns the existing full event shape with an additive `ingestion`
+field. New captures return **201** with `{"outcome":"created","duplicate":false}`;
+identical retries return **200** with `{"outcome":"duplicate","duplicate":true}`.
+Consumers must accept both successful statuses. The stored event ID, timestamps,
+evidence, processing state and jobs are preserved on retries. No processing is
+claimed, restarted or enqueued for a duplicate, including failed/discarded captures.
+Use the explicit reprocess API to request more processing.
+
+All supplied identities are checked independently: `id` is globally unique;
+`externalId` and `idempotencyKey` are each scoped by the exact owner (including a
+separate null/anonymous scope) and exact source. Their strings are opaque and
+case/whitespace sensitive on `/events`; capture helper builders retain their
+existing trimming behavior. Equal strings in different identity fields are distinct.
+A globally occupied ID belonging to another owner/source returns a generic conflict,
+never that owner's event. External/retry identities can be reused in other scopes
+with a fresh global event ID.
+
+Meaningful content is `source`, `contractVersion`, `kind`, `title`, `body`,
+`timestamp`, `raw`, `tags`, `externalId`, and `idempotencyKey` after schema defaults.
+Missing title/body/timestamp/identity values compare as null. Timestamps compare as
+instants. JSON object key order, including nested objects, is irrelevant; array/tag
+order and string whitespace remain meaningful. `raw` is compared in full: put no
+changing delivery-attempt metadata in it. `id` may differ on a retry resolved by
+another identity. Changing, adding or removing an external/retry key is a conflict
+when another identity already matches; new aliases are never silently registered.
+Unknown top-level request fields remain stripped by the existing schema.
+
+Changed content or identities matching multiple existing rows return **409**:
+
+```json
+{"error":"event_identity_conflict","message":"A capture identity is already in use. Retry the original payload or submit a new capture with new identities."}
+```
+
+For example, submitting `{ "id":"evt-1", "source":"notes", "body":"Hola", "raw":{} }`
+creates an event. Repeating it returns 200 and the same event. Changing `body` to
+`"Adi?s"` with `id:"evt-1"` returns 409 and leaves `"Hola"` intact. With a stable
+`externalId:"note-1"`, an identical request using a fresh `id` also returns the
+original event. Adding a different idempotency key to that retry returns 409.
+
+These rules apply to every currently accepted positive `contractVersion` (default
+1). Identity namespaces do **not** reset on version changes: a different version
+reusing an identity returns 409, even if all other fields agree. A new capture in
+another version requires fresh identities. Version remains part of meaningful
+content; this endpoint does not translate between versions. `/api/v2/observations`
+retains its separate envelope/receipt contract.
+
+Transition: old colon-encoded `dedupeKey` values stay untouched. Lookups use stored
+identity columns, so retries of historical rows work without an evidence rewrite.
+Ambiguous historical identities fail closed with 409. New keys use a structured,
+typed encoding and are opaque to consumers. Deploy all ingestion writers together:
+the transaction advisory-lock protocol requires every writer to use the updated
+`insertRawEvent`; a mixed old/new writer deployment cannot guarantee collision
+serialization. The migration only adds non-unique lookup indexes and does not delete
+or merge historical captures. Direct SQL writers must implement the same protocol.
+
+For compatibility `/capture/*` keeps its existing 201 status and full event/batch
+shape; each real ingested event now includes the same `ingestion` metadata and
+conflicts return 409. Batch processing remains sequential and non-atomic: earlier
+items may persist before a later conflict. Retry original items individually or
+retry the batch unchanged; successful earlier items resolve as duplicates.
+
 ### Canonical ingestion example
 
 ```json

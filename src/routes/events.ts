@@ -155,7 +155,7 @@ export const registerEventRoutes = (options: EventRoutesOptions): FastifyPluginA
           request.log.warn({ eventId: stored.id, error: String(error) }, "event progress unavailable");
           return stored;
         });
-      return reply.status(201).send(withProgress);
+      return reply.status(stored.ingestion.duplicate ? 200 : 201).send({ ...withProgress, ingestion: stored.ingestion });
     });
 
     app.get("/events/:id/jobs", async (request, reply) => {
