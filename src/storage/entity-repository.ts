@@ -312,7 +312,23 @@ export async function upsertEntity(
   return storedEntity;
 }
 
-export async function listEntities(ownerId?: string, db: Queryable = pool) {
+export type ListEntitiesPage = { limit?: number; offset?: number; newestFirst?: boolean };
+
+export async function listEntities(ownerId?: string, db: Queryable = pool, page: ListEntitiesPage = {}) {
+  const params: unknown[] = ownerId ? [ownerId] : [];
+  // Without a page the query is exactly the historical full scan; ordering and
+  // limits only change when a caller opts in.
+  const paged = page.limit !== undefined || page.offset !== undefined || page.newestFirst === true;
+  const direction = page.newestFirst ? "desc" : "asc";
+  let paging = "";
+  if (page.limit !== undefined) {
+    params.push(page.limit);
+    paging += ` limit $${params.length}`;
+  }
+  if (page.offset) {
+    params.push(page.offset);
+    paging += ` offset $${params.length}`;
+  }
   const result = await db.query<EntityRecord>(
     `
       ${selectEntityProjectionSql()}
@@ -322,9 +338,9 @@ export async function listEntities(ownerId?: string, db: Queryable = pool) {
           where tombstone.target_type = 'entity' and tombstone.target_id = e.id
         )
         ${ownerId ? "and (e.owner_id = $1 or (e.owner_id is null and e.type in ('domain','concept')))" : ""}
-      order by e.created_at asc
+      order by e.created_at ${direction}${paged ? ", e.id " + direction : ""}${paging}
     `,
-    ownerId ? [ownerId] : [],
+    params,
   );
 
   return result.rows;

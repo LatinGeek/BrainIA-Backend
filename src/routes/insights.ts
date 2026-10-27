@@ -100,7 +100,7 @@ export const registerInsightsRoutes: FastifyPluginAsync = async (app) => {
       return { ok: true, scope: "global", writer: "daily", ...result };
     }
     const requested = dailyInsightSchema.safeParse(body);
-    const latestEntity = requested.success ? null : (await listEntities(ownerScope(request))).at(-1);
+    const latestEntity = requested.success ? null : (await listEntities(ownerScope(request), undefined, { limit: 1, newestFirst: true }))[0];
     if (!requested.success && !latestEntity) {
       return reply.status(400).send({ error: "invalid_daily_insight_request", issues: requested.error.flatten() });
     }

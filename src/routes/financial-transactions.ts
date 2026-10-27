@@ -30,7 +30,31 @@ const listQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(1000).default(25),
   from: z.string().datetime({ offset: true }).optional(),
   to: z.string().datetime({ offset: true }).optional(),
+  // "summary" keeps only what list rows render and match rules on; the full record
+  // (and its complete evidence) stays available from /financial/transactions/:id.
+  view: z.enum(["full", "summary"]).default("full"),
 });
+
+const SUMMARY_FIELDS = [
+  "id", "kind", "amount", "currency", "merchantLabel", "displayMerchantLabel", "normalizedMerchant",
+  "merchantEntityId", "observedAt", "category", "account", "accountId", "destinationAccount",
+  "destinationAccountId", "destinationAmount", "destinationCurrency", "excludedFromReports",
+  "adjustmentTargetBalance", "primarySource", "evidenceCount", "status",
+] as const;
+
+function toSummaryRow(row: Record<string, unknown>) {
+  const summary: Record<string, unknown> = {};
+  for (const field of SUMMARY_FIELDS) {
+    if (field in row) summary[field] = row[field];
+  }
+  if (Array.isArray(row.evidence)) {
+    summary.evidence = row.evidence.map((entry) => {
+      const { rawEventId, source, merchantLabel } = (entry ?? {}) as Record<string, unknown>;
+      return { rawEventId, source, merchantLabel };
+    });
+  }
+  return summary;
+}
 
 // Amounts may be sent as exact decimal text (preferred) or as the legacy
 // JSON number. Neither form is turned into floating-point money server-side.
@@ -339,9 +363,10 @@ export const registerFinancialTransactionRoutes: FastifyPluginAsync = async (app
       from: parsed.data.from,
       to: parsed.data.to,
     }, db));
+    const rows = parsed.data.view === "summary" ? items.map((item) => toSummaryRow(item as unknown as Record<string, unknown>)) : items;
     return {
-      count: items.length,
-      items,
+      count: rows.length,
+      items: rows,
     };
   });
 
