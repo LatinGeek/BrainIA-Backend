@@ -36,6 +36,8 @@ export const PRIVACY_PURPOSES = [
   "intelligence_synthesis",
   "knowledge_digest_synthesis",
   "proactive_insight_synthesis",
+  "ask_plan",
+  "ask_answer",
 ] as const;
 
 export type PrivacyPurpose = (typeof PRIVACY_PURPOSES)[number];

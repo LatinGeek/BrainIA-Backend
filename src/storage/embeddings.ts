@@ -1,6 +1,7 @@
 import crypto, { randomUUID } from "node:crypto";
 import { estimateTokens, modelRequestFingerprint, recordModelCallAudit } from "./model-audit.js";
 import { pool, withTransaction } from "./postgres.js";
+import { categoryLabelEs, KIND_LABELS_ES } from "../domain/category-labels.js";
 import { assertJobFence, type JobFence } from "./job-repository.js";
 import {
   acquireProviderSlot,
@@ -17,6 +18,45 @@ type Queryable = Pick<typeof pool, "query">;
 export const LOCAL_EMBEDDING_DIMENSIONS = 192;
 export const LOCAL_EMBEDDING_MODEL = "brainia-semantic-hash";
 export const EMBEDDING_VERSION = process.env.EMBEDDING_VERSION ?? "embedding-v1";
+
+export const OPENAI_EMBEDDING_URL = "https://api.openai.com/v1/embeddings";
+export const OPENAI_EMBEDDING_MODEL = "text-embedding-3-small";
+/**
+ * 512 output dimensions keep nearly all of text-embedding-3-small's retrieval
+ * quality while making an exact in-database similarity scan cheap for one
+ * owner's data (no vector extension needed).
+ */
+export const OPENAI_EMBEDDING_DIMENSIONS = 512;
+
+export type EmbeddingProvider = { apiKey: string; endpoint: string; model: string; dimensions: number | null };
+
+/**
+ * Resolves the external embedding provider. OPENAI_EMBEDDING_API_KEY alone is
+ * enough (OpenAI endpoint, text-embedding-3-small, 512 dims); the generic
+ * EMBEDDING_* variables override any of those for another compatible provider.
+ * Returns null when no provider is configured, so the local hash vector is used.
+ */
+export function embeddingProvider(env: NodeJS.ProcessEnv = process.env): EmbeddingProvider | null {
+  const openAiKey = env.OPENAI_EMBEDDING_API_KEY?.trim() || null;
+  const apiKey = env.EMBEDDING_API_KEY?.trim() || openAiKey;
+  if (!apiKey) return null;
+  const endpoint = env.EMBEDDING_API_URL?.trim() || (openAiKey ? OPENAI_EMBEDDING_URL : null);
+  // The example file ships the local model name; it is never an external model id.
+  const explicitModel = env.EMBEDDING_MODEL?.trim();
+  const model = explicitModel && explicitModel !== LOCAL_EMBEDDING_MODEL
+    ? explicitModel : openAiKey ? OPENAI_EMBEDDING_MODEL : null;
+  // A provider without a real model id cannot record provenance: stay local.
+  if (!endpoint || !model) return null;
+  const explicitDimensions = Number(env.EMBEDDING_DIMENSIONS);
+  const dimensions = Number.isInteger(explicitDimensions) && explicitDimensions >= 64 && explicitDimensions <= 4096
+    ? explicitDimensions : model.startsWith("text-embedding-3") ? OPENAI_EMBEDDING_DIMENSIONS : null;
+  return { apiKey, endpoint, model, dimensions };
+}
+
+/** True only when an external provider can produce vectors with recorded provenance. */
+export function externalEmbeddingsConfigured() {
+  return embeddingProvider() !== null;
+}
 
 const SEMANTIC_EQUIVALENTS: Record<string, string> = {
   gasto: "expense", gastos: "expense", compra: "expense", compras: "expense", pago: "payment", pagos: "payment",
@@ -90,17 +130,14 @@ export async function generateEmbedding(input: {
   purpose?: string | null;
   authorization?: PrivacyAuthorization | PrivacyDenial | null;
 }) {
-  const apiKey = process.env.EMBEDDING_API_KEY;
-  const endpoint = process.env.EMBEDDING_API_URL;
-  const configuredModel = process.env.EMBEDDING_MODEL?.trim();
+  const provider = embeddingProvider();
   const local = () => ({ embedding: buildLocalEmbedding(input.text), model: LOCAL_EMBEDDING_MODEL, version: EMBEDDING_VERSION });
   // A local hash vector must never be labelled as an external vector, and an
-  // external vector must carry the provider's real model id. Without an
-  // explicit EMBEDDING_MODEL we cannot record provenance, so stay local.
-  if (!apiKey || !endpoint || !configuredModel) {
+  // external vector must carry the provider's real model id.
+  if (!provider) {
     return local();
   }
-  const model = configuredModel;
+  const { apiKey, endpoint, model } = provider;
   const authorization = input.authorization;
   if (!authorization?.allowed) {
     logPrivacyDenial(authorization ? authorization.reason : "missing_owner", {
@@ -121,7 +158,10 @@ export async function generateEmbedding(input: {
     const response = await fetch(endpoint, {
       method: "POST",
       headers: { "content-type": "application/json", authorization: `Bearer ${apiKey}` },
-      body: JSON.stringify({ model, input: safeText }),
+      body: JSON.stringify({
+        model, input: safeText,
+        ...(provider.dimensions ? { dimensions: provider.dimensions } : {}),
+      }),
       signal: AbortSignal.timeout(15_000),
     });
     if (!response.ok) throw new Error(`Embedding provider returned HTTP ${response.status}`);
@@ -260,11 +300,23 @@ export async function upsertEmbedding(db: Queryable, input: {
         policyVersion,
       }
     : { ...input.metadata };
+  const contentHash = crypto.createHash("sha256").update(content).digest("hex");
+  // Unchanged content embedded by the model we would use now (and under a
+  // policy version that is still current) needs no new provider call. This
+  // keeps reprocessing and backfills from re-paying for identical text.
+  const expectedModel = authorization.allowed ? embeddingProvider()?.model ?? LOCAL_EMBEDDING_MODEL : LOCAL_EMBEDDING_MODEL;
+  const existing = await db.query<{ id: string }>(`
+    select id from knowledge_embeddings
+    where object_type = $1 and object_id = $2 and embedding_version = $3
+      and content_hash = $4 and model = $5 and coalesce(policy_version, 0) >= $6
+      and coalesce(metadata->>'policyStale', 'false') <> 'true'
+    limit 1
+  `, [input.objectType, input.objectId, EMBEDDING_VERSION, contentHash, expectedModel, policyVersion]);
+  if (existing.rows.length) return null;
   const generated = await generateEmbedding({
     text: content, clientId: input.clientId, ownerId, objectId: input.objectId,
     purpose: input.purpose ?? "embedding", authorization,
   });
-  const contentHash = crypto.createHash("sha256").update(content).digest("hex");
   const result = await db.query(`
     insert into knowledge_embeddings (
       id, client_id, owner_id, object_type, object_id, embedding, dimensions,
@@ -286,6 +338,73 @@ export async function upsertEmbedding(db: Queryable, input: {
   return result.rows[0] ?? null;
 }
 
+/**
+ * Contextual retrieval text: a short header (date, source, money facts in
+ * Spanish) followed by the interpreted and raw text. Short transport text such
+ * as "Compra aprobada $1.250" embeds poorly on its own; the header lets a
+ * question like "¿cuánto gasté en delivery?" match it semantically. The raw
+ * body is capped so long emails do not dilute the vector.
+ */
+export function buildEventEmbeddingText(row: {
+  source: string; kind: string; title: string | null; body: string | null;
+  displayTitle: string | null; displayDescription: string | null; occurredAt?: string | null;
+  inferredKind?: string | null; txKind?: string | null; txAmount?: string | null;
+  txCurrency?: string | null; txCategory?: string | null; txMerchant?: string | null;
+}) {
+  const header = [
+    row.occurredAt ? `Fecha: ${row.occurredAt}` : null,
+    `Fuente: ${row.source}`,
+    `Tipo: ${row.inferredKind ?? row.kind}`,
+  ].filter(Boolean).join(" · ");
+  const money = row.txKind && row.txAmount
+    ? `Movimiento: ${KIND_LABELS_ES[row.txKind] ?? row.txKind} de ${row.txAmount} ${row.txCurrency ?? ""}`.trim()
+      + (row.txMerchant ? ` en ${row.txMerchant}` : "")
+      + ` · Categoría: ${categoryLabelEs(row.txCategory)}`
+    : null;
+  const raw = [row.title, row.body].filter(Boolean).join("\n").slice(0, 1800);
+  return [header, money, row.displayTitle, row.displayDescription, raw].filter(Boolean).join("\n");
+}
+
+export type KnnHit = { objectType: "event" | "entity"; objectId: string; score: number };
+
+/**
+ * Exact cosine nearest neighbours computed inside Postgres. Stored vectors are
+ * unit-normalised, so the dot product is the cosine. Only rows produced by the
+ * same model/version/dimensions as the query vector are comparable; mixing a
+ * hash vector with a provider vector would silently score zero.
+ */
+export async function nearestEmbeddings(db: Queryable, input: {
+  ownerId: string | null;
+  vector: number[];
+  model: string;
+  objectTypes: Array<"event" | "entity">;
+  from?: string | null;
+  to?: string | null;
+  limit: number;
+}): Promise<KnnHit[]> {
+  if (!input.vector.length) return [];
+  const result = await db.query<{ objectType: "event" | "entity"; objectId: string; score: number }>(`
+    with query as (select $1::float8[] as vector)
+    select embedding.object_type as "objectType", embedding.object_id as "objectId",
+      (select sum(a * b) from unnest(embedding.embedding, query.vector) as pair(a, b))::float8 as score
+    from knowledge_embeddings embedding cross join query
+    left join raw_events event on embedding.object_type = 'event' and event.id = embedding.object_id
+    left join entities entity on embedding.object_type = 'entity' and entity.id = embedding.object_id
+    where embedding.embedding_version = $2 and embedding.model = $3 and embedding.dimensions = $4
+      and embedding.object_type = any($5::text[])
+      and coalesce(embedding.owner_id, embedding.client_id) is not distinct from $6
+      and coalesce(embedding.metadata->>'policyStale', 'false') <> 'true'
+      and (embedding.object_type <> 'event' or (event.id is not null and event.privacy_status = 'standard'
+        and ($7::timestamptz is null or coalesce(event.timestamp, event.created_at) >= $7)
+        and ($8::timestamptz is null or coalesce(event.timestamp, event.created_at) <= $8)))
+      and (embedding.object_type <> 'entity' or (entity.id is not null and entity.visibility <> 'hidden'))
+    order by score desc nulls last
+    limit $9
+  `, [input.vector, EMBEDDING_VERSION, input.model, input.vector.length, input.objectTypes,
+    input.ownerId, input.from ?? null, input.to ?? null, input.limit]);
+  return result.rows.map((row) => ({ ...row, score: Number(row.score) }));
+}
+
 export async function refreshEventEmbeddings(
   db: Queryable,
   eventId: string,
@@ -294,12 +413,25 @@ export async function refreshEventEmbeddings(
   const event = await db.query<{
     id: string; clientId: string | null; ownerId: string | null; source: string; kind: string;
     title: string | null; body: string | null; displayTitle: string | null;
-    displayDescription: string | null;
+    displayDescription: string | null; occurredAt: string | null; inferredKind: string | null;
+    txKind: string | null; txAmount: string | null; txCurrency: string | null;
+    txCategory: string | null; txMerchant: string | null;
   }>(`
     select event.id, event.client_id as "clientId", event.owner_id as "ownerId", event.source, event.kind,
       event.title, event.body, classified.display_title as "displayTitle",
-      classified.display_description as "displayDescription"
+      classified.display_description as "displayDescription",
+      to_char(coalesce(event.timestamp, event.created_at) at time zone 'America/Montevideo', 'YYYY-MM-DD') as "occurredAt",
+      classified.inferred_kind as "inferredKind",
+      tx.kind as "txKind", tx.amount::text as "txAmount", tx.currency as "txCurrency",
+      tx.category as "txCategory", coalesce(tx.title_override, tx.merchant_label) as "txMerchant"
     from raw_events event left join classified_events classified on classified.raw_event_id = event.id
+    left join lateral (
+      select t.kind, t.amount, t.currency, t.category, t.title_override, t.merchant_label
+      from financial_transaction_events link
+      join financial_transactions t on t.id = link.transaction_id
+      where link.raw_event_id = event.id and t.hidden_at is null
+      order by t.updated_at desc limit 1
+    ) tx on true
     where event.id = $1 and event.privacy_status <> 'hidden'
   `, [eventId]);
   const row = event.rows[0];
@@ -318,8 +450,8 @@ export async function refreshEventEmbeddings(
   const ownerId = row.ownerId ?? row.clientId;
   const eventEmbedding = await write({
     clientId: row.clientId, ownerId, objectType: "event", objectId: row.id,
-    content: [row.displayTitle, row.displayDescription, row.title, row.body, row.source, row.kind].filter(Boolean).join("\n"),
-    metadata: { source: row.source, kind: row.kind }, eventIds: [row.id],
+    content: buildEventEmbeddingText(row),
+    metadata: { source: row.source, kind: row.kind, occurredAt: row.occurredAt }, eventIds: [row.id],
   });
   if (eventEmbedding) stored.push(eventEmbedding);
 

@@ -994,14 +994,29 @@ export async function listFinancialTransactions(
   return items;
 }
 
-type FinancialSummaryScope = {
+export type FinancialSummaryScope = {
   from: string;
   to: string;
   ownerId?: string;
   accountId?: string;
 };
 
-function summaryScopeFilters(input: FinancialSummaryScope, params: unknown[]) {
+/**
+ * Row-level eligibility for every reported total (Money tab, v2 summary and
+ * the Ask chat). Shared so a chat answer can never disagree with the app.
+ */
+export const REPORTABLE_TRANSACTION_FILTERS = [
+  "t.hidden_at is null",
+  "t.excluded_from_reports = false",
+  "t.amount_confirmed = true",
+  "t.currency_status in ('explicit', 'account_confirmed', 'user_confirmed')",
+  "t.currency <> 'UNKNOWN'",
+  "t.kind <> 'transfer'",
+  "not (t.review_reasons ? 'native_reference_conflict')",
+  "upper(t.currency) in ('ARS', 'BRL', 'CLP', 'COP', 'EUR', 'GBP', 'MXN', 'PEN', 'USD', 'UYU')",
+] as const;
+
+export function summaryScopeFilters(input: FinancialSummaryScope, params: unknown[]) {
   const filters: string[] = [];
   params.push(input.from);
   filters.push(`t.observed_at >= $${params.length}::timestamptz`);
@@ -1037,15 +1052,9 @@ export async function getFinancialSummary(input: {
   fxRateId?: string;
 }): Promise<FinancialSummary> {
   const params: unknown[] = [];
-  const filters = [
-    "t.hidden_at is null",
-    "t.excluded_from_reports = false",
-    "t.amount_confirmed = true",
-    "t.currency_status in ('explicit', 'account_confirmed', 'user_confirmed')",
-    "t.currency <> 'UNKNOWN'",
-    "t.kind <> 'transfer'",
-    "not (t.review_reasons ? 'native_reference_conflict')",
-  ];
+  // The currency allow-list is part of the shared filters (it was previously
+  // inlined in the query below); behaviour is unchanged.
+  const filters: string[] = [...REPORTABLE_TRANSACTION_FILTERS];
   filters.push(...summaryScopeFilters(input, params));
 
   // Report totals aggregate canonical transaction rows once. Evidence tables are
@@ -1065,8 +1074,6 @@ export async function getFinancialSummary(input: {
         count(*)::int as "transactionCount"
       from financial_transactions t
       where ${filters.join(" and ")}
-        and upper(t.currency) in ('ARS', 'BRL', 'CLP', 'COP', 'EUR', 'GBP', 'MXN', 'PEN', 'USD', 'UYU')
-        and t.amount_confirmed = true
       group by upper(t.currency)
       order by upper(t.currency) asc
     `,

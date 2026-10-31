@@ -3,6 +3,7 @@ import crypto from "node:crypto";
 import Fastify from "fastify";
 import { AuthzError, createApiAuthHook, loadAuthConfig } from "./auth.js";
 import { registerAgentRoutes } from "./routes/agent.js";
+import { registerAskRoutes } from "./routes/ask.js";
 import { registerAgentInspectRoutes } from "./routes/agent-inspect.js";
 import { registerCaptureRoutes } from "./routes/capture.js";
 import { registerDashboardRoutes } from "./routes/dashboard.js";
@@ -96,6 +97,7 @@ export async function buildApp(options: { authConfig?: AuthConfig } = {}) {
   await app.register(registerEntitySemanticProfileRoutes, { prefix: config.apiPrefix });
   await app.register(registerGraphRoutes, { prefix: config.apiPrefix });
   await app.register(registerSearchRoutes, { prefix: config.apiPrefix });
+  await app.register(registerAskRoutes, { prefix: config.apiPrefix });
   await app.register(registerSemanticRoutes, { prefix: config.apiPrefix });
   await app.register(registerOperationsRoutes, { prefix: config.apiPrefix });
   await app.register(registerPrivacyRoutes, { prefix: config.apiPrefix });

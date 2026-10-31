@@ -94,6 +94,8 @@ Update this file when:
 - production runs with `BRAINIA_EVIDENCE_POLICY=enforce`; the review queue was reduced to 10 high-utility proposals after verified existing-category assignments were applied automatically
 - Motorola `moto g04s` installed and exercised with the release APK, including evidence display, approval, rejection, and rule creation; the Xiaomi device was reachable but locked, so only install/launch could be verified
 - comparison report: `output/evidence-generation-a3f6dc01-3473-4b0b-9d81-a2eea1570235-pre-activation.md` (pre-activation) and `output/evidence-generation-a3f6dc01-3473-4b0b-9d81-a2eea1570235.md` (post-activation); production deployment `brain-eyc06jgca-latingeeks-projects.vercel.app`, alias `https://brain-ia-six.vercel.app`
+- Explorar chat backend is `POST /api/v1/ask` (NDJSON stream): DeepSeek planner → exact finance SQL (shared Money filters) + full-text/vector RRF knowledge retrieval → cited streamed answer with numeric grounding check; design in `docs/ask-rag.md`
+- semantic embeddings use OpenAI `text-embedding-3-small` (512 dims) when `OPENAI_EMBEDDING_API_KEY` is set; similarity is an exact in-Postgres scan; `npm run backfill:embeddings -- --apply` re-embeds after enabling
 
 ## Active decisions
 
