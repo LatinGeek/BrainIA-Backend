@@ -40,3 +40,24 @@ export const KIND_LABELS_ES: Record<string, string> = {
   income: "ingreso",
   transfer: "transferencia",
 };
+
+const EVENT_KIND_LABELS_ES: Record<string, string> = {
+  note: "Nota", email: "Correo", notification: "Notificación", task: "Tarea", wallet: "Billetera",
+  event: "Evento", expense: "Gasto", income: "Ingreso", transfer: "Transferencia", other: "Registro",
+};
+
+/** Spanish label for an event kind ("note" → "Nota"); unknown kinds pass through. */
+export function eventKindLabelEs(kind: string | null | undefined) {
+  const key = (kind ?? "").toLowerCase();
+  return EVENT_KIND_LABELS_ES[key] ?? (kind || "Registro");
+}
+
+const ENTITY_TYPE_LABELS_ES: Record<string, string> = {
+  person: "Persona", merchant: "Comercio", organization: "Organización", project: "Proyecto", place: "Lugar",
+  topic: "Tema", concept: "Concepto", domain: "Área", account: "Cuenta", service: "Servicio", product: "Producto",
+};
+
+export function entityTypeLabelEs(type: string | null | undefined) {
+  const key = (type ?? "").toLowerCase();
+  return ENTITY_TYPE_LABELS_ES[key] ?? (type || "Elemento");
+}

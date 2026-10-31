@@ -475,6 +475,7 @@ export function checkNumericGrounding(answer: string, evidenceTexts: string[]) {
   for (const text of evidenceTexts) for (const key of extractNumberKeys(text)) evidence.add(key);
   const withoutCitations = answer.replace(/\[S\d+\]/g, " ");
   const unverified: string[] = [];
+  let checked = 0;
   for (const match of withoutCitations.matchAll(new RegExp(`(${NUMBER_TOKEN.source})(\\s*%)?`, "g"))) {
     const token = match[1]!;
     const isPercent = Boolean(match[2]);
@@ -485,9 +486,12 @@ export function checkNumericGrounding(answer: string, evidenceTexts: string[]) {
     const isSmallInteger = !isPercent && Number.isInteger(value) && value <= 31;
     const isYear = !isPercent && Number.isInteger(value) && value >= 1990 && value <= 2100 && /^\d{4}$/.test(token);
     if (isSmallInteger || isYear) continue;
+    checked += 1;
     if (!evidence.has(key)) unverified.push(isPercent ? `${token}%` : token);
   }
-  return { status: unverified.length ? "unverified" as const : "verified" as const, unverified: [...new Set(unverified)].slice(0, 10) };
+  // "Verified" is only claimed when there was at least one material figure to verify.
+  const status = unverified.length ? "unverified" as const : checked ? "verified" as const : "not_applicable" as const;
+  return { status, unverified: [...new Set(unverified)].slice(0, 10) };
 }
 
 /** Normalises "[S1, S3]" / "[S1][S2]" and drops references to sources that do not exist. */

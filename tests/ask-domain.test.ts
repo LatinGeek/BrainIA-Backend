@@ -115,7 +115,8 @@ test("figures must be grounded: amounts, percentages and counts", () => {
   assert.equal(result.status, "unverified");
   assert.deepEqual(result.unverified, ["45.000", "15%"]);
   // Days, small counts and years are not material figures.
-  assert.equal(checkNumericGrounding("El 3 de octubre de 2026 hiciste 2 compras.", []).status, "verified");
+  // An answer without material figures is not claimed as verified.
+  assert.equal(checkNumericGrounding("El 3 de octubre de 2026 hiciste 2 compras.", []).status, "not_applicable");
 });
 
 test("citations are normalised and never point at missing sources", () => {

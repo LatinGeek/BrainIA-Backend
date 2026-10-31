@@ -7,7 +7,7 @@ import {
   type FinancePlan,
   type ResolvedPeriod,
 } from "../domain/ask.js";
-import { categoryLabelEs, KIND_LABELS_ES } from "../domain/category-labels.js";
+import { categoryLabelEs, entityTypeLabelEs, eventKindLabelEs, KIND_LABELS_ES } from "../domain/category-labels.js";
 import { quantizeDecimal, subtractDecimal } from "../domain/money.js";
 import { nearestEmbeddings } from "./embeddings.js";
 import { REPORTABLE_TRANSACTION_FILTERS, summaryScopeFilters } from "./financial-transaction-repository.js";
@@ -304,7 +304,10 @@ export async function retrieveFinance(db: Queryable, input: {
     ]);
     const previous = finance.compare ? previousPeriod(input.period, input.timeZone) : null;
     const prior = previous ? await financeTotals(db, { ...base, period: previous }) : [];
-    const currencies = [...new Set([...current.map((row) => row.currency), ...prior.map((row) => row.currency)])];
+    // The busiest currency leads (it is shown as the headline figure).
+    const activity = new Map(current.map((row) => [row.currency, row.count]));
+    const currencies = [...new Set([...current.map((row) => row.currency), ...prior.map((row) => row.currency)])]
+      .sort((left, right) => (activity.get(right) ?? 0) - (activity.get(left) ?? 0) || left.localeCompare(right));
     const rows = currencies.map((currency) => {
       const now = current.find((row) => row.currency === currency) ?? { currency, income: "0", expense: "0", count: 0 };
       const before = prior.find((row) => row.currency === currency);
@@ -546,7 +549,7 @@ function eventSource(row: EventRow, score: number): AskSource {
   return {
     kind: "event",
     title,
-    subtitle: [row.source, row.kind].join(" · "),
+    subtitle: eventKindLabelEs(row.kind),
     date: row.date,
     text: [`REGISTRO ${formatDateEs(row.date)} (${row.source}, ${row.kind}): ${title}`, description, raw, money,
       row.entityNames?.length ? `Menciona: ${row.entityNames.join(", ")}` : null].filter(Boolean).join("\n"),
@@ -563,7 +566,7 @@ function entitySource(row: EntityRow, score: number): AskSource {
   return {
     kind: "entity",
     title: row.value,
-    subtitle: row.type,
+    subtitle: entityTypeLabelEs(row.type),
     date: row.lastSeen,
     text: [`ELEMENTO "${row.value}" (${row.type})`, row.description,
       row.aliases.length ? `También llamado: ${row.aliases.join(", ")}` : null,
