@@ -169,3 +169,120 @@ export async function generateNaturalLanguageSummary(input: {
   }
   return content;
 }
+
+/**
+ * Streaming chat completion with the same privacy contract as
+ * generateNaturalLanguageSummary: authorization is required before dispatch and
+ * re-checked after the provider slot wait and once the stream ends. Content is
+ * forwarded through onDelta as it arrives; the caller must discard what it
+ * showed if the function returns null (authorization revoked mid-flight).
+ * Every non-system message is redacted under the authorization's policy.
+ */
+export async function streamChatCompletion(input: {
+  apiKey?: string;
+  model?: string;
+  messages: DeepSeekChatMessage[];
+  maxTokens?: number;
+  temperature?: number;
+  timeoutMs?: number;
+  audit: { clientId?: string | null; operation: string; promptVersion: string };
+  privacy?: PrivacyAuthorization | PrivacyDenial | null;
+  onDelta: (text: string) => void;
+}): Promise<{ content: string; inputTokens: number; outputTokens: number } | null> {
+  if (!input.apiKey) return null;
+  const authorization = input.privacy;
+  if (!authorization?.allowed) {
+    logPrivacyDenial(authorization ? authorization.reason : "missing_owner", { purpose: input.audit.operation });
+    return null;
+  }
+  const model = input.model ?? "deepseek-v4-flash";
+  const messages = input.messages.map((message) => message.role === "system"
+    ? message
+    : { ...message, content: redactForModel(message.content, authorization.redaction ?? DEFAULT_SOURCE_POLICY) });
+  const promptText = messages.map((message) => message.content).join("\n");
+  const fingerprint = modelRequestFingerprint({ model, systemPrompt: messages[0]?.content ?? "", userPrompt: promptText });
+  const inputTokensEstimate = estimateTokens(promptText);
+  const startedAt = Date.now();
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), input.timeoutMs ?? 45_000);
+  const release = await acquireProviderSlot(authorization.ownerId);
+  let content = "";
+  let usage: { prompt_tokens?: number; completion_tokens?: number } | undefined;
+  const audit = (status: "succeeded" | "failed" | "cancelled", extra: { errorCode?: string; resultMetadata?: Record<string, unknown> } = {}) => recordModelCallAudit({
+    clientId: input.audit.clientId, eventId: null, provider: "deepseek", operation: input.audit.operation,
+    model, promptVersion: input.audit.promptVersion, status,
+    inputTokens: usage?.prompt_tokens ?? inputTokensEstimate,
+    outputTokens: usage?.completion_tokens ?? estimateTokens(content),
+    latencyMs: Date.now() - startedAt, requestFingerprint: fingerprint,
+    ...extra,
+  });
+  try {
+    if (!(await stillAuthorized(authorization))) {
+      logPrivacyDenial("policy_version_changed", { purpose: authorization.purpose });
+      return null;
+    }
+    const response = await fetch(process.env.DEEPSEEK_API_URL ?? "https://api.deepseek.com/chat/completions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${input.apiKey}` },
+      body: JSON.stringify({
+        model, messages, stream: true, stream_options: { include_usage: true },
+        thinking: { type: "disabled" },
+        ...(input.maxTokens ? { max_tokens: input.maxTokens } : {}),
+        ...(input.temperature !== undefined ? { temperature: input.temperature } : {}),
+      }),
+      signal: controller.signal,
+    });
+    if (!response.ok || !response.body) {
+      // Never persist a provider error body: it can echo the prompt.
+      await audit("failed", { errorCode: `http_${response.status}`, resultMetadata: { httpStatus: response.status } });
+      throw new Error(`DeepSeek request failed with HTTP ${response.status}`);
+    }
+    const decoder = new TextDecoder();
+    let buffer = "";
+    for await (const chunk of response.body as unknown as AsyncIterable<Uint8Array>) {
+      buffer += decoder.decode(chunk, { stream: true });
+      let newline = buffer.indexOf("\n");
+      while (newline >= 0) {
+        const line = buffer.slice(0, newline).trim();
+        buffer = buffer.slice(newline + 1);
+        newline = buffer.indexOf("\n");
+        if (!line.startsWith("data:")) continue;
+        const data = line.slice(5).trim();
+        if (data === "[DONE]") continue;
+        try {
+          const parsed = JSON.parse(data) as {
+            choices?: Array<{ delta?: { content?: string | null } }>;
+            usage?: { prompt_tokens?: number; completion_tokens?: number };
+          };
+          if (parsed.usage) usage = parsed.usage;
+          const delta = parsed.choices?.[0]?.delta?.content;
+          if (delta) {
+            content += delta;
+            input.onDelta(delta);
+          }
+        } catch {
+          // Ignore keep-alive or partial frames; the provider resends full events.
+        }
+      }
+    }
+  } catch (error) {
+    const aborted = error instanceof DOMException && error.name === "AbortError";
+    if (!(error instanceof Error && error.message.startsWith("DeepSeek request failed"))) {
+      await audit(aborted ? "cancelled" : "failed", {
+        errorCode: aborted ? "timeout" : "request_error",
+        resultMetadata: { errorName: error instanceof Error ? error.name : "Error", partial: content.length > 0 },
+      });
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+    release();
+  }
+  const publishable = await stillAuthorized(authorization);
+  await audit(publishable ? "succeeded" : "cancelled", { resultMetadata: { emptyResponse: !content, streamed: true } });
+  if (!publishable) {
+    logPrivacyDenial("policy_version_changed", { purpose: authorization.purpose });
+    return null;
+  }
+  return { content, inputTokens: usage?.prompt_tokens ?? inputTokensEstimate, outputTokens: usage?.completion_tokens ?? estimateTokens(content) };
+}

@@ -1097,6 +1097,27 @@ If the digest id does not exist, the API returns HTTP `404` with:
 
 Returns a reranked 10-30 item evidence package. Optional filters are `source`, `kind`, `from`, `to`, `currency`, `account`, `category`, `limit`, and `includeGraph`. The strategy combines structured filtering, GIN full-text search, versioned embeddings, canonical aliases/merges, a bounded graph neighborhood, recency, confidence, and frequency.
 
+### `POST /api/v1/ask`
+
+Grounded question answering for the mobile Explorar chat. See `docs/ask-rag.md` for the retrieval design.
+
+Request: `{ "question": "¿Cuánto gasté en delivery el mes pasado?", "history": [{ "role": "user"|"assistant", "content": "..." }], "timeZone": "America/Montevideo", "stream": true }`. `history` carries at most 12 prior turns (client-held; the server stores no conversation). `timeZone` defaults to `America/Montevideo`.
+
+With `stream: true` (default) the response is `application/x-ndjson`, one event per line, in this order:
+
+- `{"type":"status","stage":"understanding"|"retrieving"|"answering"}` (repeated)
+- `{"type":"plan","standalone","intent","period":{"label","fromDate","toDate","assumed"}|null,"filters":[]}`
+- `{"type":"sources","sources":[{"id":"S1","kind":"calculation"|"transaction"|"event"|"entity","title","subtitle","date","route","amount"}],"cards":[...]}`
+- `{"type":"delta","text"}` (answer tokens; zero or more)
+- `{"type":"done","answer","citations":["S1"],"grounding":{"status":"verified"|"unverified"|"not_applicable","unverified":[]},"mode":"model"|"deterministic","timings":{}}`
+- or `{"type":"error","code","message"}`
+
+`cards` are deterministic SQL results the app renders directly: `totals` (per currency, optional previous-period comparison, `excludedCount`), `breakdown` (top groups with share) and `transactions`. Totals use the same eligibility filters as the Money summary, minus rows whose evidence source is denied LLM egress. With `stream: false` the same data is returned as one JSON object. `400 invalid_ask`, `503 ask_disabled` (`BRAINIA_ASK_ENABLED=false`).
+
+### `GET /api/v1/ask/capabilities`
+
+`{ "enabled", "answerModelConfigured", "semanticEmbeddings": "text-embedding-3-small"|null, "streaming": true }`.
+
 ## Processing and quality
 
 - Event responses expose `processingStatus`, `processingStatusReason`, `processingStatusUpdatedAt`, `privacyStatus`, and `processingAllowed`.

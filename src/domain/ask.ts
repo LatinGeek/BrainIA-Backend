@@ -134,13 +134,8 @@ export function resolvePeriodExpression(text: string, timeZone = DEFAULT_TIME_ZO
   }
   if (/\beste\s+mes\b/.test(value)) return make({ ...today, day: 1 }, today, `${MONTHS_ES[today.month - 1]} ${today.year} (hasta hoy)`);
 
-  if (/\b(?:el\s+)?ano\s+pasado\b/.test(value)) {
-    const year = today.year - 1;
-    return make({ year, month: 1, day: 1 }, { year, month: 12, day: 31 }, `${year}`);
-  }
-  if (/\beste\s+ano\b/.test(value)) return make({ year: today.year, month: 1, day: 1 }, today, `${today.year} (hasta hoy)`);
-
-  // Named month, optionally with a year: "en octubre", "octubre 2025", "octubre del ano pasado".
+  // Named month (checked before year-level phrases so "marzo del año pasado"
+  // is March, not the whole year), optionally with a year: "en octubre", "octubre 2025", "octubre del ano pasado".
   const monthMatch = value.match(new RegExp(`\\b(${MONTHS_ES.map(stripAccents).join("|")}|setiembre)\\b(?:\\s+(?:de|del)?\\s*(\\d{4}|ano\\s+pasado))?`));
   if (monthMatch) {
     const name = monthMatch[1] === "setiembre" ? "septiembre" : monthMatch[1]!;
@@ -153,6 +148,12 @@ export function resolvePeriodExpression(text: string, timeZone = DEFAULT_TIME_ZO
     const to = compareLocal(end, today) > 0 ? today : end;
     return make({ year, month, day: 1 }, to, `${name} ${year}${to === today && compareLocal(end, today) > 0 ? " (hasta hoy)" : ""}`);
   }
+  if (/\b(?:el\s+)?ano\s+pasado\b/.test(value)) {
+    const year = today.year - 1;
+    return make({ year, month: 1, day: 1 }, { year, month: 12, day: 31 }, `${year}`);
+  }
+  if (/\beste\s+ano\b/.test(value)) return make({ year: today.year, month: 1, day: 1 }, today, `${today.year} (hasta hoy)`);
+
   return null;
 }
 
