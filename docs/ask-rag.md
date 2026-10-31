@@ -61,6 +61,11 @@ npm run backfill:embeddings            # dry run: counts candidates
 npm run backfill:embeddings -- --apply # embeds events and their entities
 ```
 
+(The `dev` and `backfill:embeddings` scripts load `.env.local` themselves, so
+the key only has to live in that file. A dry run prints the resolved model under
+`externalProvider`; `null` there means the key was not read and the backfill
+would quietly write local hash vectors instead.)
+
 Similarity is an exact scan of the owner's rows (no vector extension, which the
 fail-closed schema contract would flag). That is fast for one person's data; if
 an owner grows beyond ~100k vectors, move to pgvector with an HNSW index via a
