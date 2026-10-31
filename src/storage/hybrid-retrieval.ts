@@ -1,5 +1,6 @@
 import { cosineSimilarity, EMBEDDING_VERSION, generateEmbedding } from "./embeddings.js";
 import { pool } from "./postgres.js";
+import { authorizeModelDispatch } from "./privacy.js";
 import { derivedRunReadEligibilitySql } from "./search-repository.js";
 
 type Queryable = Pick<typeof pool, "query">;
@@ -169,6 +170,15 @@ export async function hybridRetrieve(
     candidates.set(candidateKey(candidate), candidate);
   }
 
+  // The query vector must come from the same model as the stored vectors.
+  // Without authorization the provider is never called and the local hash
+  // model is used, so only local-hash rows are comparable in that case.
+  const queryAuthorization = await authorizeModelDispatch(db, { ownerId: filters.clientId ?? null, purpose: "retrieval_query" });
+  const queryGenerated = await generateEmbedding({
+    text: query, clientId: filters.clientId, ownerId: filters.clientId ?? null,
+    purpose: "retrieval_query", authorization: queryAuthorization,
+  });
+  const queryEmbedding = queryGenerated.embedding;
   const vectorRows = await db.query<{
     objectType: "event" | "entity" | "insight" | "digest" | "fact";
     objectId: string; embedding: number[]; content: string; metadata: Record<string, unknown>;
@@ -179,6 +189,7 @@ export async function hybridRetrieve(
     from knowledge_embeddings embedding
     where embedding.embedding_version = $1
       and ($2::text is null or embedding.client_id is not distinct from $2)
+      and embedding.model = $3 and embedding.dimensions = $4
       -- An embedding marked stale by a policy change must never surface, even
       -- when its original source metadata is unavailable.
       and coalesce(embedding.metadata->>'policyStale', 'false') <> 'true'
@@ -230,8 +241,7 @@ export async function hybridRetrieve(
         )
       )
     order by embedding.updated_at desc limit 1000
-  `, [EMBEDDING_VERSION, filters.clientId ?? null]);
-  const queryEmbedding = (await generateEmbedding({ text: query, clientId: filters.clientId })).embedding;
+  `, [EMBEDDING_VERSION, filters.clientId ?? null, queryGenerated.model, queryEmbedding.length]);
   for (const row of vectorRows.rows) {
     if (!objectTypes.has(row.objectType)) continue;
     const similarity = cosineSimilarity(queryEmbedding, row.embedding.map(Number));
