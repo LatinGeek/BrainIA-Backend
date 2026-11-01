@@ -1123,6 +1123,7 @@ With `stream: true` (default) the response is `application/x-ndjson`, one event 
 - Event responses expose `processingStatus`, `processingStatusReason`, `processingStatusUpdatedAt`, `privacyStatus`, and `processingAllowed`.
 - `GET /api/v1/metrics/quality` returns semantic coverage, hierarchy integrity, model-call usage/cost, and job health gates.
 - Protected operations routes under `/api/v1/operations/*` list/retry jobs, run a bounded worker, apply retention, and verify a restored backup.
+- `POST /api/v1/operations/embeddings/backfill` `{ dryRun=true, limit=60, cursor?, ownerId? }` re-embeds events missing a vector from the configured provider, resumably (see `docs/ask-rag.md`). `409 embedding_provider_not_configured` when no provider is set.
 
 ## Proactive insights
 

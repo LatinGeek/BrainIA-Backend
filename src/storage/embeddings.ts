@@ -472,3 +472,93 @@ export async function refreshEventEmbeddings(
   }
   return stored;
 }
+
+export type EmbeddingBackfillCursor = { occurredAt: string; id: string };
+
+/**
+ * One bounded, resumable backfill step, run inside the deployment so no
+ * database or provider secret has to leave it. Events are walked newest first
+ * with a keyset cursor, so an event whose policy forces a local vector is
+ * visited once rather than retried forever. Stops at `budgetMs`.
+ */
+export async function backfillEmbeddingsBatch(db: Queryable, input: {
+  ownerId?: string | null;
+  cursor?: EmbeddingBackfillCursor | null;
+  limit: number;
+  budgetMs: number;
+  dryRun: boolean;
+}) {
+  const startedAt = Date.now();
+  const provider = embeddingProvider();
+  const model = provider?.model ?? LOCAL_EMBEDDING_MODEL;
+  const pendingFilter = `
+    event.privacy_status = 'standard'
+    and ($1::text is null or coalesce(event.owner_id, event.client_id) = $1)
+    and not exists (
+      select 1 from knowledge_embeddings embedding
+      where embedding.object_type = 'event' and embedding.object_id = event.id
+        and embedding.embedding_version = $2 and embedding.model = $3
+    )`;
+  const counts = async () => {
+    const [pending, byModel] = await Promise.all([
+      db.query<{ count: number }>(`select count(*)::int as count from raw_events event where ${pendingFilter}`, [input.ownerId ?? null, EMBEDDING_VERSION, model]),
+      db.query<{ model: string; objectType: string; count: number }>(`
+        select model, object_type as "objectType", count(*)::int as count from knowledge_embeddings
+        where embedding_version = $1 and ($2::text is null or coalesce(owner_id, client_id) = $2)
+        group by 1, 2 order by 1, 2
+      `, [EMBEDDING_VERSION, input.ownerId ?? null]),
+    ]);
+    return { pending: pending.rows[0]?.count ?? 0, byModel: byModel.rows };
+  };
+
+  const summary = {
+    embeddingVersion: EMBEDDING_VERSION,
+    externalProvider: provider?.model ?? null,
+    dimensions: provider?.dimensions ?? null,
+    dryRun: input.dryRun,
+    processed: 0,
+    written: 0,
+    writtenByModel: {} as Record<string, number>,
+    failed: 0,
+    nextCursor: null as EmbeddingBackfillCursor | null,
+    done: false,
+    pendingBefore: 0,
+    pendingAfter: 0,
+    byModel: [] as Array<{ model: string; objectType: string; count: number }>,
+  };
+  summary.pendingBefore = (await counts()).pending;
+
+  if (!input.dryRun && provider) {
+    const batch = await db.query<{ id: string; occurredAt: string }>(`
+      select event.id, coalesce(event.timestamp, event.created_at)::text as "occurredAt"
+      from raw_events event
+      where ${pendingFilter}
+        and ($4::timestamptz is null or (coalesce(event.timestamp, event.created_at), event.id) < ($4::timestamptz, $5::text))
+      order by coalesce(event.timestamp, event.created_at) desc, event.id desc
+      limit $6
+    `, [input.ownerId ?? null, EMBEDDING_VERSION, model, input.cursor?.occurredAt ?? null, input.cursor?.id ?? null, input.limit]);
+    for (const row of batch.rows) {
+      if (Date.now() - startedAt > input.budgetMs) break;
+      try {
+        const stored = await refreshEventEmbeddings(db, row.id);
+        summary.written += stored.length;
+        for (const item of stored as Array<{ model?: string }>) {
+          const key = item.model ?? "unknown";
+          summary.writtenByModel[key] = (summary.writtenByModel[key] ?? 0) + 1;
+        }
+      } catch {
+        // Metadata only: never surface event content or ids.
+        summary.failed += 1;
+      }
+      summary.processed += 1;
+      summary.nextCursor = { occurredAt: row.occurredAt, id: row.id };
+    }
+    summary.done = summary.processed === batch.rows.length && batch.rows.length < input.limit;
+  } else {
+    summary.done = input.dryRun ? summary.pendingBefore === 0 : true;
+  }
+  const after = await counts();
+  summary.pendingAfter = after.pending;
+  summary.byModel = after.byModel;
+  return summary;
+}

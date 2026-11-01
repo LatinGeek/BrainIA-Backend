@@ -8,6 +8,8 @@ import { applyRetentionPolicies } from "../storage/data-controls.js";
 import { listClientDiagnostics } from "../storage/client-diagnostic-repository.js";
 import { config } from "../config.js";
 import { ensureIntelligenceSchema } from "../storage/intelligence-schema.js";
+import { backfillEmbeddingsBatch, embeddingProvider } from "../storage/embeddings.js";
+import { pool } from "../storage/postgres.js";
 
 function operationsAuthorized(headers: Record<string, string | string[] | undefined>) {
   const configured = process.env.BRAINIA_OPERATIONS_TOKEN?.trim();
@@ -101,6 +103,31 @@ export const registerOperationsRoutes: FastifyPluginAsync = async (app) => {
     const parsed = z.object({ limit: z.coerce.number().int().min(1).max(25).default(10) }).safeParse(request.body ?? {});
     if (!parsed.success) return reply.status(400).send({ error: "invalid_worker_request" });
     return processBackgroundJobs({ limit: parsed.data.limit });
+  });
+
+  // Resumable embeddings backfill that runs inside the deployment, so database
+  // and provider secrets never leave it. Call repeatedly, passing nextCursor
+  // back, until done is true. dryRun only reports counts.
+  app.post("/operations/embeddings/backfill", async (request, reply) => {
+    if (!operationsAuthorized(request.headers)) return reply.status(401).send({ error: "unauthorized_operations" });
+    const parsed = z.object({
+      dryRun: z.boolean().default(true),
+      ownerId: z.string().min(1).max(200).optional(),
+      limit: z.number().int().min(1).max(200).default(60),
+      cursor: z.object({ occurredAt: z.string().min(1).max(64), id: z.string().min(1).max(200) }).strict().nullable().optional(),
+    }).strict().safeParse(request.body ?? {});
+    if (!parsed.success) return reply.status(400).send({ error: "invalid_backfill_request" });
+    if (!parsed.data.dryRun && !embeddingProvider()) {
+      return reply.status(409).send({ error: "embedding_provider_not_configured" });
+    }
+    return backfillEmbeddingsBatch(pool, {
+      ownerId: parsed.data.ownerId ?? null,
+      cursor: parsed.data.cursor ?? null,
+      limit: parsed.data.limit,
+      // Leave headroom under the serverless function limit.
+      budgetMs: 40_000,
+      dryRun: parsed.data.dryRun,
+    });
   });
 
   app.post("/operations/retention/run", async (request, reply) => {

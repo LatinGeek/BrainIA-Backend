@@ -66,6 +66,21 @@ the key only has to live in that file. A dry run prints the resolved model under
 `externalProvider`; `null` there means the key was not read and the backfill
 would quietly write local hash vectors instead.)
 
+In production, where database and provider secrets cannot be pulled, run the
+backfill inside the deployment instead (requires `BRAINIA_OPERATIONS_TOKEN`):
+
+```bash
+curl -X POST https://brain-ia-six.vercel.app/api/v1/operations/embeddings/backfill \
+  -H "x-brainia-operations-token: $TOKEN" -H "content-type: application/json" \
+  -d '{"dryRun":false,"limit":60}'
+```
+
+Each call processes up to `limit` events within ~40 s and returns `nextCursor`;
+repeat with `{"dryRun":false,"cursor":<nextCursor>}` until `done` is true.
+`{"dryRun":true}` reports `pendingBefore` and embeddings per model. A
+`writtenByModel` entry of `brainia-semantic-hash` means source privacy policy
+kept those events local.
+
 Similarity is an exact scan of the owner's rows (no vector extension, which the
 fail-closed schema contract would flag). That is fast for one person's data; if
 an owner grows beyond ~100k vectors, move to pgvector with an HNSW index via a
