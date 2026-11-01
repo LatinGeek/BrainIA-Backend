@@ -7,15 +7,13 @@ import { verifyConfiguredBackup } from "../storage/backup-verification.js";
 import { applyRetentionPolicies } from "../storage/data-controls.js";
 import { listClientDiagnostics } from "../storage/client-diagnostic-repository.js";
 import { config } from "../config.js";
+import { operationsTokenMatches } from "../auth.js";
 import { ensureIntelligenceSchema } from "../storage/intelligence-schema.js";
 import { backfillEmbeddingsBatch, embeddingProvider } from "../storage/embeddings.js";
 import { pool } from "../storage/postgres.js";
 
 function operationsAuthorized(headers: Record<string, string | string[] | undefined>) {
-  const configured = process.env.BRAINIA_OPERATIONS_TOKEN?.trim();
-  if (!configured) return false;
-  const supplied = headers["x-brainia-operations-token"];
-  return (Array.isArray(supplied) ? supplied[0] : supplied) === configured;
+  return operationsTokenMatches(headers["x-brainia-operations-token"]);
 }
 
 function cronAuthorized(headers: Record<string, string | string[] | undefined>) {

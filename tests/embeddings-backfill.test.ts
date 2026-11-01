@@ -69,3 +69,26 @@ test("operations backfill: protected, dry-run first, resumable, uses the provide
     await app.close();
   }
 });
+
+test("operations token passes the API-key layer only on /operations routes", async () => {
+  process.env.BRAINIA_OPERATIONS_TOKEN = "ops-token";
+  // Auth enabled, as in production: every /api route needs a client key.
+  const app = await buildApp({ authConfig: { globalApiKey: null, clientKeys: new Map([["someone", "client-secret"]]) } });
+  try {
+    const backfill = (token?: string) => app.inject({
+      method: "POST", url: "/api/v1/operations/embeddings/backfill",
+      headers: token ? { "x-brainia-operations-token": token } : {}, payload: { dryRun: true },
+    });
+    assert.equal((await backfill("ops-token")).statusCode, 200);
+    assert.equal((await backfill("wrong")).statusCode, 401);
+    assert.equal((await backfill()).statusCode, 401);
+    // The token must not unlock owner data routes.
+    const owner = await app.inject({ method: "GET", url: "/api/v1/financial/transactions", headers: { "x-brainia-operations-token": "ops-token" } });
+    assert.equal(owner.statusCode, 401);
+    const ask = await app.inject({ method: "POST", url: "/api/v1/ask", headers: { "x-brainia-operations-token": "ops-token" }, payload: { question: "hola" } });
+    assert.equal(ask.statusCode, 401);
+  } finally {
+    delete process.env.BRAINIA_OPERATIONS_TOKEN;
+    await app.close();
+  }
+});

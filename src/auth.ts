@@ -262,6 +262,16 @@ export function requireScope(request: FastifyRequest, scope: string) {
   return principal;
 }
 
+/** Constant-time comparison against BRAINIA_OPERATIONS_TOKEN; false when it is unset. */
+export function operationsTokenMatches(supplied: string | string[] | undefined) {
+  const configured = process.env.BRAINIA_OPERATIONS_TOKEN?.trim();
+  const value = Array.isArray(supplied) ? supplied[0] : supplied;
+  if (!configured || !value) return false;
+  const left = createHash("sha256").update(value).digest();
+  const right = createHash("sha256").update(configured).digest();
+  return timingSafeEqual(left, right);
+}
+
 export function createApiAuthHook(config: AuthConfig) {
   return async function apiAuthHook(
     request: FastifyRequest,
@@ -282,6 +292,20 @@ export function createApiAuthHook(config: AuthConfig) {
         clientId: null,
         mode: "cron",
         scopes: ["jobs"],
+        authenticated: true,
+      };
+      return;
+    }
+
+    // Operator calls (backfills, retries) authenticate with the operations
+    // token instead of an owner key, the same way cron uses CRON_SECRET. The
+    // route handler re-checks the token; this only lets the request reach it.
+    if (/^\/api\/v1\/operations(\/|$)/.test(path) && operationsTokenMatches(request.headers["x-brainia-operations-token"])) {
+      request.principal = {
+        ownerId: null,
+        clientId: null,
+        mode: "cron",
+        scopes: ["operations"],
         authenticated: true,
       };
       return;
