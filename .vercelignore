@@ -12,3 +12,7 @@ coverage/
 data/
 
 .env*
+
+# Local-only files (tokens, scratch) are never deployment inputs.
+*.local
+.ops-token*
