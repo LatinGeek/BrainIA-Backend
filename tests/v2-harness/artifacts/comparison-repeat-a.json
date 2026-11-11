@@ -11,7 +11,7 @@
   "runnerSha256": "bcab21be9fa5942e8ce3088e5e0e083b3ee4fe000ffb0b481c5c4a5d6602bc7b",
   "node": "v22.23.3",
   "source": {
-    "sha256": "fcc0efdeab5c53e2e487f7bdf32bc7904c6898f51285a0ef552bb511a445f90a",
+    "sha256": "8155a6008381732748d6da0706891dca718ed51bc01838cfaa893c629a77dd0c",
     "files": [
       [
         "package-lock.json",
@@ -23,7 +23,7 @@
       ],
       [
         "src/app.ts",
-        "b4a73ec90cf95245c0854e3ab895400d65408e195db878f86efa2a093cc73229"
+        "a3d45a7f0330241353394f6c513c2ba48ba47fb3789c3c01017453be659ec9a5"
       ],
       [
         "src/auth.ts",
@@ -52,6 +52,10 @@
       [
         "src/domain/event-history.ts",
         "26de1f6a353504c35dbcf168454e98ac5698743ebf378d34f38a2004480678fa"
+      ],
+      [
+        "src/domain/event-ingestion.ts",
+        "68d8d2cc4e050abe2d7017e76b3302477bcfc43dab91567da441405d633fa50a"
       ],
       [
         "src/domain/event-interpretation.ts",
@@ -147,7 +151,7 @@
       ],
       [
         "src/routes/events.ts",
-        "d5b904df02bfd5862dd063222c7ceb7ebe9d580fa9ecaeee48605423a24abf41"
+        "7a2b454630eeb5582319b9e670b3c13de2b0a3d1be3b4b06e45b7c89310da47a"
       ],
       [
         "src/routes/financial-transactions.ts",
@@ -367,11 +371,11 @@
       ],
       [
         "src/storage/event-repository.ts",
-        "692cd8cdb02fe30b8ac7f4ddde7e7678456ef8af761ad8ed7cbbcfe692f6f02f"
+        "1d54b7ff03a38d4da8f74bfdae6bd37fead0355e1f9d19faa19afc23e252a7c5"
       ],
       [
         "src/storage/event-store.ts",
-        "b8ddb9f5c0671e75ae6e606f0bbdda4253f21330e9054ee9a481ef1d6bd346b4"
+        "b156745aeaa132180d83869f645d33397a64cd1c3db26612b11eebed22761496"
       ],
       [
         "src/storage/financial-transaction-repository.ts",
@@ -550,7 +554,7 @@
         "91ae4884162d286ae73290dfd37f823f8520856a527cce4f4b77fc75a421fb27"
       ]
     ],
-    "head": "9869611338d7c151f962ced06712054558581ca5",
+    "head": "11b4e4626f532dc6f600cc376a6bf6768c1980f2",
     "dirty": true
   },
   "configurations": {
@@ -564,9 +568,9 @@
       "adapterSha256": "31404676c7a9a0d2c3469a7e44d4c2945e599fd087621e9a1bee56300e5958c5",
       "adapterRevision": "interpretation-comparison-1",
       "classificationVersion": "heuristic-v3",
-      "sourceSha256": "fcc0efdeab5c53e2e487f7bdf32bc7904c6898f51285a0ef552bb511a445f90a",
+      "sourceSha256": "8155a6008381732748d6da0706891dca718ed51bc01838cfaa893c629a77dd0c",
       "configFileSha256": "c03f863906e3c1cb08df206ade51a088c2e88bcc401acc2cf4a2ead660e58ec1",
-      "sha256": "78fa31036cd20d26f3529ff1d64511738e30793d28cbcfc1fcabed34b70f34d7"
+      "sha256": "4fbf08c14a13ea7ded7337fd264cbd5b92af59c05228724b4315d3ef645282eb"
     },
     "candidate": {
       "id": "checkout-rules-candidate",
@@ -578,9 +582,9 @@
       "adapterSha256": "31404676c7a9a0d2c3469a7e44d4c2945e599fd087621e9a1bee56300e5958c5",
       "adapterRevision": "interpretation-comparison-1",
       "classificationVersion": "heuristic-v3",
-      "sourceSha256": "fcc0efdeab5c53e2e487f7bdf32bc7904c6898f51285a0ef552bb511a445f90a",
+      "sourceSha256": "8155a6008381732748d6da0706891dca718ed51bc01838cfaa893c629a77dd0c",
       "configFileSha256": "6a74523d82614bc4a102eee133b1a2babd9f79057e2c8b7b8c8ef4ad99277c8d",
-      "sha256": "711e0eb08ac092860b1c3971fa0129e3294085e81cd4ca12a14a2d15a93a4cc3"
+      "sha256": "b41bee9b0d7f1d7ca8392cb55692be6768437d995726dd13532f33717cc9eec0"
     }
   },
   "criteria": {
@@ -783,25 +787,25 @@
       },
       "adapterLatencyMs": {
         "samples": [
-          15.236400000000003,
-          0.3879000000000019,
-          0.35990000000003874,
-          0.3574999999999591,
-          0.3650000000000091,
-          0.5374999999999659,
-          0.5515000000000327,
-          0.19420000000002346,
-          0.07740000000001146,
-          0.16899999999998272,
-          0.6510000000000105,
-          0.11509999999998399,
-          0.18549999999999045,
-          0.09759999999999991,
-          0.32200000000000273,
-          0.23140000000000782,
-          0.18999999999999773
+          11.686799999999948,
+          0.43840000000000146,
+          0.48579999999998336,
+          0.441099999999949,
+          0.3623999999999796,
+          0.48619999999999663,
+          0.5067999999999984,
+          0.19700000000000273,
+          0.05709999999999127,
+          0.1671000000000049,
+          0.4445999999999799,
+          0.13650000000001228,
+          0.08090000000004238,
+          0.0735000000000241,
+          0.22810000000004038,
+          0.24959999999998672,
+          0.16460000000000719
         ],
-        "p95": 15.236400000000003,
+        "p95": 11.686799999999948,
         "scope": "adapter invocation including lazy imports; not production latency"
       },
       "usage": [
@@ -1115,25 +1119,25 @@
       },
       "adapterLatencyMs": {
         "samples": [
-          5.134900000000016,
-          0.2844000000000051,
-          0.20980000000002974,
-          0.15109999999998536,
-          0.30160000000000764,
-          0.2306000000000381,
-          0.2681999999999789,
-          0.13189999999997326,
-          0.04939999999999145,
-          0.06799999999998363,
-          0.3535999999999717,
-          0.080600000000004,
-          0.11960000000004811,
-          0.08019999999999072,
+          4.516599999999983,
+          0.25540000000000873,
+          0.3146000000000413,
+          0.20230000000003656,
+          0.20639999999997372,
+          0.23469999999997526,
+          0.287399999999991,
+          0.1501999999999839,
+          0.04660000000001219,
+          0.08320000000003347,
+          0.31080000000002883,
+          0.10199999999997544,
+          0.05709999999999127,
+          0.07949999999999591,
           0.17880000000002383,
-          0.24249999999994998,
-          0.1664000000000101
+          0.20890000000002829,
+          0.1663000000000352
         ],
-        "p95": 5.134900000000016,
+        "p95": 4.516599999999983,
         "scope": "adapter invocation including lazy imports; not production latency"
       },
       "usage": [
@@ -1307,9 +1311,9 @@
       "baseline": {
         "configuration": {
           "id": "checkout-rules-baseline",
-          "sha256": "78fa31036cd20d26f3529ff1d64511738e30793d28cbcfc1fcabed34b70f34d7"
+          "sha256": "4fbf08c14a13ea7ded7337fd264cbd5b92af59c05228724b4315d3ef645282eb"
         },
-        "latencyMs": 15.236400000000003,
+        "latencyMs": 11.686799999999948,
         "usage": null,
         "cost": null,
         "promptHashes": [],
@@ -1417,9 +1421,9 @@
       "candidate": {
         "configuration": {
           "id": "checkout-rules-candidate",
-          "sha256": "711e0eb08ac092860b1c3971fa0129e3294085e81cd4ca12a14a2d15a93a4cc3"
+          "sha256": "b41bee9b0d7f1d7ca8392cb55692be6768437d995726dd13532f33717cc9eec0"
         },
-        "latencyMs": 5.134900000000016,
+        "latencyMs": 4.516599999999983,
         "usage": null,
         "cost": null,
         "promptHashes": [],
@@ -1554,9 +1558,9 @@
       "baseline": {
         "configuration": {
           "id": "checkout-rules-baseline",
-          "sha256": "78fa31036cd20d26f3529ff1d64511738e30793d28cbcfc1fcabed34b70f34d7"
+          "sha256": "4fbf08c14a13ea7ded7337fd264cbd5b92af59c05228724b4315d3ef645282eb"
         },
-        "latencyMs": 0.3879000000000019,
+        "latencyMs": 0.43840000000000146,
         "usage": null,
         "cost": null,
         "promptHashes": [],
@@ -1664,9 +1668,9 @@
       "candidate": {
         "configuration": {
           "id": "checkout-rules-candidate",
-          "sha256": "711e0eb08ac092860b1c3971fa0129e3294085e81cd4ca12a14a2d15a93a4cc3"
+          "sha256": "b41bee9b0d7f1d7ca8392cb55692be6768437d995726dd13532f33717cc9eec0"
         },
-        "latencyMs": 0.2844000000000051,
+        "latencyMs": 0.25540000000000873,
         "usage": null,
         "cost": null,
         "promptHashes": [],
@@ -1801,9 +1805,9 @@
       "baseline": {
         "configuration": {
           "id": "checkout-rules-baseline",
-          "sha256": "78fa31036cd20d26f3529ff1d64511738e30793d28cbcfc1fcabed34b70f34d7"
+          "sha256": "4fbf08c14a13ea7ded7337fd264cbd5b92af59c05228724b4315d3ef645282eb"
         },
-        "latencyMs": 0.35990000000003874,
+        "latencyMs": 0.48579999999998336,
         "usage": null,
         "cost": null,
         "promptHashes": [],
@@ -1911,9 +1915,9 @@
       "candidate": {
         "configuration": {
           "id": "checkout-rules-candidate",
-          "sha256": "711e0eb08ac092860b1c3971fa0129e3294085e81cd4ca12a14a2d15a93a4cc3"
+          "sha256": "b41bee9b0d7f1d7ca8392cb55692be6768437d995726dd13532f33717cc9eec0"
         },
-        "latencyMs": 0.20980000000002974,
+        "latencyMs": 0.3146000000000413,
         "usage": null,
         "cost": null,
         "promptHashes": [],
@@ -2042,9 +2046,9 @@
       "baseline": {
         "configuration": {
           "id": "checkout-rules-baseline",
-          "sha256": "78fa31036cd20d26f3529ff1d64511738e30793d28cbcfc1fcabed34b70f34d7"
+          "sha256": "4fbf08c14a13ea7ded7337fd264cbd5b92af59c05228724b4315d3ef645282eb"
         },
-        "latencyMs": 0.3574999999999591,
+        "latencyMs": 0.441099999999949,
         "usage": null,
         "cost": null,
         "promptHashes": [],
@@ -2134,9 +2138,9 @@
       "candidate": {
         "configuration": {
           "id": "checkout-rules-candidate",
-          "sha256": "711e0eb08ac092860b1c3971fa0129e3294085e81cd4ca12a14a2d15a93a4cc3"
+          "sha256": "b41bee9b0d7f1d7ca8392cb55692be6768437d995726dd13532f33717cc9eec0"
         },
-        "latencyMs": 0.15109999999998536,
+        "latencyMs": 0.20230000000003656,
         "usage": null,
         "cost": null,
         "promptHashes": [],
@@ -2247,9 +2251,9 @@
       "baseline": {
         "configuration": {
           "id": "checkout-rules-baseline",
-          "sha256": "78fa31036cd20d26f3529ff1d64511738e30793d28cbcfc1fcabed34b70f34d7"
+          "sha256": "4fbf08c14a13ea7ded7337fd264cbd5b92af59c05228724b4315d3ef645282eb"
         },
-        "latencyMs": 0.3650000000000091,
+        "latencyMs": 0.3623999999999796,
         "usage": null,
         "cost": null,
         "promptHashes": [],
@@ -2339,9 +2343,9 @@
       "candidate": {
         "configuration": {
           "id": "checkout-rules-candidate",
-          "sha256": "711e0eb08ac092860b1c3971fa0129e3294085e81cd4ca12a14a2d15a93a4cc3"
+          "sha256": "b41bee9b0d7f1d7ca8392cb55692be6768437d995726dd13532f33717cc9eec0"
         },
-        "latencyMs": 0.30160000000000764,
+        "latencyMs": 0.20639999999997372,
         "usage": null,
         "cost": null,
         "promptHashes": [],
@@ -2452,9 +2456,9 @@
       "baseline": {
         "configuration": {
           "id": "checkout-rules-baseline",
-          "sha256": "78fa31036cd20d26f3529ff1d64511738e30793d28cbcfc1fcabed34b70f34d7"
+          "sha256": "4fbf08c14a13ea7ded7337fd264cbd5b92af59c05228724b4315d3ef645282eb"
         },
-        "latencyMs": 0.5374999999999659,
+        "latencyMs": 0.48619999999999663,
         "usage": null,
         "cost": null,
         "promptHashes": [],
@@ -2544,9 +2548,9 @@
       "candidate": {
         "configuration": {
           "id": "checkout-rules-candidate",
-          "sha256": "711e0eb08ac092860b1c3971fa0129e3294085e81cd4ca12a14a2d15a93a4cc3"
+          "sha256": "b41bee9b0d7f1d7ca8392cb55692be6768437d995726dd13532f33717cc9eec0"
         },
-        "latencyMs": 0.2306000000000381,
+        "latencyMs": 0.23469999999997526,
         "usage": null,
         "cost": null,
         "promptHashes": [],
@@ -2668,9 +2672,9 @@
       "baseline": {
         "configuration": {
           "id": "checkout-rules-baseline",
-          "sha256": "78fa31036cd20d26f3529ff1d64511738e30793d28cbcfc1fcabed34b70f34d7"
+          "sha256": "4fbf08c14a13ea7ded7337fd264cbd5b92af59c05228724b4315d3ef645282eb"
         },
-        "latencyMs": 0.5515000000000327,
+        "latencyMs": 0.5067999999999984,
         "usage": null,
         "cost": null,
         "promptHashes": [],
@@ -2793,9 +2797,9 @@
       "candidate": {
         "configuration": {
           "id": "checkout-rules-candidate",
-          "sha256": "711e0eb08ac092860b1c3971fa0129e3294085e81cd4ca12a14a2d15a93a4cc3"
+          "sha256": "b41bee9b0d7f1d7ca8392cb55692be6768437d995726dd13532f33717cc9eec0"
         },
-        "latencyMs": 0.2681999999999789,
+        "latencyMs": 0.287399999999991,
         "usage": null,
         "cost": null,
         "promptHashes": [],
@@ -2945,9 +2949,9 @@
       "baseline": {
         "configuration": {
           "id": "checkout-rules-baseline",
-          "sha256": "78fa31036cd20d26f3529ff1d64511738e30793d28cbcfc1fcabed34b70f34d7"
+          "sha256": "4fbf08c14a13ea7ded7337fd264cbd5b92af59c05228724b4315d3ef645282eb"
         },
-        "latencyMs": 0.19420000000002346,
+        "latencyMs": 0.19700000000000273,
         "usage": null,
         "cost": null,
         "promptHashes": [],
@@ -3055,9 +3059,9 @@
       "candidate": {
         "configuration": {
           "id": "checkout-rules-candidate",
-          "sha256": "711e0eb08ac092860b1c3971fa0129e3294085e81cd4ca12a14a2d15a93a4cc3"
+          "sha256": "b41bee9b0d7f1d7ca8392cb55692be6768437d995726dd13532f33717cc9eec0"
         },
-        "latencyMs": 0.13189999999997326,
+        "latencyMs": 0.1501999999999839,
         "usage": null,
         "cost": null,
         "promptHashes": [],
@@ -3186,9 +3190,9 @@
       "baseline": {
         "configuration": {
           "id": "checkout-rules-baseline",
-          "sha256": "78fa31036cd20d26f3529ff1d64511738e30793d28cbcfc1fcabed34b70f34d7"
+          "sha256": "4fbf08c14a13ea7ded7337fd264cbd5b92af59c05228724b4315d3ef645282eb"
         },
-        "latencyMs": 0.07740000000001146,
+        "latencyMs": 0.05709999999999127,
         "usage": null,
         "cost": null,
         "promptHashes": [],
@@ -3293,9 +3297,9 @@
       "candidate": {
         "configuration": {
           "id": "checkout-rules-candidate",
-          "sha256": "711e0eb08ac092860b1c3971fa0129e3294085e81cd4ca12a14a2d15a93a4cc3"
+          "sha256": "b41bee9b0d7f1d7ca8392cb55692be6768437d995726dd13532f33717cc9eec0"
         },
-        "latencyMs": 0.04939999999999145,
+        "latencyMs": 0.04660000000001219,
         "usage": null,
         "cost": null,
         "promptHashes": [],
@@ -3421,9 +3425,9 @@
       "baseline": {
         "configuration": {
           "id": "checkout-rules-baseline",
-          "sha256": "78fa31036cd20d26f3529ff1d64511738e30793d28cbcfc1fcabed34b70f34d7"
+          "sha256": "4fbf08c14a13ea7ded7337fd264cbd5b92af59c05228724b4315d3ef645282eb"
         },
-        "latencyMs": 0.16899999999998272,
+        "latencyMs": 0.1671000000000049,
         "usage": null,
         "cost": null,
         "promptHashes": [],
@@ -3513,9 +3517,9 @@
       "candidate": {
         "configuration": {
           "id": "checkout-rules-candidate",
-          "sha256": "711e0eb08ac092860b1c3971fa0129e3294085e81cd4ca12a14a2d15a93a4cc3"
+          "sha256": "b41bee9b0d7f1d7ca8392cb55692be6768437d995726dd13532f33717cc9eec0"
         },
-        "latencyMs": 0.06799999999998363,
+        "latencyMs": 0.08320000000003347,
         "usage": null,
         "cost": null,
         "promptHashes": [],
@@ -3626,9 +3630,9 @@
       "baseline": {
         "configuration": {
           "id": "checkout-rules-baseline",
-          "sha256": "78fa31036cd20d26f3529ff1d64511738e30793d28cbcfc1fcabed34b70f34d7"
+          "sha256": "4fbf08c14a13ea7ded7337fd264cbd5b92af59c05228724b4315d3ef645282eb"
         },
-        "latencyMs": 0.6510000000000105,
+        "latencyMs": 0.4445999999999799,
         "usage": null,
         "cost": null,
         "promptHashes": [],
@@ -3772,9 +3776,9 @@
       "candidate": {
         "configuration": {
           "id": "checkout-rules-candidate",
-          "sha256": "711e0eb08ac092860b1c3971fa0129e3294085e81cd4ca12a14a2d15a93a4cc3"
+          "sha256": "b41bee9b0d7f1d7ca8392cb55692be6768437d995726dd13532f33717cc9eec0"
         },
-        "latencyMs": 0.3535999999999717,
+        "latencyMs": 0.31080000000002883,
         "usage": null,
         "cost": null,
         "promptHashes": [],
@@ -3945,9 +3949,9 @@
       "baseline": {
         "configuration": {
           "id": "checkout-rules-baseline",
-          "sha256": "78fa31036cd20d26f3529ff1d64511738e30793d28cbcfc1fcabed34b70f34d7"
+          "sha256": "4fbf08c14a13ea7ded7337fd264cbd5b92af59c05228724b4315d3ef645282eb"
         },
-        "latencyMs": 0.11509999999998399,
+        "latencyMs": 0.13650000000001228,
         "usage": null,
         "cost": null,
         "promptHashes": [],
@@ -4057,9 +4061,9 @@
       "candidate": {
         "configuration": {
           "id": "checkout-rules-candidate",
-          "sha256": "711e0eb08ac092860b1c3971fa0129e3294085e81cd4ca12a14a2d15a93a4cc3"
+          "sha256": "b41bee9b0d7f1d7ca8392cb55692be6768437d995726dd13532f33717cc9eec0"
         },
-        "latencyMs": 0.080600000000004,
+        "latencyMs": 0.10199999999997544,
         "usage": null,
         "cost": null,
         "promptHashes": [],
@@ -4190,9 +4194,9 @@
       "baseline": {
         "configuration": {
           "id": "checkout-rules-baseline",
-          "sha256": "78fa31036cd20d26f3529ff1d64511738e30793d28cbcfc1fcabed34b70f34d7"
+          "sha256": "4fbf08c14a13ea7ded7337fd264cbd5b92af59c05228724b4315d3ef645282eb"
         },
-        "latencyMs": 0.18549999999999045,
+        "latencyMs": 0.08090000000004238,
         "usage": null,
         "cost": null,
         "promptHashes": [],
@@ -4282,9 +4286,9 @@
       "candidate": {
         "configuration": {
           "id": "checkout-rules-candidate",
-          "sha256": "711e0eb08ac092860b1c3971fa0129e3294085e81cd4ca12a14a2d15a93a4cc3"
+          "sha256": "b41bee9b0d7f1d7ca8392cb55692be6768437d995726dd13532f33717cc9eec0"
         },
-        "latencyMs": 0.11960000000004811,
+        "latencyMs": 0.05709999999999127,
         "usage": null,
         "cost": null,
         "promptHashes": [],
@@ -4401,9 +4405,9 @@
       "baseline": {
         "configuration": {
           "id": "checkout-rules-baseline",
-          "sha256": "78fa31036cd20d26f3529ff1d64511738e30793d28cbcfc1fcabed34b70f34d7"
+          "sha256": "4fbf08c14a13ea7ded7337fd264cbd5b92af59c05228724b4315d3ef645282eb"
         },
-        "latencyMs": 0.09759999999999991,
+        "latencyMs": 0.0735000000000241,
         "usage": null,
         "cost": null,
         "promptHashes": [],
@@ -4531,9 +4535,9 @@
       "candidate": {
         "configuration": {
           "id": "checkout-rules-candidate",
-          "sha256": "711e0eb08ac092860b1c3971fa0129e3294085e81cd4ca12a14a2d15a93a4cc3"
+          "sha256": "b41bee9b0d7f1d7ca8392cb55692be6768437d995726dd13532f33717cc9eec0"
         },
-        "latencyMs": 0.08019999999999072,
+        "latencyMs": 0.07949999999999591,
         "usage": null,
         "cost": null,
         "promptHashes": [],
@@ -4710,9 +4714,9 @@
       "baseline": {
         "configuration": {
           "id": "checkout-rules-baseline",
-          "sha256": "78fa31036cd20d26f3529ff1d64511738e30793d28cbcfc1fcabed34b70f34d7"
+          "sha256": "4fbf08c14a13ea7ded7337fd264cbd5b92af59c05228724b4315d3ef645282eb"
         },
-        "latencyMs": 0.32200000000000273,
+        "latencyMs": 0.22810000000004038,
         "usage": null,
         "cost": null,
         "promptHashes": [],
@@ -4918,7 +4922,7 @@
       "candidate": {
         "configuration": {
           "id": "checkout-rules-candidate",
-          "sha256": "711e0eb08ac092860b1c3971fa0129e3294085e81cd4ca12a14a2d15a93a4cc3"
+          "sha256": "b41bee9b0d7f1d7ca8392cb55692be6768437d995726dd13532f33717cc9eec0"
         },
         "latencyMs": 0.17880000000002383,
         "usage": null,
@@ -5175,9 +5179,9 @@
       "baseline": {
         "configuration": {
           "id": "checkout-rules-baseline",
-          "sha256": "78fa31036cd20d26f3529ff1d64511738e30793d28cbcfc1fcabed34b70f34d7"
+          "sha256": "4fbf08c14a13ea7ded7337fd264cbd5b92af59c05228724b4315d3ef645282eb"
         },
-        "latencyMs": 0.23140000000000782,
+        "latencyMs": 0.24959999999998672,
         "usage": null,
         "cost": null,
         "promptHashes": [],
@@ -5383,9 +5387,9 @@
       "candidate": {
         "configuration": {
           "id": "checkout-rules-candidate",
-          "sha256": "711e0eb08ac092860b1c3971fa0129e3294085e81cd4ca12a14a2d15a93a4cc3"
+          "sha256": "b41bee9b0d7f1d7ca8392cb55692be6768437d995726dd13532f33717cc9eec0"
         },
-        "latencyMs": 0.24249999999994998,
+        "latencyMs": 0.20890000000002829,
         "usage": null,
         "cost": null,
         "promptHashes": [],
@@ -5634,9 +5638,9 @@
       "baseline": {
         "configuration": {
           "id": "checkout-rules-baseline",
-          "sha256": "78fa31036cd20d26f3529ff1d64511738e30793d28cbcfc1fcabed34b70f34d7"
+          "sha256": "4fbf08c14a13ea7ded7337fd264cbd5b92af59c05228724b4315d3ef645282eb"
         },
-        "latencyMs": 0.18999999999999773,
+        "latencyMs": 0.16460000000000719,
         "usage": null,
         "cost": null,
         "promptHashes": [],
@@ -5822,9 +5826,9 @@
       "candidate": {
         "configuration": {
           "id": "checkout-rules-candidate",
-          "sha256": "711e0eb08ac092860b1c3971fa0129e3294085e81cd4ca12a14a2d15a93a4cc3"
+          "sha256": "b41bee9b0d7f1d7ca8392cb55692be6768437d995726dd13532f33717cc9eec0"
         },
-        "latencyMs": 0.1664000000000101,
+        "latencyMs": 0.1663000000000352,
         "usage": null,
         "cost": null,
         "promptHashes": [],

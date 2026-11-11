@@ -1,6 +1,6 @@
 {
   "formatVersion": 1,
-  "generatedAt": "2026-10-15T16:23:30.721Z",
+  "generatedAt": "2026-10-26T00:50:40.106Z",
   "status": "BLOCKED",
   "offline": true,
   "datasetVersion": "2.0.0-synthetic.1",
@@ -62,8 +62,8 @@
   ],
   "adapter": {
     "path": "tests\\v2-harness\\current-adapter.mjs",
-    "revision": "current-checkout-heuristic-v3",
-    "sha256": "49b6bb1b234b48459e7a35b02e4918bc211766e22d5b2d8da99be250b8f4e156"
+    "revision": "current-checkout-heuristic-v4",
+    "sha256": "7dd95e4ce1139c4cd8094aaedaf269ff07307a799ddb9beca3a3703da03badf1"
   },
   "environment": {
     "node": "v22.23.3",
@@ -94,7 +94,7 @@
         "value": "<redacted>"
       }
     ],
-    "migrationsSha256": "809e242eb9fe714d3e77137c8306e2adbe25b45af04944ae71579d156650c216",
+    "migrationsSha256": "81a166887c66405e65a3277ae9395ffecb74386ab4fe6d6dc78387ea07a05772",
     "installedDatabaseSchema": "UNAVAILABLE: offline, no database connected",
     "deploymentSha256": null,
     "apkSha256": null,
@@ -193,7 +193,7 @@
         "zeroErrorUpper95": null
       },
       "adapterObservationLatencyMs": {
-        "p95": 0.009700000000009368,
+        "p95": 0.014799999999979718,
         "productStageLatency": "not instrumented"
       },
       "slices": {

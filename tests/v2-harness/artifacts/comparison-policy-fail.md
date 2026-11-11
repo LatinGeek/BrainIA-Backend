@@ -1,8 +1,8 @@
 # Interpretation configuration comparison
 
 Status: FAIL. Dataset: interpretation-comparison-synthetic-1.
-Baseline: checkout-rules-baseline (78fa31036cd20d26f3529ff1d64511738e30793d28cbcfc1fcabed34b70f34d7).
-Candidate: deliberate-amount-regression (102ce376d0d484d67fbfec4ef37b1214afed1578717b795fba66ca94ce2796cd).
+Baseline: checkout-rules-baseline (4fbf08c14a13ea7ded7337fd264cbd5b92af59c05228724b4315d3ef645282eb).
+Candidate: deliberate-amount-regression (6a808f9e21c36c2c607bba4f12faf98831b8158ca0da30e9c3ae6b57825ca9d6).
 
 | Field | Baseline correct/total | Candidate correct/total |
 | --- | --- | --- |

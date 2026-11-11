@@ -1,8 +1,8 @@
 # Interpretation configuration comparison
 
 Status: FAIL. Dataset: interpretation-comparison-synthetic-1.
-Baseline: checkout-rules-baseline (78fa31036cd20d26f3529ff1d64511738e30793d28cbcfc1fcabed34b70f34d7).
-Candidate: synthetic-prompt-replay (32396ae5f274ad391d65efec13c5f2a74dfc52afc6ec12dd812eeae1f9984de7).
+Baseline: checkout-rules-baseline (4fbf08c14a13ea7ded7337fd264cbd5b92af59c05228724b4315d3ef645282eb).
+Candidate: synthetic-prompt-replay (367331516db87c9389f10d104e91fdcd74cfef0ce07d6cb752d20796650afb07).
 
 | Field | Baseline correct/total | Candidate correct/total |
 | --- | --- | --- |

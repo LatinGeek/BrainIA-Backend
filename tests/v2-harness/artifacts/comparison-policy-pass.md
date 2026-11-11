@@ -1,8 +1,8 @@
 # Interpretation configuration comparison
 
 Status: PASS. Dataset: interpretation-comparison-synthetic-1.
-Baseline: checkout-rules-baseline (78fa31036cd20d26f3529ff1d64511738e30793d28cbcfc1fcabed34b70f34d7).
-Candidate: checkout-rules-candidate (711e0eb08ac092860b1c3971fa0129e3294085e81cd4ca12a14a2d15a93a4cc3).
+Baseline: checkout-rules-baseline (4fbf08c14a13ea7ded7337fd264cbd5b92af59c05228724b4315d3ef645282eb).
+Candidate: checkout-rules-candidate (b41bee9b0d7f1d7ca8392cb55692be6768437d995726dd13532f33717cc9eec0).
 
 | Field | Baseline correct/total | Candidate correct/total |
 | --- | --- | --- |
